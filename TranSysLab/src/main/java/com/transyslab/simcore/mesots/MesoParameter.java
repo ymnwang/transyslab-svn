@@ -1,0 +1,264 @@
+/**
+ *
+ */
+package com.transyslab.simcore.mesots;
+
+import java.util.HashMap;
+
+import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.roadnetwork.Parameter;
+
+/**
+ * @author its312
+ *
+ */
+public class MesoParameter extends Parameter {
+
+	final static float ETC_RATE = 0.3f;
+	final static float HOV_RATE = 0.25f;
+
+	final static float VEHICLE_LENGTH = 6.0960f; // 单位米， 20 feet
+
+	final static float CELL_RSP_LOWER = 30.48f; // 单位米，about 200 feet
+	final static float CELL_RSP_UPPER = 91.44f; // 单位米，about 500 feet
+	final static float CHANNELIZE_DISTANCE = 60.96f; // 单位米，about 400 feet
+
+	protected int nVehicleClasses_;
+	protected float[] vehicleClassCDF_;
+	protected String[] vehicleName_;
+	protected double updateStepSize_;// 从MESO_Engine转移过来
+	protected float hovRate_;
+	protected float etcRate_;
+	protected float[] vehicleLength_; // meter
+
+	protected float[] limitingParam_; // min headway, headway/speed slope,
+	// max acc, min speed, etc.
+
+	protected float[] queueParam_; // max speed for queue releasing
+
+	protected float cellSplitGap_; // gap threshold for split a cell
+	protected float rspLower_;
+	protected float rspUpper_;
+	protected float channelizeDistance_; // from dnNode (meter)
+
+	public static MesoParameter getInstance() {
+		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
+		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		return MesoNetworkPool.getInstance().getParameter(threadid);
+	}
+
+	public MesoParameter() {
+		nVehicleClasses_ = 1;
+		vehicleClassCDF_ = new float[1];
+		vehicleLength_ = new float[1];
+		vehicleName_ = new String[1];
+		etcRate_ = ETC_RATE;
+		hovRate_ = HOV_RATE;
+		rspLower_ = CELL_RSP_LOWER;
+		rspUpper_ = CELL_RSP_UPPER;
+		cellSplitGap_ = 0.5f * (CELL_RSP_LOWER + CELL_RSP_UPPER);
+		channelizeDistance_ = CHANNELIZE_DISTANCE;
+		// limitingParam_ = null;
+		// queueParam_ = null;
+		limitingParam_ = new float[3];
+		queueParam_ = new float[3];
+
+		vehicleClassCDF_[0] = 1.0f;
+		vehicleLength_[0] = VEHICLE_LENGTH;
+		vehicleName_[0] = new String("Cars");
+		// 从mesolib文件读入的默认参数值
+		limitingParam_[0] = (float) (5.0 * lengthFactor_);
+		limitingParam_[1] = 1.36f;
+		limitingParam_[2] = (float) (5.0 * speedFactor_);// km/hour
+		queueParam_[0] = -0.001f;
+		queueParam_[1] = (float) (25.0 * speedFactor_);
+		queueParam_[2] = 100.0f;// seconds
+	}/*
+		 * public void load(){ String filename =
+		 * ToolKit::optionalInputFile(name_,ToolKit::indir()); if (!filename)
+		 * theException->exit(1); VariableParser vp(this); vp.parse( filename );
+		 * }
+		 */
+	public double getUpdateStepSize() {
+		return updateStepSize_;
+	}
+	public void setUpdateStepSize(double uss) {
+		updateStepSize_ = uss;
+	}
+	public int nVehicleClasses() {
+		return nVehicleClasses_;
+	}
+	public float[] vehicleClassCDF() {
+		return vehicleClassCDF_;
+	}
+	public float vehicleClassCDF(int i) {
+		return vehicleClassCDF_[i];
+	}
+	public float hovRate() {
+		return hovRate_;
+	}
+	public float etcRate() {
+		return etcRate_;
+	}
+	public float vehicleLength(int i) {
+		if (i >= 0 && i < nVehicleClasses_)
+			return vehicleLength_[i];
+		else
+			return vehicleLength_[0];
+	}
+	public String vehicleName(int i) {
+		return vehicleName_[i];
+	}
+
+	// This returns the minimum distance gap for a given speed
+	public float minGap(float speed) {
+		return minHeadwayGap() + headwaySpeedSlope() * speed;
+	}
+
+	// This returns a maximum speed for a give gap, in a n-lane segment
+	float maxSpeed(float gap, int n) {
+		float dt = (float) (SimulationClock.getInstance().getStepSize() + headwaySpeedSlope() / n);
+		float dx = gap - minHeadwayGap() / n;
+		float v = dx / dt;
+		if (v > 40)
+			return 40;
+		return (v > 0.0) ? v : 0.0f;
+	}
+
+	public float cellSplitGap() {
+		return cellSplitGap_;
+	}
+	public float rspLower() {
+		return rspLower_;
+	}
+	public float rspUpper() {
+		return rspUpper_;
+	}
+	public float rspRange() {
+		return rspUpper_ - rspLower_;
+	}
+	public void setCellSplitGap(float dmax) {
+		cellSplitGap_ = dmax;
+	}
+	public void updateCSG() {
+		cellSplitGap_ = 0.5f * (rspLower_ + rspUpper_);
+	}
+	public void setRspLower(float dmin) {
+		rspLower_ = dmin;
+	}
+	public void setRspUpper(float dupper) {
+		rspUpper_ = dupper;
+	}
+	public float channelizeDistance() {
+		return channelizeDistance_;
+	}
+
+	public float minHeadwayGap() {
+		return limitingParam_[0];
+	}
+	public float headwaySpeedSlope() {
+		return limitingParam_[1];
+	}
+	public float minSpeed() {
+		return limitingParam_[2];
+	}
+
+	public float queueReleasingSpeed(float t, float v_f) {
+		if (t > queueParam_[2])
+			return v_f;
+
+		float r = 1.0f - (float) Math.exp(queueParam_[0] * t * t);
+		return queueParam_[1] + (v_f - queueParam_[1]) * r;
+	}
+	/*
+	 * private int parseVariable(GenericVariable gv) { if
+	 * (Parameter.parseVariable(gv) == 0) return 0;
+	 *
+	 * String token = compact(gv.name());
+	 *
+	 * if (isEqual(token, "ETCRate")) { etcRate_ = gv.element(); } else if
+	 * (isEqual(token, "HOVRate")) { hovRate_ = gv.element();
+	 *
+	 * } else if (isEqual(token, "VehicleClasses")) { return
+	 * loadVehicleClassParas(gv);
+	 *
+	 * } else if (isEqual(token, "limitingParameters")) { return
+	 * loadLimitingParameters(gv);
+	 *
+	 * } else if (isEqual(token, "QueueDispatch")) { return
+	 * loadQueueDispatchParameters(gv);
+	 *
+	 * } else if (isEqual(token, "CellResponseLowerBound")) { rspLower_ =
+	 * gv.element(); rspLower_ *= lengthFactor_;
+	 *
+	 * } else if (isEqual(token, "CellResponseUpperBound")) { rspUpper_ =
+	 * gv.element(); rspUpper_ *= lengthFactor_;
+	 *
+	 * } else if (isEqual(token, "CellSplitGap")) { cellSplitGap_ =
+	 * gv.element(); cellSplitGap_ *= lengthFactor_;
+	 *
+	 * } else if (isEqual(token, "ChannelizeDistance")) { channelizeDistance_ =
+	 * gv.element(); channelizeDistance_ *= lengthFactor_;
+	 *
+	 * } else if (isEqual(token, "FontSizes")) {
+	 *
+	 * return 0;
+	 *
+	 * } else { return 1; } return 0; } private int
+	 * loadVehicleClassParas(GenericVariable gv) { final int num = 3; float pdf,
+	 * cdf = 0.0f;
+	 *
+	 * nVehicleClasses_ = gv.nElements() / num; vehicleClassCDF_ = new float
+	 * [nVehicleClasses_]; vehicleLength_ = new float [nVehicleClasses_];
+	 * vehicleName_ = new String[nVehicleClasses_];
+	 *
+	 * float len;
+	 *
+	 * for (int i = 0; i < nVehicleClasses_; i ++) { vehicleName_[i] =
+	 * Copy((String)gv.element(i * num));//String处原来是const*char len =
+	 * gv.element(i * num + 1); vehicleLength_[i] = lengthFactor_ * len; pdf =
+	 * gv.element(i * num + 2); cdf += pdf; vehicleClassCDF_[i] = cdf;
+	 *
+	 * }
+	 *
+	 * if (!AproxEqual(cdf, (float)1.0)) { //未处理 cerr <<
+	 * "Error:: Sum of vehicle mix (" //未处理 <<
+	 * vehicleClassCDF_[nVehicleClasses_-1] //未处理 << ") does not equal to 1.0."
+	 * << endl; return -1; } return 0; } private int
+	 * loadLimitingParameters(GenericVariable gv) { int i, n = gv.nElements();
+	 * if (n != 3) { //未处理 cerr << "Error:: 3 parameters expected, " //未处理 << n
+	 * << " found." << endl; return -1; }
+	 *
+	 * limitingParam_ = new float [n]; for (i = 0; i < n; i ++) {
+	 * limitingParam_[i] = gv.element(i); }
+	 *
+	 * // 0 = min headway limitingParam_[0] *= lengthFactor_;
+	 *
+	 * // 1 = headway/speed slope (sec)
+	 *
+	 * // 2 = min speed limitingParam_[2] *= speedFactor_;
+	 *
+	 * return 0; }
+	 *
+	 * private int loadQueueDispatchParameters(GenericVariable gv) { int i, n =
+	 * gv.nElements(); if (n != 3) { //未处理 cerr <<
+	 * "Error:: 3 parameters expected, " //未处理 << n << " found." << endl; return
+	 * -1; }
+	 *
+	 * queueParam_ = new float [n]; for (i = 0; i < n; i ++) { queueParam_[i] =
+	 * gv.element(i); }
+	 *
+	 * // 0 = coef wrt time since queue start to dispatch
+	 *
+	 * if (queueParam_[0] > 0) { queueParam_[0] = -queueParam_[0]; }
+	 *
+	 * // 1 = queue releasing speed
+	 *
+	 * queueParam_[1] *= speedFactor_;
+	 *
+	 * // 2 = maximum time
+	 *
+	 * return 0; }
+	 */
+	// 未处理 extern MESO_Parameter * theParameter;
+}
