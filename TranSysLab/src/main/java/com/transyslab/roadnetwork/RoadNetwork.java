@@ -87,6 +87,11 @@ public class RoadNetwork {
 		totalLinkLength_ = 0;
 		totalLaneLength_ = 0;
 	}
+	public static RoadNetwork getInstance() {
+		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
+		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		return RoadNetworkPool.getInstance().getNetwork(threadid);
+	}
 	/*
 	 * public void setMaxCapacity(float mc){ maxCapacity_ = mc; } public float
 	 * getMaxCapacity(){ return maxCapacity_ ; }
@@ -924,10 +929,9 @@ public class RoadNetwork {
 			getLink(i).resetStatistics();
 		}
 	}
-	public static RoadNetwork getInstance() {
-		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return RoadNetworkPool.getInstance().getNetwork(threadid);
+	//保存每一帧在网车辆的位置信息
+	public void recordVehicleData(){
+		
 	}
 
 	// public void save_3d_state(int roll, int tm, const char *prefix = 0);

@@ -127,12 +127,12 @@ public class MesoVehicle extends Vehicle {
 	}
 
 	@Override
-	public Link link() // virtual
+	public Link link() 
 	{
 		return trafficCell_ != null ? trafficCell_.link() : (Link) null;
 	}
 	@Override
-	public Segment segment() // virtual
+	public Segment segment() 
 	{
 		return trafficCell_ != null ? trafficCell_.segment() : (Segment) null;
 	}

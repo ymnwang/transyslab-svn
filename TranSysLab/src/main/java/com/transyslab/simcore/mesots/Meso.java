@@ -12,7 +12,7 @@ import java.util.concurrent.FutureTask;
 
 import javax.swing.SwingUtilities;
 
-import com.transyslab.commons.renderer.JOGL_RenderContainer;
+import com.transyslab.commons.renderer.JOGLRenderContainer;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
@@ -118,7 +118,7 @@ public class Meso {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				JOGL_RenderContainer drawnetwork = new JOGL_RenderContainer(); // run the constructor
+				JOGLRenderContainer drawnetwork = new JOGLRenderContainer(); // run the constructor
 				drawnetwork.init();
 				drawnetwork.render();
 			}

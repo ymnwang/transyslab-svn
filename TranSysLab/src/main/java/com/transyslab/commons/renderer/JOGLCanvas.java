@@ -9,6 +9,11 @@ import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Point;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.RoadNetworkPool;
+import com.transyslab.roadnetwork.Segment;
+import com.transyslab.roadnetwork.VehicleData;
+import com.transyslab.roadnetwork.VehicleDataPool;
+
+import jogamp.graph.font.typecast.ot.table.VdmxTable;
 
 import static com.jogamp.opengl.GL.*; // GL constants
 import static com.jogamp.opengl.GL2ES1.GL_PERSPECTIVE_CORRECTION_HINT;
@@ -19,13 +24,13 @@ import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_PROJECTION;
 import java.awt.Dimension;
 import java.util.List;
 
-public class JOGL_Canvas extends GLCanvas implements GLEventListener {
+public class JOGLCanvas extends GLCanvas implements GLEventListener {
 	private GLU glu; // for the GL Utility
 	private RoadNetwork drawableNetwork_;
-	private JOGL_Camera cam_;
+	private JOGLCamera cam_;
 
 	/** Constructor to setup the GUI for this Component */
-	public JOGL_Canvas() {
+	public JOGLCanvas() {
 		this.addGLEventListener(this);
 		// 区别于从线程-编号哈希表获取对象
 		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
@@ -33,7 +38,7 @@ public class JOGL_Canvas extends GLCanvas implements GLEventListener {
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
 		this.setPreferredSize(new Dimension(640, 480));
 	}
-	public JOGL_Canvas(int width, int height) {
+	public JOGLCanvas(int width, int height) {
 		this.addGLEventListener(this);
 		// 区别于从线程-编号哈希表获取对象
 		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
@@ -41,7 +46,7 @@ public class JOGL_Canvas extends GLCanvas implements GLEventListener {
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
 		this.setPreferredSize(new Dimension(width, height));
 	}
-	public void setCamera(JOGL_Camera cam) {
+	public void setCamera(JOGLCamera cam) {
 		cam_ = cam;
 	}
 
@@ -60,7 +65,7 @@ public class JOGL_Canvas extends GLCanvas implements GLEventListener {
 		gl.glMatrixMode(GL_PROJECTION);
 		gl.glLoadIdentity();
 		float widthHeightRatio = (float) getWidth() / (float) getHeight();
-		glu.gluPerspective(45, widthHeightRatio, 0.1, 1000);
+		glu.gluPerspective(45, widthHeightRatio, 0.1, 10000);
 		// YYL end
 		gl.glClearDepth(1.0f); // set clear depth value to farthest
 		gl.glEnable(GL_DEPTH_TEST); // enables depth testing
@@ -93,7 +98,7 @@ public class JOGL_Canvas extends GLCanvas implements GLEventListener {
 		// Setup perspective projection, with aspect ratio matches viewport
 		gl.glMatrixMode(GL_PROJECTION); // choose projection matrix
 		gl.glLoadIdentity(); // reset projection matrix
-		glu.gluPerspective(45.0, aspect, 0.1, 1000.0); // fovy, aspect, zNear,
+		glu.gluPerspective(45.0, aspect, 0.1, 10000.0); // fovy, aspect, zNear,
 														// zFar
 
 		// Enable the model-view transform
@@ -135,10 +140,29 @@ public class JOGL_Canvas extends GLCanvas implements GLEventListener {
 	public void scene(GL2 gl) {
 		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
 		Boundary tmpboundary;
+		Segment tmpsegment;
 		for (int i = 0; i < boundarys.size(); i++) {
 			tmpboundary = boundarys.get(i);
-			JOGL_DrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 5,
+			JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 5,
 					Constants.COLOR_WHITE);
 		}
+		for(int i=0;i<drawableNetwork_.nSegments();i++){
+			tmpsegment = drawableNetwork_.getSegment(i);
+			JOGLDrawShapes.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 5,
+					Constants.COLOR_WHITE);
+		}
+		while(!JOGLAnimationFrame.getFrameQueue().isEmpty()){
+			JOGLAnimationFrame frame = JOGLAnimationFrame.getFrameQueue().pollFirst();
+			
+			while(!frame.getVhcDataQueue().isEmpty()){
+				VehicleData vd = frame.getVehicleData();
+				JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(), 1, Constants.COLOR_BLUE);
+				//回收vehicledata
+				VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
+			}
+			//回收frame
+			JOGLFramePool.getFramePool().recycleFrame(frame);	
+		}
+		
 	}
 }

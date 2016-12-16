@@ -8,20 +8,20 @@ import java.awt.event.MouseWheelListener;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.glu.GLU;
 
-public class JOGL_Camera implements KeyListener, MouseListener, MouseWheelListener {
+public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListener {
 
 	private double sensitive_;
 	private double keyStep_;
 	private double mouseStep_;
 	private double[] eyePosition_ = {271, 614, 20};
 	private double[] targetPosition_ = {271, 614, 0};
-	public JOGL_Camera() {
+	public JOGLCamera() {
 		// 271, 614, 20, 271, 614, 0
 		// eyePosition_ = new double[3];
 		// targetPosition_ = new double[3];
 		keyStep_ = 1.0;
 		mouseStep_ = 1.0;
-		sensitive_ = 2.0;
+		sensitive_ = 20.0;
 
 	}
 	public double[] getEyePosition() {
@@ -34,14 +34,6 @@ public class JOGL_Camera implements KeyListener, MouseListener, MouseWheelListen
 
 	}
 	public void setCamera(GL2 gl, GLU glu) {
-
-		// glu.gluLookAt(eyex_, eyey_, eyez_, centerx_, centery_, centerz_, 0,
-		// 1, 0);
-
-		// Change back to model view matrix.
-		/*
-		 * gl.glMatrixMode(GL2.GL_MODELVIEW); gl.glLoadIdentity();
-		 */
 	}
 
 	@Override
@@ -95,21 +87,21 @@ public class JOGL_Camera implements KeyListener, MouseListener, MouseWheelListen
 			case KeyEvent.VK_SPACE :
 				break;
 			case KeyEvent.VK_UP :
-				eyePosition_[1] += 1.0;
-				targetPosition_[1] += 1.0;
+				eyePosition_[1] += sensitive_;
+				targetPosition_[1] += sensitive_;
 				System.out.println(eyePosition_[1]);
 				break;
 			case KeyEvent.VK_DOWN :
-				eyePosition_[1] -= 1.0;
-				targetPosition_[1] -= 1.0;
+				eyePosition_[1] -= sensitive_;
+				targetPosition_[1] -= sensitive_;
 				break;
 			case KeyEvent.VK_RIGHT :
-				eyePosition_[0] += 1.0;
-				targetPosition_[0] += 1.0;
+				eyePosition_[0] += sensitive_;
+				targetPosition_[0] += sensitive_;
 				break;
 			case KeyEvent.VK_LEFT :
-				eyePosition_[0] -= 1.0;
-				targetPosition_[0] -= 1.0;
+				eyePosition_[0] -= sensitive_;
+				targetPosition_[0] -= sensitive_;
 				break;
 		}
 

@@ -44,10 +44,6 @@ public abstract class SimulationEngine {
 	// Returns 0 if no error, negative if fatal error and positive
 	// if warning error
 
-	public int loadSimulationFiles() {
-		return 0;
-	}
-
 	public int canStart() {
 		if (master_ == null)
 			return 1;

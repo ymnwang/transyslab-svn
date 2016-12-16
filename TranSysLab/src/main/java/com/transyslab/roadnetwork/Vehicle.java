@@ -255,7 +255,7 @@ public class Vehicle extends CodedObject {
 	public int types() {
 		return type_;
 	}
-	public int type() {
+	public int getType() {
 		return type_ & Constants.VEHICLE_CLASS;
 	}
 	public int group() {
