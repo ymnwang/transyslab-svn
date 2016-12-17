@@ -152,7 +152,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 					Constants.COLOR_WHITE);
 		}
 		while(!JOGLAnimationFrame.getFrameQueue().isEmpty()){
-			JOGLAnimationFrame frame = JOGLAnimationFrame.getFrameQueue().pollFirst();
+			JOGLAnimationFrame frame = JOGLAnimationFrame.getFrameQueue().poll();
 			
 			while(!frame.getVhcDataQueue().isEmpty()){
 				VehicleData vd = frame.getVehicleData();

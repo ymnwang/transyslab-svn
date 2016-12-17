@@ -115,14 +115,14 @@ public class Meso {
 		}
 		endtime[0] = System.currentTimeMillis();
 		System.out.println("引擎初始化所需的运行时间：" + (endtime[0] - begintime) + "ms");
-		SwingUtilities.invokeLater(new Runnable() {
+/*		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				JOGLRenderContainer drawnetwork = new JOGLRenderContainer(); // run the constructor
 				drawnetwork.init();
 				drawnetwork.render();
 			}
-		});
+		});*/
 		int runtimes = 1;
 		while (runtimes <= 1) {
 			CyclicBarrier barrier = new CyclicBarrier(Constants.THREAD_NUM + 1);

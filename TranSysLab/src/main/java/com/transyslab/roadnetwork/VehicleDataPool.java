@@ -1,14 +1,14 @@
 package com.transyslab.roadnetwork;
 
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class VehicleDataPool {
 	private static VehicleDataPool vhcDataPool_;
 	private int nRows_;
-	private LinkedList<VehicleData> recycleList_;
+	private LinkedBlockingQueue<VehicleData> recycleList_;
 	
 	private VehicleDataPool(){
-		recycleList_ = new LinkedList<VehicleData>();
+		recycleList_ = new LinkedBlockingQueue<VehicleData>();
 		nRows_ = 0;
 	}
 	
@@ -19,7 +19,7 @@ public class VehicleDataPool {
 	}
 	public void recycleVehicleData(VehicleData vd){
 		vd.clean();
-		recycleList_.offerLast(vd);
+		recycleList_.offer(vd);
 	}
 	public VehicleData getVehicleData() /* get a vehicle from the list */
 	{
@@ -30,7 +30,7 @@ public class VehicleDataPool {
 			nRows_++;
 		}
 		else { // get head from the list
-			vd = recycleList_.pollFirst();
+			vd = recycleList_.poll();
 		}
 		return vd;
 	}

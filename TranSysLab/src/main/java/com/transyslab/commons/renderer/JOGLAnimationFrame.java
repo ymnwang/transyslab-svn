@@ -1,23 +1,24 @@
 package com.transyslab.commons.renderer;
 
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import com.transyslab.roadnetwork.VehicleData;
 
 public class JOGLAnimationFrame{
 	private int frameID_;
-	private LinkedList<VehicleData> vhcDataQueue_;
+	private LinkedBlockingQueue<VehicleData> vhcDataQueue_;
 	
-	private static LinkedList<JOGLAnimationFrame> animationFrameQueue_;
-	public static LinkedList<JOGLAnimationFrame> getFrameQueue(){
+	private static LinkedBlockingQueue<JOGLAnimationFrame> animationFrameQueue_;
+	public static LinkedBlockingQueue<JOGLAnimationFrame> getFrameQueue(){
 		if(animationFrameQueue_==null)
-			animationFrameQueue_ = new LinkedList<JOGLAnimationFrame>();
+			animationFrameQueue_ = new LinkedBlockingQueue<JOGLAnimationFrame>();
 		return animationFrameQueue_;
 	}
 	
 	public JOGLAnimationFrame(){
-		vhcDataQueue_ = new LinkedList<VehicleData>();
+		vhcDataQueue_ = new LinkedBlockingQueue<VehicleData>();
 	}
-	public LinkedList<VehicleData> getVhcDataQueue(){
+	public LinkedBlockingQueue<VehicleData> getVhcDataQueue(){
 		return vhcDataQueue_;
 	}
 	public void setFrameID(int id){
@@ -28,11 +29,11 @@ public class JOGLAnimationFrame{
 	}
 	public void addVehicleData(VehicleData vd){
 		//从尾部插入对象
-		vhcDataQueue_.offerLast(vd);
+		vhcDataQueue_.offer(vd);
 	}
 	public VehicleData getVehicleData(){
 		//从头部移除对象
-		return vhcDataQueue_.pollFirst();
+		return vhcDataQueue_.poll();
 	}
 	public void clean(){
 		frameID_ = 0;

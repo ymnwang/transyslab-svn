@@ -441,7 +441,8 @@ public class MesoEngine extends SimulationEngine {
 		 * (IOException e) { // TODO 自动生成的 catch 块 e.printStackTrace(); }
 		 */
 		//当前帧在网车辆的位置信息存储到framequeue
-		meso_network.recordVehicleData();
+		if(MesoVehicle.nVehicles()!=0)
+			meso_network.recordVehicleData();
 		// Advance the clock
 		
 		if(firstEntry!=0){

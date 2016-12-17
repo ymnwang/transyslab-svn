@@ -351,8 +351,8 @@ public class MesoNetwork extends RoadNetwork {
 				tc = tc.trailing();
 			}
 		}
-		//当前帧所有在网车辆遍历完成后，将frame插入待渲染队列
-		JOGLAnimationFrame.getFrameQueue().offerLast(frame);
+		//在网车辆数>0,当前帧所有在网车辆遍历完成后，将frame插入待渲染队列
+		JOGLAnimationFrame.getFrameQueue().offer(frame);
 	}
 
 }

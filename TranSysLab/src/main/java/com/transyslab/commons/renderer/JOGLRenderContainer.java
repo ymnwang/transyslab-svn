@@ -14,7 +14,7 @@ public class JOGLRenderContainer extends JFrame {
 	public JOGLRenderContainer() {
 		// Create the OpenGL rendering canvas
 		canvas_ = new JOGLCanvas();
-		fps_ = 30;
+		fps_ = 10;
 	}
 	public JOGLRenderContainer(int width, int height, int fps) {
 		// Create the OpenGL rendering canvas
@@ -61,5 +61,6 @@ public class JOGLRenderContainer extends JFrame {
 	}
 	public void render() {
 		animator_.start(); // start the animation loop
+//		canvas_.display();
 	}
 }

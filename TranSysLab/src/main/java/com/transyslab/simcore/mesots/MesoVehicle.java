@@ -5,6 +5,7 @@ package com.transyslab.simcore.mesots;
 
 import java.util.HashMap;
 import java.util.ListIterator;
+import java.util.function.IntPredicate;
 
 import com.transyslab.commons.tools.Random;
 import com.transyslab.commons.tools.SimulationClock;
@@ -33,9 +34,8 @@ public class MesoVehicle extends Vehicle {
 
 	protected float spaceInSegment_; // update each time it enter a new segment
 
-	protected static int[] stepCounter_ = new int[Constants.THREAD_NUM]; // iteration
-																			// counter
-
+	protected static int[] stepCounter_ = new int[Constants.THREAD_NUM]; // iteration counter
+	protected static int[] vhcCounter_ = new int[Constants.THREAD_NUM];  	//在网车辆数统计
 	public MesoVehicle() {
 		trafficCell_ = null;
 		leading_ = null;
@@ -54,65 +54,11 @@ public class MesoVehicle extends Vehicle {
 	public void unsetFlag(int s) {
 		flags_ &= ~s;
 	}
-	/*
-	 * public int load(Reader &is, int queue) { int idx; // lane index int ori;
-	 * // origin int des; // destination int p, k; // path
-	 *
-	 * flags_ = 0;
-	 *
-	 * //未处理 is >> code_ >> type_ //未处理 >> ori >> des //未处理 >> departTime_ //未处理
-	 * >> mileage_ //未处理 >> p >> k //未处理 >> timeEntersLink_ //未处理 >> idx >>
-	 * distance_;
-	 *
-	 * RN_Node o = new RN_Node(); RN_Node d = new RN_Node();
-	 *
-	 * if ((o = theNetwork.node(ori)) == null || (d = theNetwork.node(des)) ==
-	 * null) {
-	 *
-	 * return load_error("Origin and/or destination", is);
-	 *
-	 * }
-	 *
-	 * if (p >= 0) { // path specified setPath(thePathTable.path(p), k); } else
-	 * { // no path specified setPath(null, k); // k must be link index }
-	 *
-	 * MESO_Segment ps = new MESO_Segment();
-	 *
-	 * if (idx >= 0) { if (idx < theNetwork.nLanes()) { // position specified
-	 * RN_Lane pl = theNetwork.lane(idx); ps = (MESO_Segment ) pl.segment(); }
-	 * else { return load_error("lane index", is); } } else { // yet to enter
-	 * the network ps = null; }
-	 *
-	 * if (queue) { // Vehicles in the pretrip queue
-	 *
-	 * if (ps) { nextLink_ = ps.link(); } else if (nextLink_) { ps =
-	 * (MESO_Segment)nextLink_.startSegment(); } else { // failed to be set by
-	 * setPath() above return load_error("Entry link", is); }
-	 *
-	 * // append to the end of the queue
-	 *
-	 * ((MESO_Link )nextLink_).queue(this);
-	 *
-	 * currentSpeed_ = ps.maxSpeed(); distance_ = -currentSpeed_ *
-	 * theSimulationClock.stepSize();
-	 *
-	 * } else { // vehicles on the road if (ps) { currentSpeed_ = ps.maxSpeed();
-	 * ps.insert(this); theStatus.nActive(1); } else { return
-	 * load_error("segment", is); } }
-	 *
-	 * OD_Pair odpair(o, d); PtrOD_Pair odptr(&odpair); OdPairSetType.iterator i
-	 * = theOdPairs.find(odptr); if (i == theOdPairs.end()) { od_ = new
-	 * OD_Pair(odpair); theOdPairs.insert(od_); } else { od_ = (i).p(); } code_
-	 * = -code_; // reverse the sign to avoid conflict
-	 *
-	 * return 0; }
-	 */
-	/*
-	 * public int load_error(const char *, Reader &is) { //未处理 cerr <<
-	 * "Warning:: " << msg << " of vehicle <" //未处理 << code_ << "> parsed at <"
-	 * //未处理 << is.name() << ":" << is.line_number() //未处理 <<
-	 * "> invalid. Droped." << endl; return -1; }
-	 */
+	public static int nVehicles(){
+		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
+		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		return vhcCounter_[threadid];
+	}
 
 	public MesoLink getNextMesoLink() {
 		return (MesoLink) nextLink_;
@@ -322,8 +268,10 @@ public class MesoVehicle extends Vehicle {
 		OnRouteChoosePath(nextLink_.getDnNode());
 		updateSpeed();
 
-		// theStatus.nActive(1);
-
+		//统计在网车辆数
+		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
+		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		vhcCounter_[threadid]++;
 		return 1;
 	}
 	public void appendTo(MesoTrafficCell cell) {
@@ -624,8 +572,11 @@ public class MesoVehicle extends Vehicle {
 
 		trafficCell_.remove(this);
 		MesoVehicleList.getInstance().recycle(this);
-		// theStatus.nActive(-1);
-		// theStatus.nArrived(1);
+		//统计在网车辆数
+		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
+		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		vhcCounter_[threadid]--;
+
 	}
 	/*
 	 * public void report() { MESO_Parameter p = theParameter;

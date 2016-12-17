@@ -1,9 +1,9 @@
 package com.transyslab.commons.renderer;
 
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class JOGLFramePool {
-	private LinkedList<JOGLAnimationFrame> frameList_;
+	private LinkedBlockingQueue<JOGLAnimationFrame> frameList_;
 	private int nFrames_;
 	private static JOGLFramePool theFramePool_; 
 	
@@ -13,12 +13,12 @@ public class JOGLFramePool {
 		return theFramePool_;
 	}
 	private JOGLFramePool(){
-		frameList_ = new LinkedList<JOGLAnimationFrame>();
+		frameList_ = new LinkedBlockingQueue<JOGLAnimationFrame>();
 		nFrames_ = 0;
 	}
 	public void recycleFrame(JOGLAnimationFrame frame){
 		frame.clean();
-		frameList_.offerLast(frame);
+		frameList_.offer(frame);
 	}
 	public JOGLAnimationFrame getFrame() /* get a vehicle from the list */
 	{
@@ -29,7 +29,7 @@ public class JOGLFramePool {
 			nFrames_++;
 		}
 		else { // get head from the list
-			frame = frameList_.pollFirst();
+			frame = frameList_.poll();
 		}
 		return frame;
 	}
