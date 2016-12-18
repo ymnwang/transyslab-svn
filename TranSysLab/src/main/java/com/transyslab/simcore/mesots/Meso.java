@@ -12,7 +12,10 @@ import java.util.concurrent.FutureTask;
 
 import javax.swing.SwingUtilities;
 
+import com.transyslab.commons.renderer.JOGLAnimationFrame;
+import com.transyslab.commons.renderer.JOGLFrameQueue;
 import com.transyslab.commons.renderer.JOGLRenderContainer;
+import com.transyslab.commons.tools.DoubleBufferedQueue;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
@@ -115,14 +118,22 @@ public class Meso {
 		}
 		endtime[0] = System.currentTimeMillis();
 		System.out.println("引擎初始化所需的运行时间：" + (endtime[0] - begintime) + "ms");
-/*		SwingUtilities.invokeLater(new Runnable() {
+		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				JOGLRenderContainer drawnetwork = new JOGLRenderContainer(); // run the constructor
 				drawnetwork.init();
 				drawnetwork.render();
 			}
-		});*/
+		});
+		JOGLFrameQueue.getInstance().initFrameQueue();
+		//延迟开始仿真任务
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		int runtimes = 1;
 		while (runtimes <= 1) {
 			CyclicBarrier barrier = new CyclicBarrier(Constants.THREAD_NUM + 1);

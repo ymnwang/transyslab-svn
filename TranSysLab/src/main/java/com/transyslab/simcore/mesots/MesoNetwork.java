@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.ListIterator;
 
 import com.transyslab.commons.renderer.JOGLAnimationFrame;
-import com.transyslab.commons.renderer.JOGLFramePool;
+import com.transyslab.commons.renderer.JOGLFrameQueue;
 import com.transyslab.commons.tools.Random;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
@@ -24,6 +24,7 @@ import com.transyslab.roadnetwork.VehicleDataPool;
 public class MesoNetwork extends RoadNetwork {
 	protected int[] permuteLink;
 	protected int nPermutedLinks;
+
 	public MesoNetwork() {
 	}
 
@@ -327,7 +328,7 @@ public class MesoNetwork extends RoadNetwork {
 		MesoVehicle vhc;
 		VehicleData vd;
 		//从对象池中获取frame对象
-		JOGLAnimationFrame frame = JOGLFramePool.getFramePool().getFrame();
+//		JOGLAnimationFrame frame = JOGLFramePool.getFramePool().getFrame();
 		ListIterator<Segment> i = segments_.listIterator();
 		//遍历segment
 		while (i.hasNext()) {
@@ -343,7 +344,12 @@ public class MesoNetwork extends RoadNetwork {
 					//记录车辆信息
 					vd.init(vhc);
 					//将vehicledata插入frame
-					frame.addVehicleData(vd);
+					try {
+						JOGLFrameQueue.getInstance().offer(vd, MesoVehicle.nVehicles());
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					//下一辆车
 					vhc = vhc.trailing();
 				}
@@ -351,8 +357,6 @@ public class MesoNetwork extends RoadNetwork {
 				tc = tc.trailing();
 			}
 		}
-		//在网车辆数>0,当前帧所有在网车辆遍历完成后，将frame插入待渲染队列
-		JOGLAnimationFrame.getFrameQueue().offer(frame);
 	}
 
 }

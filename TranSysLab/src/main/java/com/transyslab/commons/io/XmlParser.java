@@ -154,7 +154,7 @@ public class XmlParser {
 			}
 			MesoNetwork.getInstance().addLaneConnector(tempupl, tempdnl);
 		}
-		if (node.getName() == "B") {
+		if (node.getName() == "Boundary") {
 			for (Attribute attr : list) {
 				// System.out.println(attr.getText() + "-----" + attr.getName()
 				// + "---" + attr.getValue());

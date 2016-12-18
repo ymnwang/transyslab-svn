@@ -194,7 +194,6 @@ public class MesoVehicle extends Vehicle {
 	public void initialize() // virtual, called by init()
 	{
 		flags_ = 0;
-		// countFlags_ = true;
 		SensorIDFlag_ = -100000;
 		int prefix = type_ & (~Constants.VEHICLE_CLASS); // prefix, e.g., HOV
 		int vehicle_class = (type_ & Constants.VEHICLE_CLASS);
@@ -271,7 +270,9 @@ public class MesoVehicle extends Vehicle {
 		//统计在网车辆数
 		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		//进入路网车辆，计数+1
 		vhcCounter_[threadid]++;
+		
 		return 1;
 	}
 	public void appendTo(MesoTrafficCell cell) {
@@ -561,20 +562,14 @@ public class MesoVehicle extends Vehicle {
 
 	// Called when a vehicle arrived its desitination
 
-	public void removeFromNetwork() {/*
-										 * if (MESO.theEngine.chosenOutput(
-										 * OUTPUT_VEHICLE_PATH_RECORDS)) {
-										 * writePathRecord(theFileManager.
-										 * osPathRecord()); }
-										 *
-										 * report();
-										 */
+	public void removeFromNetwork() {
 
 		trafficCell_.remove(this);
 		MesoVehicleList.getInstance().recycle(this);
 		//统计在网车辆数
 		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		//离开路网车辆，计数-1
 		vhcCounter_[threadid]--;
 
 	}

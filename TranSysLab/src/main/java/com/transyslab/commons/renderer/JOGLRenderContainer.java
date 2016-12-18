@@ -61,6 +61,5 @@ public class JOGLRenderContainer extends JFrame {
 	}
 	public void render() {
 		animator_.start(); // start the animation loop
-//		canvas_.display();
 	}
 }

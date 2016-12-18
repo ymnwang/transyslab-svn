@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import com.transyslab.commons.renderer.JOGLAnimationFrame;
-import com.transyslab.commons.renderer.JOGLFramePool;
 import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.PSO;
 import com.transyslab.commons.tools.SimulationClock;
@@ -353,7 +352,7 @@ public class MesoEngine extends SimulationEngine {
 		double now = SimulationClock.getInstance().getCurrentTime();
 
 		if (firstEntry != 0) {
-			
+			firstEntry = 0;
 
 			// This block is called only once just before the simulation gets
 			// started.
@@ -445,16 +444,7 @@ public class MesoEngine extends SimulationEngine {
 			meso_network.recordVehicleData();
 		// Advance the clock
 		
-		if(firstEntry!=0){
-			firstEntry = 0;
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
+//		System.out.println(MesoVehicle.nVehicles());
 		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
 		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {
 			// HashMap<String, Integer> hm =

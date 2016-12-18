@@ -1,9 +1,14 @@
 package com.transyslab.roadnetwork;
 
+//车辆轨迹数据
 public class VehicleData {
+	//车辆id
 	protected int vehicleID_;
+	//车辆类型
 	protected int vehicleType_;
+	//车辆长度
 	protected float vehicleLength_;
+	//车辆沿segment的坐标位置
 	protected double vhcLocationX_;
 	protected double vhcLocationY_;
 	

@@ -5,23 +5,24 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.glu.GLU;
+import com.transyslab.roadnetwork.Point;
 
 public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListener {
 
-	private double sensitive_;
+	private double mouseSensitive_;
+	private double keySensitive_;
 	private double keyStep_;
 	private double mouseStep_;
-	private double[] eyePosition_ = {271, 614, 20};
+	private double[] eyePosition_ = {271, 614, 1000};
 	private double[] targetPosition_ = {271, 614, 0};
 	public JOGLCamera() {
-		// 271, 614, 20, 271, 614, 0
-		// eyePosition_ = new double[3];
-		// targetPosition_ = new double[3];
 		keyStep_ = 1.0;
 		mouseStep_ = 1.0;
-		sensitive_ = 20.0;
+		mouseSensitive_ = 5.0;
+		keySensitive_ = 5.0;
 
 	}
 	public double[] getEyePosition() {
@@ -30,10 +31,10 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 	public double[] getTargetPosition() {
 		return targetPosition_;
 	}
-	public void setCamPosition() {
-
-	}
-	public void setCamera(GL2 gl, GLU glu) {
+	public void initCamera(Point p, double zHeight) {
+		targetPosition_[0] = eyePosition_[0] = p.getLocationX();
+		targetPosition_[1] = eyePosition_[1] = p.getLocationY();
+		targetPosition_[2] = eyePosition_[2] = zHeight;
 	}
 
 	@Override
@@ -77,31 +78,30 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 		// TODO 自动生成的方法存根
 		switch (e.getKeyCode()) {
 			case KeyEvent.VK_PAGE_UP :
-				keyStep_ += sensitive_;
-				mouseStep_ += sensitive_;
+				keyStep_ += keySensitive_;
+				mouseStep_ += mouseSensitive_;
 				break;
 			case KeyEvent.VK_PAGE_DOWN :
-				keyStep_ -= sensitive_;
-				mouseStep_ -= sensitive_;
+				keyStep_ -= keySensitive_;
+				mouseStep_ -= mouseSensitive_;
 				break;
 			case KeyEvent.VK_SPACE :
 				break;
 			case KeyEvent.VK_UP :
-				eyePosition_[1] += sensitive_;
-				targetPosition_[1] += sensitive_;
-				System.out.println(eyePosition_[1]);
+				eyePosition_[1] += keyStep_;
+				targetPosition_[1] += keyStep_;
 				break;
 			case KeyEvent.VK_DOWN :
-				eyePosition_[1] -= sensitive_;
-				targetPosition_[1] -= sensitive_;
+				eyePosition_[1] -= keyStep_;
+				targetPosition_[1] -= keyStep_;
 				break;
 			case KeyEvent.VK_RIGHT :
-				eyePosition_[0] += sensitive_;
-				targetPosition_[0] += sensitive_;
+				eyePosition_[0] += keyStep_;
+				targetPosition_[0] += keyStep_;
 				break;
 			case KeyEvent.VK_LEFT :
-				eyePosition_[0] -= sensitive_;
-				targetPosition_[0] -= sensitive_;
+				eyePosition_[0] -= keyStep_;
+				targetPosition_[0] -= keyStep_;
 				break;
 		}
 
@@ -121,6 +121,8 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 			eyePosition_[2] += mouseStep_;
 		if (count < 0)
 			eyePosition_[2] -= mouseStep_;
+		if(eyePosition_[2]<0)
+			eyePosition_[2] = 0;
 	}
 
 }

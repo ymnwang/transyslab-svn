@@ -77,6 +77,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 									// lighting
 
 		// ----- Your OpenGL initialization code here -----
+//		Point center = drawableNetwork_.getWorldSpace().getCenter();
+//		cam_.initCamera(center, 200);
 
 	}
 
@@ -113,11 +115,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 	public void display(GLAutoDrawable drawable) {
 		GL2 gl = drawable.getGL().getGL2(); // get the OpenGL 2 graphics context
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear color
-																// and depth
-																// buffers
+																// and depth  buffers
+													
 		gl.glMatrixMode(GL_MODELVIEW);
 		gl.glLoadIdentity(); // reset the model-view matrix
-		Point center = drawableNetwork_.getWorldSpace().getCenter();
+
 		// glu.gluLookAt(center.getX(), center.getY(), 20, center.getX(),
 		// center.getY(), 0, 0, 1, 0);
 
@@ -127,6 +129,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		// ----- Your OpenGL rendering code here (render a white triangle for
 		// testing) -----
 		scene(gl);
+
 
 	}
 
@@ -141,28 +144,28 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
 		Boundary tmpboundary;
 		Segment tmpsegment;
+		JOGLAnimationFrame frame;
 		for (int i = 0; i < boundarys.size(); i++) {
 			tmpboundary = boundarys.get(i);
 			JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 5,
 					Constants.COLOR_WHITE);
-		}
+		}/*
 		for(int i=0;i<drawableNetwork_.nSegments();i++){
 			tmpsegment = drawableNetwork_.getSegment(i);
 			JOGLDrawShapes.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 5,
 					Constants.COLOR_WHITE);
-		}
-		while(!JOGLAnimationFrame.getFrameQueue().isEmpty()){
-			JOGLAnimationFrame frame = JOGLAnimationFrame.getFrameQueue().poll();
+		}*/
+		frame =JOGLFrameQueue.getInstance().poll();
+		if(frame!=null){
 			
 			while(!frame.getVhcDataQueue().isEmpty()){
 				VehicleData vd = frame.getVehicleData();
-				JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(), 1, Constants.COLOR_BLUE);
+				JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(), 2, Constants.COLOR_BLUE);
 				//回收vehicledata
 				VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
 			}
-			//回收frame
-			JOGLFramePool.getFramePool().recycleFrame(frame);	
-		}
-		
+			//清空frame
+			frame.clean();
+		}		
 	}
 }
