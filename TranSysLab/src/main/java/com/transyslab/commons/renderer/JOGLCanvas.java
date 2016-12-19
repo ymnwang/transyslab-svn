@@ -149,18 +149,18 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 			tmpboundary = boundarys.get(i);
 			JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 5,
 					Constants.COLOR_WHITE);
-		}/*
+		}
 		for(int i=0;i<drawableNetwork_.nSegments();i++){
 			tmpsegment = drawableNetwork_.getSegment(i);
 			JOGLDrawShapes.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 5,
 					Constants.COLOR_WHITE);
-		}*/
+		}
 		frame =JOGLFrameQueue.getInstance().poll();
 		if(frame!=null){
 			
 			while(!frame.getVhcDataQueue().isEmpty()){
 				VehicleData vd = frame.getVehicleData();
-				JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(), 2, Constants.COLOR_BLUE);
+				JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),10, Constants.COLOR_BLUE);
 				//»ØÊÕvehicledata
 				VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
 			}

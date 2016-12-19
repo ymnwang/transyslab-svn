@@ -150,7 +150,7 @@ public class JOGLFrameQueue {
             	notFull_.await();
             //插入数据
         	writeArray_[writeArrayTP_].addVehicleData(vd);
-        	//确保写完每一帧的车辆位置信息
+        	//确保写完每一帧所有车辆的位置信息
         	if(writeArray_[writeArrayTP_].getVhcDataQueue().size() == vhcnum){
         		//索引跳到下一帧
                 ++writeArrayTP_;
@@ -164,14 +164,18 @@ public class JOGLFrameQueue {
         }  
     }
     public JOGLAnimationFrame poll(){
-    	//可读队列不为空
-        if(readCount_>0)  
-        {  
-            return extract();  
+    	//先判断可读队列是否为空
+        if(readCount_<=0)  
+        {
+        	//交换队列失败则返回空帧
+        	if(queueSwitch()) 
+        		return extract();
+        	else return null;  
         }
-        //可读队列为空则尝试交换队列
-        else 
-        	queueSwitch();
-        return null;  
+        //可读队列不为空则读取数据
+        //注意：这里不能用else，因为交换队列之后readCount_>0
+        if(readCount_>0) 
+        	return extract();
+        return null;
     }  
 }
