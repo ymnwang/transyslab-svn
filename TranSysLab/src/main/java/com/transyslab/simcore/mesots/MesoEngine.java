@@ -6,6 +6,7 @@ package com.transyslab.simcore.mesots;
 import java.io.IOException;
 import java.util.HashMap;
 
+import com.transyslab.commons.renderer.JOGLAnimationFrame;
 import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.PSO;
 import com.transyslab.commons.tools.SimulationClock;
@@ -295,7 +296,6 @@ public class MesoEngine extends SimulationEngine {
 	public void quit(int state) {
 
 	}
-	@Override
 	public int loadSimulationFiles() {
 
 		// 初始化SimulationClock,此处赋开始时间，结束时间
@@ -439,8 +439,12 @@ public class MesoEngine extends SimulationEngine {
 		 * try { MESO_Network.getInstance().outputVhcPosition(); } catch
 		 * (IOException e) { // TODO 自动生成的 catch 块 e.printStackTrace(); }
 		 */
+		//当前帧在网车辆的位置信息存储到framequeue
+		if(MesoVehicle.nVehicles()!=0)
+			meso_network.recordVehicleData();
 		// Advance the clock
-
+		
+//		System.out.println(MesoVehicle.nVehicles());
 		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
 		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {
 			// HashMap<String, Integer> hm =

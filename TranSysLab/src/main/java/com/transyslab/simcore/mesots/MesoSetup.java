@@ -32,7 +32,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\network"+s+".xml";
-		XmlParser.parseNetworkXml("E:\\MesoInput_Cases\\jogltest\\network.xml");
+		XmlParser.parseNetworkXml("src/main/resources/demo/network.xml");
 		/*
 		 * if (MESO_Network.getInstance()!=null) { // if (ToolKit::verbose()) {
 		 * // cout << "Unloading <" << theNetwork->name() // << ">" << endl; //
@@ -50,7 +50,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\pathtable"+s+".xml";
-		XmlParser.parsePathTableXml("E:\\MesoInput_Cases\\pathtable.xml");
+		XmlParser.parsePathTableXml("src/main/resources/demo/pathtable.xml");
 		/*
 		 * if (thePathTable) { delete thePathTable; thePathTable = NULL; } if
 		 * (ToolKit::isValidInputFilename(RN_PathTable::name())) { thePathTable
@@ -69,7 +69,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\demand"+s+".xml";
-		XmlParser.parseODXml("E:\\MesoInput_Cases\\demand1-21.xml", tarid);
+		XmlParser.parseODXml("src/main/resources/demo/demand1-21.xml", tarid);
 		/*
 		 * if (theODTable) { delete (MESO_ODTable *)theODTable; theODTable =
 		 * NULL; }
@@ -99,10 +99,10 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\dettime"+s+".xml";
-		XmlParser.parseDetTimeXml("E:\\MesoInput_Cases\\dettime.xml", realtime);
+		XmlParser.parseDetTimeXml("src/main/resources/demo/dettime.xml", realtime);
 	}
 	public static void ParseSensorTables() {
-		XmlParser.parseSensorXml("E:\\MesoInput_Cases\\sensor.xml");
+		XmlParser.parseSensorXml("src/main/resources/demo/sensor.xml");
 	}
 	public static void SetupMiscellaneous() {
 		// Assign the pointers to control and surveillance devices in

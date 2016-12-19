@@ -11,8 +11,8 @@ import java.util.HashMap;
  */
 public class MesoVehicleList {
 
-	private MesoVehicle head_ /* = new MESO_Vehicle() */;
-	private MesoVehicle tail_ /* = new MESO_Vehicle() */;
+	private MesoVehicle head_ ;
+	private MesoVehicle tail_ ;
 	private int nVehicles_; /* number of vehicles */
 	private int nPeakVehicles_; /* max number of vehicles */
 

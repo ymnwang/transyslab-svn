@@ -53,8 +53,8 @@ public class WorldSpace {
 				Math.max(northEastPnt.getLocationY(), point.getLocationY()));
 	}
 	public void createWorldSpace() {
-		width = (northEastPnt.getLocationX() - southWestPnt.getLocationX()) * Parameter.lengthFactor();
-		height = (northEastPnt.getLocationY() - southWestPnt.getLocationY()) * Parameter.lengthFactor();
+		width = (northEastPnt.getLocationX() - southWestPnt.getLocationX()); //* Parameter.lengthFactor();
+		height = (northEastPnt.getLocationY() - southWestPnt.getLocationY()); //* Parameter.lengthFactor();
 		// 坐标平移，将sw极点平移到坐标系原点，即ll_pnt坐标为(0,0)
 		lowLeftPnt = worldSpacePoint(southWestPnt);
 		topRightPnt = worldSpacePoint(northEastPnt);
@@ -84,8 +84,8 @@ public class WorldSpace {
 		return worldSpacePoint(p.getLocationX(), p.getLocationY());
 	}
 	public Point worldSpacePoint(double x, double y) {
-		return new Point((x - southWestPnt.getLocationX()) * Parameter.lengthFactor(),
-				(y - southWestPnt.getLocationY()) * Parameter.lengthFactor());
+		return new Point((x - southWestPnt.getLocationX()) /* * Parameter.lengthFactor()*/,
+				(y - southWestPnt.getLocationY())  /* * Parameter.lengthFactor()*/);
 
 	}
 
