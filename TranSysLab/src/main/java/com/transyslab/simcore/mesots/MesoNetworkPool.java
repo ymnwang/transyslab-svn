@@ -11,6 +11,7 @@ import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.LinkTimes;
 import com.transyslab.roadnetwork.PathTable;
 import com.transyslab.roadnetwork.RoadNetworkPool;
+import com.transyslab.roadnetwork.VehicleTable;
 
 /**
  * @author yali
@@ -26,6 +27,9 @@ public class MesoNetworkPool extends RoadNetworkPool {
 	private MesoODTable[] odTableArray_;
 	private int[] threadIndex_;
 	private int threadNum_;
+	//外部车辆数据
+	private MesoVehicleTable[] vhcTableArray_;
+	
 	private HashMap<String, Integer> threadMap_;
 
 	private static MesoNetworkPool theInfoArrays;
@@ -52,6 +56,7 @@ public class MesoNetworkPool extends RoadNetworkPool {
 		pathTableArray_ = new PathTable[threadNum_];
 		linkTimesArray_ = new LinkTimes[threadNum_];
 		randomArray_ = new Vector<Vector<Random>>();
+		vhcTableArray_ = new MesoVehicleTable[threadNum_];
 		// 实例化数组内的对象
 		initArrays();
 	}
@@ -68,6 +73,7 @@ public class MesoNetworkPool extends RoadNetworkPool {
 			cellListArray_[i] = new MesoCellList();
 			parameterArray_[i] = new MesoParameter();
 			simClockArray_[i] = new SimulationClock();
+			vhcTableArray_[i] = new MesoVehicleTable();
 			randomArray_.add(new Vector<Random>());
 			Random.create(3, randomArray_.get(i));
 		}
@@ -109,6 +115,10 @@ public class MesoNetworkPool extends RoadNetworkPool {
 	}
 	public int getThreadNum() {
 		return threadNum_;
+	}
+	@Override
+	public MesoVehicleTable getVhcTable(int i) {
+		return vhcTableArray_[i];
 	}
 
 }

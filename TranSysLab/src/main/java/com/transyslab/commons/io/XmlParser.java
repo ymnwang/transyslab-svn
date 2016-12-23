@@ -23,6 +23,7 @@ import com.transyslab.roadnetwork.Path;
 import com.transyslab.roadnetwork.PathTable;
 import com.transyslab.roadnetwork.Sensor;
 import com.transyslab.roadnetwork.SurvStation;
+import com.transyslab.roadnetwork.VehicleTable;
 import com.transyslab.simcore.mesots.MesoLane;
 import com.transyslab.simcore.mesots.MesoLink;
 import com.transyslab.simcore.mesots.MesoNetwork;
@@ -30,6 +31,9 @@ import com.transyslab.simcore.mesots.MesoNode;
 import com.transyslab.simcore.mesots.MesoODCell;
 import com.transyslab.simcore.mesots.MesoODTable;
 import com.transyslab.simcore.mesots.MesoSegment;
+import com.transyslab.simcore.mesots.MesoVehicle;
+import com.transyslab.simcore.mesots.MesoVehicleList;
+import com.transyslab.simcore.mesots.MesoVehicleTable;
 
 /**
  * @author yali
@@ -477,6 +481,88 @@ public class XmlParser {
 			// 对子节点进行遍历
 			listSensorNodes(e);
 		}
+	}
+	public static void parseSnapshotXml(String filename, List<MesoVehicle> vhclist){
+		File inputXml=new File(filename); 
+		SAXReader saxReader = new SAXReader(); 
+		try { 
+		Document document = saxReader.read(inputXml); 
+		Element node = document.getRootElement();
+		listSnapshotNodes(node,vhclist);
+		} catch (DocumentException e) { 
+		System.out.println(e.getMessage()); 
+		} 
+	}
+	//注意：应先解析VehicleTable，得到od和path
+	public static void listSnapshotNodes(Element node, List<MesoVehicle> vhclist){
+		int vhcid=-1,type=-1;
+		float distance=0,length=0,departtime=0;
+		List<Element> rootchild = node.elements();
+		for(Element vehicleobj : rootchild){
+			List<Attribute> vehiclearr = vehicleobj.attributes();
+			for(Attribute vehicle: vehiclearr){
+				if(vehicle.getName()=="vhcID")
+					vhcid = Integer.parseInt(vehicle.getValue());
+				if(vehicle.getName()=="length")
+					length = Float.parseFloat(vehicle.getValue());
+				if(vehicle.getName()=="distance")
+					distance = Float.parseFloat(vehicle.getValue());
+				if(vehicle.getName()=="type")
+					type = Integer.parseInt(vehicle.getValue());
+				if(vehicle.getName()=="departtime")
+					departtime = Float.parseFloat(vehicle.getValue());
+			}
+			MesoVehicle tmp = MesoVehicleList.getInstance().recycle();
+			tmp.init(vhcid, type, length,distance,departtime);
+			vhclist.add(tmp);
+		}
+	}
+	public static void parseVehicleTable(String filename){
+		File inputXml=new File(filename); 
+		SAXReader saxReader = new SAXReader(); 
+		try { 
+		Document document = saxReader.read(inputXml); 
+		Element node = document.getRootElement();
+		listVhcTableNodes(node);
+		} catch (DocumentException e) { 
+		System.out.println(e.getMessage()); 
+		} 
+	}
+	public static void listVhcTableNodes(Element node){
+		int vhcid=-1,o=-1,d=-1,type=-1,pid=-1;
+		float length = 0, departtime=0;
+		List<Element> rootchild = node.elements();
+		for(Element tableobj:rootchild){
+			List<Attribute> vhctables = tableobj.attributes();
+			for(Attribute tableatt:vhctables){
+				if(tableatt.getName()=="o")
+					o = Integer.parseInt(tableatt.getValue());
+				if(tableatt.getName()=="d")
+					d = Integer.parseInt(tableatt.getValue());
+				if(tableatt.getName()=="pid")
+					pid = Integer.parseInt(tableatt.getValue());
+			}
+			MesoVehicleTable.getInstance().init(o, d, pid);
+			List<Element> vehiclelist = tableobj.elements();
+			for(Element vehicleobj : vehiclelist){
+				List<Attribute> vehiclearr = vehicleobj.attributes();
+				for(Attribute vehicle: vehiclearr){
+					if(vehicle.getName()=="vhcID")
+						vhcid = Integer.parseInt(vehicle.getValue());
+					if(vehicle.getName()=="length")
+						length = Float.parseFloat(vehicle.getValue());
+					if(vehicle.getName()=="type")
+						type = Integer.parseInt(vehicle.getValue());
+					if(vehicle.getName()=="departtime")
+						departtime = Float.parseFloat(vehicle.getValue());
+				}
+				MesoVehicle tmp = MesoVehicleList.getInstance().recycle();
+				tmp.init(vhcid, type,length,0,departtime);
+				((MesoVehicleTable) MesoVehicleTable.getInstance()).getVhcList().add(tmp);
+			}
+		}
+		
+		
 	}
 	/*
 	 * //解析路段集计设置文件 public void parseLinkTimesXml(String filename){ File

@@ -1,0 +1,14 @@
+<MesoTS>
+<SurvStations num="3">
+
+<station type="1" interval="60" zone="5" segid = "10510" id = "17067" pos = "0.3">
+<sensor id="1706701" laneid = "-1"/>
+</station>
+<station type="1" interval="60" zone="5" segid = "10510" id = "17068" pos = "0.6">
+<sensor id="1706801" laneid = "-2"/>
+</station>
+<station type="1" interval="60" zone="5" segid = "10510" id = "17069" pos = "0.9">
+<sensor id="1706901" laneid = "-3"/>
+</station>
+</SurvStations>
+</MesoTS>

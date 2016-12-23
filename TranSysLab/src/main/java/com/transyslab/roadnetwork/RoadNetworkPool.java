@@ -32,6 +32,7 @@ public abstract class RoadNetworkPool {
 	public abstract Parameter getParameter(int i);
 	public abstract ODTable getODTable(int i);
 	public abstract SimulationClock getSimulationClock(int i);
+	public abstract VehicleTable getVhcTable(int i);
 	public HashMap<String, Integer> getHashMap() {
 		return threadMap_;
 	}
@@ -44,4 +45,5 @@ public abstract class RoadNetworkPool {
 	public Vector<Random> getRandom(int i) {
 		return randomArray_.get(i);
 	}
+
 }

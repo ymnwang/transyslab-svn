@@ -59,7 +59,11 @@ public class MesoVehicle extends Vehicle {
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		return vhcCounter_[threadid];
 	}
-
+	public static void setVehicleCounter(int vhcnum){
+		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
+		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		vhcCounter_[threadid] = vhcnum;
+	}
 	public MesoLink getNextMesoLink() {
 		return (MesoLink) nextLink_;
 	}
@@ -293,9 +297,16 @@ public class MesoVehicle extends Vehicle {
 		if ((stepCounter_[threadid] & 0x1) != 0) {
 			setFlag(FLAG_PROCESSED);
 		}
+		//奇数步长：flag =  FLAG_PROCESSED异或FLAG_PROCESSED = 0
+  	    //偶数步长：flag = 0异或FLAG_PROCESSED = FLAG_PROCESSED
 		markAsProcessed();
 	}
-
+    public void appendSnapshotTo(MesoTrafficCell cell)
+    {
+    	  MesoSegment ps = cell.segment();
+    	  trafficCell_ = cell;
+    	  calcSpaceInSegment();
+    }
 	public void move() // update position
 	{
 

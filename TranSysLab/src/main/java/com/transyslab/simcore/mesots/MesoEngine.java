@@ -4,9 +4,10 @@
 package com.transyslab.simcore.mesots;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-import com.transyslab.commons.renderer.JOGLAnimationFrame;
 import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.PSO;
 import com.transyslab.commons.tools.SimulationClock;
@@ -47,8 +48,17 @@ public class MesoEngine extends SimulationEngine {
 	private float[] tempBest_;
 	public float alpha_;
 	public float Beta_;
-
-	public MesoEngine() {
+	private List<MesoVehicle> snapshotList_;//初始帧的在网车辆列表
+	private int vhcTableIndex_;
+	private int mode_;// =0:非snapshot启动，按OD流量随机发车；
+	                  // =1:非snapshot启动，按过车记录定时发车;
+					  // =2:snapshot启动，按OD流量随机发车；
+	                  // =3:snapshot启动，按过车记录定时发车；
+		
+	public MesoEngine(int mode) {
+		//定义仿真运行模式
+		mode_ = mode;
+		vhcTableIndex_ = 0;
 		// 浮动车旅行时间
 		realFlow_ = new int[3][34];
 		realTraTime_ = new float[3][34];
@@ -82,7 +92,7 @@ public class MesoEngine extends SimulationEngine {
 
 	public void init() {
 		// 通过parameter 赋值,结束时间往后推300s
-		SimulationClock.getInstance().init(43200, 84900, 0.2);
+		SimulationClock.getInstance().init(0, 900, 0.1);
 
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
@@ -281,6 +291,28 @@ public class MesoEngine extends SimulationEngine {
 				simTraTime_[2] = MesoNetwork.getInstance().getLink(i).getAvgTravelTime();
 		}
 	}
+	  public void initSnapshotData(){
+		  int vhcnum = snapshotList_.size();
+		  //在网车辆数统计
+		  MesoVehicle.setVehicleCounter(vhcnum);;
+		  MesoSegment seg = (MesoSegment) MesoNetwork.getInstance().getSegment(0);
+		  seg.append(MesoCellList.getInstance().recycle());
+		  seg.getLastCell().initialize();
+		  for(int i=0;i<vhcnum-1;i++){
+			  if(snapshotList_.get(i+1).distance()-snapshotList_.get(i).distance()<MesoParameter.getInstance().cellSplitGap()){
+				  seg.getLastCell().appendSnapshot(snapshotList_.get(i));
+				  if(i==vhcnum-2){
+					  //最后一辆车
+					  seg.getLastCell().appendSnapshot(snapshotList_.get(i+1));
+				  }
+			  }
+			  else{
+				  seg.append(MesoCellList.getInstance().recycle());
+				  seg.getLastCell().initialize();
+				  seg.getLastCell().appendSnapshot(snapshotList_.get(i+1));
+			  }
+		  }
+	  }
 	public int[][] getSimFlow() {
 		return simFlow_;
 	}
@@ -319,7 +351,14 @@ public class MesoEngine extends SimulationEngine {
 		// 更新不同路段的速密函数
 		// MESO_Network.getInstance().setsdIndex();
 		MesoSetup.ParseSensorTables();
-
+		
+		if(mode_ == 2||mode_ ==3){//从SnapShot启动仿真，并依靠过车记录发车
+			 //解析车辆表
+			  MesoSetup.ParseVehicleTable();  
+			//解析已在路网上的车辆列表
+			  snapshotList_ = new ArrayList<MesoVehicle>();
+			  MesoSetup.ParseSnapshotList(snapshotList_);
+		}
 		// 输出路网信息
 		/*try {
 			MesoNetwork.getInstance().outputSegments();
@@ -360,6 +399,11 @@ public class MesoEngine extends SimulationEngine {
 			// 加载事件
 			MesoIncident ic = new MesoIncident();
 			ic.init(1, 33000, 39900, 18, -1.0f);
+			if(mode_==2||mode_==3){
+				//初始化路网已有车辆的所有信息
+				initSnapshotData();
+			}
+
 		}
 
 		// SAVE GENERATED VEHICLE WHICH CAN BE LOADED IN LATER RUNS
@@ -368,21 +412,34 @@ public class MesoEngine extends SimulationEngine {
 			// MesoVehicle.nextBlockOfDepartureRecords();
 			depRecordTime_ = now + depRecordStepSize_;
 		}
+		//按OD流量随机发车
+		if(mode_ ==0||mode_==2){
+			// Update OD trip tables
 
-		// Update OD trip tables
+			if (MesoODTable.getInstance().getNextTime() <= now) {
+				// MESO_ODTable.theODTable.read();
+				// 读对应时段的OD信息
+				MesoSetup.ParseODTripTables(parseODID_);
+				MesoODTable.getInstance().sortODCell();
+				parseODID_++;
 
-		if (MesoODTable.getInstance().getNextTime() <= now) {
-			// MESO_ODTable.theODTable.read();
-			// 读对应时段的OD信息
-			MesoSetup.ParseODTripTables(parseODID_);
-			MesoODTable.getInstance().sortODCell();
-			parseODID_++;
+			}
 
+			// Create vehicles based on trip tables
+
+			MesoODTable.getInstance().emitVehicles();
 		}
-
-		// Create vehicles based on trip tables
-
-		MesoODTable.getInstance().emitVehicles();
+		else if(mode_ == 1|| mode_==3){
+			//按过车记录定时发车
+			while(vhcTableIndex_<MesoVehicleTable.getInstance().getVhcList().size() 
+					&& MesoVehicleTable.getInstance().getVhcList().get(vhcTableIndex_).departTime()<=now){
+				  MesoVehicleTable.getInstance().getVhcList().get(vhcTableIndex_).enterPretripQueue();
+				  vhcTableIndex_++;
+			 }
+		}
+		else{
+			//error, 请定义发车模式
+		}
 
 		// ENTER VEHICLES INTO THE NETWORK
 
@@ -434,17 +491,17 @@ public class MesoEngine extends SimulationEngine {
 			// meso_network.save_3d_state(rolls_-1, tm_);
 			stateTime_ = now + stateStepSize_;
 		}
+
+		//当前帧在网车辆的位置信息存储到framequeue
+		if(MesoVehicle.nVehicles()!=0)
+			meso_network.recordVehicleData();
+		
 		// 输出步长内所有车辆的位置信息
 		/*
 		 * try { MESO_Network.getInstance().outputVhcPosition(); } catch
 		 * (IOException e) { // TODO 自动生成的 catch 块 e.printStackTrace(); }
 		 */
-		//当前帧在网车辆的位置信息存储到framequeue
-		if(MesoVehicle.nVehicles()!=0)
-			meso_network.recordVehicleData();
 		// Advance the clock
-		
-//		System.out.println(MesoVehicle.nVehicles());
 		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
 		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {
 			// HashMap<String, Integer> hm =
@@ -459,8 +516,16 @@ public class MesoEngine extends SimulationEngine {
 			 * MESO_Network.getInstance().outputModelSensorDataToOracle();
 			 * MESO_Network.getInstance().outputTaskSensorDataToOracle();
 			 */
+			//输出检测器检测记录
+			/*
+			  try {
+				MESO_Network.getInstance().outputSectionRecord();
+			} catch (IOException e) {
+				// TODO 自动生成的 catch 块
+				e.printStackTrace();
+			}
 			organize2DFlow();
-			organize2DTraTime();
+			organize2DTraTime();*/
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
 													// is done
 		}

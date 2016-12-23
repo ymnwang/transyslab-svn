@@ -105,7 +105,37 @@ public class Vehicle extends CodedObject {
 
 		return 1;
 	}
+    public int init(int id, int t, float len, float dis,float departtime){
+		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
+		int threadid = hm.get(Thread.currentThread().getName()).intValue();
+		int c;
+		if (id > 0) { // id is specified
+			c = (id > 0) ? -id : id;
+			setCode(c);
+		}
+		else { // not specified, assign a serial number
+			c = (++lastId_[threadid]);
+			setCode(c);
+		}
+        type_ = t;
+        od_ = VehicleTable.getInstance().getODPair();
+        setPath(VehicleTable.getInstance().getPath());
+        length_ = len;
+        distance_ = dis;
+        info_ = Constants.INT_INF;
+        //³õÊ¼»¯Â·¾¶
+        nextLink_ = path_.getFirstLink();
 
+        departTime_	= departtime;
+        timeEntersLink_ = departTime_;
+
+        oriNode().nOriCounts_ ++;
+        desNode().nDesCounts_ ++;
+
+        initialize();				// virtual function
+
+        return 1;
+    }
 	public int initBus(int bid, ODPair od, Path p) {
 		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();

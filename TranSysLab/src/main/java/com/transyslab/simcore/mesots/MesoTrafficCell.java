@@ -161,7 +161,25 @@ public class MesoTrafficCell {
 			updateHeadSpeeds();
 		}
 	}
-
+	 public void appendSnapshot(MesoVehicle vehicle){
+		vehicle.leading_ = lastVehicle_;
+		vehicle.trailing_ = null;
+		
+		if (lastVehicle_!=null) {		// append at end
+		      lastVehicle_.trailing_ = vehicle;
+		} else {			// queue is empty
+		      firstVehicle_ = vehicle;
+		}
+		lastVehicle_ = vehicle;
+		nVehicles_ ++;
+		
+		vehicle.appendSnapshotTo(this);
+		
+		if (nVehicles_ <= 1) {		// first vehicle
+			updateTailSpeed();
+			updateHeadSpeeds();
+		}
+	}
 	// Split the traffic cell into two cells at the first gap
 	// smaller than the given threshold
 	/*

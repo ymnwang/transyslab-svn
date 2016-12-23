@@ -294,8 +294,7 @@ public class ODCell {
 			return (-Math.log(Random.getInstance().get(Random.Departure).urandom()) * headway_);
 		}
 	}
-	// Œ¥¥¶¿Ì
-	// public RN_Vehicle* newVehicle() = 0;
+
 	public Vehicle newVehicle() {
 		return null;
 	}
