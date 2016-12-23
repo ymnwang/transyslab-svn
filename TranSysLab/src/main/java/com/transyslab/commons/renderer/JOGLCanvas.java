@@ -77,8 +77,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 									// lighting
 
 		// ----- Your OpenGL initialization code here -----
-//		Point center = drawableNetwork_.getWorldSpace().getCenter();
-//		cam_.initCamera(center, 200);
+		Point center = drawableNetwork_.getWorldSpace().getCenter();
+		cam_.initCamera(center, 200);
 
 	}
 

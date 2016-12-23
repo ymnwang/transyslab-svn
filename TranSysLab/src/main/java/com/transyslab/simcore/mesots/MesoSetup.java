@@ -3,6 +3,8 @@
  */
 package com.transyslab.simcore.mesots;
 
+import java.util.List;
+
 import com.transyslab.commons.io.XmlParser;
 
 /**
@@ -32,7 +34,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\network"+s+".xml";
-		XmlParser.parseNetworkXml("src/main/resources/demo/network.xml");
+		XmlParser.parseNetworkXml("src/main/resources/demo_snapshot/network.xml");
 		/*
 		 * if (MESO_Network.getInstance()!=null) { // if (ToolKit::verbose()) {
 		 * // cout << "Unloading <" << theNetwork->name() // << ">" << endl; //
@@ -50,7 +52,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\pathtable"+s+".xml";
-		XmlParser.parsePathTableXml("src/main/resources/demo/pathtable.xml");
+		XmlParser.parsePathTableXml("src/main/resources/demo_snapshot/pathtable.xml");
 		/*
 		 * if (thePathTable) { delete thePathTable; thePathTable = NULL; } if
 		 * (ToolKit::isValidInputFilename(RN_PathTable::name())) { thePathTable
@@ -102,7 +104,13 @@ public class MesoSetup {
 		XmlParser.parseDetTimeXml("src/main/resources/demo/dettime.xml", realtime);
 	}
 	public static void ParseSensorTables() {
-		XmlParser.parseSensorXml("src/main/resources/demo/sensor.xml");
+		XmlParser.parseSensorXml("src/main/resources/demo_snapshot/sensor.xml");
+	}
+	public static void ParseSnapshotList(List<MesoVehicle> vhclist){
+		XmlParser.parseSnapshotXml("src/main/resources/demo_snapshot/snapshot.xml", vhclist);
+	}
+	public static void ParseVehicleTable(){
+		XmlParser.parseVehicleTable("src/main/resources/demo_snapshot/vehicletable.xml");
 	}
 	public static void SetupMiscellaneous() {
 		// Assign the pointers to control and surveillance devices in

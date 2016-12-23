@@ -4,6 +4,8 @@
 package com.transyslab.commons.tools;
 
 import java.util.concurrent.Callable;
+
+import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 
@@ -17,7 +19,7 @@ public class Producer implements Callable<SimulationEngine> {
 	private SimulationEngine engine_;
 	private PSO pso_;
 	private DE de_;
-	// private CyclicBarrier barrier_;
+
 	public Producer() {
 
 	}
@@ -39,8 +41,11 @@ public class Producer implements Callable<SimulationEngine> {
 	}
 	@Override
 	public MesoEngine call() {
-
-		engine_ = new MesoEngine();
+		// =0:非snapshot启动，按OD流量随机发车；
+        // =1:非snapshot启动，按过车记录定时发车;
+		// =2:snapshot启动，按OD流量随机发车；
+        // =3:snapshot启动，按过车记录定时发车；
+		engine_ = new MesoEngine(Constants.SIM_MODE);
 		// engine_.initPSO(pso_);
 		// engine_.initDE(de_);
 		engine_.loadFiles();

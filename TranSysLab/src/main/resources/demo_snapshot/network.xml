@@ -1,0 +1,18 @@
+<MesoTS>
+<Nodes Nodenum="2">
+<N id="105" type="1" name="N105"/>
+<N id="106" type="1" name="N106"/>
+</Nodes>
+<Links linknum="1">
+<L id="1051" type="1" UpNode="105" DnNode="106" flag="0">
+<S id="10510" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="0.0" beginY="0.0" endX="300.0" endY="0.0"> 
+<LA LaneID="9401" rule="3"/>
+<LA LaneID="9402" rule="3"/>
+<LA LaneID="9403" rule="3"/>
+<LA LaneID="9404" rule="3"/>
+<LA LaneID="9405" rule="3"/>
+<LA LaneID="9406" rule="3"/>
+</S>
+</L>
+</Links>
+</MesoTS>
