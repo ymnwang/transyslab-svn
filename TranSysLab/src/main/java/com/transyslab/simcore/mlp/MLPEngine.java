@@ -1,7 +1,5 @@
 package com.transyslab.simcore.mlp;
 
-import com.transyslab.commons.tools.DE;
-import com.transyslab.commons.tools.PSO;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.simcore.SimulationEngine;
 
