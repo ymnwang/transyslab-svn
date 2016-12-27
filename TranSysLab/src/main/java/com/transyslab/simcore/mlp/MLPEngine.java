@@ -5,6 +5,7 @@ import com.transyslab.commons.tools.PSO;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.simcore.SimulationEngine;
 
+
 public class MLPEngine extends SimulationEngine{
 	
 	protected int runTimes_; // 仿真运行次数
@@ -39,7 +40,13 @@ public class MLPEngine extends SimulationEngine{
 		//load xml
 		//parse xml into parameter & network
 		
-		init();		
+		//引擎的初始化
+		init();
+		
+		// 读取路网xml
+		MLPSetup.ParseNetwork();
+		// 读入路网数据后组织路网不同要素的关系
+		MLPNetwork.getInstance().calcStaticInfo();
 		start();
 		parseODID_ = 1;
 		return 0;

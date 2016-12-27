@@ -8,6 +8,7 @@ import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.LinkTimes;
 import com.transyslab.roadnetwork.PathTable;
 import com.transyslab.roadnetwork.RoadNetworkPool;
+import com.transyslab.roadnetwork.VehicleTable;
 import com.transyslab.simcore.mlp.PlatoonList;
 import com.transyslab.simcore.mlp.MLPNetwork;
 import com.transyslab.simcore.mlp.MLPNetworkPool;
@@ -107,6 +108,11 @@ public class MLPNetworkPool extends RoadNetworkPool{
 	}
 	public int getThreadNum() {
 		return threadNum_;
+	}
+	@Override
+	public VehicleTable getVhcTable(int i) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
