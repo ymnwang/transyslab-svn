@@ -267,7 +267,7 @@ public class MesoEngine extends SimulationEngine {
 		else if(mode ==3){
 
 			MesoNetwork mesonetwork = MesoNetwork.getInstance();
-			mesonetwork.updateParaSdfns(0.5f, parameter_[3], parameter_[4], parameter_[2],parameter_[0],parameter_[1]);
+			mesonetwork.updateParaSdfns(0.5f,0.0f, 16.67f, 180.0f,parameter_[0],parameter_[1]);
 			mesonetwork.updateSegFreeSpeed();
 			while (simulationLoop() >= 0) {
 			}
@@ -323,7 +323,8 @@ public class MesoEngine extends SimulationEngine {
 			}
 			sumError = sumError + w * (sumOfLinkFlowError) + (1 - w) * (sumOfLinkTimeError);
 		}
-		return (float) (sumError / col);
+		return (float) (sumError / col);		
+		
 	}
 	public void evaRMSN(){
 		MesoNetwork meso_network = MesoNetwork.getInstance();

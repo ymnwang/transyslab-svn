@@ -58,6 +58,7 @@ public class DE {
 		for (int i = 0; i < p; i++) {
 			idvds_[i] = new Individual(dim);
 			newidvds_[i] = new Individual(dim);
+			//生成初始解
 			idvds_[i].init(pl, pu);
 			for (int j = 0; j < dims_; j++) {
 				newidvds_[i].pos_[j] = idvds_[i].pos_[j];

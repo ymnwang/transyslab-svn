@@ -1,6 +1,7 @@
 package com.transyslab.commons.tools;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
+import org.apache.commons.math3.stat.descriptive.SynchronizedMultivariateSummaryStatistics;
 
 //同步扰动随机逼近算法
 public class SPSA {
@@ -72,7 +73,7 @@ public class SPSA {
 	public void perturbation(int k, float[] parameters1, float[] parameters2){
 		perturbationStep_ = c_ / (Math.pow((k+1),gamma_));
 		//重设时间种子
-		bd_.reseedRandomGenerator(System.currentTimeMillis());
+//		bd_.reseedRandomGenerator(System.currentTimeMillis());
 		perturbationValue_ = bd_.sample(dims_);
 		for(int i=0;i<dims_;i++){
 			if(perturbationValue_[i] == 0)
@@ -83,7 +84,7 @@ public class SPSA {
 		//反归一化，用于仿真计算
 		inverseNomalization(parameters1);
 		inverseNomalization(parameters2);
-		
+//		System.out.println("");
 	}
 	//估计第k次迭代的梯度方向
 	public void estimateGradient(double psim, double nsim){

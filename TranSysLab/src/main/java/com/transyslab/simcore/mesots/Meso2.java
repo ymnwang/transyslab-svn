@@ -29,11 +29,12 @@ public class Meso2 {
 //        float[] pupper = new float[]{80.0f,180.0f,10.0f,10.0f};
 //        DE de = new DE();
 //        de.initDE(30, 4, 0.5f, 0.5f, plower, pupper);
-		float[] plower = new float[]{ 0f, 0f,100.0f,0.0f,13.9f};
-		float[] pupper = new float[]{10f,10f,200.0f,5.5f,25.0f};
-		float[] pinit = new float[]{5f,8f,150f,2f,20f};
-        SPSA spsa = new SPSA(5);
-        spsa.setAlgParameters(0.5, 50, 0.602, 0.1, 0.101);
+		float[] plower = new float[]{ 0f, 0f};/*, 100.0f,0.0f,13.9f};*/
+		float[] pupper = new float[]{10f,10f};/*,200.0f,5.5f,25.0f};*/
+		
+		float[] pinit = new float[]{2f,6f};/*,150f,2.5f,20f};*/
+        SPSA spsa = new SPSA(2);
+        spsa.setAlgParameters(0.02, 50, 0.602, 0.01, 0.101);
         spsa.setBounderies(plower, pupper);
         spsa.setParameters(pinit);
         MesoNetworkPool infoarrays = MesoNetworkPool.getInstance();
@@ -70,8 +71,10 @@ public class Meso2 {
 		System.out.println("引擎初始化所需的运行时间："+(endtime[0]-begintime)+"ms");
 		//完成Engine初始化
 		int runtimes = 1;
-		while(runtimes<=20){
-			
+		while(runtimes<=55){
+			if(runtimes==1){
+				
+			}
 			if(runtimes>=2){
 				//梯度逼近
 				spsa.estimateGradient(engineList[0].getObjFunction(), engineList[1].getObjFunction());
@@ -109,6 +112,12 @@ public class Meso2 {
 //			endtime[runtimes] = System.currentTimeMillis();*/
 			//更新参数
 			System.out.println(engineList[2].getObjFunction());
+			if(runtimes>50){
+				for(int i=0;i<engineList[2].getParameters().length;i++){
+					System.out.println(engineList[2].getParameters()[i]);
+				}
+				
+			}
 			runtimes++;			
 		}
 		/*
