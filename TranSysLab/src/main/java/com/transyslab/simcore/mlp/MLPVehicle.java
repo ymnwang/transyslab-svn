@@ -10,4 +10,5 @@ public class MLPVehicle extends Vehicle{
 		trailing_ = null;
 		leading_ = null;
 	}
+
 }
