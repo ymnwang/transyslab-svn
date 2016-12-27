@@ -19,6 +19,7 @@ public class Producer implements Callable<SimulationEngine> {
 	private SimulationEngine engine_;
 	private PSO pso_;
 	private DE de_;
+	private SPSA spsa_;
 
 	public Producer() {
 
@@ -36,6 +37,10 @@ public class Producer implements Callable<SimulationEngine> {
 		engine_ = eg;
 		de_ = de;
 	}
+	public Producer(SimulationEngine eg, SPSA spsa){
+		engine_ = eg;
+		spsa_ = spsa;
+	}
 	public Producer(SimulationEngine eg) {
 		engine_ = eg;
 	}
@@ -48,7 +53,9 @@ public class Producer implements Callable<SimulationEngine> {
 		engine_ = new MesoEngine(Constants.SIM_MODE);
 		// engine_.initPSO(pso_);
 		// engine_.initDE(de_);
+		MesoEngine engine = (MesoEngine)engine_;
+		engine.initSPSA(spsa_);
 		engine_.loadFiles();
-		return (MesoEngine) engine_;
+		return engine;
 	}
 }

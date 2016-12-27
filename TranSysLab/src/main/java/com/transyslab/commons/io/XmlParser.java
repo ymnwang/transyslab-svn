@@ -246,7 +246,7 @@ public class XmlParser {
 					// 往后读5分钟，故+300秒
 					ODtime = h * 3600 + m * 60 + sec + 300;
 					// 最后一个时间间隔
-					if (ODtime == 54000)
+					if (ODtime == 68700)
 						ODtime = Constants.INT_INF;
 					// System.out.println(ODtime+"-----");
 				}

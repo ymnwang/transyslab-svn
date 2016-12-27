@@ -428,7 +428,7 @@ public class MesoTrafficCell {
 
 	public float calcSpeed(float density) {
 		SdFn sdf = MesoNetwork.getInstance().getSdFn(sdIndex());
-		return sdf.densityToSpeed(segment_.maxSpeed(), density, segment_.nLanes());
+		return sdf.densityToSpeed(density, segment_.nLanes());
 	}
 
 	// These calculations are based on states at the beginning of
@@ -481,7 +481,7 @@ public class MesoTrafficCell {
 			// Not the last segment in the link, speed is based on
 			// downstrean condition
 
-			setHeadSpeeds(calcHeadSpeed(segment_.downstream().lastCell()), dnx);
+			setHeadSpeeds(calcHeadSpeed(segment_.getDnStream().lastCell()), dnx);
 			return;
 
 		}

@@ -63,7 +63,9 @@ public class Random {
 	public void setSeed(int s) {
 		seed_ = s;
 	}
-
+	public void resetSeed(){
+		seed_ = 1468288583;
+	}
 	// Set random seed
 	public int randomize() {
 		int s = 0xFF << (signature_ * 8);
@@ -90,7 +92,7 @@ public class Random {
 
 		seed_ = A * (seed_ % Q) - R * (seed_ / Q);
 		seed_ = (seed_ > 0) ? (seed_) : (seed_ + M);
-
+//		System.out.println((double) seed_ / (double) M);
 		return (double) seed_ / (double) M;
 	}
 

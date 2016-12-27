@@ -414,7 +414,7 @@ public class MesoVehicle extends Vehicle {
 
 		}
 		else if (nextLink_ != null) { // cross link
-
+			
 			if (getNextMesoLink().isJammed() == 0) {
 
 				/*

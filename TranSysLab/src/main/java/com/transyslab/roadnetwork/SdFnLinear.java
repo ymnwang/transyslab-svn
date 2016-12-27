@@ -30,9 +30,9 @@ public class SdFnLinear extends SdFn {
 
 	// void print(ostream &os = cout);
 	@Override
-	public float densityToSpeed(float free_speed, float density, int nlanes) {
+	public float densityToSpeed(/*float free_speed, */float density, int nlanes) {
 		if (density < 1.0) {
-			return free_speed;
+			return freeSpeed_;
 		}
 		else if (density + 1.0 > jamDensity_) {
 			return jamSpeed_ * (nlanes - 1);
@@ -53,7 +53,7 @@ public class SdFnLinear extends SdFn {
 			// cout << " r " << r <<" free speed" << free_speed <<" jam speed "
 			// << jamSpeed_ << "Jam Density " << jamDensity_<< "Capacity " <<
 			// capacity_;
-			return v0 + r * (free_speed - v0);
+			return v0 + r * (freeSpeed_ - v0);
 		}
 	}
 
