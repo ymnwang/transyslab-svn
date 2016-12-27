@@ -70,6 +70,14 @@ public class MesoNetwork extends RoadNetwork {
 		superCalcStaticInfo();
 		organize();
 	}
+	public void updateSegFreeSpeed(){
+		MesoSegment mesosegment;
+		for(int i=0;i<nSegments();i++){
+			mesosegment = (MesoSegment) segments_.get(i);
+			mesosegment.updateFreeSpeed();
+		}
+		
+	}
 	public void setsdIndex() {
 		MesoSegment ps;
 		for (int i = 0; i < nLinks(); i++) {
@@ -288,6 +296,12 @@ public class MesoNetwork extends RoadNetwork {
 		for (i = 0; i < nSegments(); i++) {
 			MesoSegment ps = mesoSegment(i);
 			ps.setCapacity(ps.defaultCapacity());
+		}
+		//Çå³ý¼ì²âÊý¾Ý
+		for(i=0;i<nSurvStation();i++){
+			survStations_.get(i).getflowList().clear();
+			survStations_.get(i).getSpeedList().clear();
+			survStations_.get(i).resetMeasureTime();
 		}
 	}
 

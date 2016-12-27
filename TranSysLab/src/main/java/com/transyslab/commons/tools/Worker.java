@@ -32,7 +32,7 @@ public class Worker implements Runnable {
 	public void run() {
 		// engine_.run(2);
 		// engine_.exhaustionRun(6f, 0.01f);
-		engine_.run();
+		engine_.run(3);
 		try {
 			barrier_.await();
 		}

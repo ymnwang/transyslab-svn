@@ -67,7 +67,7 @@ public abstract class SimulationEngine {
 	// would be good enough. This function will NOT return until the
 	// simulation is done.
 
-	public void run() {
+	public void run(int mode) {
 		while (simulationLoop() >= 0);
 	}
 	public abstract void start();

@@ -116,6 +116,12 @@ public class SurvStation extends CodedObject {
 	public float getMeasureTime() {
 		return measureTime_;
 	}
+	public void resetMeasureTime(){
+		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
+		sectionAvgSpeed_ = 0;
+		sectionSpeed_ = 0;
+		sectionCount_ = 0;
+	}
 	public List<Float> getSpeedList() {
 		return speedList_;
 	}

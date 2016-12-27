@@ -54,7 +54,7 @@ public class MesoSegment extends Segment {
 	public MesoSegment getUpSegment() {
 		return (MesoSegment) super.getUpSegment();
 	}
-	public MesoSegment downstream() {
+	public MesoSegment getDnStream() {
 		return (MesoSegment) super.getDnSegment();
 	}
 
@@ -312,7 +312,9 @@ public class MesoSegment extends Segment {
 	public float maxSpeed() {
 		return freeSpeed_;
 	}
-
+	public void updateFreeSpeed(){
+		freeSpeed_ = MesoNetwork.getInstance().getSdFn(sdIndex_).getFreeSpeed();
+	}
 	public float defaultCapacity() {
 		float vph = MesoNetwork.getInstance().getSdFn(getSdIndex()).getCapacity();
 		return nLanes_ * vph;
@@ -368,7 +370,7 @@ public class MesoSegment extends Segment {
 	@Override
 	public void calcStaticInfo() {
 		// 重写部分开始
-		if ((downstream() == null)) {
+		if ((getDnStream() == null)) {
 			localType_ |= 0x0001;
 			if (getLink().nDnLinks() < 1 || getLink().getDnNode().type(0x0001) > 0) {
 				localType_ |= 0x0020;
@@ -389,6 +391,8 @@ public class MesoSegment extends Segment {
 			sdIndex_ = 0;
 		}
 		// 重写部分结束
+		//此处赋值freeSpeed
+		freeSpeed_ = MesoNetwork.getInstance().getSdFn(sdIndex_).getFreeSpeed();
 		density_ = 0.0f;
 		speed_ = maxSpeed();
 

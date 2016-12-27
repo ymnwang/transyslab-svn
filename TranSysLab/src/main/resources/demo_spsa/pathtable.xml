@@ -1,0 +1,26 @@
+<MesoTS>
+<Paths num="4">
+
+<P id="1" o="105" d="802" pathtime = "35">
+<L id="28"/>
+<L id="30"/>
+</P>
+<P id="2" o="105" d="817" pathtime = "180">
+<L id="28"/>
+<L id="29"/>
+<L id="63"/>
+</P>
+<P id="3" o="105" d="818" pathtime = "200">
+<L id="28"/>
+<L id="29"/>
+<L id="62"/>
+<L id="65"/>
+</P>
+<P id="4" o="105" d="107" pathtime = "250">
+<L id="28"/>
+<L id="29"/>
+<L id="62"/>
+<L id="64"/>
+</P>
+</Paths>
+</MesoTS>

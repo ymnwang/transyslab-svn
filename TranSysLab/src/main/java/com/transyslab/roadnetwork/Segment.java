@@ -197,7 +197,7 @@ public class Segment extends CodedObject {
 		setCode(id);
 
 		speedLimit_ = speed_limit;
-		freeSpeed_ = (float) (speed * 0.447);
+//		freeSpeed_ = (float) (speed * 0.447);
 		grade_ = grd;
 
 		index_ = RoadNetwork.getInstance().nSegments();
@@ -248,9 +248,10 @@ public class Segment extends CodedObject {
 	public void setSpeedLimit(int sl) {
 		speedLimit_ = sl;
 	}
+	/*
 	public void setFreeSpeed(float f) {
 		freeSpeed_ = f;
-	}
+	}*/
 	public double getFreeSpeed() {
 		return freeSpeed_;
 	}
@@ -271,7 +272,7 @@ public class Segment extends CodedObject {
 		}
 
 		SdFn sdf = RoadNetwork.getInstance().getSdFn(sdIndex_);
-		float spd = sdf.densityToSpeed((float) getFreeSpeed(), calcDensity(), nLanes());
+		float spd = sdf.densityToSpeed(/*(float) getFreeSpeed(),*/ calcDensity(), nLanes());
 
 		if (spd < min_spd)
 			spd = min_spd;

@@ -27,9 +27,6 @@ import com.transyslab.simcore.SimulationEngine;
  */
 public class Meso {
 
-	/**
-	 * @param args
-	 */
 	/*
 	 * public static void main(String[] args) { long begintime =
 	 * System.currentTimeMillis(); long[] endtime = new long[2000]; float[]
@@ -118,7 +115,7 @@ public class Meso {
 		}
 		endtime[0] = System.currentTimeMillis();
 		System.out.println("引擎初始化所需的运行时间：" + (endtime[0] - begintime) + "ms");
-		SwingUtilities.invokeLater(new Runnable() {
+/*		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				JOGLRenderContainer drawnetwork = new JOGLRenderContainer(); // run the constructor
@@ -133,7 +130,7 @@ public class Meso {
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+		}*/
 		int runtimes = 1;
 		while (runtimes <= 1) {
 			CyclicBarrier barrier = new CyclicBarrier(Constants.THREAD_NUM + 1);
@@ -153,6 +150,7 @@ public class Meso {
 				// TODO 自动生成的 catch 块
 				e.printStackTrace();
 			}
+			
 			runtimes++;
 		}
 

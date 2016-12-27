@@ -8,11 +8,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
+
+import org.apache.commons.csv.CSVRecord;
+
+import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.PSO;
+import com.transyslab.commons.tools.Random;
+import com.transyslab.commons.tools.SPSA;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.LinkTimes;
+import com.transyslab.roadnetwork.SurvStation;
 import com.transyslab.simcore.SimulationEngine;
 
 /**
@@ -44,6 +52,7 @@ public class MesoEngine extends SimulationEngine {
 	private double detStepSize_;
 	private PSO pso_;
 	private DE de_;
+	private SPSA spsa_;
 	private float tempBestFitness_;
 	private float[] tempBest_;
 	public float alpha_;
@@ -54,6 +63,11 @@ public class MesoEngine extends SimulationEngine {
 	                  // =1:非snapshot启动，按过车记录定时发车;
 					  // =2:snapshot启动，按OD流量随机发车；
 	                  // =3:snapshot启动，按过车记录定时发车；
+	private List<Float> LPB9_ =  new ArrayList<>();
+	private List<Float> VDB7_ = new ArrayList<>();
+	private List<Float> LPB11_ = new ArrayList<>();
+	private float objFunction_;
+	private float[] parameter_;
 		
 	public MesoEngine(int mode) {
 		//定义仿真运行模式
@@ -76,9 +90,14 @@ public class MesoEngine extends SimulationEngine {
 		iteration_ = 0; // id of the iteration
 		parseODID_ = 0;
 		//默认仿真时间和步长
-		SimulationClock.getInstance().init(28800.0, 32400.0, 1.0);
+//		SimulationClock.getInstance().init(28800.0, 32400.0, 1.0);
 
-		// Default parameter filename
+	}
+	public float getObjFunction(){
+		return objFunction_;
+	}
+	public float[] getParameters(){
+		return parameter_;
 	}
 	public double beginTime() {
 		return beginTime_;
@@ -92,7 +111,7 @@ public class MesoEngine extends SimulationEngine {
 
 	public void init() {
 		// 通过parameter 赋值,结束时间往后推300s
-		SimulationClock.getInstance().init(0, 900, 0.1);
+		SimulationClock.getInstance().init(61200,68700, 0.2);
 
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
@@ -111,12 +130,21 @@ public class MesoEngine extends SimulationEngine {
 		de_ = de;
 		tempBest_ = new float[de_.getDim()];
 	}
+	public void initSPSA(SPSA spsa){
+		spsa_ = spsa;
+		parameter_ = new float[spsa_.getDimention()];
+		//参数赋初值
+		spsa_ .getInverseNomal(parameter_);
+	}
 	public void resetBeforeSimLoop() {
 		firstEntry = 1;
-		SimulationClock.getInstance().init(12 * 3600, 14 * 3600 + 50 * 60, 0.2);
+		SimulationClock.getInstance().init(61200, 68700, 0.2);
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
 		updateTime_ = now;
+		//重置检测器
+		updateDetTime_ = now + detStepSize_;
+		
 		pathTime_ = now + pathStepSize_;
 		stateTime_ = now;
 		frequency_ = (float) (1.0 / SimulationClock.getInstance().getStepSize());
@@ -124,6 +152,10 @@ public class MesoEngine extends SimulationEngine {
 		MesoNetwork.getInstance().clean();
 		parseODID_ = 1;
 		MesoODTable.getInstance().setNextTime(0);
+		//重置种子
+		Random.getInstance().get(Random.Misc).resetSeed();
+		Random.getInstance().get(Random.Departure).resetSeed();
+		Random.getInstance().get(Random.Routing).resetSeed();
 	}
 	// 读入所有输入文件，包含MasterFile（仿真配置文件）和SimulationFile（仿真参数文件）
 	@Override
@@ -131,21 +163,41 @@ public class MesoEngine extends SimulationEngine {
 		if (canStart() > 0) {
 			loadMasterFile();
 		}
+		
 		loadSimulationFiles();
-	}
-	@Override
-	public void run() {
 
-		while (simulationLoop() >= 0) {
 
+		List<CSVRecord> records;
+		int i=0;
+		try {
+			records = CSVUtils.readCSV("E:\\MesoInput_Cases\\12.25goodluck\\input1.csv", null);
+			for(CSVRecord record : records){
+				for(int j=0;j<record.size();j++){
+					if(i==0)
+					LPB9_.add(Float.parseFloat(record.get(j)));
+					else if (i==1)
+						VDB7_.add(Float.parseFloat(record.get(j)));
+						else
+							LPB11_.add(Float.parseFloat(record.get(j)));
+				}
+				i++;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 	}
 
+
 	// 多次运行
 	public void run(int mode) {
+		if(mode==0){
+			while (simulationLoop() >= 0) {
 
-		if (mode == 1) {
+			}
+		}
+		else if (mode == 1) {
 			HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
 			int threadid = hm.get(Thread.currentThread().getName()).intValue();
 
@@ -211,7 +263,17 @@ public class MesoEngine extends SimulationEngine {
 				simTraTime_ = null;
 
 			}
-		} 
+		}
+		else if(mode ==3){
+
+			MesoNetwork mesonetwork = MesoNetwork.getInstance();
+			mesonetwork.updateParaSdfns(0.5f,0.0f, 16.67f, 180.0f,parameter_[0],parameter_[1]);
+			mesonetwork.updateSegFreeSpeed();
+			while (simulationLoop() >= 0) {
+			}
+			evaRMSN();
+			resetBeforeSimLoop();
+		}
 	}
 	public void exhaustionRun(float mp, float step) {
 		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
@@ -261,8 +323,35 @@ public class MesoEngine extends SimulationEngine {
 			}
 			sumError = sumError + w * (sumOfLinkFlowError) + (1 - w) * (sumOfLinkTimeError);
 		}
-		return (float) (sumError / col);
+		return (float) (sumError / col);		
+		
 	}
+	public void evaRMSN(){
+		MesoNetwork meso_network = MesoNetwork.getInstance();
+		List<SurvStation> survstations = meso_network.getSurvStations();
+		List<Float> vList;
+		float head=0,tail=0;
+		float head1,tail1=0;
+		for(int i=0;i<survstations.size();i++){
+			if(survstations.get(i).getCode()==-9)
+				vList = LPB9_;
+				else if(survstations.get(i).getCode()==7)
+					vList = VDB7_;
+					else
+						vList = LPB11_;
+			head1 = 0;
+			tail1 = 0;
+			for(int j=0;j<survstations.get(i).getSpeedList().size();j++){
+				head1 += (float) Math.pow(vList.get(j)-survstations.get(i).getSpeedList().get(j),2);
+				tail1 += vList.get(j);
+			}
+			head += head1;
+			tail += tail1;
+		}
+		objFunction_ = (float) (Math.sqrt(head*5*25))/tail;
+			
+	}
+
 	// 新增方法，按二维数组的形式组织流量与时间的输出
 	// 行记录不同link，列记录不同时段
 	public void organize2DFlow() {
@@ -350,6 +439,7 @@ public class MesoEngine extends SimulationEngine {
 		MesoNetwork.getInstance().initializeLinkStatistics();
 		// 更新不同路段的速密函数
 		// MESO_Network.getInstance().setsdIndex();
+
 		MesoSetup.ParseSensorTables();
 		
 		if(mode_ == 2||mode_ ==3){//从SnapShot启动仿真，并依靠过车记录发车
@@ -414,8 +504,9 @@ public class MesoEngine extends SimulationEngine {
 		}
 		//按OD流量随机发车
 		if(mode_ ==0||mode_==2){
+			
 			// Update OD trip tables
-
+			MesoODTable odtable = MesoODTable.getInstance();
 			if (MesoODTable.getInstance().getNextTime() <= now) {
 				// MESO_ODTable.theODTable.read();
 				// 读对应时段的OD信息
@@ -470,7 +561,8 @@ public class MesoEngine extends SimulationEngine {
 		if (now > updateDetTime_) {
 			meso_network.updateSurvStationMeasureTime();
 			updateDetTime_ = updateDetTime_ + detStepSize_;
-			meso_network.calcSegmentInfo();
+			//输出路段统计量
+//			meso_network.calcSegmentInfo();
 		}
 		meso_network.calcTrafficCellUpSpeed();
 		meso_network.calcTrafficCellDnSpeeds();
@@ -493,14 +585,16 @@ public class MesoEngine extends SimulationEngine {
 		}
 
 		//当前帧在网车辆的位置信息存储到framequeue
-		if(MesoVehicle.nVehicles()!=0)
-			meso_network.recordVehicleData();
+/*		if(MesoVehicle.nVehicles()!=0)
+			meso_network.recordVehicleData();*/
 		
 		// 输出步长内所有车辆的位置信息
 		/*
-		 * try { MESO_Network.getInstance().outputVhcPosition(); } catch
-		 * (IOException e) { // TODO 自动生成的 catch 块 e.printStackTrace(); }
-		 */
+		  try { MesoNetwork.getInstance().outputVhcPosition(); 
+		  } catch(IOException e) { 
+			  // TODO 自动生成的 catch 块 
+			  e.printStackTrace(); }*/
+		 
 		// Advance the clock
 		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
 		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {
@@ -526,6 +620,7 @@ public class MesoEngine extends SimulationEngine {
 			}
 			organize2DFlow();
 			organize2DTraTime();*/
+
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
 													// is done
 		}

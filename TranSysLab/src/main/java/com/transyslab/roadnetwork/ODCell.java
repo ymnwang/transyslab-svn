@@ -218,7 +218,8 @@ public class ODCell {
 			// Random.getInstance().get(Random.Departure)).urandom();
 			nextTime_ = SimulationClock.getInstance().getCurrentTime()
 					- Math.log(Random.getInstance().get(Random.Departure).urandom()) * headway_;
-
+//			System.out.println(SimulationClock.getInstance().getCurrentTime());
+//			System.out.println(Math.log(Random.getInstance().get(Random.Departure).urandom()) * headway_);
 		}
 		else {
 			headway_ = Constants.DBL_INF;

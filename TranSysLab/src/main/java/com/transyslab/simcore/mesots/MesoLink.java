@@ -178,7 +178,7 @@ public class MesoLink extends Link {
 				}
 				pc = pc.trailing();
 			}
-			ps = ps.downstream();
+			ps = ps.getDnStream();
 		}
 
 		// Vehicles in pretrip queue

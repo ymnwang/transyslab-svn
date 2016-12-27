@@ -609,7 +609,10 @@ public class RoadNetwork {
 			sdFns_.add(new SdFnNonLinear());
 		}
 	}
-
+	//更新速密函数参数
+	public void updateParaSdfns(float cap, float minspeed, float maxspeed, float maxdensity,float a, float b){
+		((SdFnNonLinear) sdFns_.get(0)).updateParameters(cap, minspeed, maxspeed, maxdensity,a,b);
+	}
 	// Before we use the parsed network, this function must called to
 	// calculate some static information, sort objects, etc.
 	// --------------------------------------------------------------------
