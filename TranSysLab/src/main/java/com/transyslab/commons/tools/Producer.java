@@ -51,10 +51,11 @@ public class Producer implements Callable<SimulationEngine> {
 		// =2:snapshot启动，按OD流量随机发车；
         // =3:snapshot启动，按过车记录定时发车；
 		engine_ = new MesoEngine(Constants.SIM_MODE);
-		// engine_.initPSO(pso_);
-		// engine_.initDE(de_);
+
 		MesoEngine engine = (MesoEngine)engine_;
 		engine.initSPSA(spsa_);
+//		 engine_.initPSO(pso_);
+//		engine.initDE(de_);
 		engine_.loadFiles();
 		return engine;
 	}

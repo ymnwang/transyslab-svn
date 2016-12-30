@@ -34,7 +34,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\network"+s+".xml";
-		XmlParser.parseNetworkXml("E:\\MesoInput_Cases\\12.25goodluck\\network.xml");
+		XmlParser.parseNetworkXml("E:\\MesoInput_Cases\\12.28bestluck\\network.xml");
 		/*
 		 * if (MESO_Network.getInstance()!=null) { // if (ToolKit::verbose()) {
 		 * // cout << "Unloading <" << theNetwork->name() // << ">" << endl; //
@@ -52,7 +52,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\pathtable"+s+".xml";
-		XmlParser.parsePathTableXml("E:\\MesoInput_Cases\\12.25goodluck\\pathtable.xml");
+		XmlParser.parsePathTableXml("E:\\MesoInput_Cases\\12.28bestluck\\pathtable.xml");
 		/*
 		 * if (thePathTable) { delete thePathTable; thePathTable = NULL; } if
 		 * (ToolKit::isValidInputFilename(RN_PathTable::name())) { thePathTable
@@ -104,13 +104,13 @@ public class MesoSetup {
 		XmlParser.parseDetTimeXml("E:\\MesoInput_Cases\\12.25goodluck\\dettime.xml", realtime);
 	}
 	public static void ParseSensorTables() {
-		XmlParser.parseSensorXml("E:\\MesoInput_Cases\\12.25goodluck\\sensor.xml");
+		XmlParser.parseSensorXml("E:\\MesoInput_Cases\\12.28bestluck\\sensor.xml");
 	}
 	public static void ParseSnapshotList(List<MesoVehicle> vhclist){
 		XmlParser.parseSnapshotXml("src/main/resources/demo_snapshot/snapshot.xml", vhclist);
 	}
 	public static void ParseVehicleTable(){
-		XmlParser.parseVehicleTable("src/main/resources/demo_snapshot/vehicletable.xml");
+		XmlParser.parseVehicleTable("E:\\MesoInput_Cases\\12.28bestluck\\emitList(12.28).xml");
 	}
 	public static void SetupMiscellaneous() {
 		// Assign the pointers to control and surveillance devices in

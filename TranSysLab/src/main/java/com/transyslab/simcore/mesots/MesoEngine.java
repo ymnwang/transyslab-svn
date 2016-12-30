@@ -66,6 +66,7 @@ public class MesoEngine extends SimulationEngine {
 	private List<Float> LPB9_ =  new ArrayList<>();
 	private List<Float> VDB7_ = new ArrayList<>();
 	private List<Float> LPB11_ = new ArrayList<>();
+	private List<Float> LPA24_ = new ArrayList<>();
 	private float objFunction_;
 	private float[] parameter_;
 		
@@ -111,12 +112,13 @@ public class MesoEngine extends SimulationEngine {
 
 	public void init() {
 		// 通过parameter 赋值,结束时间往后推300s
-		SimulationClock.getInstance().init(61200,68700, 0.2);
+		SimulationClock.getInstance().init(0,7200, 0.2);
 
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
 		updateTime_ = now;
-		updateDetTime_ = now + detStepSize_;
+		//待改
+		updateDetTime_ = 102 + detStepSize_;
 		pathTime_ = now + pathStepSize_;
 		stateTime_ = now;
 		frequency_ = (float) (1.0 / SimulationClock.getInstance().getStepSize());
@@ -138,12 +140,12 @@ public class MesoEngine extends SimulationEngine {
 	}
 	public void resetBeforeSimLoop() {
 		firstEntry = 1;
-		SimulationClock.getInstance().init(61200, 68700, 0.2);
+		SimulationClock.getInstance().init(0, 7200, 0.2);
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
 		updateTime_ = now;
 		//重置检测器
-		updateDetTime_ = now + detStepSize_;
+		updateDetTime_ = 102 + detStepSize_;
 		
 		pathTime_ = now + pathStepSize_;
 		stateTime_ = now;
@@ -156,6 +158,12 @@ public class MesoEngine extends SimulationEngine {
 		Random.getInstance().get(Random.Misc).resetSeed();
 		Random.getInstance().get(Random.Departure).resetSeed();
 		Random.getInstance().get(Random.Routing).resetSeed();
+		if(mode_ == 1){
+			vhcTableIndex_ =0;
+			MesoVehicleTable.getInstance().getVhcList().clear();
+			MesoSetup.ParseVehicleTable();
+		}
+			
 	}
 	// 读入所有输入文件，包含MasterFile（仿真配置文件）和SimulationFile（仿真参数文件）
 	@Override
@@ -170,11 +178,12 @@ public class MesoEngine extends SimulationEngine {
 		List<CSVRecord> records;
 		int i=0;
 		try {
-			records = CSVUtils.readCSV("E:\\MesoInput_Cases\\12.25goodluck\\input1.csv", null);
+			records = CSVUtils.readCSV("E:\\MesoInput_Cases\\12.28bestluck\\input1.csv", null);
 			for(CSVRecord record : records){
 				for(int j=0;j<record.size();j++){
 					if(i==0)
-					LPB9_.add(Float.parseFloat(record.get(j)));
+						LPA24_.add(Float.parseFloat(record.get(j)));
+//					LPB9_.add(Float.parseFloat(record.get(j)));
 					else if (i==1)
 						VDB7_.add(Float.parseFloat(record.get(j)));
 						else
@@ -193,6 +202,7 @@ public class MesoEngine extends SimulationEngine {
 	// 多次运行
 	public void run(int mode) {
 		if(mode==0){
+			MesoNetwork.getInstance().updateParaSdfns(0.45f,0.0f, 21.95f, 156.25f,1.61f,6.31f);
 			while (simulationLoop() >= 0) {
 
 			}
@@ -241,13 +251,16 @@ public class MesoEngine extends SimulationEngine {
 			int si = threadid * de_.getPopulation() / Constants.THREAD_NUM;
 			int ei = threadid * de_.getPopulation() / Constants.THREAD_NUM + de_.getPopulation() / Constants.THREAD_NUM;
 			for (int i = si; i < ei; i++) {
-				MesoNetwork.getInstance().updateSdFns(de_.getNewPosition(i)[2], de_.getNewPosition(i)[3]);
-				MesoParameter.getInstance().setRspLower(de_.getNewPosition(i)[0]);
-				MesoParameter.getInstance().setRspUpper(de_.getNewPosition(i)[1]);
-				MesoParameter.getInstance().updateCSG();
+				MesoNetwork.getInstance().updateParaSdfns(0.5f, 0.0f, 16.67f, 180.0f, de_.getNewPosition(i)[0], de_.getNewPosition(i)[1]);
+//				MesoNetwork.getInstance().updateSdFns(de_.getNewPosition(i)[2], de_.getNewPosition(i)[3]);
+//				MesoParameter.getInstance().setRspLower(de_.getNewPosition(i)[0]);
+//				MesoParameter.getInstance().setRspUpper(de_.getNewPosition(i)[1]);
+//				MesoParameter.getInstance().updateCSG();
 				while (simulationLoop() >= 0) {
 				}
-				de_.getNewIdvds()[i].evaMRE(simFlow_, simTraTime_, realFlow_, realTraTime_, 0);
+//				de_.getNewIdvds()[i].evaMRE(simFlow_, simTraTime_, realFlow_, realTraTime_, 0);
+				evaRMSN();
+				de_.getNewIdvds()[i].setFitness(objFunction_);
 				de_.selection(i);
 				if (tempBestFitness_ > de_.getFitness(i)) {
 					tempBestFitness_ = de_.getFitness(i);
@@ -267,14 +280,21 @@ public class MesoEngine extends SimulationEngine {
 		else if(mode ==3){
 
 			MesoNetwork mesonetwork = MesoNetwork.getInstance();
-			mesonetwork.updateParaSdfns(0.5f,0.0f, 16.67f, 180.0f,parameter_[0],parameter_[1]);
+			//0.45f,0.0f, 21.95f, 156.25f,1.61f,6.31f
+			MesoNetwork.getInstance().updateParaSdfns(0.45f,0.0f, parameter_[3], parameter_[2],parameter_[0],parameter_[1]);
+			MesoParameter.getInstance().setRspLower(parameter_[4]);
+			MesoParameter.getInstance().setRspUpper(parameter_[5]);
+			MesoParameter.getInstance().updateCSG();
+//			mesonetwork.updateParaSdfns(0.5f,0.0f, 16.67f, 180.0f,parameter_[0],parameter_[1]);
 			mesonetwork.updateSegFreeSpeed();
 			while (simulationLoop() >= 0) {
 			}
-			evaRMSN();
+			evaMRE();
+//			evaRMSN();
 			resetBeforeSimLoop();
 		}
 	}
+	/*
 	public void exhaustionRun(float mp, float step) {
 		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
@@ -303,9 +323,9 @@ public class MesoEngine extends SimulationEngine {
 			b = b + step;
 		}
 
-	}
-	public float evaMRE(float w) {
-		int col = simFlow_[0].length;
+	}*/
+	public void evaMRE(/*float w*/) {
+/*		int col = simFlow_[0].length;
 		int row = simFlow_.length;
 		double sumOfLinkFlowError;
 		double sumOfLinkTimeError;
@@ -323,7 +343,23 @@ public class MesoEngine extends SimulationEngine {
 			}
 			sumError = sumError + w * (sumOfLinkFlowError) + (1 - w) * (sumOfLinkTimeError);
 		}
-		return (float) (sumError / col);		
+		return (float) (sumError / col);	*/
+		MesoNetwork meso_network = MesoNetwork.getInstance();
+		List<SurvStation> survstations = meso_network.getSurvStations();
+		List<Float> vList;
+		float head=0,tail=0;
+		float head1=0,tail1=0;
+		for(int i=0;i<survstations.size();i++){
+			if(survstations.get(i).getCode()==7){
+				vList = LPA24_;
+				for(int j=0;j<survstations.get(i).getSpeedList().size();j++){
+					head1 += Math.abs(vList.get(j)-survstations.get(i).getSpeedList().get(j))/ vList.get(j);
+				}
+			}
+				
+			
+		}
+		objFunction_ = head1/survstations.get(1).getSpeedList().size();		
 		
 	}
 	public void evaRMSN(){
@@ -442,12 +478,15 @@ public class MesoEngine extends SimulationEngine {
 
 		MesoSetup.ParseSensorTables();
 		
-		if(mode_ == 2||mode_ ==3){//从SnapShot启动仿真，并依靠过车记录发车
-			 //解析车辆表
-			  MesoSetup.ParseVehicleTable();  
+		if(mode_ == 2||mode_ ==3){//从SnapShot启动仿真
+ 
 			//解析已在路网上的车辆列表
 			  snapshotList_ = new ArrayList<MesoVehicle>();
 			  MesoSetup.ParseSnapshotList(snapshotList_);
+		}
+		if(mode_ == 1||mode_ ==3){
+			 //解析车辆表
+			  MesoSetup.ParseVehicleTable(); 
 		}
 		// 输出路网信息
 		/*try {
@@ -522,6 +561,7 @@ public class MesoEngine extends SimulationEngine {
 		}
 		else if(mode_ == 1|| mode_==3){
 			//按过车记录定时发车
+			MesoVehicleTable tmptable = MesoVehicleTable.getInstance();
 			while(vhcTableIndex_<MesoVehicleTable.getInstance().getVhcList().size() 
 					&& MesoVehicleTable.getInstance().getVhcList().get(vhcTableIndex_).departTime()<=now){
 				  MesoVehicleTable.getInstance().getVhcList().get(vhcTableIndex_).enterPretripQueue();
@@ -536,7 +576,7 @@ public class MesoEngine extends SimulationEngine {
 
 		// Move vehicles from vitual queue into the network if they could
 		// enter the network at present time.
-
+//		MesoVehicleTable tmptable = MesoVehicleTable.getInstance();
 		meso_network.enterVehiclesIntoNetwork();
 
 		// UPDATE PHASE : Calculate the density of speeds of all TCs in the
@@ -585,7 +625,8 @@ public class MesoEngine extends SimulationEngine {
 		}
 
 		//当前帧在网车辆的位置信息存储到framequeue
-/*		if(MesoVehicle.nVehicles()!=0)
+		/*
+		if(MesoVehicle.nVehicles()!=0)
 			meso_network.recordVehicleData();*/
 		
 		// 输出步长内所有车辆的位置信息

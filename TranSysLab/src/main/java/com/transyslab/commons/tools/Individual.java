@@ -32,6 +32,9 @@ public class Individual {
 			pos_[i] = pl[i] + (pu[i] - pl[i]) * rnd_.nextFloat();
 		}
 	}
+	public void setFitness(float fitness){
+		fitness_ = fitness;
+	}
 	public void evaMRE(int[][] simflow, float[][] simavgtime, int[][] realflow, float[][] realavgtime, float w) {
 		// 列为不同时间，行为不同link
 		int col = simflow[0].length;

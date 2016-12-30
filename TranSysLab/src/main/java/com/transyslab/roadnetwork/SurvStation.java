@@ -117,7 +117,8 @@ public class SurvStation extends CodedObject {
 		return measureTime_;
 	}
 	public void resetMeasureTime(){
-		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
+//		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
+		measureTime_ = 102 + interval_;
 		sectionAvgSpeed_ = 0;
 		sectionSpeed_ = 0;
 		sectionCount_ = 0;
@@ -137,7 +138,9 @@ public class SurvStation extends CodedObject {
 
 		type_ = ty; // sensor type
 		interval_ = iv; // statistic time interval in seconds
-		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
+		//×¢Òâ¸ü¸Ä
+//		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
+		measureTime_ = 102 + interval_;
 		zoneLength_ = zone; // * Parameter::lengthFactor(); in meter
 		// position_ = (float) (1.0 - pos); // position in % from segment end
 

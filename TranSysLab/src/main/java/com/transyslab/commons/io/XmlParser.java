@@ -556,7 +556,7 @@ public class XmlParser {
 					if(vehicle.getName()=="departtime")
 						departtime = Float.parseFloat(vehicle.getValue());
 				}
-				MesoVehicle tmp = MesoVehicleList.getInstance().recycle();
+				MesoVehicle tmp = new MesoVehicle();
 				tmp.init(vhcid, type,length,0,departtime);
 				((MesoVehicleTable) MesoVehicleTable.getInstance()).getVhcList().add(tmp);
 			}

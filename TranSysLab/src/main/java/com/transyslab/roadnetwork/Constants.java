@@ -192,5 +192,5 @@ public class Constants {
     // =1:非snapshot启动，按过车记录定时发车;
 	// =2:snapshot启动，按OD流量随机发车；
     // =3:snapshot启动，按过车记录定时发车；
-	public static final int SIM_MODE = 0;  
+	public static final int SIM_MODE = 1;  
 }
