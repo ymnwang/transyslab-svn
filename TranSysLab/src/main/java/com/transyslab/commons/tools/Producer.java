@@ -54,7 +54,7 @@ public class Producer implements Callable<SimulationEngine> {
 		// engine_.initPSO(pso_);
 		// engine_.initDE(de_);
 		MesoEngine engine = (MesoEngine)engine_;
-		engine.initSPSA(spsa_);
+//		engine.initSPSA(spsa_);
 		engine_.loadFiles();
 		return engine;
 	}

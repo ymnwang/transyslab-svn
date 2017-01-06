@@ -166,7 +166,7 @@ public class MesoEngine extends SimulationEngine {
 		
 		loadSimulationFiles();
 
-
+/*
 		List<CSVRecord> records;
 		int i=0;
 		try {
@@ -185,7 +185,7 @@ public class MesoEngine extends SimulationEngine {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 
 	}
 

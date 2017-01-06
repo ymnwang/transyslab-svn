@@ -564,15 +564,4 @@ public class XmlParser {
 		
 		
 	}
-	/*
-	 * //解析路段集计设置文件 public void parseLinkTimesXml(String filename){ File
-	 * inputXml=new File(filename); SAXReader saxReader = new SAXReader(); try {
-	 * Document document = saxReader.read(inputXml); Element node =
-	 * document.getRootElement(); listLinkTimesNodes(node); } catch
-	 * (DocumentException e) { System.out.println(e.getMessage()); } } public
-	 * void listLinkTimesNodes(Element node){ System.out.println("当前节点的名称：：" +
-	 * node.getName()); if() // 当前节点下面子节点迭代器 Iterator<Element> it =
-	 * node.elementIterator(); // 遍历 while (it.hasNext()) { // 获取某个子节点对象 Element
-	 * e = it.next(); // 对子节点进行遍历 listPathTableNodes(e); } }
-	 */
 }

@@ -34,7 +34,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\network"+s+".xml";
-		XmlParser.parseNetworkXml("E:\\MesoInput_Cases\\12.25goodluck\\network.xml");
+		XmlParser.parseNetworkXml("src/main/resources/demo/network.xml");
 		/*
 		 * if (MESO_Network.getInstance()!=null) { // if (ToolKit::verbose()) {
 		 * // cout << "Unloading <" << theNetwork->name() // << ">" << endl; //
@@ -52,7 +52,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\pathtable"+s+".xml";
-		XmlParser.parsePathTableXml("E:\\MesoInput_Cases\\12.25goodluck\\pathtable.xml");
+		XmlParser.parsePathTableXml("src/main/resources/demo/pathtable.xml");
 		/*
 		 * if (thePathTable) { delete thePathTable; thePathTable = NULL; } if
 		 * (ToolKit::isValidInputFilename(RN_PathTable::name())) { thePathTable
@@ -71,7 +71,7 @@ public class MesoSetup {
 		// int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		// String s = String.valueOf(threadid);
 		// String file = "E:\\demand"+s+".xml";
-		XmlParser.parseODXml("E:\\MesoInput_Cases\\12.25goodluck\\demand(synthesis).xml", tarid);
+		XmlParser.parseODXml("src/main/resources/demo/demand1-21.xml", tarid);
 		/*
 		 * if (theODTable) { delete (MESO_ODTable *)theODTable; theODTable =
 		 * NULL; }
@@ -104,7 +104,7 @@ public class MesoSetup {
 		XmlParser.parseDetTimeXml("E:\\MesoInput_Cases\\12.25goodluck\\dettime.xml", realtime);
 	}
 	public static void ParseSensorTables() {
-		XmlParser.parseSensorXml("E:\\MesoInput_Cases\\12.25goodluck\\sensor.xml");
+		XmlParser.parseSensorXml("src/main/resources/demo/sensor.xml");
 	}
 	public static void ParseSnapshotList(List<MesoVehicle> vhclist){
 		XmlParser.parseSnapshotXml("src/main/resources/demo_snapshot/snapshot.xml", vhclist);
