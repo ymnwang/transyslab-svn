@@ -26,7 +26,7 @@ public class MLPNetwork extends RoadNetwork {
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		return MLPNetworkPool.getInstance().getNetwork(threadid);
 	}
-
+/*
 	@Override
 	public Node newNode()// C++:RN_Node* MLP_Network::newNode()
 	{

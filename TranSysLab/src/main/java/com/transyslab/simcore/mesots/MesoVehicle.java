@@ -351,7 +351,7 @@ public class MesoVehicle extends Vehicle {
 		}
 
 		// ½Ú¶ÎÊÇ·ñÓÐ¼ì²âÆ÷
-		if (segment().getSurvList() != null&&SimulationClock.getInstance().getCurrentTime()>=102) {
+		if (segment().getSurvList() != null) {
 			ListIterator<SurvStation> i = segment().getSurvList().listIterator();
 			while (i.hasNext()) {
 				SurvStation tmp = i.next();

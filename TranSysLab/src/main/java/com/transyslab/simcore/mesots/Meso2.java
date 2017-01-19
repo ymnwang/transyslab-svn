@@ -14,7 +14,7 @@ import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 
-
+//SPSA参数校准运行
 public class Meso2 {
 
 	/**
@@ -24,18 +24,16 @@ public class Meso2 {
 		long begintime = System.currentTimeMillis();
 		long[] endtime = new long[2000];
 		float[] fitness = new float[2000];
-//		int iteration = 0;
-//	    float[] plower = new float[]{10.0f,80.0f,0f,0f};
-//        float[] pupper = new float[]{80.0f,180.0f,10.0f,10.0f};
-//        DE de = new DE();
-//        de.initDE(30, 4, 0.5f, 0.5f, plower, pupper);
-		float[] plower = new float[]{0,     0,   130,   16,20,50};
-		float[] pupper = new float[]{5.0f,5.0f,180.0f,25,40,100};
-		//0.45f,0.0f, 21.95f, 156.25f,1.61f,6.31f
-		float[] pinit = new float[]{1.61f,6.31f,156.25f,21.95f,30.48f,91.44f};/*,150f,2.5f,20f};*/
+
+		float[] plower = new float[]{1f,5.0f,150.0f,18.0f,25,85};//,   130,   16,20,50};
+		float[] pupper = new float[]{4f,8.0f,170.0f,23.0f,35,95};//,180.0f,25,40,100};
+		//0.45f,0.0f, 21.95f, 156.25f,1.61f,6.31f 曲线拟合
+		//2.2822566,5.56166,154.72292,19.469088,32.80778,91.904686 0.108
+//		float[] pinit = new float[]{1.61f,6.31f,156.25f,21.95f,30.48f,91.44f};/*,150f,2.5f,20f};*/
 //		float[] pinit = new float[]{30.48f,91.44f};/*,150f,2.5f,20f};*/
+		float[] pinit = new float[]{1.61f,6.31f,156.25f,21.95f,30.48f,91.44f};
         SPSA spsa = new SPSA(6);
-     
+        //Spall建议20，100，0.602，1.9，0.101
         spsa.setAlgParameters(0.5, 50, 0.602, 0.1, 0.101);
         spsa.setBounderies(plower, pupper);
         spsa.setParameters(pinit);
@@ -102,34 +100,17 @@ public class Meso2 {
 				// TODO 自动生成的 catch 块
 				e.printStackTrace();
 			}
-			/*
-			for(int i=0;i<Constants.THREAD_NUM;i++){
-				if(de.getGbestFitness() > engineList[i].getTempBestFitness()){
-					de.setGbestFitness(engineList[i].getTempBestFitness());
-					de.setGbest(engineList[i].getTempBest());
-				}
-			}
-//			fitness[runtimes-1] = de.getGbestFitness();
-			System.out.println("Fitness: "+de.getGbestFitness());
-//			endtime[runtimes] = System.currentTimeMillis();*/
 			//更新参数
 			System.out.println(engineList[2].getObjFunction());
-			if(engineList[2].getObjFunction()<=0.118){
+			if(engineList[2].getObjFunction()<=0.13){
 				for(int i=0;i<engineList[2].getParameters().length;i++){
 					System.out.println(engineList[2].getParameters()[i]);
 				}
+//				break;
 				
 			}
 			runtimes++;			
 		}
-		/*
-		for(int i=1;i<(runtimes);i++){
-			System.out.println("程序运行第"+ (i-1) +"代所需的运行时间："+(endtime[i]-endtime[i-1])/1000+"s");
-		}
-*//*
-		for(int j=0;j<de.getDim();j++){
-			System.out.println(de.getGbest()[j]);
-		}*/
 	}
 
 }

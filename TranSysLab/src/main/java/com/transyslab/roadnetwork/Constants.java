@@ -188,6 +188,7 @@ public class Constants {
 	public static final float[] COLOR_BLUE = {0.0f, 0.0f, 1.0f};
 	public static final float[] COLOR_GREEN = {0.0f, 1.0f, 0.0f};
 	public static final float[] COLOR_WHITE = {1.0f, 1.0f, 1.0f};
+	public static final float[] COLOR_GREY = {0.21f, 0.21f, 0.21f};
 	// =0:非snapshot启动，按OD流量随机发车；
     // =1:非snapshot启动，按过车记录定时发车;
 	// =2:snapshot启动，按OD流量随机发车；

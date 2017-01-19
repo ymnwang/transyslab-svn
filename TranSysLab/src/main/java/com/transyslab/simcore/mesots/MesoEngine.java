@@ -13,6 +13,7 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
 import org.apache.commons.csv.CSVRecord;
 
 import com.transyslab.commons.io.CSVUtils;
+import com.transyslab.commons.renderer.JOGLFrameQueue;
 import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.PSO;
 import com.transyslab.commons.tools.Random;
@@ -21,6 +22,8 @@ import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.LinkTimes;
 import com.transyslab.roadnetwork.SurvStation;
+import com.transyslab.roadnetwork.VehicleData;
+import com.transyslab.roadnetwork.VehicleDataPool;
 import com.transyslab.simcore.SimulationEngine;
 
 /**
@@ -69,6 +72,8 @@ public class MesoEngine extends SimulationEngine {
 	private List<Float> LPA24_ = new ArrayList<>();
 	private float objFunction_;
 	private float[] parameter_;
+	private List<CSVRecord> vhcData_;
+	private int vhcDataID_;
 		
 	public MesoEngine(int mode) {
 		//定义仿真运行模式
@@ -112,13 +117,13 @@ public class MesoEngine extends SimulationEngine {
 
 	public void init() {
 		// 通过parameter 赋值,结束时间往后推300s
-		SimulationClock.getInstance().init(0,7200, 0.2);
+		SimulationClock.getInstance().init(0*3600,2*3600, 0.2);
 
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
 		updateTime_ = now;
 		//待改
-		updateDetTime_ = 102 + detStepSize_;
+		updateDetTime_ = now + detStepSize_;
 		pathTime_ = now + pathStepSize_;
 		stateTime_ = now;
 		frequency_ = (float) (1.0 / SimulationClock.getInstance().getStepSize());
@@ -140,12 +145,12 @@ public class MesoEngine extends SimulationEngine {
 	}
 	public void resetBeforeSimLoop() {
 		firstEntry = 1;
-		SimulationClock.getInstance().init(0, 7200, 0.2);
+		SimulationClock.getInstance().init(0*3600,2*3600, 0.2);
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
 		updateTime_ = now;
 		//重置检测器
-		updateDetTime_ = 102 + detStepSize_;
+		updateDetTime_ = now + detStepSize_;
 		
 		pathTime_ = now + pathStepSize_;
 		stateTime_ = now;
@@ -178,7 +183,10 @@ public class MesoEngine extends SimulationEngine {
 		List<CSVRecord> records;
 		int i=0;
 		try {
+			// E:\\MesoInput_Cases\\12.25goodluck\\input1.csv
+			// E:\\MesoInput_Cases\\12.28bestluck\\input1.csv
 			records = CSVUtils.readCSV("E:\\MesoInput_Cases\\12.28bestluck\\input1.csv", null);
+			
 			for(CSVRecord record : records){
 				for(int j=0;j<record.size();j++){
 					if(i==0)
@@ -195,6 +203,13 @@ public class MesoEngine extends SimulationEngine {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		/*
+		try {
+			vhcData_ = CSVUtils.readCSV("src/main/resources/demo_pre/newdata.csv", null);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 
 	}
 
@@ -202,7 +217,7 @@ public class MesoEngine extends SimulationEngine {
 	// 多次运行
 	public void run(int mode) {
 		if(mode==0){
-			MesoNetwork.getInstance().updateParaSdfns(0.45f,0.0f, 21.95f, 156.25f,1.61f,6.31f);
+			MesoNetwork.getInstance().updateParaSdfns(0.15f,0.0f, 21.95f, 156.25f,1.61f,6.31f);
 			while (simulationLoop() >= 0) {
 
 			}
@@ -281,17 +296,45 @@ public class MesoEngine extends SimulationEngine {
 
 			MesoNetwork mesonetwork = MesoNetwork.getInstance();
 			//0.45f,0.0f, 21.95f, 156.25f,1.61f,6.31f
-			MesoNetwork.getInstance().updateParaSdfns(0.45f,0.0f, parameter_[3], parameter_[2],parameter_[0],parameter_[1]);
-			MesoParameter.getInstance().setRspLower(parameter_[4]);
-			MesoParameter.getInstance().setRspUpper(parameter_[5]);
+			//2.2822566,5.56166,154.72292,19.469088,32.80778,91.904686
+			//扰动六个参数
+//			MesoNetwork.getInstance().updateParaSdfns(0.45f,0.0f, parameter_[3], parameter_[2],parameter_[0],parameter_[1]);
+			
+//			MesoNetwork.getInstance().updateParaSdfns(0.45f,0.0f, 17.69f,183.95f,2.91f,0.65f);
+			//扰动四个参数
+//			MesoNetwork.getInstance().updateParaSdfns(0.45f,0.0f, 21.95f,156.25f,1.61f,8.11f);// parameter_[0],parameter_[1]);
+			MesoParameter.getInstance().setRspLower(30.57f);//parameter_[4]);
+			MesoParameter.getInstance().setRspUpper(91.79f);//parameter_[5]);
 			MesoParameter.getInstance().updateCSG();
+			//人工合成数据
 //			mesonetwork.updateParaSdfns(0.5f,0.0f, 16.67f, 180.0f,parameter_[0],parameter_[1]);
+			mesonetwork.updateParaSdfns(0.45f,0.0f, 19.76f, 156.21f,2.0f,5.35f);
 			mesonetwork.updateSegFreeSpeed();
 			while (simulationLoop() >= 0) {
 			}
-			evaMRE();
-//			evaRMSN();
+//			evaMRE();
+			evaRMSN();
 			resetBeforeSimLoop();
+		}
+		else if(mode == 4){
+			int tmpframeid =-1;
+			for(CSVRecord record: vhcData_){
+				vhcDataID_ = Integer.parseInt(record.get(0));
+/*				if(tmpframeid!=vhcDataID_){
+					tmpframeid = vhcDataID_;
+				}*/				
+				//从对象池获取vehicledata对象
+				VehicleData vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
+				//记录车辆信息
+				vd.init(Integer.parseInt(record.get(1)),Float.parseFloat(record.get(2)));
+				//将vehicledata插入frame
+				try {
+					JOGLFrameQueue.getInstance().offer(vd, Integer.parseInt(record.get(3)));
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 	/*
@@ -352,14 +395,14 @@ public class MesoEngine extends SimulationEngine {
 		for(int i=0;i<survstations.size();i++){
 			if(survstations.get(i).getCode()==7){
 				vList = LPA24_;
-				for(int j=0;j<survstations.get(i).getSpeedList().size();j++){
-					head1 += Math.abs(vList.get(j)-survstations.get(i).getSpeedList().get(j))/ vList.get(j);
+				for(int j=0;j<vList.size();j++){
+					head1 += Math.abs(vList.get(j)-survstations.get(i).getSpeedList().get(j+3))/vList.get(j);
 				}
 			}
 				
 			
 		}
-		objFunction_ = head1/survstations.get(1).getSpeedList().size();		
+		objFunction_ = head1/LPA24_.size();		
 		
 	}
 	public void evaRMSN(){
@@ -367,7 +410,8 @@ public class MesoEngine extends SimulationEngine {
 		List<SurvStation> survstations = meso_network.getSurvStations();
 		List<Float> vList;
 		float head=0,tail=0;
-		float head1,tail1=0;
+		float head1=0,tail1=0;
+		/*人工数据
 		for(int i=0;i<survstations.size();i++){
 			if(survstations.get(i).getCode()==-9)
 				vList = LPB9_;
@@ -383,8 +427,19 @@ public class MesoEngine extends SimulationEngine {
 			}
 			head += head1;
 			tail += tail1;
+		}*/
+		for(int i=0;i<survstations.size();i++){
+			if(survstations.get(i).getCode()==7){
+				vList = LPA24_;
+				for(int j=0;j<vList.size();j++){
+					head1 += (float) Math.pow(vList.get(j)-survstations.get(i).getSpeedList().get(j+3),2);
+					tail1 += vList.get(j);
+				}
+				head += head1;
+				tail += tail1;
+			}
 		}
-		objFunction_ = (float) (Math.sqrt(head*5*25))/tail;
+		objFunction_ = (float) (Math.sqrt(head*20))/tail;
 			
 	}
 
@@ -625,9 +680,10 @@ public class MesoEngine extends SimulationEngine {
 		}
 
 		//当前帧在网车辆的位置信息存储到framequeue
-		/*
-		if(MesoVehicle.nVehicles()!=0)
-			meso_network.recordVehicleData();*/
+		
+		if(MesoVehicle.nVehicles()!=0 && mode_==0)
+			meso_network.recordVehicleData();
+		
 		
 		// 输出步长内所有车辆的位置信息
 		/*

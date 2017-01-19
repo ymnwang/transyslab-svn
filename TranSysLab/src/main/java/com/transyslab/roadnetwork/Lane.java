@@ -21,7 +21,8 @@ public class Lane extends CodedObject {
 	protected int rules_;// lane use and change rules
 	protected List<Lane> upLanes_;
 	protected List<Lane> dnLanes_;
-
+	protected Point startPnt_;
+	protected Point endPnt_;
 	protected int laneType_;
 	protected int state_;
 	protected int cmarker_;// connection marker
@@ -278,12 +279,15 @@ public class Lane extends CodedObject {
 		rules_ &= ~exclude;
 	}
 
-	public int init(int c, int r) {
+	public int init(int c, int r, double beginx, double beginy, double endx, double endy) {
 		/*
 		 * if (ToolKit::debug()) { cout << indent << indent << indent << "<" <<
 		 * c << endc << r << ">" << endl; }
 		 */
-
+		startPnt_ =new Point(beginx,beginy);
+		endPnt_ =new Point(endx,endy);
+		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(startPnt_);
+		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(endPnt_);
 		if (segment_ != null) {
 			/*
 			 * cerr << "Error:: Lane <" << c << "> " <<
@@ -312,14 +316,23 @@ public class Lane extends CodedObject {
 	public void printDnConnectors() {
 
 	}
-
-	public void calcStaticInfo() {
+	public Point getStartPnt() {
+		return startPnt_;
+	}
+	public Point getEndPnt() {
+		return endPnt_;
+	}
+	public void calcStaticInfo(WorldSpace world_space) {
 		if (getLeftLane() == null)
 			rulesExclude(Constants.LANE_CHANGE_LEFT);
 		if (getRightLane() == null)
 			rulesExclude(Constants.LANE_CHANGE_RIGHT);
 
 		setLaneType();
+		//起终点坐标平移
+		startPnt_ = world_space.worldSpacePoint(startPnt_);
+		endPnt_ = world_space.worldSpacePoint(endPnt_);
+		
 	}
 	/*
 	 * --------------------------------------------------------------------

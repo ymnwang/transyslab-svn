@@ -6,13 +6,13 @@ package com.transyslab.roadnetwork;
 /**
  * 世界坐标
  *
- * @author YYL extern RN_WorldSpace * theWorldSpace; = this RN_WorldSpace *
- *         theWorldSpace = NULL;
+ * @author YYL 
+ *     
  *
- *         // We initialize the north east point to - LARGE_NUMBER and the south
- *         // west point to + LARGE_NUMBER to ensure that the first network
- *         point // compared in recordExtremePoints will replace the initial
- *         values.
+ *  We initialize the north east point to - LARGE_NUMBER and the south
+ *  west point to + LARGE_NUMBER to ensure that the first network
+ *  point compared in recordExtremePoints will replace the initial
+ *  values.
  *
  */
 public class WorldSpace {
@@ -70,7 +70,7 @@ public class WorldSpace {
 		else if (height < Point.POINT_EPSILON) { // W-E linear network
 			height = 0.1 * width;
 		}
-		// Point初始化
+		// 中心点初始化
 		if (center == null)
 			center = new Point();
 		center.setCoodinate(0.5 * width, 0.5 * height);
@@ -88,7 +88,10 @@ public class WorldSpace {
 				(y - southWestPnt.getLocationY())  /* * Parameter.lengthFactor()*/);
 
 	}
-
+	//点要素坐标平移
+	public void translateWorldSpacePoint(Point p){
+		p.setCoodinate(p.getLocationX() - southWestPnt.getLocationX(), p.getLocationY() - southWestPnt.getLocationY());
+	}
 	// Convert a point from work space coordinates to original
 	// network database cooridinates
 

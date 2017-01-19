@@ -41,6 +41,14 @@ public class VehicleData {
 		vhcLocationY_ = seg.getStartPnt().getLocationY() + s * (seg.getEndPnt().getLocationY() - seg.getStartPnt().getLocationY()) / l;
 		
 	}
+	public void init(int laneid, float distance){
+		Lane lane = RoadNetwork.getInstance().findLane(laneid);
+		double l = lane.getLength();
+		double s = l-distance;
+		vhcLocationX_ = lane.getStartPnt().getLocationX() + s * (lane.getEndPnt().getLocationX() - lane.getStartPnt().getLocationX()) / l;
+		vhcLocationY_ = lane.getStartPnt().getLocationY() + s * (lane.getEndPnt().getLocationY() - lane.getStartPnt().getLocationY()) / l;
+		
+	}
 	public void clean(){
 		vehicleID_ = vehicleType_ = 0;
 		vhcLocationX_ = vhcLocationY_ = 0;

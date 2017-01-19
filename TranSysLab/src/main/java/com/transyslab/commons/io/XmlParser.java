@@ -21,9 +21,10 @@ import com.transyslab.roadnetwork.Boundary;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Path;
 import com.transyslab.roadnetwork.PathTable;
+import com.transyslab.roadnetwork.Point;
 import com.transyslab.roadnetwork.Sensor;
+import com.transyslab.roadnetwork.Surface;
 import com.transyslab.roadnetwork.SurvStation;
-import com.transyslab.roadnetwork.VehicleTable;
 import com.transyslab.simcore.mesots.MesoLane;
 import com.transyslab.simcore.mesots.MesoLink;
 import com.transyslab.simcore.mesots.MesoNetwork;
@@ -34,13 +35,21 @@ import com.transyslab.simcore.mesots.MesoSegment;
 import com.transyslab.simcore.mesots.MesoVehicle;
 import com.transyslab.simcore.mesots.MesoVehicleList;
 import com.transyslab.simcore.mesots.MesoVehicleTable;
+import com.transyslab.simcore.mlp.MLPLane;
+import com.transyslab.simcore.mlp.MLPLink;
+import com.transyslab.simcore.mlp.MLPNetwork;
+import com.transyslab.simcore.mlp.MLPNode;
+import com.transyslab.simcore.mlp.MLPSegment;
 
 /**
  * @author yali
  *
  */
 public class XmlParser {
-
+	//路网类型，1:MesoTS模型; 2:MLP模型
+	public static int networkType_;
+	
+	//解析仿真路网
 	public static void parseNetworkXml(String fileName) {
 		File inputXml = new File(fileName);
 		SAXReader saxReader = new SAXReader();
@@ -54,7 +63,7 @@ public class XmlParser {
 		}
 	}
 	public static void listNetworkNodes(Element node) {
-		// System.out.println("当前节点的名称：：" + node.getName());
+		
 		int tempid = -100;
 		int temptype = -100;
 		String tempname = "null";
@@ -70,15 +79,17 @@ public class XmlParser {
 		int tempdnl = -100;
 		int tempupl = -100;
 		int tempboundary = -100;
+		int tmpsurface = -100;
+		int arcid = -100;
+		double kerbx = 0;
+		double kerby = 0;
 
 		// 获取当前节点的所有属性节点
 		List<Attribute> list = node.attributes();
-		// 遍历属性节点
+		// 解析Node
 		if (node.getName() == "N") {
-			MesoNode tempnode = (MesoNode) MesoNetwork.getInstance().newNode();
+
 			for (Attribute attr : list) {
-				// System.out.println(attr.getText() + "-----" + attr.getName()
-				// + "---" + attr.getValue());
 				if (attr.getName() == "id")
 					tempid = Integer.parseInt(attr.getValue());
 				if (attr.getName() == "type")
@@ -87,14 +98,21 @@ public class XmlParser {
 					tempname = attr.getValue();
 
 			}
-			tempnode.init(tempid, temptype, tempname);
+			//实例化不同仿真模型的路网要素
+			if(networkType_ == 1){
+				MesoNode tempnode = new MesoNode();
+				tempnode.init(tempid, temptype, tempname);
+			}	
+			else if(networkType_ == 2){
+				MLPNode tempnode = new MLPNode();
+				tempnode.init(tempid, temptype, tempname);
+			}
+			
 		}
+		// 解析Link
 		if (node.getName() == "L") {
-			MesoLink templink = (MesoLink) MesoNetwork.getInstance().newLink();
+			
 			for (Attribute attr : list) {
-				// System.out.println(attr.getText() + "-----" + attr.getName()
-				// + "---" + attr.getValue());
-
 				if (attr.getName() == "id")
 					tempid = Integer.parseInt(attr.getValue());
 				if (attr.getName() == "type")
@@ -105,13 +123,20 @@ public class XmlParser {
 					tempdnnode = Integer.parseInt(attr.getValue());
 
 			}
-			templink.init(tempid, temptype, tempupnode, tempdnnode);
+			//实例化不同仿真模型的路网要素
+			if(networkType_ == 1){
+				MesoLink templink = new MesoLink();
+				templink.init(tempid, temptype, tempupnode, tempdnnode);
+			}	
+			else if(networkType_ == 2){
+				MLPLink templink = new MLPLink();
+				templink.init(tempid, temptype, tempupnode, tempdnnode);
+			}
 		}
+		//解析Segment
 		if (node.getName() == "S") {
-			MesoSegment tempsegment = (MesoSegment) MesoNetwork.getInstance().newSegment();
+			
 			for (Attribute attr : list) {
-				// System.out.println(attr.getText() + "-----" + attr.getName()
-				// + "---" + attr.getValue());
 				if (attr.getName() == "id")
 					tempid = Integer.parseInt(attr.getValue());
 				if (attr.getName() == "speedLimit")
@@ -130,11 +155,21 @@ public class XmlParser {
 					endy = Double.parseDouble(attr.getValue());
 
 			}
-			tempsegment.init(tempid, tempspeedlimit, (float) tempfreespeed, gradient);
-			tempsegment.initArc(beginx, beginy, 0, endx, endy);
+			if(networkType_ == 1){
+				MesoSegment tempsegment = new MesoSegment();
+				tempsegment.init(tempid, tempspeedlimit, (float) tempfreespeed, gradient);
+				tempsegment.initArc(beginx, beginy, 0, endx, endy);
+			}	
+			else if(networkType_ == 2){
+				MLPSegment tempsegment = new MLPSegment();
+				tempsegment.init(tempid, tempspeedlimit, (float) tempfreespeed, gradient);
+				tempsegment.initArc(beginx, beginy, 0, endx, endy);
+			}
+
 		}
+		//解析Lane
 		if (node.getName() == "LA") {
-			MesoLane templane = (MesoLane) MesoNetwork.getInstance().newLane();
+			
 			for (Attribute attr : list) {
 				// System.out.println(attr.getText() + "-----" + attr.getName()
 				// + "---" + attr.getValue());
@@ -142,30 +177,54 @@ public class XmlParser {
 					tempid = Integer.parseInt(attr.getValue());
 				if (attr.getName() == "rule")
 					temptype = Integer.parseInt(attr.getValue());
+				if (attr.getName() == "beginX")
+					beginx = Double.parseDouble(attr.getValue());
+				if (attr.getName() == "beginY")
+					beginy = Double.parseDouble(attr.getValue());
+				if (attr.getName() == "endX")
+					endx = Double.parseDouble(attr.getValue());
+				if (attr.getName() == "endY")
+					endy = Double.parseDouble(attr.getValue());
 
 			}
-			templane.init(tempid, temptype);
+			//创建不同仿真模型的Lane对象
+			if(networkType_ == 1){
+				MesoLane templane = new MesoLane();
+				templane.init(tempid, temptype,beginx,beginy,endx,endy);
+			}	
+			else if(networkType_ == 2){
+				MLPLane templane = new MLPLane();
+				templane.init(tempid, temptype,beginx,beginy,endx,endy);
+			}
+			
 		}
+		//解析LaneConnector
 		if (node.getName() == "LC") {
 			for (Attribute attr : list) {
-				// System.out.println(attr.getText() + "-----" + attr.getName()
-				// + "---" + attr.getValue());
+				
 				if (attr.getName() == "UpLane")
 					tempupl = Integer.parseInt(attr.getValue());
 				if (attr.getName() == "DnLane")
 					tempdnl = Integer.parseInt(attr.getValue());
 
 			}
-			MesoNetwork.getInstance().addLaneConnector(tempupl, tempdnl);
+			//组织车道纵向拓扑关系
+			if(networkType_ == 1){
+				MesoNetwork.getInstance().addLaneConnector(tempupl, tempdnl);
+			}	
+			else if(networkType_ == 2){
+				MLPNetwork.getInstance().addLaneConnector(tempupl, tempdnl);
+			}
+			
 		}
+		//解析Boundary
 		if (node.getName() == "Boundary") {
 			for (Attribute attr : list) {
-				// System.out.println(attr.getText() + "-----" + attr.getName()
-				// + "---" + attr.getValue());
+				
 				if (attr.getName() == "BoundaryID")
 					tempboundary = Integer.parseInt(attr.getValue());
 				if (attr.getName() == "BeginX")
-					beginx = Double.parseDouble(attr.getValue());
+					beginx = Double.parseDouble(attr.getValue());					
 				if (attr.getName() == "BeginY")
 					beginy = Double.parseDouble(attr.getValue());
 				if (attr.getName() == "EndX")
@@ -174,8 +233,39 @@ public class XmlParser {
 					endy = Double.parseDouble(attr.getValue());
 
 			}
+			//创建Boundary对象，用于绘制车道分隔线，与仿真模型无关
 			Boundary tempbdy = new Boundary();
 			tempbdy.init(tempboundary, beginx, beginy, endx, endy);
+		}
+		//解析Surface
+		if(node.getName() == "Surface"){
+			for (Attribute attr : list) {
+
+				if (attr.getName() == "id")
+					tmpsurface = Integer.parseInt(attr.getValue());
+				if (attr.getName() == "arcid")
+					arcid = Integer.parseInt(attr.getValue());
+
+			}
+			//创建Surface对象，用于绘制路面，与仿真模型无关
+			Surface surface = new Surface();
+			surface.init(tmpsurface, arcid);
+			List<Element> kerblist = node.elements();
+			for(Element p : kerblist){
+				List<Attribute> pattr = p.attributes();
+				for(Attribute attr : pattr){
+					if(attr.getName()=="KerbX"){
+						if(attr.getValue().isEmpty())
+							System.out.print(tmpsurface);
+						kerbx = Double.parseDouble(attr.getValue());
+					}
+						
+					if(attr.getName()=="KerbY")
+						kerby = Double.parseDouble(attr.getValue());
+				}
+				surface.addKerbPoint(new Point(kerbx,kerby));
+			}
+			
 		}
 
 		// 当前节点下面子节点迭代器
@@ -360,6 +450,7 @@ public class XmlParser {
 			listPathTableNodes(e);
 		}
 	}
+	//解析外部检测数据，建议使用csv格式
 	public static void parseDetTimeXml(String filename, float[][] realtime) {
 		File inputXml = new File(filename);
 		SAXReader saxReader = new SAXReader();
@@ -373,7 +464,7 @@ public class XmlParser {
 		}
 	}
 	public static void listDetTimeNodes(Element node, float[][] realtime) {
-		// System.out.println("当前节点的名称：：" + node.getName());
+		
 		int colindex;
 		List<Element> rootchild = node.elements();
 		for (Element linkobj : rootchild) {
@@ -407,6 +498,7 @@ public class XmlParser {
 
 		}
 	}
+	//解析交通检测器
 	public static void parseSensorXml(String filename) {
 		File inputXml = new File(filename);
 		SAXReader saxReader = new SAXReader();
@@ -456,16 +548,10 @@ public class XmlParser {
 				// station元素下的子元素sensor
 				List<Attribute> listofl = lofp.attributes();
 				for (Attribute attrofl : listofl) {
-					// System.out.println(attrofl.getText() + "-----" +
-					// attrofl.getName()
-					// + "---" + attrofl.getValue());
-					if (attrofl.getName() == "id") {
+					if (attrofl.getName() == "id") 
 						sid = Integer.parseInt(attrofl.getValue());
-					}
-					if (attrofl.getName() == "laneid") {
+					if (attrofl.getName() == "laneid") 
 						lid = Integer.parseInt(attrofl.getValue());
-					}
-					// 完成station初始化
 				}
 				Sensor tsensor = new Sensor();
 				tsensor.init(sid, lid);
@@ -482,6 +568,9 @@ public class XmlParser {
 			listSensorNodes(e);
 		}
 	}
+	
+	//解析路网快照
+	//注意：应先解析VehicleTable，得到od和path
 	public static void parseSnapshotXml(String filename, List<MesoVehicle> vhclist){
 		File inputXml=new File(filename); 
 		SAXReader saxReader = new SAXReader(); 
@@ -493,7 +582,6 @@ public class XmlParser {
 		System.out.println(e.getMessage()); 
 		} 
 	}
-	//注意：应先解析VehicleTable，得到od和path
 	public static void listSnapshotNodes(Element node, List<MesoVehicle> vhclist){
 		int vhcid=-1,type=-1;
 		float distance=0,length=0,departtime=0;
@@ -517,6 +605,8 @@ public class XmlParser {
 			vhclist.add(tmp);
 		}
 	}
+	
+	//解析外部发车表
 	public static void parseVehicleTable(String filename){
 		File inputXml=new File(filename); 
 		SAXReader saxReader = new SAXReader(); 
@@ -564,15 +654,4 @@ public class XmlParser {
 		
 		
 	}
-	/*
-	 * //解析路段集计设置文件 public void parseLinkTimesXml(String filename){ File
-	 * inputXml=new File(filename); SAXReader saxReader = new SAXReader(); try {
-	 * Document document = saxReader.read(inputXml); Element node =
-	 * document.getRootElement(); listLinkTimesNodes(node); } catch
-	 * (DocumentException e) { System.out.println(e.getMessage()); } } public
-	 * void listLinkTimesNodes(Element node){ System.out.println("当前节点的名称：：" +
-	 * node.getName()); if() // 当前节点下面子节点迭代器 Iterator<Element> it =
-	 * node.elementIterator(); // 遍历 while (it.hasNext()) { // 获取某个子节点对象 Element
-	 * e = it.next(); // 对子节点进行遍历 listPathTableNodes(e); } }
-	 */
 }

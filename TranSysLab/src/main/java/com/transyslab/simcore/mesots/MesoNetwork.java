@@ -3,9 +3,14 @@
  */
 package com.transyslab.simcore.mesots;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.commons.csv.CSVRecord;
+
+import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.renderer.JOGLAnimationFrame;
 import com.transyslab.commons.renderer.JOGLFrameQueue;
 import com.transyslab.commons.tools.Random;
@@ -33,9 +38,9 @@ public class MesoNetwork extends RoadNetwork {
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		return MesoNetworkPool.getInstance().getNetwork(threadid);
 	}
-
+/*
 	@Override
-	public Node newNode()// C++:RN_Node* MESO_Network::newNode()
+	public Node newNode()
 	{
 		return new MesoNode();
 	}
@@ -111,10 +116,6 @@ public class MesoNetwork extends RoadNetwork {
 			((MesoLink) getLink(i)).checkConnectivity();
 		}
 	}
-	/*
-	 * public void resetSensorReadings() { for (int i = 0; i < nSensors(); i ++
-	 * ) { getSensor(i).resetSensorReadings(); } }
-	 */
 
 	public void calcSegmentData() {
 		MesoSegment ps = new MesoSegment();
@@ -335,14 +336,14 @@ public class MesoNetwork extends RoadNetwork {
 			}
 		}
 	}
-	
+
 	public void recordVehicleData(){
 		MesoSegment ps;
 		MesoTrafficCell tc;
 		MesoVehicle vhc;
 		VehicleData vd;
 		//从对象池中获取frame对象
-//		JOGLAnimationFrame frame = JOGLFramePool.getFramePool().getFrame();
+
 		ListIterator<Segment> i = segments_.listIterator();
 		//遍历segment
 		while (i.hasNext()) {

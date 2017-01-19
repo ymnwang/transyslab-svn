@@ -10,6 +10,7 @@ import com.transyslab.roadnetwork.Point;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.RoadNetworkPool;
 import com.transyslab.roadnetwork.Segment;
+import com.transyslab.roadnetwork.Surface;
 import com.transyslab.roadnetwork.VehicleData;
 import com.transyslab.roadnetwork.VehicleDataPool;
 
@@ -78,7 +79,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 
 		// ----- Your OpenGL initialization code here -----
 		Point center = drawableNetwork_.getWorldSpace().getCenter();
-		cam_.initCamera(center, 200);
+		cam_.initCamera(center, 20);
 
 	}
 
@@ -142,30 +143,46 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 	}
 	public void scene(GL2 gl) {
 		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
+		List<Surface> surfaces = drawableNetwork_.getSurfaces();
 		Boundary tmpboundary;
 		Segment tmpsegment;
 		JOGLAnimationFrame frame;
-		for (int i = 0; i < boundarys.size(); i++) {
-			tmpboundary = boundarys.get(i);
-			JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 5,
-					Constants.COLOR_WHITE);
+		if(cam_.getEyePosition()[2]<=1000){
+			for (int i = 0; i < boundarys.size(); i++) {
+				tmpboundary = boundarys.get(i);
+				JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
+						Constants.COLOR_WHITE);
+			}
 		}
+
+		/*
 		for(int i=0;i<drawableNetwork_.nSegments();i++){
 			tmpsegment = drawableNetwork_.getSegment(i);
 			JOGLDrawShapes.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 5,
 					Constants.COLOR_WHITE);
+		}*/
+		for(Surface sf: surfaces){
+			JOGLDrawShapes.drawPolygon(gl, sf.getKerbList(),Constants.COLOR_GREY);
 		}
-		frame =JOGLFrameQueue.getInstance().poll();
-		if(frame!=null){
-			
-			while(!frame.getVhcDataQueue().isEmpty()){
-				VehicleData vd = frame.getVehicleData();
-				JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),10, Constants.COLOR_BLUE);
-				//回收vehicledata
-				VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
-			}
-			//清空frame
-			frame.clean();
-		}		
+		if(cam_.canStart_){
+			frame =JOGLFrameQueue.getInstance().poll();
+			if(frame!=null){
+				
+				while(!frame.getVhcDataQueue().isEmpty()){
+					VehicleData vd = frame.getVehicleData();
+					
+//						if(cam_.getEyePosition()[2]<=1000)
+					//根据摄像机高度调整绘制的车辆大小，2017年1月2日ppt材料
+					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),15*(1000-cam_.getEyePosition()[2])/1000, Constants.COLOR_BLUE);
+//						else
+//							JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),1, Constants.COLOR_BLUE);
+					//回收vehicledata
+					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
+				}
+				//清空frame
+				frame.clean();
+			}		
+		}
+		
 	}
 }

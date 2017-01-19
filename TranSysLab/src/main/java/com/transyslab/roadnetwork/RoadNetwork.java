@@ -38,6 +38,7 @@ public class RoadNetwork {
 	protected List<Segment> segments_ = new ArrayList<Segment>();
 	protected List<Lane> lanes_ = new ArrayList<Lane>();
 	protected List<Boundary> boundarys_ = new ArrayList<Boundary>();
+	protected List<Surface> surfaces_ = new ArrayList<Surface>();
 	protected List<Label> labels_ = new ArrayList<Label>();
 
 	protected List<Sensor> sensors_ = new ArrayList<Sensor>();
@@ -53,7 +54,7 @@ public class RoadNetwork {
 
 	// tomer
 
-	protected Vector<Intersection> IS_;
+	protected List<Intersection> IS_;
 
 	// **
 
@@ -116,6 +117,7 @@ public class RoadNetwork {
 	// should be overloaded in the derived classes if your network objects
 	// differ from the defaults.
 	// ----
+	/*
 	public Label newLabel() {
 		return new Label();
 	}
@@ -193,7 +195,7 @@ public class RoadNetwork {
 	// tomer - where is the capacity() function?
 
 	public int nMaxIS() {
-		return IS_.capacity();
+		return IS_.size();
 	}
 
 	// **
@@ -217,6 +219,9 @@ public class RoadNetwork {
 	}
 	public int nBoundarys() {
 		return boundarys_.size();
+	}
+	public int nSurfaces(){
+		return surfaces_.size();
 	}
 	public int nSensors() {
 		return sensors_.size();
@@ -439,10 +444,10 @@ public class RoadNetwork {
 	}
 
 	// tomer - again where is the back(0 function defined?
-
+/*
 	public Intersection lastIS() {
 		return IS_.lastElement();
-	}
+	}*/
 
 	// **
 
@@ -451,6 +456,9 @@ public class RoadNetwork {
 	}
 	public List<Boundary> getBoundarys() {
 		return boundarys_;
+	}
+	public List<Surface> getSurfaces(){
+		return surfaces_;
 	}
 	public SurvStation getLastSurvStation() {
 		return lastSurvStation_;
@@ -480,6 +488,9 @@ public class RoadNetwork {
 	public void addBoundary(Boundary i) {
 		boundarys_.add(i);
 	}
+	public void addSurface(Surface i){
+		surfaces_.add(i);
+	}
 	public void addLabel(Label i) {
 		labels_.add(i);
 	}
@@ -507,10 +518,6 @@ public class RoadNetwork {
 	// Connects lane 'up' with lane 'dn'. Return -1 if error, 1 if these
 	// two lanes are already connected, or 0 if success.
 	public int addLaneConnector(int up, int dn) {
-		/*
-		 * if (ToolKit::debug()) { cout << indent << "<" << up << endc << dn <<
-		 * ">" << endl; }
-		 */
 
 		Lane ulane, dlane;
 		if ((ulane = findLane(up)) == null) {
@@ -662,6 +669,10 @@ public class RoadNetwork {
 		for (i = 0; i < nBoundarys(); i++) {
 			boundarys_.get(i).translateInWorldSpace(worldSpace_);
 		}
+		// kerbpoint 位置平移
+		for(i=0;i < nSurfaces(); i++){
+			surfaces_.get(i).translateInWorldSpace(worldSpace_);
+		}
 		// Sort outgoing and incoming arcs at each node.
 		// Make sure RN_Link::comp() is based on angle.
 
@@ -707,9 +718,9 @@ public class RoadNetwork {
 		}
 
 		// Set variables in lanes
-
+		// 增加坐标平移操作
 		for (i = 0; i < nLanes(); i++) {
-			lanes_.get(i).calcStaticInfo();
+			lanes_.get(i).calcStaticInfo(worldSpace_);
 		}
 	}
 	// public int calcnSelectedSegs();

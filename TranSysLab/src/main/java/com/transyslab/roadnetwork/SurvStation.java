@@ -117,8 +117,8 @@ public class SurvStation extends CodedObject {
 		return measureTime_;
 	}
 	public void resetMeasureTime(){
-//		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
-		measureTime_ = 102 + interval_;
+		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
+//		measureTime_ = 102 + interval_;
 		sectionAvgSpeed_ = 0;
 		sectionSpeed_ = 0;
 		sectionCount_ = 0;
@@ -131,16 +131,9 @@ public class SurvStation extends CodedObject {
 	}
 	public int init(int ty, float iv, float zone, int seg, int code, float pos) {
 
-		/*
-		 * if (ToolKit::debug()) { cout << indent << "<" << ty << endc << ta <<
-		 * endc << zone << endc << seg << endc << pos << ">" << endl; }
-		 */
-
 		type_ = ty; // sensor type
 		interval_ = iv; // statistic time interval in seconds
-		//注意更改
-//		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
-		measureTime_ = 102 + interval_;
+		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
 		zoneLength_ = zone; // * Parameter::lengthFactor(); in meter
 		// position_ = (float) (1.0 - pos); // position in % from segment end
 
@@ -155,39 +148,15 @@ public class SurvStation extends CodedObject {
 		// (YYL)
 		sensors_ = new ArrayList<Sensor>();
 		distance_ = (float) (segment_.getDistance() + position_);
-		/*
-		 * if (isLinkWide()) { sensors_.add(new RN_Sensor()); sensors_.get(0). }
-		 * else { int n = segment_.nLanes(); sensors_.reserve(n); while (n > 0)
-		 * { n --; sensors_[n] = null; } }
-		 */
+
 		if (segment_.getSurvList() == null)
 			segment_.survList_ = new ArrayList<SurvStation>();
 		index_ = segment_.getSurvList().size();
 		segment_.getSurvList().add(this);
-		// 方便输出
 		RoadNetwork.getInstance().addSurvStation(this);
 
 		return 0;
-	}/*
-		 * public void print(){
-		 *
-		 * }
-		 *
-		 * public int cmp(CodedObject other){ RN_SurvStation surv =
-		 * (RN_SurvStation)other; if (distance_ < surv.distance_) return 1; else
-		 * if (distance_ > surv.distance_) return -1; else return 0; } public
-		 * int cmp(int c){ return this.cmp(c); }
-		 */
-
-	// functions for incident detection
-	/*
-	 * public int prmGrpID() { return -1; } public int stationState() { return
-	 * -1;}
-	 *
-	 * public void setprmGrpID(int n) { } public int setState(int n){ return 1;
-	 * } public int clearState(int n) { return 1; } public int addState(int n) {
-	 * return 1; } public int incDcrPersistCount() { return -1; }
-	 */
+	}
 
 	// computes the flow across the section - used in incident detection
 
