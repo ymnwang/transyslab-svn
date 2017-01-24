@@ -39,13 +39,13 @@ public class Meso2 {
         spsa.setParameters(pinit);
         MesoNetworkPool infoarrays = MesoNetworkPool.getInstance();
 	    
-		MesoEngine[] engineList =  new MesoEngine[Constants.THREAD_NUM];		
+		SimulationEngine[] engineList =  new SimulationEngine[Constants.THREAD_NUM];		
 		Worker[] workerList = new Worker[Constants.THREAD_NUM];
 		Producer[] producerList = new Producer[Constants.THREAD_NUM];
 		List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
 		Thread[] threadList = new Thread[Constants.THREAD_NUM];
 		for(int i=0;i<Constants.THREAD_NUM;i++){
-			producerList[i] = new Producer(engineList[i],spsa);
+			producerList[i] = new Producer(engineList[i],spsa,1);
 			taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
 			threadList[i] = new Thread(taskList.get(i));
 		}
@@ -59,7 +59,7 @@ public class Meso2 {
 		int tempi = 0;
 		for(FutureTask<SimulationEngine> task : taskList){
 			try {
-				engineList[tempi] = (MesoEngine) task.get();
+				engineList[tempi] = task.get();
 			}
 			catch (InterruptedException | ExecutionException e) {
 				// TODO 自动生成的 catch 块
@@ -71,18 +71,16 @@ public class Meso2 {
 		System.out.println("引擎初始化所需的运行时间："+(endtime[0]-begintime)+"ms");
 		//完成Engine初始化
 		int runtimes = 1;
-		while(runtimes<=500){
-			if(runtimes==1){
-				
-			}
+		while(runtimes<=3){
+
 			if(runtimes>=2){
 				//梯度逼近
-				spsa.estimateGradient(engineList[0].getObjFunction(), engineList[1].getObjFunction());
+				spsa.estimateGradient(((MesoEngine) engineList[0]).getObjFunction(), ((MesoEngine) engineList[1]).getObjFunction());
 				//更新spsa里面的parameter（属于[0,1]区间），同时更新第三个engine的参数
-				spsa.updateParameters(runtimes, engineList[2].getParameters());	
+				spsa.updateParameters(runtimes, ((MesoEngine) engineList[2]).getParameters());	
 			}
 			//扰动参数，更新第一、二个engine的参数
-			spsa.perturbation(runtimes, engineList[0].getParameters(), engineList[1].getParameters());
+			spsa.perturbation(runtimes, ((MesoEngine) engineList[0]).getParameters(), ((MesoEngine) engineList[1]).getParameters());
 			
 			CyclicBarrier barrier = new CyclicBarrier(Constants.THREAD_NUM+1);
 			for(int i=0; i<Constants.THREAD_NUM;i++){
@@ -101,10 +99,10 @@ public class Meso2 {
 				e.printStackTrace();
 			}
 			//更新参数
-			System.out.println(engineList[2].getObjFunction());
-			if(engineList[2].getObjFunction()<=0.13){
-				for(int i=0;i<engineList[2].getParameters().length;i++){
-					System.out.println(engineList[2].getParameters()[i]);
+			System.out.println(((MesoEngine) engineList[2]).getObjFunction());
+			if(((MesoEngine) engineList[2]).getObjFunction()<=0.13){
+				for(int i=0;i<((MesoEngine) engineList[2]).getParameters().length;i++){
+					System.out.println(((MesoEngine) engineList[2]).getParameters()[i]);
 				}
 //				break;
 				

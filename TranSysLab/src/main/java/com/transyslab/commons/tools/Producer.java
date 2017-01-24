@@ -20,6 +20,7 @@ public class Producer implements Callable<SimulationEngine> {
 	private PSO pso_;
 	private DE de_;
 	private SPSA spsa_;
+	private int engineType_;
 
 	public Producer() {
 
@@ -28,35 +29,46 @@ public class Producer implements Callable<SimulationEngine> {
 		this.id_ = id;
 		this.name_ = n;
 	}
-	public Producer(SimulationEngine eg, PSO pso) {
+	public Producer(SimulationEngine eg, PSO pso, int type) {
 		engine_ = eg;
 		pso_ = pso;
+		engineType_ = type;
 		// barrier_ = bar;
 	}
-	public Producer(SimulationEngine eg, DE de) {
+	public Producer(SimulationEngine eg, DE de, int type) {
 		engine_ = eg;
 		de_ = de;
+		engineType_ = type;
 	}
-	public Producer(SimulationEngine eg, SPSA spsa){
+	public Producer(SimulationEngine eg, SPSA spsa, int type){
 		engine_ = eg;
 		spsa_ = spsa;
+		engineType_ = type;
 	}
-	public Producer(SimulationEngine eg) {
+	public Producer(SimulationEngine eg, int type) {
 		engine_ = eg;
+		engineType_ = type;
 	}
 	@Override
-	public MesoEngine call() {
-		// =0:非snapshot启动，按OD流量随机发车；
-        // =1:非snapshot启动，按过车记录定时发车;
-		// =2:snapshot启动，按OD流量随机发车；
-        // =3:snapshot启动，按过车记录定时发车；
-		engine_ = new MesoEngine(Constants.SIM_MODE);
+	public SimulationEngine call() {
 
-		MesoEngine engine = (MesoEngine)engine_;
-		engine.initSPSA(spsa_);
-//		 engine_.initPSO(pso_);
-//		engine.initDE(de_);
-		engine_.loadFiles();
-		return engine;
+		if(engineType_ == 1){
+			// =0:非snapshot启动，按OD流量随机发车；
+	        // =1:非snapshot启动，按过车记录定时发车;
+			// =2:snapshot启动，按OD流量随机发车；
+	        // =3:snapshot启动，按过车记录定时发车；
+			engine_ = new MesoEngine(Constants.SIM_MODE);
+
+			MesoEngine engine = (MesoEngine)engine_;
+			engine.initSPSA(spsa_);
+//			 engine_.initPSO(pso_);
+//			engine.initDE(de_);
+			engine_.loadFiles();
+		}
+		// 加载MLP模型
+		else if(engineType_ == 2){
+			
+		}
+		return engine_;
 	}
 }

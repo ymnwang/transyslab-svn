@@ -89,7 +89,7 @@ public class Meso {
 		List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
 		Thread[] threadList = new Thread[Constants.THREAD_NUM];
 		for (int i = 0; i < Constants.THREAD_NUM; i++) {
-			producerList[i] = new Producer(engineList[i]);
+			producerList[i] = new Producer(engineList[i],1);
 			taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
 			threadList[i] = new Thread(taskList.get(i));
 		}

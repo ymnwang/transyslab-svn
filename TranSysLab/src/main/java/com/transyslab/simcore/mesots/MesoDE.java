@@ -33,7 +33,7 @@ public class MesoDE {
 		List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
 		Thread[] threadList = new Thread[Constants.THREAD_NUM];
 		for(int i=0;i<Constants.THREAD_NUM;i++){
-			producerList[i] = new Producer(engineList[i],de);
+			producerList[i] = new Producer(engineList[i],de,1);
 			taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
 			threadList[i] = new Thread(taskList.get(i));
 		}
