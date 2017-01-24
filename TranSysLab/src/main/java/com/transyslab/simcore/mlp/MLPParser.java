@@ -15,7 +15,7 @@ import com.transyslab.simcore.mlp.MLPVehicle;
 
 public class MLPParser extends XmlParser{
 	
-	public static void parseMLPSnapshot(String filename, List<MLPVehicle> vehlist){
+/*	public static void parseMLPSnapshot(String filename, List<MLPVehicle> vehlist){
 		File inputXml=new File(filename); 
 		SAXReader saxReader = new SAXReader(); 
 		try { 
@@ -25,7 +25,7 @@ public class MLPParser extends XmlParser{
 		} catch (DocumentException e) { 
 			System.out.println(e.getMessage()); 
 		} 
-	}
+	}*/
 	
 	public static void parseMLPSnapshotXml(String filename, List<MLPVehicle> vhclist){
 		File inputXml=new File(filename); 
