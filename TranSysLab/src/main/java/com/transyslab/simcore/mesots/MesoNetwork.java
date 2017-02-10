@@ -18,6 +18,7 @@ import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.Node;
 import com.transyslab.roadnetwork.RoadNetwork;
+import com.transyslab.roadnetwork.SdFnNonLinear;
 import com.transyslab.roadnetwork.Segment;
 import com.transyslab.roadnetwork.VehicleData;
 import com.transyslab.roadnetwork.VehicleDataPool;
@@ -29,6 +30,7 @@ import com.transyslab.roadnetwork.VehicleDataPool;
 public class MesoNetwork extends RoadNetwork {
 	protected int[] permuteLink;
 	protected int nPermutedLinks;
+	private MesoSegment tmpsegment;
 
 	public MesoNetwork() {
 	}
@@ -38,28 +40,6 @@ public class MesoNetwork extends RoadNetwork {
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		return MesoNetworkPool.getInstance().getNetwork(threadid);
 	}
-/*
-	@Override
-	public Node newNode()
-	{
-		return new MesoNode();
-	}
-	@Override
-	public Link newLink() {
-		return new MesoLink();
-	}
-	@Override
-	public Segment newSegment() {
-		return new MesoSegment();
-	}
-	@Override
-	public Lane newLane() {
-		return new MesoLane();
-	}/*
-		 * public RN_Sensor newSensor() { return new MESO_Sensor(); }/* public
-		 * RN_Signal newSignal() { return new MESO_Signal(); } public
-		 * RN_TollBooth newTollBooth() { return new MESO_TollBooth(); }
-		 */
 
 	public MesoNode mesoNode(int i) {
 		return (MesoNode) getNode(i);
@@ -110,7 +90,16 @@ public class MesoNetwork extends RoadNetwork {
 
 		}
 	}
-
+	//更新速密函数参数
+	public void updateParaSdfns(float cap, float minspeed, float maxspeed, float maxdensity,float a, float b){
+		((SdFnNonLinear) sdFns_.get(0)).updateParameters(cap, minspeed, maxspeed, maxdensity,a,b);
+		//更新capacity
+		MesoSegment tmpmesosegment;
+		for(Segment tmpsegment: segments_){
+			tmpmesosegment = (MesoSegment) tmpsegment;
+			tmpmesosegment.setCapacity(tmpmesosegment.defaultCapacity());
+		}
+	}
 	public void organize() {
 		for (int i = 0; i < nLinks(); i++) {
 			((MesoLink) getLink(i)).checkConnectivity();
@@ -296,6 +285,7 @@ public class MesoNetwork extends RoadNetwork {
 
 		for (i = 0; i < nSegments(); i++) {
 			MesoSegment ps = mesoSegment(i);
+			float test = ps.defaultCapacity();
 			ps.setCapacity(ps.defaultCapacity());
 		}
 		//清除检测数据

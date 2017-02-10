@@ -9,7 +9,7 @@ package com.transyslab.roadnetwork;
  */
 public class SdFn {
 	
-	//路段末交通流最短车头时距
+	//路段末交通流最短车头时距（最大通行能力）
 	protected float capacity_;
 	protected float jamSpeed_;
 	protected float jamDensity_;

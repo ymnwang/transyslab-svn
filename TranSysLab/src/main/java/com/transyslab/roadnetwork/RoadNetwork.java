@@ -109,50 +109,6 @@ public class RoadNetwork {
 		return worldSpace_;
 	}
 
-	// These create actual objects and should be overloaded in the
-	// derived class if your network objects differ from the default
-	// networkk objects
-	// --------------------------------------------------------------------
-	// These functions create new network objects. They are virtual and
-	// should be overloaded in the derived classes if your network objects
-	// differ from the defaults.
-	// ----
-	/*
-	public Label newLabel() {
-		return new Label();
-	}
-	public Node newNode() {
-		return new Node();
-	}
-	public Link newLink() {
-		return new Link();
-	}
-	public Segment newSegment() {
-		return new Segment();
-	}
-	public Lane newLane() {
-		return new Lane();
-	}
-	public Sensor newStation() {
-		return new Sensor();
-	}
-	public Signal newSignal() {
-		return new Signal();
-	}
-	public SurvStation newSurvStation() {
-		return new SurvStation();
-	}
-	public CtrlStation newCtrlStation() {
-		return new CtrlStation();
-	}
-	public TollBooth newTollBooth() {
-		return new TollBooth();
-	}
-	/*
-	 * public RN_BusStop newBusStopChars(); { //margaret return new
-	 * RN_BusStop(); }
-	 */
-
 	// tomer
 
 	public Intersection newIS() {
@@ -165,14 +121,7 @@ public class RoadNetwork {
 		drivingDirection_ = k;
 	}
 
-	/*
-	 * {drivingDirection_ = k;
-	 *
-	 * cout << "rama: road network.h: k = " << k << " member = " <<
-	 * drivingDirection_ << endl;}
-	 */
 
-	// inline void setDrivingDirection(int n) {drivingDirection_ = n;}
 	// 新增方法，供MESO_Segment调用
 	public double getTotalLinkLength() {
 		return totalLinkLength_;
@@ -616,10 +565,7 @@ public class RoadNetwork {
 			sdFns_.add(new SdFnNonLinear());
 		}
 	}
-	//更新速密函数参数
-	public void updateParaSdfns(float cap, float minspeed, float maxspeed, float maxdensity,float a, float b){
-		((SdFnNonLinear) sdFns_.get(0)).updateParameters(cap, minspeed, maxspeed, maxdensity,a,b);
-	}
+
 	// Before we use the parsed network, this function must called to
 	// calculate some static information, sort objects, etc.
 	// --------------------------------------------------------------------
