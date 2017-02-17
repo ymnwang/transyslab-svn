@@ -47,7 +47,7 @@ import com.transyslab.simcore.mlp.MLPSegment;
  */
 public class XmlParser {
 	//路网类型，1:MesoTS模型; 2:MLP模型
-	public static int networkType_ = 1;
+	public static int networkType_ = 2;
 	
 	//解析仿真路网
 	public static void parseNetworkXml(String fileName) {

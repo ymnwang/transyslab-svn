@@ -1,12 +1,14 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
@@ -16,17 +18,21 @@ public class MLP {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
+		
+		//测试区域
+	
+		//测试区域
+		
 		long begintime = System.currentTimeMillis();
 		long[] endtime = new long[20];
 		MLPNetworkPool infoarrays = MLPNetworkPool.getInstance();
-		MLPEngine[] engineList = new MLPEngine[Constants.THREAD_NUM];
+		SimulationEngine[] engineList = new SimulationEngine[Constants.THREAD_NUM];
 		Worker[] workerList = new Worker[Constants.THREAD_NUM];
 		Producer[] producerList = new Producer[Constants.THREAD_NUM];
 		List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
 		Thread[] threadList = new Thread[Constants.THREAD_NUM];
 		for (int i = 0; i < Constants.THREAD_NUM; i++) {
-			producerList[i] = new Producer(engineList[i],2);
+			producerList[i] = new Producer(engineList[i], 2);
 			taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
 			threadList[i] = new Thread(taskList.get(i));
 		}
@@ -89,6 +95,7 @@ public class MLP {
 			runtimes++;
 		}
 
+		System.out.println("运行时间： " + (System.currentTimeMillis() - endtime[0]) + "ms");
 		System.out.print("done");
 
 	}

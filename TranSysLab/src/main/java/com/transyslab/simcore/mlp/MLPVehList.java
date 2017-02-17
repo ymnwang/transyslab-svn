@@ -5,14 +5,16 @@ import java.util.HashMap;
 public class MLPVehList {
 	private MLPVehicle head_ ;
 	private MLPVehicle tail_ ;
-	private int nVehicles_; /* number of vehicles */
-	private int nPeakVehicles_; /* max number of vehicles */
+	private int nVehicles_;  //number of vehicles 
+	private int nPeakVehicles_;  //max number of vehicles 
+	
 
 	public MLPVehList() {
 		head_ = null;
 		tail_ = null;
 		nVehicles_ = 0;
 		nPeakVehicles_ = 0;
+
 	}
 	
 	public static MLPVehList getInstance() {
@@ -40,7 +42,7 @@ public class MLPVehList {
 		nVehicles_ ++;		
 	}
 	
-	public MLPVehicle recycle() /* get a vehicle from the list */
+	public MLPVehicle recycle()  //get a vehicle from the list 
 	{
 		MLPVehicle pv;
 
