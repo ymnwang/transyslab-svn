@@ -1,24 +1,30 @@
 package com.transyslab.simcore.mlp;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.ListIterator;
+import java.util.List;
+import java.util.Random;
 
-import com.transyslab.commons.renderer.JOGLAnimationFrame;
-import com.transyslab.commons.renderer.JOGLFrameQueue;
-import com.transyslab.commons.tools.Random;
+import com.transyslab.commons.tools.Inflow;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.Node;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
-import com.transyslab.roadnetwork.VehicleData;
-import com.transyslab.roadnetwork.VehicleDataPool;
 
 public class MLPNetwork extends RoadNetwork {
 	protected int[] permuteLink;
 	protected int nPermutedLinks;
+	protected int newVehID_;
+	public MLPVehPool veh_pool;
+	public List<MLPVehicle> veh_list;
+	public Random sysRand;
 
 	public MLPNetwork() {
+		newVehID_ = 0;
+		veh_pool = new MLPVehPool();
+		veh_list = new ArrayList<MLPVehicle>();
+		sysRand = new Random(System.currentTimeMillis());
 	}
 
 	public static MLPNetwork getInstance() {
@@ -27,23 +33,6 @@ public class MLPNetwork extends RoadNetwork {
 		return MLPNetworkPool.getInstance().getNetwork(threadid);
 	}
 /*
-	@Override
-	public Node newNode()// C++:RN_Node* MLP_Network::newNode()
-	{
-		return new MLPNode();
-	}
-	@Override
-	public Link newLink() {
-		return new MLPLink();
-	}
-	@Override
-	public Segment newSegment() {
-		return new MLPSegment();
-	}
-	@Override
-	public Lane newLane() {
-		return new MLPLane();
-	}/*
 		 * public RN_Sensor newSensor() { return new MLP_Sensor(); }/* public
 		 * RN_Signal newSignal() { return new MLP_Signal(); } public
 		 * RN_TollBooth newTollBooth() { return new MLP_TollBooth(); }
@@ -57,6 +46,9 @@ public class MLPNetwork extends RoadNetwork {
 	}
 	public MLPSegment mlpSegment(int i) {
 		return (MLPSegment) getSegment(i);
+	}
+	public MLPLane mlpLane(int i){
+		return (MLPLane) getLane(i);
 	}
 
 	public void calcStaticInfo() {
@@ -92,8 +84,31 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	public void organize() {
-		for (int i = 0; i < nLinks(); i++) {
-			((MLPLink) getLink(i)).checkConnectivity();
+		//补充车道编号的信息
+		for (Lane l: lanes_){
+			((MLPLane) l).calLnPos();
+		}
+		for (Lane l: lanes_){
+			((MLPLane) l).checkConectedLane();
+		}
+		for (Lane l: lanes_){
+			((MLPLane) l).calDi();
+		}
+		
+		for (Segment seg: segments_){
+			Segment tmpseg = seg;
+			while (tmpseg.getUpSegment() != null) {
+				tmpseg = tmpseg.getUpSegment();
+				((MLPSegment) seg).startDSP += tmpseg.getLength();
+			}
+			((MLPSegment) seg).endDSP = ((MLPSegment) seg).startDSP + seg.getLength();
+		}
+		
+		for (Link l: links_){
+			//预留
+			((MLPLink) l).checkConnectivity();
+			//将jointLane信息装入Link中
+			((MLPLink) l).addLnPosInfo();
 		}
 	}
 	/*
@@ -352,4 +367,81 @@ public class MLPNetwork extends RoadNetwork {
 		}
 	}*/
 
+	public void resetReleaseTime(){
+		for (int i = 0; i<nLinks(); i++){
+			mlpLink(i).resetReleaseTime();
+		}
+	}
+	
+	/*public void addNewVehID() {
+		newVehID_ += 1;		
+	}*/
+	
+	public int getNewVehID(){
+		newVehID_ += 1;	
+		return newVehID_ ;
+	}
+	
+	public void loadEmtTable(){
+		//double now = SimulationClock.getInstance().getCurrentTime();
+		for (int i = 0; i<nLinks(); i++){
+			while (mlpLink(i).checkFirstEmtTableRec()){
+				Inflow emitVeh = mlpLink(i).emtTable.getInflow().poll();
+				MLPVehicle newVeh = veh_pool.generate();
+				newVeh.init2(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx));
+				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);				
+				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
+				mlpLane(emitVeh.laneIdx).appendVeh(newVeh);
+			}
+		}
+	}
+	
+	public void platoonRecognize() {
+		for (MLPVehicle mlpv : veh_list){
+			mlpv.calState();
+			if (mlpv.CFState_ && mlpv.speedLevel_==mlpv.leading_.speedLevel_) {
+				mlpv.resemblance = true;
+			}
+			else {
+				mlpv.resemblance = false;
+			}
+			mlpv.resetPlatoonCode();
+		}
+		/*List<MLPVehicle> vl = findResemblance();
+		while (vl.size()>0){
+			for (MLPVehicle v: vl){
+				v.platoonCode = v.leading_.platoonCode;
+				v.resemblance = v.leading_.resemblance;
+			}
+			vl = findResemblance();
+		}*/
+		
+	}
+	
+	public List<MLPVehicle> findResemblance() {
+		List<MLPVehicle> vList = new ArrayList<MLPVehicle>();
+		for (MLPVehicle v: veh_list){
+			if (v.resemblance)
+				vList.add(v);
+		}
+		return vList;
+	}
+	
+	public void setOverallCapacity(double arg) {
+		for (int i = 0; i < nLinks(); i++) {
+			mlpLink(i).capacity_ = arg;
+		}
+	}	
+	public void setCapacity(int idx, double c) {
+		mlpLink(idx).capacity_ = c;
+	}
+	
+	public void setOverallSDParas(double [] args) {
+		for (int i = 0; i < nLinks(); i++) {
+			mlpLink(i).dynaFun.sdPara = args;
+		}
+	}
+	public void setSDParas(int idx, double [] paras) {
+		mlpLink(idx).dynaFun.sdPara = paras;
+	}
 }
