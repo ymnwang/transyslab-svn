@@ -1,9 +1,14 @@
 package com.transyslab.simcore.mlp;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+
+import javax.swing.text.StyledEditorKit.ForegroundAction;
+
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.emitTable;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.Vehicle;
 import com.transyslab.simcore.SimulationEngine;
 
 
@@ -15,6 +20,8 @@ public class MLPEngine extends SimulationEngine{
 	protected double LCDTime_;
 	protected boolean firstEntry = true; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable = true; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
+	protected BufferedWriter writer;
+	protected String msg = "";
 
 	@Override
 	public int simulationLoop() {
@@ -23,6 +30,8 @@ public class MLPEngine extends SimulationEngine{
 		MLPNetwork mlp_network = MLPNetwork.getInstance();
 
 		double now = SimulationClock.getInstance().getCurrentTime();
+		double startTime = SimulationClock.getInstance().getStartTime();
+		String time = String.format("%.1f", now - startTime);
 
 		if (firstEntry) {
 			firstEntry = false;
@@ -30,9 +39,13 @@ public class MLPEngine extends SimulationEngine{
 			// This block is called only once just before the simulation gets
 			// started.
 			
+			//establish writer
+			establishTXTWriter();
+			
 			//set overall parameters
 			mlp_network.setOverallCapacity(0.5);
 			mlp_network.setOverallSDParas(new double [] {16.67,0.0,180.0,5.0,1.8});
+			mlp_network.setLoopSection(mlp_network.getLink(0).getCode(), 0.5);
 			//reset update time
 			mlp_network.resetReleaseTime();
 			//load incidence
@@ -40,10 +53,18 @@ public class MLPEngine extends SimulationEngine{
 			//load snapshot Start
 			/*to be done*/
 			//initSnapshotData();
+			//发车统计
+			int total = 0;
+			for (int i = 0; i < mlp_network.nLinks(); i++) {
+				total += mlp_network.mlpLink(i).emtTable.getInflow().size();				
+			}
+			writeNFlush("随机发出真实车： " + total + "\r\n");
+			
 		}
 		
 		if (now>= updateTime_){
 			mlp_network.resetReleaseTime();
+			flushBuffer();
 			updateTime_ = now + MLPParameter.getInstance().updateStepSize_;
 		}
 		
@@ -68,7 +89,13 @@ public class MLPEngine extends SimulationEngine{
 			for (int i = 0; i < mlp_network.nLinks(); i++){
 				mlp_network.mlpLink(i).move();
 			}
-			
+			//线圈检测
+			for (int j = 0; j < mlp_network.loops.size(); j++){
+				msg = mlp_network.loops.get(j).detect();
+				if (msg != "") {
+					write(time + "," + msg);
+				}
+			}
 			//车辆更新(同时更新)
 			for (int k = 0; k<mlp_network.veh_list.size(); k++) {
 				MLPVehicle theVeh = mlp_network.veh_list.get(k);
@@ -78,6 +105,16 @@ public class MLPEngine extends SimulationEngine{
 			
 		}
 		
+		/*if (!mlp_network.veh_list.isEmpty()) {
+			time = String.format("%.1f", now - startTime);
+			for (MLPVehicle v : mlp_network.veh_list) {
+				write(time + "," + 
+						 v.getCode() + "," + 
+						 v.Displacement() + "," + 
+						 v.currentSpeed() + "\r\n");
+			}
+		}*/
+		
 		//System.out.println("t = " + String.format("%.1f", now-SimulationClock.getInstance().getStartTime()));
 		/*if (!mlp_network.veh_list.isEmpty()) {
 			for (MLPVehicle v : mlp_network.veh_list) {
@@ -86,6 +123,9 @@ public class MLPEngine extends SimulationEngine{
 		}*/		
 		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
 		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {
+			//System.out.println("共产生真实车与虚拟车：" + (mlp_network.getNewVehID()-1));
+			writeNFlush("共产生真实车与虚拟车：" + (mlp_network.getNewVehID()-1)+"\r\n");
+			closeWriter();
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
 													// is done
 		}
@@ -146,6 +186,47 @@ public class MLPEngine extends SimulationEngine{
 		}
 	}
 	
-	
+	public void establishTXTWriter(){
+		//establish csv printer
+		int threadID = MLPNetworkPool.getInstance().getHashMap().
+									get(Thread.currentThread().getName()).intValue();
+		String filepath = "src/main/resources/output/Engine"+ threadID + ".txt";
+		File file = new File(filepath);
+		try {
+			file.createNewFile();
+			writer = new BufferedWriter(new FileWriter(file));
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}	
+	private void writeNFlush(String str) {
+		try {
+			writer.write(str);
+			writer.flush();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	protected void write(String str) {
+		try {
+			writer.write(str);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	private void flushBuffer() {
+		try {
+			writer.flush();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	private void closeWriter() {
+		try {
+			writer.close();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
 
 }

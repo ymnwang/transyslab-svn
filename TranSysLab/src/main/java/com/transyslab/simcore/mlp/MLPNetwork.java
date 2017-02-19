@@ -8,7 +8,6 @@ import java.util.Random;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
-import com.transyslab.roadnetwork.Node;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
 
@@ -18,12 +17,14 @@ public class MLPNetwork extends RoadNetwork {
 	protected int newVehID_;
 	public MLPVehPool veh_pool;
 	public List<MLPVehicle> veh_list;
+	public List<Loop> loops;
 	public Random sysRand;
 
 	public MLPNetwork() {
 		newVehID_ = 0;
 		veh_pool = new MLPVehPool();
 		veh_list = new ArrayList<MLPVehicle>();
+		loops = new ArrayList<Loop>();
 		sysRand = new Random(System.currentTimeMillis());
 	}
 
@@ -443,5 +444,24 @@ public class MLPNetwork extends RoadNetwork {
 	}
 	public void setSDParas(int idx, double [] paras) {
 		mlpLink(idx).dynaFun.sdPara = paras;
+	}
+	
+	public void setLoopSection(int linkID, double p) {
+		MLPLink theLink = (MLPLink) findLink(linkID);
+		MLPSegment theSeg = null;
+		MLPLane theLane = null;
+		double dsp = ((MLPSegment) theLink.getEndSegment()).endDSP * p;
+		for (int i = 0; i<theLink.nSegments(); i++) {
+			theSeg = (MLPSegment) theLink.getSegment(i);
+			if (theSeg.startDSP<dsp && theSeg.endDSP>=dsp) 
+				break;
+		}
+		if (theSeg != null) {
+			for (int k = 0; k<theSeg.nLanes(); k++) {
+				theLane = (MLPLane) theSeg.getLane(k);
+				loops.add(new Loop(theLane, theSeg, theLink, dsp));
+			}
+		}
+		
 	}
 }

@@ -21,8 +21,8 @@ public class MLPVehicle extends Vehicle{
 	public boolean stopFlag;
 	public double newSpeed;
 	public double newDis;
-	
-	private boolean active_;
+	protected int usage;
+	//private boolean active_;
 	
 	protected static int[] vhcCounter_ = new int[Constants.THREAD_NUM];  	//在网车辆数统计
 	
@@ -30,7 +30,6 @@ public class MLPVehicle extends Vehicle{
 		trailing_ = null;
 		leading_ = null;
 		platoonCode = 0;
-		active_ = true;
 		stopFlag = false;
 	}
 	
@@ -42,14 +41,6 @@ public class MLPVehicle extends Vehicle{
 	
 	public void reset(){
 		
-	}
-	
-	public boolean getActive(){
-		return active_;
-	}
-	
-	public void setActive(boolean val) {
-		active_ = val;
 	}
 	
 	public void resetPlatoonCode(){
@@ -271,11 +262,14 @@ public class MLPVehicle extends Vehicle{
 		stopFlag = false;
 		newSpeed = 0.0;
 		newDis = 0.0;
-		active_ = false;
 		setCode(0);
 		length_ = 0.0f;
 		distance_ = 0.0f;
 		currentSpeed_ = 0.0f;
+	}
+	
+	public void updateUsage() {
+		usage += 1;
 	}
 	/*public MLPVehicle getLateralLeading(MLPLane tarLN){		
 	}
