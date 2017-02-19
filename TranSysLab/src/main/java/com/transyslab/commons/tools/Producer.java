@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
+import com.transyslab.simcore.mlp.MLPEngine;
 
 /**
  * @author yali
@@ -67,7 +68,8 @@ public class Producer implements Callable<SimulationEngine> {
 		}
 		// ¼ÓÔØMLPÄ£ÐÍ
 		else if(engineType_ == 2){
-			
+			engine_ = new MLPEngine();
+			engine_.loadFiles();
 		}
 		return engine_;
 	}

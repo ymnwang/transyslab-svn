@@ -37,7 +37,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
 		// 画布默认大小,宽640，高480
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
-		this.setPreferredSize(new Dimension(640, 480));
+//		this.setPreferredSize(new Dimension(640, 480));
 	}
 	public JOGLCanvas(int width, int height) {
 		this.addGLEventListener(this);
@@ -45,7 +45,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
 		// 设置画布大小
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
-		this.setPreferredSize(new Dimension(width, height));
+//		this.setPreferredSize(new Dimension(width, height));
 	}
 	public void setCamera(JOGLCamera cam) {
 		cam_ = cam;

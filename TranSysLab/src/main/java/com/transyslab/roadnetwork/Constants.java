@@ -182,7 +182,7 @@ public class Constants {
 																	// initial
 																	// SP
 	public static final int INFO_FLAG_AVAILABILITY = 0x0100;
-	public static final int THREAD_NUM = 3;
+	public static final int THREAD_NUM = 1;
 	public static final double APROXEPSILON = 1.0E-5;
 	public static final float[] COLOR_RED = {1.0f, 0.0f, 0.0f};
 	public static final float[] COLOR_BLUE = {0.0f, 0.0f, 1.0f};

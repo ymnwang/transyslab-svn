@@ -31,7 +31,7 @@ public class MesoSetup {
 	public static void ParseNetwork() {
 		// E:\\MesoInput_Cases\\12.28bestluck\\
 		//src/main/resources/demo/
-		XmlParser.parseNetworkXml("E:\\MesoInput_Cases\\12.28bestluck\\network.xml");
+		XmlParser.parseNetworkXml("src/main/resources/demo_pre/network.xml");
 
 	}
 	public static void ParsePathTables() {
