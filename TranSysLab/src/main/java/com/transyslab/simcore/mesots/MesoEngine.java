@@ -203,6 +203,13 @@ public class MesoEngine extends SimulationEngine {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		try {
+			vhcData_ = CSVUtils.readCSV("src/main/resources/demo_pre/newdata.csv", null);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 

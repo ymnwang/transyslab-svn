@@ -118,7 +118,7 @@ public class Meso {
 			@Override
 			public void run() {
 				WinForm drawnetwork = new WinForm(); // run the constructor
-				drawnetwork.init();
+//				drawnetwork.init();
 				drawnetwork.render();
 			}
 		});

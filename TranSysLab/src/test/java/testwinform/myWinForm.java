@@ -1,119 +1,96 @@
-package com.transyslab.commons.renderer;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.SystemColor;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.border.EtchedBorder;
-import com.jogamp.opengl.util.FPSAnimator;
+package testwinform;
 
-public class WinForm {
-	// Define constants for the top-level container
-	private String title_ = "TranSysLab"; // window's title
-	private int fps_; // animator's target frames per second
-	private JOGLCanvas canvas_;
-	private FPSAnimator animator_;
-	
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JPanel;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import java.awt.Color;
+import javax.swing.JButton;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import java.awt.GridLayout;
+import java.awt.Font;
+import javax.swing.JFormattedTextField;
+import java.awt.Canvas;
+import javax.swing.JToolBar;
+import javax.swing.ImageIcon;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.JSlider;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.border.EtchedBorder;
+
+import javax.swing.JTabbedPane;
+import java.awt.SystemColor;
+import java.awt.BorderLayout;
+
+public class myWinForm {
+
 	private JFrame frame;
 	private JTextField textField;
 	private int windowWidth = 810;
 	private int windowHeight = 632;
-	
-	/** Constructor to setup the top-level container and animator */
-	public WinForm() {
-		//Complete window design
-		initialize();
-		// Set rendering canvas
-		fps_ = 25;		
-		JOGLCamera cam = new JOGLCamera();
-		canvas_.setCamera(cam);
-		canvas_.addKeyListener(cam);
-		canvas_.addMouseListener(cam);
-		canvas_.addMouseWheelListener(cam);
-		canvas_.addMouseMotionListener(cam);
-		// Create a animator that drives canvas' display() at the specified FPS.
-		animator_ = new FPSAnimator(canvas_, fps_, true);
 
-		// Create the top-level container frame
-		frame.getContentPane().add(canvas_);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// Use a dedicate thread to run the stop() to ensure that the
-				// animator stops before program exits.
-				new Thread() {
-					@Override
-					public void run() {
-						if (animator_.isStarted())
-							animator_.stop();
-						System.exit(0);
-					}
-				}.start();
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					myWinForm window = new myWinForm();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		});
-		/*
-		frame.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-//			System.out.println("尺寸改变了！");
-//			canvas_.setBounds(10, 10, 540, 390);}});*/
-		
-		
 	}
+
+	/**
+	 * Create the application.
+	 */
+	public myWinForm() {
+		initialize();
+	}
+
 	/**
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
 		int screenWidth = (int) java.awt.Toolkit.getDefaultToolkit().getScreenSize().getWidth();
 		int screenHeight = (int) java.awt.Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-		canvas_ = new JOGLCanvas();
-		frame = new JFrame();		
+		frame = new JFrame();
 		frame.setBounds(screenWidth/2 - windowWidth/2, screenHeight/2-windowHeight/2, windowWidth, windowHeight);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setTitle(title_);
+		frame.setTitle("TranSysLab");
 		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBackground(SystemColor.controlHighlight);
-		panel_1.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				windowHeight = frame.getHeight();
-				windowWidth = frame.getWidth();
-				int referHeight = panel_1.getHeight();
-				int referWidth = panel_1.getWidth();
-				java.awt.Point p = panel_1.getLocation();
-				canvas_.setBounds(0, (int) p.getY(), windowWidth-5-referWidth, referHeight);
-				}
-			}
-		);
-
-//		panel_1.setForeground(Color.DARK_GRAY);
+		panel_1.setForeground(Color.DARK_GRAY);
 		
 		JPanel panel_2 = new JPanel();
-//		panel_2.setBackground(Color.PINK);
+		panel_2.setBackground(Color.PINK);
 		
 		JPanel panel_3 = new JPanel();
-//		panel_3.setBackground(Color.CYAN);
+		panel_3.setBackground(Color.CYAN);
 		
 		JPanel panel_5 = new JPanel();
-//		panel_5.setBackground(Color.WHITE);
+		panel_5.setBackground(Color.WHITE);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		
 		JPanel panel_4 = new JPanel();
-		
-//		panel_4.setBackground(Color.CYAN);
-//		panel_4.setLayout(new BorderLayout(0, 0));
-		
-//		Canvas canvas = new Canvas();
-//		canvas.setBackground(Color.BLACK);
-//		panel_4.add(canvas_, BorderLayout.CENTER);
+		panel_4.setBackground(Color.CYAN);
 		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -125,7 +102,7 @@ public class WinForm {
 					.addComponent(panel_5, GroupLayout.PREFERRED_SIZE, 235, GroupLayout.PREFERRED_SIZE)
 					.addContainerGap(559, Short.MAX_VALUE))
 				.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-					.addComponent(canvas_, GroupLayout.DEFAULT_SIZE, 552, Short.MAX_VALUE)
+					.addComponent(panel_4, GroupLayout.DEFAULT_SIZE, 552, Short.MAX_VALUE)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addComponent(panel_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 				.addComponent(tabbedPane, GroupLayout.DEFAULT_SIZE, 794, Short.MAX_VALUE)
@@ -142,21 +119,22 @@ public class WinForm {
 						.addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 27, GroupLayout.PREFERRED_SIZE))
 					.addGap(1)
 					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addComponent(canvas_, GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
+						.addComponent(panel_4, GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
 						.addComponent(panel_1, GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE))
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 136, GroupLayout.PREFERRED_SIZE))
 		);
-
+		panel_4.setLayout(new BorderLayout(0, 0));
+		
+		Canvas canvas = new Canvas();
+		canvas.setBackground(Color.BLACK);
+		panel_4.add(canvas, BorderLayout.CENTER);
 		
 		JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.addTab("方案", null, tabbedPane_1, null);
 		
 		JTabbedPane tabbedPane_2 = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.addTab("控制台", null, tabbedPane_2, null);
-		/*
-		Canvas canvas = new Canvas();
-		panel_3.add(canvas);*/
 		
 		JPanel panel_6 = new JPanel();
 		panel_6.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -375,10 +353,5 @@ public class WinForm {
 		menu_6.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
 		menuBar.add(menu_6);
 		frame.getContentPane().setLayout(groupLayout);
-		frame.setVisible(true);
-	}
-
-	public void render() {
-		animator_.start(); // start the animation loop
 	}
 }
