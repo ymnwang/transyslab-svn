@@ -3,13 +3,17 @@ package com.transyslab.simcore.mlp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Random;
 
+import com.transyslab.commons.renderer.JOGLFrameQueue;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
+import com.transyslab.roadnetwork.VehicleData;
+import com.transyslab.roadnetwork.VehicleDataPool;
 
 public class MLPNetwork extends RoadNetwork {
 	protected int[] permuteLink;
@@ -463,5 +467,24 @@ public class MLPNetwork extends RoadNetwork {
 			}
 		}
 		
+	}
+	public void recordVehicleData(){
+		VehicleData vd;
+		if (!veh_list.isEmpty()) {
+			//遍历vehicle
+			for (MLPVehicle v : veh_list) {
+				//从对象池获取vehicledata对象
+				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
+				//记录车辆信息
+				vd.init(v,1);
+				//将vehicledata插入frame
+				try {
+					JOGLFrameQueue.getInstance().offer(vd, veh_list.size());
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 }

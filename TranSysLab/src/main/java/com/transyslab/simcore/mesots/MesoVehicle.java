@@ -69,20 +69,20 @@ public class MesoVehicle extends Vehicle {
 	}
 
 	public MesoLink mesoLink() {
-		return (MesoLink) link();
+		return (MesoLink) getLink();
 	}
 
 	public MesoSegment mesoSegment() {
-		return (MesoSegment) segment();
+		return (MesoSegment) getSegment();
 	}
 
 	@Override
-	public Link link() 
+	public Link getLink() 
 	{
 		return trafficCell_ != null ? trafficCell_.link() : (Link) null;
 	}
 	@Override
-	public Segment segment() 
+	public Segment getSegment() 
 	{
 		return trafficCell_ != null ? trafficCell_.segment() : (Segment) null;
 	}
@@ -113,7 +113,7 @@ public class MesoVehicle extends Vehicle {
 		return spaceInSegment_;
 	}
 	public void calcSpaceInSegment() {
-		spaceInSegment_ = length_ / segment().nLanes();
+		spaceInSegment_ = length_ / getSegment().nLanes();
 	}
 
 	public MesoVehicle leadingVehicleInStream() {
@@ -153,7 +153,7 @@ public class MesoVehicle extends Vehicle {
 	{
 		int i;
 
-		if (trafficCell_.nHeads_ > 1 && nextLink_ != null && segment().isHead() != 0) {
+		if (trafficCell_.nHeads_ > 1 && nextLink_ != null && getSegment().isHead() != 0) {
 			i = nextLink_.getDnIndex();
 		}
 		else {
@@ -346,13 +346,13 @@ public class MesoVehicle extends Vehicle {
 		distance_ -= currentSpeed_ * SimulationClock.getInstance().getStepSize();
 
 		if (front != null) { // no overtaking
-			float pos = front.upPos() + MesoParameter.getInstance().minHeadwayGap() / segment().nLanes();
+			float pos = front.upPos() + MesoParameter.getInstance().minHeadwayGap() / getSegment().nLanes();
 			distance_ = Math.max(distance_, pos);
 		}
 
 		// 节段是否有检测器
-		if (segment().getSurvList() != null) {
-			ListIterator<SurvStation> i = segment().getSurvList().listIterator();
+		if (getSegment().getSurvList() != null) {
+			ListIterator<SurvStation> i = getSegment().getSurvList().listIterator();
 			while (i.hasNext()) {
 				SurvStation tmp = i.next();
 				// 车辆是否经过检测断面
@@ -385,7 +385,7 @@ public class MesoVehicle extends Vehicle {
 			}
 		}
 		else { // moved into a downstream segment
-			currentSpeed_ = (float) ((oldpos + segment().getLength() - distance_) * frequency);
+			currentSpeed_ = (float) ((oldpos + getSegment().getLength() - distance_) * frequency);
 		}
 
 		advance(); // sort position in list
@@ -402,7 +402,7 @@ public class MesoVehicle extends Vehicle {
 		mileage_ += ps.getLength(); // record mileage
 
 		int done = 0;
-		MesoSegment ds = (MesoSegment) segment().getDnSegment();
+		MesoSegment ds = (MesoSegment) getSegment().getDnSegment();
 
 		if (ds != null) {
 
@@ -438,7 +438,7 @@ public class MesoVehicle extends Vehicle {
 
 				trafficCell_.remove(this);
 
-				if (MesoNetwork.getInstance().isNeighbor(link(), nextLink_) != 0) {
+				if (MesoNetwork.getInstance().isNeighbor(getLink(), nextLink_) != 0) {
 					getNextMesoLink().append(this);
 					OnRouteChoosePath(nextLink_.getDnNode());
 					done = 1;
@@ -563,8 +563,8 @@ public class MesoVehicle extends Vehicle {
 		// the system is not VMS/Beacon based.
 		// 未处理 setAttr(ATTR_ACCESSED_INFO);
 		// }
-		if (link() != null) { // alreay in the network
-			OnRouteChoosePath(link().getDnNode());
+		if (getLink() != null) { // alreay in the network
+			OnRouteChoosePath(getLink().getDnNode());
 		}
 		else { // in spillback queue
 			OnRouteChoosePath(nextLink_.getUpNode());

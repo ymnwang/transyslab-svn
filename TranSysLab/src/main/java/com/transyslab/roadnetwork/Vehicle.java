@@ -316,18 +316,18 @@ public class Vehicle extends CodedObject {
 	 * -------------------------------------------------------------------
 	 */
 	public float distanceFromDownNode() {
-		return (float) (segment().getDistance() + distance_);
+		return (float) (getSegment().getDistance() + distance_);
 	}
 
 	// Current link the vehicle stays
 
-	public Link link() {
+	public Link getLink() {
 		return null;
 	}
-	public Segment segment() {
+	public Segment getSegment() {
 		return null;
 	}
-	public Lane lane() {
+	public Lane getLane() {
 		return null;
 	}
 
@@ -398,7 +398,7 @@ public class Vehicle extends CodedObject {
 		int i = pathIndex_ + 1;
 		Link pl = path_.getLink(i);
 
-		if (link() == null || (RoadNetwork.getInstance().isNeighbor(link(), pl)) != 0) {
+		if (getLink() == null || (RoadNetwork.getInstance().isNeighbor(getLink(), pl)) != 0) {
 			setPathIndex(i);
 		}
 		else if (pl != nextLink_) {
@@ -408,7 +408,7 @@ public class Vehicle extends CodedObject {
 	public void retrievePathIndex() {
 		int i = pathIndex_ - 1;
 		Link pl = path_.getLink(i);
-		if (link() == null || RoadNetwork.getInstance().isNeighbor(pl, link()) != 0) {
+		if (getLink() == null || RoadNetwork.getInstance().isNeighbor(pl, getLink()) != 0) {
 			setPathIndex(i);
 		}
 	}
@@ -511,7 +511,7 @@ public class Vehicle extends CodedObject {
 			v = currentSpeed_;
 		}
 		else {
-			v = (float) ((link().length() - distanceFromDownNode()) / t);
+			v = (float) ((getLink().length() - distanceFromDownNode()) / t);
 		}
 		// cout<<v<<endl;
 		return (float) Math.max(v, WORSE_THAN_WALKING);

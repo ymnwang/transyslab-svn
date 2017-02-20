@@ -14,15 +14,12 @@ import com.transyslab.roadnetwork.Surface;
 import com.transyslab.roadnetwork.VehicleData;
 import com.transyslab.roadnetwork.VehicleDataPool;
 
-import jogamp.graph.font.typecast.ot.table.VdmxTable;
-
 import static com.jogamp.opengl.GL.*; // GL constants
 import static com.jogamp.opengl.GL2ES1.GL_PERSPECTIVE_CORRECTION_HINT;
 import static com.jogamp.opengl.fixedfunc.GLLightingFunc.GL_SMOOTH;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_MODELVIEW;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_PROJECTION;
 
-import java.awt.Dimension;
 import java.util.List;
 
 public class JOGLCanvas extends GLCanvas implements GLEventListener {
@@ -144,12 +141,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 	public void scene(GL2 gl) {
 		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
 		List<Surface> surfaces = drawableNetwork_.getSurfaces();
-		Boundary tmpboundary;
+		
 		Segment tmpsegment;
 		JOGLAnimationFrame frame;
 		if(cam_.getEyePosition()[2]<=1000){
-			for (int i = 0; i < boundarys.size(); i++) {
-				tmpboundary = boundarys.get(i);
+			for (Boundary tmpboundary:boundarys) {
 				JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
 						Constants.COLOR_WHITE);
 			}
@@ -171,11 +167,9 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 				while(!frame.getVhcDataQueue().isEmpty()){
 					VehicleData vd = frame.getVehicleData();
 					
-//						if(cam_.getEyePosition()[2]<=1000)
 					//根据摄像机高度调整绘制的车辆大小，2017年1月2日ppt材料
 					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),15*(1000-cam_.getEyePosition()[2])/1000, Constants.COLOR_BLUE);
-//						else
-//							JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),1, Constants.COLOR_BLUE);
+					
 					//回收vehicledata
 					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
 				}

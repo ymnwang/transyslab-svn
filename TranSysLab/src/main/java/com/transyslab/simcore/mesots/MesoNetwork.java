@@ -23,6 +23,7 @@ import com.transyslab.roadnetwork.Segment;
 import com.transyslab.roadnetwork.VehicleData;
 import com.transyslab.roadnetwork.VehicleDataPool;
 
+
 /**
  * @author its312
  *
@@ -309,7 +310,7 @@ public class MesoNetwork extends RoadNetwork {
 			while (cell != null) {
 				pv = cell.firstVehicle();
 				while (pv != null) {
-					pv.link().recordExpectedTravelTime(pv);
+					pv.getLink().recordExpectedTravelTime(pv);
 					pv = pv.trailing();
 				}
 				cell = cell.trailing();
@@ -347,7 +348,7 @@ public class MesoNetwork extends RoadNetwork {
 					//从对象池获取vehicledata对象
 					vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
 					//记录车辆信息
-					vd.init(vhc);
+					vd.init(vhc,0);
 					//将vehicledata插入frame
 					try {
 						JOGLFrameQueue.getInstance().offer(vd, MesoVehicle.nVehicles());

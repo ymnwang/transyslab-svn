@@ -691,7 +691,7 @@ public class Link extends CodedObject {
 
 		double pos;
 
-		if (pv.segment() != null) {
+		if (pv.getSegment() != null) {
 			pos = pv.distanceFromDownNode();
 		}
 		else {

@@ -6,9 +6,11 @@ public class VehicleData {
 	protected int vehicleID_;
 	//车辆类型
 	protected int vehicleType_;
+	//车辆特殊渲染的标记,0:无标记；1:MLP模型虚拟车
+	protected int specialFlag_;
 	//车辆长度
 	protected float vehicleLength_;
-	//车辆沿segment的坐标位置
+	//车辆沿segment或lane的坐标位置
 	protected double vhcLocationX_;
 	protected double vhcLocationY_;
 	
@@ -30,16 +32,16 @@ public class VehicleData {
 		vhcLocationX_ = x;
 		vhcLocationY_ = y;
 	}
-	public void init(Vehicle vhc){
+	public void init(Vehicle vhc, int flag){
 		vehicleID_ = vhc.getCode();
 		vehicleType_ = vhc.getType();
 		vehicleLength_ = vhc.getLength();
-		Segment seg = vhc.segment();
-		double l = seg.getLength();
+		specialFlag_ = flag;
+		Segment seg = vhc.getSegment();
+		double l = seg.getDistance();
 		double s = l-vhc.distance();
 		vhcLocationX_ = seg.getStartPnt().getLocationX() + s * (seg.getEndPnt().getLocationX() - seg.getStartPnt().getLocationX()) / l;
-		vhcLocationY_ = seg.getStartPnt().getLocationY() + s * (seg.getEndPnt().getLocationY() - seg.getStartPnt().getLocationY()) / l;
-		
+		vhcLocationY_ = seg.getStartPnt().getLocationY() + s * (seg.getEndPnt().getLocationY() - seg.getStartPnt().getLocationY()) / l;						
 	}
 	public void init(int laneid, float distance){
 		Lane lane = RoadNetwork.getInstance().findLane(laneid);

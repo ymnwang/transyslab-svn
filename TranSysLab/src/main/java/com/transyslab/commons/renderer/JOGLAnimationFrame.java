@@ -1,21 +1,12 @@
 package com.transyslab.commons.renderer;
 
 import java.util.LinkedList;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import com.transyslab.commons.tools.DoubleBufferedQueue;
 import com.transyslab.roadnetwork.VehicleData;
 
 public class JOGLAnimationFrame{
 	private int frameID_;
 	private LinkedList<VehicleData> vhcDataQueue_;
-	/*
-	private static LinkedBlockingQueue<JOGLAnimationFrame> animationFrameQueue_;
-	public static LinkedBlockingQueue<JOGLAnimationFrame> getFrameQueue(){
-		if(animationFrameQueue_==null)
-			animationFrameQueue_ = new LinkedBlockingQueue<JOGLAnimationFrame>();
-		return animationFrameQueue_;
-	}*/
+
 	public JOGLAnimationFrame(){
 		vhcDataQueue_ = new LinkedList<VehicleData>();
 	}
