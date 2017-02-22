@@ -32,9 +32,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		this.addGLEventListener(this);
 		// 区别于从线程-编号哈希表获取对象
 		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
-		// 画布默认大小,宽640，高480
-		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
-//		this.setPreferredSize(new Dimension(640, 480));
 	}
 	public JOGLCanvas(int width, int height) {
 		this.addGLEventListener(this);
@@ -168,7 +165,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 					VehicleData vd = frame.getVehicleData();
 					
 					//根据摄像机高度调整绘制的车辆大小，2017年1月2日ppt材料
-					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),15*(1000-cam_.getEyePosition()[2])/1000, Constants.COLOR_BLUE);
+//					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),15*(1000-cam_.getEyePosition()[2])/1000, Constants.COLOR_BLUE);
+					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),5, Constants.COLOR_BLUE);
 					
 					//回收vehicledata
 					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);

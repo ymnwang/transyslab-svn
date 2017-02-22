@@ -24,7 +24,9 @@ public class Loop {
 				str += veh.getCode() + "," +  
 						   veh.VirtualType_ + "," + 
 						   veh.newSpeed + "," + 
-						   lane.getLnPosNum() + "\r\n";
+						   lane.getLnPosNum() + "," +
+						   link.getCode() + "," +
+						   displacement + "\r\n";
 			}
 		}
 		return str;

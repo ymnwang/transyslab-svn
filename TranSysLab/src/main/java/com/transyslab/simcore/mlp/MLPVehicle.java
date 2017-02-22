@@ -83,18 +83,18 @@ public class MLPVehicle extends Vehicle{
 			return trailing_;
 		}
 		else {
-			MLPLane dnLane = lane_.getSamePosLane(segment_.getDnSegment()); 
-			while (dnLane != null){
-				if (dnLane.getHead() != null) 
-					return dnLane.getHead();
-				dnLane = dnLane.getSamePosLane(segment_.getDnSegment()); 
+			MLPLane upLane = lane_.getSamePosLane(segment_.getUpSegment()); 
+			while (upLane != null){
+				if (upLane.getHead() != null) 
+					return upLane.getHead();
+				upLane = upLane.getSamePosLane(upLane.getSegment().getUpSegment()); 
 			}
 			return (MLPVehicle) null;
 		}
 	}
 	
 	public double Displacement(){
-		return segment_.endDSP - distance_;
+		return Math.max(0.0, segment_.endDSP - distance_);
 	}
 	
 	public boolean checkGapAccept(MLPLane tarLane){
@@ -122,17 +122,23 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	private double calDLC(int turning, double fDSP, double tDSP){
-		double [] s = sum(turning, segment_, fDSP, tDSP, new double []{0.0,0.0});
-		return s[0]/s[1];
+		try {
+			double [] s = sum(turning, segment_, fDSP, tDSP, new double []{0.0,0.0});
+			return s[0]/s[1];
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			System.out.println(e.getStackTrace());
+		}
+		return 0.18;		
 	}
 	
 	private double [] sum(int turning, MLPSegment seg, double f, double t, double [] count){
 		//double [] answer = {0.0,0.0};		
-		if (f>=seg.startDSP)	{
-			if (t<=seg.endDSP) {
+		if (f - seg.startDSP > -0.001)	{
+			if (t - seg.endDSP < 0.001) {
 				double [] answer = new double [2];
 				MLPLane tarlane = lane_.getAdjacent(turning).getSamePosLane(seg);
-				if (tarlane == null || !tarlane.enterAllowed || !tarlane.checkLCAllowen(turning)) {
+				if (tarlane == null || !tarlane.enterAllowed || !tarlane.checkLCAllowen((turning+1)%2)) {
 					answer[0] = count[0] + (t-f)*link_.dynaFun.sdPara[2];
 				}
 				else {
@@ -220,6 +226,7 @@ public class MLPVehicle extends Vehicle{
 			}
 			else {//passing Seg.
 				lane_.passVeh2ConnDnLn(this);
+				lane_ = lane_.connectedDnLane;
 				segment_ = segment_.getDnSegment();
 				newDis = segment_.getLength() + newDis;
 			}

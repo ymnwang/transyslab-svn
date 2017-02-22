@@ -6,39 +6,39 @@
 <Links linknum="190">
 <L id="162" type="1" UpNode="411" DnNode="57" flag="0">
 <S id="3471" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="38422627.7856026" beginY="2556829.75000191" endX="38422845.3051071" endY="2556400.35460281"> 
-<LA LaneID="34711" rule="3" LeftBoundaryID="0" RightBoundaryID="747"/>
-<LA LaneID="34712" rule="3" LeftBoundaryID="747" RightBoundaryID="748"/>
-<LA LaneID="34713" rule="3" LeftBoundaryID="748" RightBoundaryID="749"/>
+<LA LaneID="34711" rule="3" beginX="38422841.4845009" beginY="2556404.02413177" endX="38422628.4839706" endY="2556824.49883461" LeftBoundaryID="0" RightBoundaryID="747"/>
+<LA LaneID="34712" rule="3" beginX="38422838.3622551" beginY="2556402.44249344" endX="38422625.3617249" endY="2556822.91719246" LeftBoundaryID="747" RightBoundaryID="748"/>
+<LA LaneID="34713" rule="3" beginX="38422835.2400055" beginY="2556400.86084938" endX="38422622.2394791" endY="2556821.3355484" LeftBoundaryID="748" RightBoundaryID="749"/>
 </S>
 <S id="3461" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="38422845.3051071" beginY="2556400.35460281" endX="38422855.7855072" endY="2556370.93590355"> 
-<LA LaneID="34611" rule="3" LeftBoundaryID="0" RightBoundaryID="744"/>
-<LA LaneID="34612" rule="3" LeftBoundaryID="744" RightBoundaryID="745"/>
-<LA LaneID="34613" rule="3" LeftBoundaryID="745" RightBoundaryID="746"/>
+<LA LaneID="34611" rule="3" beginX="38422854.1369934" beginY="2556370.34862137" endX="38422843.6565933" endY="2556399.76732063" LeftBoundaryID="0" RightBoundaryID="744"/>
+<LA LaneID="34612" rule="3" beginX="38422850.8399696" beginY="2556369.17405701" endX="38422840.3595696" endY="2556398.59275627" LeftBoundaryID="744" RightBoundaryID="745"/>
+<LA LaneID="34613" rule="3" beginX="38422847.5429344" beginY="2556367.99949265" endX="38422837.0625343" endY="2556397.41819191" LeftBoundaryID="745" RightBoundaryID="746"/>
 </S>
 <S id="3451" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="38422855.7855072" beginY="2556370.93590355" endX="38422888.7618027" endY="2556194.01060104"> 
-<LA LaneID="34511" rule="3" LeftBoundaryID="0" RightBoundaryID="741"/>
-<LA LaneID="34512" rule="3" LeftBoundaryID="741" RightBoundaryID="742"/>
-<LA LaneID="34513" rule="3" LeftBoundaryID="742" RightBoundaryID="743"/>
+<LA LaneID="34511" rule="3" beginX="38422886.1252861" beginY="2556198.60529709" endX="38422854.9812889" endY="2556365.69990349" LeftBoundaryID="0" RightBoundaryID="741"/>
+<LA LaneID="34512" rule="3" beginX="38422882.684536" beginY="2556197.96399498" endX="38422851.5405426" endY="2556365.05859756" LeftBoundaryID="741" RightBoundaryID="742"/>
+<LA LaneID="34513" rule="3" beginX="38422879.2437935" beginY="2556197.32268715" endX="38422848.0997925" endY="2556364.41729355" LeftBoundaryID="742" RightBoundaryID="743"/>
 </S>
 <S id="3441" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="38422888.7618027" beginY="2556194.01060104" endX="38422898.535305" endY="2556081.06660271"> 
-<LA LaneID="34411" rule="3" LeftBoundaryID="0" RightBoundaryID="738"/>
-<LA LaneID="34412" rule="3" LeftBoundaryID="738" RightBoundaryID="739"/>
-<LA LaneID="34413" rule="3" LeftBoundaryID="739" RightBoundaryID="740"/>
+<LA LaneID="34411" rule="3" beginX="38422896.3607636" beginY="2556085.89711571" endX="38422887.449379" endY="2556188.8783474" LeftBoundaryID="0" RightBoundaryID="738"/>
+<LA LaneID="34412" rule="3" beginX="38422892.8737946" beginY="2556085.59537697" endX="38422883.96241" endY="2556188.57660484" LeftBoundaryID="738" RightBoundaryID="739"/>
+<LA LaneID="34413" rule="3" beginX="38422889.3868217" beginY="2556085.29363441" endX="38422880.4754448" endY="2556188.27486229" LeftBoundaryID="739" RightBoundaryID="740"/>
 </S>
 <S id="3431" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="38422898.535305" beginY="2556081.06660271" endX="38422905.3686066" endY="2556028.15280151"> 
-<LA LaneID="34311" rule="3" LeftBoundaryID="0" RightBoundaryID="735"/>
-<LA LaneID="34312" rule="3" LeftBoundaryID="735" RightBoundaryID="736"/>
-<LA LaneID="34313" rule="3" LeftBoundaryID="736" RightBoundaryID="737"/>
+<LA LaneID="34311" rule="3" beginX="38422902.9926338" beginY="2556032.88749123" endX="38422897.4401016" endY="2556075.88364983" LeftBoundaryID="0" RightBoundaryID="735"/>
+<LA LaneID="34312" rule="3" beginX="38422899.5214577" beginY="2556032.43922043" endX="38422893.9689255" endY="2556075.43537903" LeftBoundaryID="735" RightBoundaryID="736"/>
+<LA LaneID="34313" rule="3" beginX="38422896.0502853" beginY="2556031.99095154" endX="38422890.4977493" endY="2556074.98711014" LeftBoundaryID="736" RightBoundaryID="737"/>
 </S>
 <S id="3421" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="38422905.3686066" beginY="2556028.15280151" endX="38422914.3451042" endY="2555997.06370163"> 
-<LA LaneID="34211" rule="3" LeftBoundaryID="0" RightBoundaryID="732"/>
-<LA LaneID="34212" rule="3" LeftBoundaryID="732" RightBoundaryID="733"/>
-<LA LaneID="34213" rule="3" LeftBoundaryID="733" RightBoundaryID="734"/>
+<LA LaneID="34211" rule="3" beginX="38422912.6637878" beginY="2555996.57825089" endX="38422903.6872864" endY="2556027.66734695" LeftBoundaryID="0" RightBoundaryID="732"/>
+<LA LaneID="34212" rule="3" beginX="38422909.3011475" beginY="2555995.60733986" endX="38422900.3246498" endY="2556026.69643402" LeftBoundaryID="732" RightBoundaryID="733"/>
+<LA LaneID="34213" rule="3" beginX="38422905.9385109" beginY="2555994.63642883" endX="38422896.9620171" endY="2556025.72552681" LeftBoundaryID="733" RightBoundaryID="734"/>
 </S>
 <S id="3411" speedLimit="40" freeSpeed="40" gradient="0" index="0" beginX="38422914.3451042" beginY="2555997.06370163" endX="38423153.3044052" endY="2555636.12500381"> 
-<LA LaneID="34111" rule="3" LeftBoundaryID="0" RightBoundaryID="96"/>
-<LA LaneID="34112" rule="3" LeftBoundaryID="96" RightBoundaryID="97"/>
-<LA LaneID="34113" rule="3" LeftBoundaryID="97" RightBoundaryID="98"/>
+<LA LaneID="34111" rule="3" beginX="38423149.0850601" beginY="2555639.32806206" endX="38422915.64608" endY="2555991.92853355" LeftBoundaryID="0" RightBoundaryID="96"/>
+<LA LaneID="34112" rule="3" beginX="38423146.1666756" beginY="2555637.39595032" endX="38422912.7276955" endY="2555989.99641991" LeftBoundaryID="96" RightBoundaryID="97"/>
+<LA LaneID="34113" rule="3" beginX="38423143.2482986" beginY="2555635.46384048" endX="38422909.8093185" endY="2555988.06431007" LeftBoundaryID="97" RightBoundaryID="98"/>
 </S>
 </L>
 </Links>

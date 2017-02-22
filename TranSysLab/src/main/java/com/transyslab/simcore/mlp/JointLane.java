@@ -36,7 +36,7 @@ public class JointLane {
 			MLPLane lane = iterator.next();
 			if (!lane.vehsOnLn.isEmpty()){
 				return lane.getHead();
-			}			
+			}
 		}
 		return null;
 	}

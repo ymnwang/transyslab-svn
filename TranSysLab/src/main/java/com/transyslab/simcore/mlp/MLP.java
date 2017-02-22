@@ -9,6 +9,11 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+
+import javax.swing.SwingUtilities;
+
+import com.transyslab.commons.renderer.JOGLFrameQueue;
+import com.transyslab.commons.renderer.WinForm;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
@@ -55,12 +60,11 @@ public class MLP {
 			tempi++;
 		}
 		endtime[0] = System.currentTimeMillis();
-		System.out.println("引擎初始化所需的运行时间：" + (endtime[0] - begintime) + "ms");
-/*		SwingUtilities.invokeLater(new Runnable() {
+		System.out.println("引擎初始化所需的运行时间：" + (endtime[0] - begintime) + "ms");/*
+		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				JOGLRenderContainer drawnetwork = new JOGLRenderContainer(); // run the constructor
-				drawnetwork.init();
+				WinForm drawnetwork = new WinForm(); // run the constructor
 				drawnetwork.render();
 			}
 		});

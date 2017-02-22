@@ -1,11 +1,6 @@
 package com.transyslab.simcore.mlp;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-
-import javax.swing.text.StyledEditorKit.ForegroundAction;
-
+import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.emitTable;
 import com.transyslab.roadnetwork.Constants;
@@ -20,7 +15,12 @@ public class MLPEngine extends SimulationEngine{
 	protected double LCDTime_;
 	protected boolean firstEntry = true; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable = true; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
-	protected BufferedWriter writer;
+	protected TXTUtils loopRecWriter;
+	protected boolean loopRecOn = false;
+	protected TXTUtils trackWriter;
+	protected boolean trackOn = false;
+	protected TXTUtils infoWriter;
+	protected boolean infoOn = false;
 	protected String msg = "";
 
 	@Override
@@ -39,32 +39,47 @@ public class MLPEngine extends SimulationEngine{
 			// This block is called only once just before the simulation gets
 			// started.
 			
-			//establish writer
-			establishTXTWriter();
+			//establish writers
+			int threadID = MLPNetworkPool.getInstance().getHashMap().
+									get(Thread.currentThread().getName()).intValue();
+			if (loopRecOn) {
+				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadID + ".csv");
+				loopRecWriter.write("TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
+			}				
+			if (trackOn) {
+				trackWriter = new TXTUtils("src/main/resources/output/track" + threadID + ".csv");
+				trackWriter.write("TIME,VID,VIRTYPE,BUFF,POS,LINK,DSP,SPD\r\n");
+			}				
+			if (infoOn)
+				infoWriter = new TXTUtils("src/main/resources/output/info" + threadID + ".txt");
+			
 			
 			//set overall parameters
 			mlp_network.setOverallCapacity(0.5);
 			mlp_network.setOverallSDParas(new double [] {16.67,0.0,180.0,5.0,1.8});
 			mlp_network.setLoopSection(mlp_network.getLink(0).getCode(), 0.5);
+			
 			//reset update time
 			mlp_network.resetReleaseTime();
-			//load incidence
-			/*empty for now*/
-			//load snapshot Start
-			/*to be done*/
-			//initSnapshotData();
-			//发车统计
-			int total = 0;
-			for (int i = 0; i < mlp_network.nLinks(); i++) {
-				total += mlp_network.mlpLink(i).emtTable.getInflow().size();				
-			}
-			writeNFlush("随机发出真实车： " + total + "\r\n");
 			
+			//信息统计：发车数
+			if (infoOn) {
+				int total = 0;
+				for (int i = 0; i < mlp_network.nLinks(); i++) {
+					total += mlp_network.mlpLink(i).emtTable.getInflow().size();				
+				}
+				infoWriter.writeNFlush("随机发出真实车： " + total + "\r\n");	
+			}		
 		}
 		
 		if (now>= updateTime_){
 			mlp_network.resetReleaseTime();
-			flushBuffer();
+			if (loopRecOn) 
+				loopRecWriter.flushBuffer();
+			if (trackOn)
+				trackWriter.flushBuffer();
+			if (infoOn)
+				infoWriter.flushBuffer();
 			updateTime_ = now + MLPParameter.getInstance().updateStepSize_;
 		}
 		
@@ -84,48 +99,77 @@ public class MLPEngine extends SimulationEngine{
 				mlp_network.platoonRecognize();
 				
 				LCDTime_ = now + MLPParameter.getInstance().LCDStepSize_;
-			}			
+			}
+			for (int i = 0; i < mlp_network.nLanes(); i++) {
+				MLPLane theLN = mlp_network.mlpLane(i);
+				MLPVehicle claimTail = theLN.getTail();
+				MLPVehicle claimHead = theLN.getHead();
+				if ((claimTail != null && !theLN.vehsOnLn.contains(claimTail)) ||
+						(claimHead != null && !theLN.vehsOnLn.contains(claimHead)) ||
+						((claimTail == null || claimHead == null) && !theLN.vehsOnLn.isEmpty()) ) {
+					System.out.println("BUG");
+				}
+			}
 			//运动计算、节点服务(暂缺)、写入发车表（暂缺）
 			for (int i = 0; i < mlp_network.nLinks(); i++){
 				mlp_network.mlpLink(i).move();
 			}
 			//线圈检测
-			for (int j = 0; j < mlp_network.loops.size(); j++){
-				msg = mlp_network.loops.get(j).detect();
-				if (msg != "") {
-					write(time + "," + msg);
+			if (loopRecOn) {
+				for (int j = 0; j < mlp_network.loops.size(); j++){
+					msg = mlp_network.loops.get(j).detect();
+					if (msg != "") {
+						loopRecWriter.write(time + "," + msg);
+					}
 				}
 			}
+			
 			//车辆更新(同时更新)
 			for (int k = 0; k<mlp_network.veh_list.size(); k++) {
 				MLPVehicle theVeh = mlp_network.veh_list.get(k);
 				if (theVeh.updateMove()==1) 
 					k -=1;
-			}
-			
+			}			
 		}
 		
-		/*if (!mlp_network.veh_list.isEmpty()) {
-			time = String.format("%.1f", now - startTime);
-			for (MLPVehicle v : mlp_network.veh_list) {
-				write(time + "," + 
-						 v.getCode() + "," + 
-						 v.Displacement() + "," + 
-						 v.currentSpeed() + "\r\n");
-			}
-		}*/
+		//可视化渲染
+//		mlp_network.recordVehicleData();
 		
-		//System.out.println("t = " + String.format("%.1f", now-SimulationClock.getInstance().getStartTime()));
-		/*if (!mlp_network.veh_list.isEmpty()) {
-			for (MLPVehicle v : mlp_network.veh_list) {
-				System.out.println("VID" + v.getCode() + " dis: " + v.distance() + " spd: " + v.currentSpeed());
+		for (int i = 0; i < mlp_network.nLanes(); i++) {
+			MLPLane theLN = mlp_network.mlpLane(i);
+			MLPVehicle claimTail = theLN.getTail();
+			MLPVehicle claimHead = theLN.getHead();
+			if ((claimTail != null && !theLN.vehsOnLn.contains(claimTail)) ||
+					(claimHead != null && !theLN.vehsOnLn.contains(claimHead)) ||
+					((claimTail == null || claimHead == null) && !theLN.vehsOnLn.isEmpty()) ) {
+				System.out.println("BUG");
 			}
-		}*/		
+		}
+		if (trackOn) {
+			if (!mlp_network.veh_list.isEmpty()) {
+				for (MLPVehicle v : mlp_network.veh_list) {
+					trackWriter.write(time + "," + 
+							 				  v.getCode() + "," +
+							 				  v.VirtualType_ + "," +
+							 				  v.buffer_ + "," +
+							 				  v.lane_.getLnPosNum() + "," +
+							 				  v.segment_.getCode() + "," +
+							 				  v.Displacement() + "," + 
+							 				  v.currentSpeed() + "\r\n");
+				}
+			}
+		}
+		System.out.println(time);
 		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
-		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {
-			//System.out.println("共产生真实车与虚拟车：" + (mlp_network.getNewVehID()-1));
-			writeNFlush("共产生真实车与虚拟车：" + (mlp_network.getNewVehID()-1)+"\r\n");
-			closeWriter();
+		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {			
+			if (infoOn)
+				infoWriter.writeNFlush("共产生真实车与虚拟车：" + (mlp_network.getNewVehID()-1)+"\r\n");			
+			if (loopRecOn) 
+				loopRecWriter.closeWriter();
+			if (trackOn)
+				trackWriter.closeWriter();
+			if (infoOn)
+				infoWriter.closeWriter();			
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
 													// is done
 		}
@@ -159,13 +203,13 @@ public class MLPEngine extends SimulationEngine{
 		// 读入路网数据后组织路网不同要素的关系
 		MLPNetwork.getInstance().calcStaticInfo();
 		//随机生成或读取发车表
-		buildemittable(needRndETable);	
+		MLPNetwork.getInstance().buildemittable(needRndETable);	
 		start();
 		return 0;
 	}
 	
 	public void init() {//Engine中需要初始化的属性
-		SimulationClock.getInstance().init(61200,68700, 0.2);
+		SimulationClock.getInstance().init(0, 3600, 0.2);
 		
 		double now = SimulationClock.getInstance().getCurrentTime();
 		updateTime_ = now;
@@ -175,58 +219,6 @@ public class MLPEngine extends SimulationEngine{
 	
 	public void initSnapshotData(){
 		
-	}
-	
-	public void buildemittable(boolean needRET){
-		if (needRET){
-			emitTable.createRndETables();
-		}
-		else{
-			emitTable.readETables();
-		}
-	}
-	
-	public void establishTXTWriter(){
-		//establish csv printer
-		int threadID = MLPNetworkPool.getInstance().getHashMap().
-									get(Thread.currentThread().getName()).intValue();
-		String filepath = "src/main/resources/output/Engine"+ threadID + ".txt";
-		File file = new File(filepath);
-		try {
-			file.createNewFile();
-			writer = new BufferedWriter(new FileWriter(file));
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-	}	
-	private void writeNFlush(String str) {
-		try {
-			writer.write(str);
-			writer.flush();
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-	}
-	protected void write(String str) {
-		try {
-			writer.write(str);
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-	}
-	private void flushBuffer() {
-		try {
-			writer.flush();
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-	}
-	private void closeWriter() {
-		try {
-			writer.close();
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
 	}
 
 }

@@ -12,6 +12,7 @@ import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.simcore.mlp.MLPLink;
 import com.transyslab.simcore.mlp.MLPNetwork;
 import com.transyslab.simcore.mlp.MLPSegment;
+import com.transyslab.simcore.mlp.MLPSetup;
 
 public class emitTable {
 	protected LinkedList<Inflow> inflowlist_;
@@ -21,8 +22,8 @@ public class emitTable {
 		inflowlist_ = new LinkedList<Inflow>();
 		r = new Random(System.currentTimeMillis());
 	}
-	static public void createRndETables(){
-		String filePath = "src/main/resources/demo_OD/od_form.csv";
+	public void createRndETables(){
+		String filePath = MLPSetup.ODFormDir;
 		String[] header = {"fLinkID","tLinkID","demand",
 						   "fTime","tTime",
 						   "mean","sd","vlim"};
@@ -44,16 +45,29 @@ public class emitTable {
 				thelink.emtTable.generate(demand, speed, time, thelnIdxes, tLinkID);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	static public void readETables(){
-		
+	public void readETables(){
+		String filePath = MLPSetup.EmitFormDir;
+		String[] header = {"laneID", "tLinkID", "time", "speed", "dis"};
+		try {
+			List<CSVRecord> rows = CSVUtils.readCSV(filePath,header);
+			for(int i = 1; i<rows.size(); i++){
+				CSVRecord r = rows.get(i);
+				appendFromCSV(Integer.parseInt(r.get(0)),
+										   Integer.parseInt(r.get(1)), 
+										   Double.parseDouble(r.get(2)),
+										   Double.parseDouble(r.get(3)),
+										   Double.parseDouble(r.get(4)) );
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
-	public void generate(int demand, double[] speed, double[] time, int[] laneIdxes, int tlnkID){
+	private void generate(int demand, double[] speed, double[] time, int[] laneIdxes, int tlnkID){
 		double mean = speed[0];
 		double sd = speed[1];
 		double vlim = speed[2];
@@ -69,14 +83,15 @@ public class emitTable {
 				Inflow theinflow = new Inflow(startTime+i*simStep, 
 											  Math.min(vlim, Math.max(0.01,nd.sample())), 
 											  laneIdxes[r.nextInt(laneCount)],
-											  tlnkID);
+											  tlnkID,
+											  -1.0);
 				inflowlist_.offer(theinflow);
 			}
 		}
 	}
 
-	public void appendFromCSV(double[] row){
-		Inflow theinflow = new Inflow(row);
+	private void appendFromCSV(int LnIdx, int TLnkID, double t, double v, double d){
+		Inflow theinflow = new Inflow(LnIdx, TLnkID, t, v, d);
 		inflowlist_.offer(theinflow);
 	}
 	

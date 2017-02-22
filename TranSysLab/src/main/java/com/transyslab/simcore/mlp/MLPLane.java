@@ -186,10 +186,19 @@ public class MLPLane extends Lane {
 		if (connectedDnLane == null) {
 			System.err.println("no connected downstream lane");
 		}
-		vehsOnLn.remove(theVeh);
-		head_ = theVeh.trailing_;
+		vehsOnLn.remove(theVeh);		
+		if (vehsOnLn.isEmpty()) {
+			tail_ = null;
+			head_ = null;
+		}
+		else {
+			head_ = theVeh.trailing_;
+		}		
+		if (connectedDnLane.vehsOnLn.isEmpty()) {
+			connectedDnLane.head_ = theVeh;
+		}		
+		connectedDnLane.tail_ = theVeh;		
 		connectedDnLane.vehsOnLn.add(theVeh);
-		connectedDnLane.tail_ = theVeh;
 	}
 	
 	public MLPVehicle getHead() {

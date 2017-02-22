@@ -1,2 +1,2 @@
 fLinkID,tLinkID,demand,fTime,tTime,mean,sd,vlim
-1051,1051,10000,0,7200,15,2,20
+162,162,1000,0,3600,15,2,20

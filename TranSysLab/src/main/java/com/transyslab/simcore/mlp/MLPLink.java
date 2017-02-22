@@ -62,8 +62,8 @@ public class MLPLink extends Link {
 	public void addLnPosInfo() {
 		MLPSegment theSeg = (MLPSegment) getEndSegment();
 		while (theSeg != null){
-			for (int i = theSeg.getLeftLaneIndex(); i<theSeg.nLanes(); i++){
-				MLPLane ln = MLPNetwork.getInstance().mlpLane(i);
+			for (int i = 0; i<theSeg.nLanes(); i++){
+				MLPLane ln = (MLPLane) theSeg.getLane(i);
 				JointLane tmpJLn = findJointLane(ln);
 				if (tmpJLn == null) {
 					JointLane newJLn = new JointLane(ln.getLnPosNum());
@@ -74,7 +74,7 @@ public class MLPLink extends Link {
 					tmpJLn.lanesCompose.add(ln);
 				}
 			}
-			theSeg = (MLPSegment) theSeg.getDnSegment();
+			theSeg = (MLPSegment) theSeg.getUpSegment();
 		}
 	}
 	
