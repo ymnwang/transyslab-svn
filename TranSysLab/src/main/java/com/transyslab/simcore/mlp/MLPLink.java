@@ -139,7 +139,7 @@ public class MLPLink extends Link {
 							//tarLane.RtCutinAllowed &&
 							veh.checkGapAccept(tarLane)) {
 						//换道概率计算						
-						pr[i] = veh.calLCProbability(i, tailDsp, headDsp);
+						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
 					}
 				}
 				//排序
@@ -173,16 +173,17 @@ public class MLPLink extends Link {
 	}
 	
 	public void LCOperate(MLPVehicle veh, int turn) {
-		//虚拟车
+		MLPLane thisLane = veh.lane_;
+		MLPLane tarLane = thisLane.getAdjacent(turn);
+		//虚拟车(生产->初始化*2->加buff->替换)
 		MLPVehicle newVeh = MLPNetwork.getInstance().veh_pool.generate();
-		newVeh.init2(veh.getCode(),veh.link_,veh.segment_,veh.lane_);
+		newVeh.initInfo(veh.getCode(),veh.link_,veh.segment_,veh.lane_);
 		newVeh.init(MLPNetwork.getInstance().getNewVehID(), MLPParameter.VEHICLE_LENGTH, veh.distance(), veh.currentSpeed());
 		newVeh.buffer_ = MLPParameter.getInstance().getLCBuff();
-		veh.lane_.substitudeVeh(veh, newVeh);
-		//换道车
-		veh.lane_ = veh.lane_.getAdjacent(turn);
+		thisLane.substitudeVeh(veh, newVeh);
+		//换道车(加buff->insert)
 		veh.buffer_ = MLPParameter.getInstance().getLCBuff();
-		veh.lane_.insertVeh(veh);
+		tarLane.insertVeh(veh);
 	}
 	
 	public void move() {
@@ -199,7 +200,7 @@ public class MLPLink extends Link {
 				platoonhead = theveh.Displacement();
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
-					if (theveh.resemblance) {						
+					if (theveh.resemblance) {
 						platoon.add(theveh);
 					}
 					else {
@@ -218,7 +219,6 @@ public class MLPLink extends Link {
 	
 	public void dealMove(double headDsp, double tailDsp){
 		double tailspeed = dynaFun.sdFun(((double)platoon.size())/(headDsp-tailDsp));
-		//System.out.println("platoonK=" + ((double)platoon.size())/(headDsp-tailDsp));
 		double headspeed = dynaFun.updateHeadSpd(platoon.get(0));
 		if (platoon.size()>1) {
 			double headPt = platoon.get(0).Displacement();

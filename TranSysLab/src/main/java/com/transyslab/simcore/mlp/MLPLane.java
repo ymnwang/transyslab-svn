@@ -1,6 +1,7 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.omg.PortableServer.ID_ASSIGNMENT_POLICY_ID;
@@ -14,9 +15,9 @@ import jogamp.graph.curve.tess.HEdge;
 
 public class MLPLane extends Lane {
 	private int lnPosNum_;
-	public List<MLPVehicle> vehsOnLn;
-	private MLPVehicle head_;
-	private MLPVehicle tail_;
+	public LinkedList<MLPVehicle> vehsOnLn;
+//	private MLPVehicle head_;
+//	private MLPVehicle tail_;
 //	private double emitTime_;
 	//private double capacity_ = 0.5;
 //	private MLPLane upConectLane_;
@@ -31,7 +32,7 @@ public class MLPLane extends Lane {
 	
 	public MLPLane(){
 		lnPosNum_ = 0;
-		vehsOnLn = new ArrayList<MLPVehicle>();
+		vehsOnLn = new LinkedList<MLPVehicle>();
 		lateralCutInAllowed = 0;
 //		LfCutinAllowed = true;
 //		RtCutinAllowed = true;
@@ -52,6 +53,7 @@ public class MLPLane extends Lane {
 	}
 	
 	public boolean checkVolum(MLPVehicle mlpv) {
+		MLPVehicle tail_ = getTail();
 		if (tail_ != null &&
 			getLength() - tail_.distance() < 
 			(mlpv.getLength() +MLPParameter.getInstance().minGap(mlpv.currentSpeed()))) {
@@ -62,6 +64,7 @@ public class MLPLane extends Lane {
 	}
 	
 	public boolean checkVolum(double vehLen, double vehSpeed) {
+		MLPVehicle tail_ = getTail();
 		if (tail_ != null &&
 			getLength() - tail_.distance() < 
 			(vehLen +  MLPParameter.getInstance().minGap(vehSpeed))) {
@@ -71,142 +74,127 @@ public class MLPLane extends Lane {
 			return true;
 	}
 	
+	//appendVeh(); removeVeh(); insertVeh(); check list:
+	//1. 相关lane.vehsOnLn的挂载更新
+	//2. 相关车辆的跟车关系的更新
+	//3. Network.veh_list & veh_pool recycle的挂载更新
+	//4. 转移车辆(processing veh)的lane, seg, link的挂载关系更新	
+	//推荐流程
+	//S1 Network.veh_list.add();
+	//S2 lane.vehsOnLn.add() & remove();
+	//S3 processingVeh.updateLeadNTrail() 
+	//     -> if lead or trail not null, lead.updateLeadNTrail() & trail.updateLeadNTrail()
+	//S4 veh_pool.recycle() 
+	//     -> if no need, processingVeh.lane/seg/link setting
 	public void appendVeh(MLPVehicle mlpveh) {
-		if (vehsOnLn.isEmpty()) {
-			head_ = mlpveh;
-		}
-		else {
-			tail_.trailing_ = mlpveh;
-			mlpveh.leading_ = tail_;
-		}
-		vehsOnLn.add(mlpveh);
-		tail_ = mlpveh;			
+		//处理相关lane的vehsOnLn & network.veh_list generate
+		//network.veh_list has been taken care before called
+		vehsOnLn.offer(mlpveh);		
+		//处理相关veh的lead_&trail_
+		mlpveh.updateLeadNTrail();
+		if (mlpveh.leading_ != null) 
+			mlpveh.leading_.updateLeadNTrail();
+		if (mlpveh.trailing_ != null)
+			mlpveh.trailing_.updateLeadNTrail();
+		//processing veh的lane, seg, link的注册
+		//MUST Done before called.
 	}
 	
-	public void insertVeh(MLPVehicle mlpveh){		
-		if (vehsOnLn.isEmpty()){
-			MLPLane theDnLane = getSamePosLane(segment_.getDnSegment());
-			if (theDnLane != null && !theDnLane.vehsOnLn.isEmpty()) {
-				mlpveh.leading_ = theDnLane.getTail();
-				theDnLane.getTail().trailing_ = mlpveh;
-			}
-			else {
-				mlpveh.leading_ = null;
-			}
-			MLPLane theUpLane = getSamePosLane(segment_.getUpSegment());
-			if (theUpLane != null && !theUpLane.vehsOnLn.isEmpty()) {
-				mlpveh.trailing_ = theUpLane.getHead();
-				theUpLane.getHead().leading_ = mlpveh;
-			}
-			else {
-				mlpveh.trailing_ = null;
-			}
-			head_ = mlpveh;
-			tail_ = mlpveh;
-		}
-		else {
-			if (head_.Displacement()<mlpveh.Displacement()){
-				mlpveh.trailing_ = head_;
-				mlpveh.leading_ = head_.leading_;
-				head_.leading_ = mlpveh;
-				if (mlpveh.leading_ != null) {
-					mlpveh.leading_.trailing_ = mlpveh;
-				}				
-				head_ = mlpveh;
-			}
-			else {
-				MLPVehicle tmp = head_;
-				while(tmp!=tail_){
-					if (tmp.trailing_.Displacement()<mlpveh.Displacement()) {
-						mlpveh.leading_ = tmp;
-						mlpveh.trailing_ = tmp.trailing_;
-						tmp.trailing_ = mlpveh;
-						mlpveh.trailing_.leading_ = mlpveh;
-						break;
-					}					
-					tmp = tmp.trailing_;					
-				}
-				if (tmp==tail_) {//队伍最后
-					mlpveh.leading_ = tail_;
-					mlpveh.trailing_ = tail_.trailing_;
-					tail_.trailing_ = mlpveh;
-					if (mlpveh.trailing_ != null) {
-						mlpveh.trailing_.leading_ = mlpveh;
-					}
-					tail_ = mlpveh;
-				}
-			}			
-		}
-		vehsOnLn.add(mlpveh);
-	}
-	
-	public void substitudeVeh(MLPVehicle veh, MLPVehicle newVeh){
-		if (veh.trailing_ != null) {
-			newVeh.trailing_ = veh.trailing_;
-			veh.trailing_ .leading_= newVeh; 
-		}
-		if (veh.leading_  != null) {
-			newVeh.leading_ = veh.leading_;
-			veh.leading_.trailing_ = newVeh;			
-		}
-		if (head_==veh) {
-			head_ = newVeh;
-		}
-		if (tail_ == veh) {
-			tail_ = newVeh;
-		}
-		vehsOnLn.remove(veh);
-		vehsOnLn.add(newVeh);
-	}
-	
-	public void removeVeh(MLPVehicle mlpveh){
+	public void removeVeh(MLPVehicle mlpveh, boolean recycleNeeded){
+		//处理相关lane的vehsOnLn
 		vehsOnLn.remove(mlpveh);
-		if (mlpveh.leading_ != null) {
-			mlpveh.leading_.trailing_ = mlpveh.trailing_;
+		//处理与此veh相关veh的lead_&trail_
+		if (mlpveh.leading_ != null) 
+			mlpveh.leading_.updateLeadNTrail();
+		if (mlpveh.trailing_ != null)
+			mlpveh.trailing_.updateLeadNTrail();
+		if (recycleNeeded)
+			//处理network.veh_list recycle; 
+			MLPNetwork.getInstance().veh_pool.recycle(mlpveh);
+		else {
+			//若不需要回收，则完成processing Veh的跟车更新及挂载注册
+			mlpveh.leading_ = (MLPVehicle) null;
+			mlpveh.trailing_ = (MLPVehicle) null;
+			mlpveh.lane_ = null;
+			mlpveh.segment_ = null;
+			mlpveh.link_ = null;
 		}
-		if (mlpveh.trailing_ != null) {
-			mlpveh.trailing_.leading_ = mlpveh.leading_;
-		}
+	}
+	
+	public void insertVeh(MLPVehicle mlpveh) {
+		//找到插入节点并在vehsOnLn上插入
 		if (vehsOnLn.isEmpty()) {
-			head_ = null;
-			tail_ = null;
+			vehsOnLn.offer(mlpveh);
 		}
 		else {
-			if (head_.getCode() == mlpveh.getCode()) {
-				head_ = mlpveh.trailing_;
+			int p = 0;
+			while (p<vehsOnLn.size() && vehsOnLn.get(p).distance() < mlpveh.distance()) {
+				p += 1;
 			}
-			else if (tail_.getCode() == mlpveh.getCode()) {
-				tail_ = mlpveh.leading_;
-			}
+			vehsOnLn.add(p, mlpveh);
 		}
-			
+		//processingVeh.lane/seg/link setting
+		mlpveh.lane_ = this;
+		mlpveh.segment_ = (MLPSegment) segment_;
+		mlpveh.link_ = (MLPLink) segment_.getLink();
+		//updateLeadNTrail()
+		mlpveh.updateLeadNTrail();
+		if (mlpveh.leading_ != null) 
+			mlpveh.leading_.updateLeadNTrail();
+		if (mlpveh.trailing_ != null) 
+			mlpveh.trailing_.updateLeadNTrail();		
+	}
+	
+	public void insertVeh(MLPVehicle mlpveh, int p) {
+		//在vehsOnLn上插入
+		vehsOnLn.add(p, mlpveh);
+		//updateLeadNTrail()
+		mlpveh.updateLeadNTrail();
+		if (mlpveh.leading_ != null) 
+			mlpveh.leading_.updateLeadNTrail();
+		if (mlpveh.trailing_ != null) 
+			mlpveh.trailing_.updateLeadNTrail();
+		//processingVeh.lane/seg/link setting
+		mlpveh.lane_ = this;
+		mlpveh.segment_ = (MLPSegment) segment_;
+		mlpveh.link_ = (MLPLink) segment_.getLink();
+	}
+
+	public void substitudeVeh(MLPVehicle rmVeh, MLPVehicle newVeh){
+		/*if (!vehsOnLn.contains(rmVeh)) {
+			System.err.println("err: rmVeh is not on this lane");
+			return;
+		}*/
+		int p_ = vehsOnLn.indexOf(rmVeh);
+		removeVeh(rmVeh, false);
+		insertVeh(newVeh, p_);
 	}
 	
 	public void passVeh2ConnDnLn(MLPVehicle theVeh) {
 		if (connectedDnLane == null) {
 			System.err.println("no connected downstream lane");
 		}
-		vehsOnLn.remove(theVeh);		
-		if (vehsOnLn.isEmpty()) {
-			tail_ = null;
-			head_ = null;
-		}
-		else {
-			head_ = theVeh.trailing_;
-		}		
-		if (connectedDnLane.vehsOnLn.isEmpty()) {
-			connectedDnLane.head_ = theVeh;
-		}		
-		connectedDnLane.tail_ = theVeh;		
-		connectedDnLane.vehsOnLn.add(theVeh);
+		//S2
+		vehsOnLn.remove(theVeh);
+		connectedDnLane.vehsOnLn.offer(theVeh);
+		//S3 NONEED
+		//S4 
+		theVeh.lane_ = connectedDnLane;
+		theVeh.segment_ = (MLPSegment) segment_.getDnSegment();
 	}
 	
 	public MLPVehicle getHead() {
-		return head_;
+		if (vehsOnLn.isEmpty()) 
+			return (MLPVehicle) null;
+		else 
+			return vehsOnLn.getFirst();
 	}
 	
 	public MLPVehicle getTail(){
-		return tail_;
+		if (vehsOnLn.isEmpty()) 
+			return (MLPVehicle) null;
+		else
+			return vehsOnLn.getLast();
 	}
 	
 	public MLPLane getAdjacent(int dir){

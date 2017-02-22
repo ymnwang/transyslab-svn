@@ -48,7 +48,7 @@ public class MLPEngine extends SimulationEngine{
 			}				
 			if (trackOn) {
 				trackWriter = new TXTUtils("src/main/resources/output/track" + threadID + ".csv");
-				trackWriter.write("TIME,VID,VIRTYPE,BUFF,POS,LINK,DSP,SPD\r\n");
+				trackWriter.write("TIME,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
 			}				
 			if (infoOn)
 				infoWriter = new TXTUtils("src/main/resources/output/info" + threadID + ".txt");
@@ -100,16 +100,6 @@ public class MLPEngine extends SimulationEngine{
 				
 				LCDTime_ = now + MLPParameter.getInstance().LCDStepSize_;
 			}
-			for (int i = 0; i < mlp_network.nLanes(); i++) {
-				MLPLane theLN = mlp_network.mlpLane(i);
-				MLPVehicle claimTail = theLN.getTail();
-				MLPVehicle claimHead = theLN.getHead();
-				if ((claimTail != null && !theLN.vehsOnLn.contains(claimTail)) ||
-						(claimHead != null && !theLN.vehsOnLn.contains(claimHead)) ||
-						((claimTail == null || claimHead == null) && !theLN.vehsOnLn.isEmpty()) ) {
-					System.out.println("BUG");
-				}
-			}
 			//运动计算、节点服务(暂缺)、写入发车表（暂缺）
 			for (int i = 0; i < mlp_network.nLinks(); i++){
 				mlp_network.mlpLink(i).move();
@@ -122,8 +112,7 @@ public class MLPEngine extends SimulationEngine{
 						loopRecWriter.write(time + "," + msg);
 					}
 				}
-			}
-			
+			}			
 			//车辆更新(同时更新)
 			for (int k = 0; k<mlp_network.veh_list.size(); k++) {
 				MLPVehicle theVeh = mlp_network.veh_list.get(k);
@@ -135,31 +124,32 @@ public class MLPEngine extends SimulationEngine{
 		//可视化渲染
 //		mlp_network.recordVehicleData();
 		
-		for (int i = 0; i < mlp_network.nLanes(); i++) {
-			MLPLane theLN = mlp_network.mlpLane(i);
-			MLPVehicle claimTail = theLN.getTail();
-			MLPVehicle claimHead = theLN.getHead();
-			if ((claimTail != null && !theLN.vehsOnLn.contains(claimTail)) ||
-					(claimHead != null && !theLN.vehsOnLn.contains(claimHead)) ||
-					((claimTail == null || claimHead == null) && !theLN.vehsOnLn.isEmpty()) ) {
-				System.out.println("BUG");
-			}
-		}
+		//输出轨迹
 		if (trackOn) {
 			if (!mlp_network.veh_list.isEmpty()) {
+				int LV;
+				int FV;
 				for (MLPVehicle v : mlp_network.veh_list) {
+					LV = 0; FV = 0;
+					if (v.leading_!=null)
+						LV = v.leading_.getCode();
+					if (v.trailing_ != null)
+						FV = v.trailing_.getCode();
 					trackWriter.write(time + "," + 
 							 				  v.getCode() + "," +
 							 				  v.VirtualType_ + "," +
 							 				  v.buffer_ + "," +
 							 				  v.lane_.getLnPosNum() + "," +
 							 				  v.segment_.getCode() + "," +
-							 				  v.Displacement() + "," + 
-							 				  v.currentSpeed() + "\r\n");
+							 				  v.link_.getCode() + "," +
+							 				  v.Displacement() + "," +
+							 				  v.currentSpeed() + "," + 
+							 				  LV + "," + 
+							 				  FV + "\r\n");
 				}
 			}
 		}
-		System.out.println(time);
+//		System.out.println(time);
 		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
 		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {			
 			if (infoOn)

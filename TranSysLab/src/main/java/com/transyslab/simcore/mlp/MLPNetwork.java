@@ -164,7 +164,7 @@ public class MLPNetwork extends RoadNetwork {
 			while (mlpLink(i).checkFirstEmtTableRec()){
 				Inflow emitVeh = mlpLink(i).emtTable.getInflow().poll();
 				MLPVehicle newVeh = veh_pool.generate();
-				newVeh.init2(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx));
+				newVeh.initInfo(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx));
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);				
 				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
 				mlpLane(emitVeh.laneIdx).appendVeh(newVeh);
