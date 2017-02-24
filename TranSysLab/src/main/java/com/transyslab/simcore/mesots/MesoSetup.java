@@ -36,7 +36,7 @@ public class MesoSetup {
 	}
 	public static void ParsePathTables() {
 		// 
-		XmlParser.parsePathTableXml("E:\\MesoInput_Cases\\12.28bestluck\\pathtable.xml");
+		XmlParser.parsePathTableXml("src/main/resources/demo_neihuan/scenario2/pathtable.xml");
 
 	}
 	public static void ParseODTripTables(int tarid) {
@@ -56,13 +56,13 @@ public class MesoSetup {
 		XmlParser.parseDetTimeXml("src/main/resources/demo/dettime.xml", realtime);
 	}
 	public static void ParseSensorTables() {
-		XmlParser.parseSensorXml("E:\\MesoInput_Cases\\12.28bestluck\\sensor.xml");
+		XmlParser.parseSensorXml("src/main/resources/demo_neihuan/scenario2/sensor.xml");
 	}
 	public static void ParseSnapshotList(List<MesoVehicle> vhclist){
 		XmlParser.parseSnapshotXml("src/main/resources/demo_snapshot/snapshot.xml", vhclist);
 	}
 	public static void ParseVehicleTable(){
-		XmlParser.parseVehicleTable("E:\\MesoInput_Cases\\12.28bestluck\\emitList(12.28).xml");
+		XmlParser.parseVehicleTable("src/main/resources/demo_neihuan/scenario2/emitList(12.28).xml");
 	}
 	public static void SetupMiscellaneous() {
 		// Assign the pointers to control and surveillance devices in

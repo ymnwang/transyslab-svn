@@ -29,6 +29,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.JTabbedPane;
 import java.awt.SystemColor;
 import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class myWinForm {
 
@@ -243,6 +245,13 @@ public class myWinForm {
 		panel_7.setLayout(gl_panel_7);
 		
 		JButton button = new JButton("\u65B0\u5EFA\u9879\u76EE");
+		button.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				frame.enable(false);
+				new SubWindowPara().setVisible(true);
+			}
+		});
 		button.setFont(new Font("ËÎÌו", Font.PLAIN, 14));
 		
 		JButton button_1 = new JButton("\u52A0\u8F7D\u8DEF\u7F51");

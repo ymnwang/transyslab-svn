@@ -254,12 +254,8 @@ public class XmlParser {
 			for(Element p : kerblist){
 				List<Attribute> pattr = p.attributes();
 				for(Attribute attr : pattr){
-					if(attr.getName()=="KerbX"){
-						if(attr.getValue().isEmpty())
-							System.out.print(tmpsurface);
-						kerbx = Double.parseDouble(attr.getValue());
-					}
-						
+					if(attr.getName()=="KerbX")
+						kerbx = Double.parseDouble(attr.getValue());						
 					if(attr.getName()=="KerbY")
 						kerby = Double.parseDouble(attr.getValue());
 				}

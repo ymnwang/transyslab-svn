@@ -27,7 +27,6 @@ public class Segment extends CodedObject {
 	protected int speedLimit_; // default speed limit
 	protected float freeSpeed_; // free flow speed
 	protected double distance_; // distance from dn node
-	protected static int last = -1;
 
 	protected List<CtrlStation> ctrlList_; // first (upstream) control station
 	protected List<SurvStation> survList_; // first (upstream) sensor station

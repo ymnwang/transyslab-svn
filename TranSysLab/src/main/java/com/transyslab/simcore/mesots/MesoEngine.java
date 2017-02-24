@@ -215,7 +215,7 @@ public class MesoEngine extends SimulationEngine {
 	// 多次运行
 	public void run(int mode) {
 		if(mode==0){
-			MesoNetwork.getInstance().updateParaSdfns(0.15f,0.0f, 21.95f, 156.25f,1.61f,6.31f);
+//			MesoNetwork.getInstance().updateParaSdfns(0.15f,0.0f, 21.95f, 156.25f,1.61f,6.31f);
 			while (simulationLoop() >= 0) {
 
 			}
@@ -679,7 +679,7 @@ public class MesoEngine extends SimulationEngine {
 
 		//当前帧在网车辆的位置信息存储到framequeue
 		
-		if(MesoVehicle.nVehicles()!=0 && mode_==0)
+		if(MesoVehicle.nVehicles()!=0 && mode_==1)
 			meso_network.recordVehicleData();
 		
 		

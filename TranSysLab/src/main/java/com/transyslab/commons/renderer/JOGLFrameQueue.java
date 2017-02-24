@@ -173,7 +173,7 @@ public class JOGLFrameQueue {
         	else return null;  
         }
         //可读队列不为空则读取数据
-        //注意：这里不能用else，因为交换队列之后readCount_>0
+        //注意：这里不能用else if，因为交换队列之后readCount_>0
         if(readCount_>0) 
         	return extract();
         return null;

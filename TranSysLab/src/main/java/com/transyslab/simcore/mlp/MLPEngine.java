@@ -122,7 +122,7 @@ public class MLPEngine extends SimulationEngine{
 		}
 		
 		//可视化渲染
-//		mlp_network.recordVehicleData();
+		mlp_network.recordVehicleData();
 		
 		//输出轨迹
 		if (trackOn) {

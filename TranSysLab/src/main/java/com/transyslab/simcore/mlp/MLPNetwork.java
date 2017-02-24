@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 
+import org.apache.commons.math3.analysis.function.Max;
+
 import com.transyslab.commons.renderer.JOGLFrameQueue;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.roadnetwork.Lane;
@@ -247,7 +249,7 @@ public class MLPNetwork extends RoadNetwork {
 				//从对象池获取vehicledata对象
 				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
 				//记录车辆信息
-				vd.init(v,1);
+				vd.init(v,false,Math.min(1,v.VirtualType_));
 				//将vehicledata插入frame
 				try {
 					JOGLFrameQueue.getInstance().offer(vd, veh_list.size());

@@ -10,7 +10,7 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.EtchedBorder;
 import com.jogamp.opengl.util.FPSAnimator;
 
-public class WinForm {
+public class MainWindow {
 	// Define constants for the top-level container
 	private String title_ = "TranSysLab"; // window's title
 	private int fps_; // animator's target frames per second
@@ -23,7 +23,7 @@ public class WinForm {
 	private int windowHeight = 632;
 	
 	/** Constructor to setup the top-level container and animator */
-	public WinForm() {
+	public MainWindow() {
 		//Complete window design
 		initialize();
 		// Set rendering canvas
@@ -53,15 +53,7 @@ public class WinForm {
 					}
 				}.start();
 			}
-		});
-		/*
-		frame.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-//			System.out.println("尺寸改变了！");
-//			canvas_.setBounds(10, 10, 540, 390);}});*/
-		
-		
+		});		
 	}
 	/**
 	 * Initialize the contents of the frame.
@@ -72,7 +64,7 @@ public class WinForm {
 		canvas_ = new JOGLCanvas();
 		frame = new JFrame();		
 		frame.setBounds(screenWidth/2 - windowWidth/2, screenHeight/2-windowHeight/2, windowWidth, windowHeight);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle(title_);
 		
 		JPanel panel = new JPanel();
@@ -93,27 +85,17 @@ public class WinForm {
 			}
 		);
 
-//		panel_1.setForeground(Color.DARK_GRAY);
 		
 		JPanel panel_2 = new JPanel();
-//		panel_2.setBackground(Color.PINK);
 		
 		JPanel panel_3 = new JPanel();
-//		panel_3.setBackground(Color.CYAN);
 		
 		JPanel panel_5 = new JPanel();
-//		panel_5.setBackground(Color.WHITE);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		
 		JPanel panel_4 = new JPanel();
 		
-//		panel_4.setBackground(Color.CYAN);
-//		panel_4.setLayout(new BorderLayout(0, 0));
-		
-//		Canvas canvas = new Canvas();
-//		canvas.setBackground(Color.BLACK);
-//		panel_4.add(canvas_, BorderLayout.CENTER);
 		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -154,9 +136,6 @@ public class WinForm {
 		
 		JTabbedPane tabbedPane_2 = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.addTab("控制台", null, tabbedPane_2, null);
-		/*
-		Canvas canvas = new Canvas();
-		panel_3.add(canvas);*/
 		
 		JPanel panel_6 = new JPanel();
 		panel_6.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -377,7 +356,6 @@ public class WinForm {
 		frame.getContentPane().setLayout(groupLayout);
 		frame.setVisible(true);
 	}
-
 	public void render() {
 		animator_.start(); // start the animation loop
 	}

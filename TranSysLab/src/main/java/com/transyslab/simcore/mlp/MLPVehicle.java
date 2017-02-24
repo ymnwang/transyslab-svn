@@ -38,7 +38,12 @@ public class MLPVehicle extends Vehicle{
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		vhcCounter_[threadid] = vhcnum;
 	}
-	
+	public MLPSegment getSegment(){
+		return segment_;
+	}
+	public MLPLane getLane(){
+		return lane_;
+	}
 	public void reset(){
 		
 	}
