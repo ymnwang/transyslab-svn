@@ -11,15 +11,16 @@ public class MLPParameter extends Parameter {
 	protected double updateStepSize_;//update阶段时长
 	protected double LCDStepSize_;//Lane changing decision 换道决策时间间隔
 	protected double capacity;// veh/s/lane
+	protected float CELL_RSP_LOWER; // 单位米，about 200 feet 30.48f
+	protected float CELL_RSP_UPPER; // 单位米，about 500 feet 91.44f
 	private double [] SDPara_;//[0]VMax m/s; [1]VMin m/s; [2]KJam veh/m; [3]Alpha a.u.; [4]Beta a.u.;
-	private double [] LCPara_;//[0]gamma1 a.u.; [1]gamma2 a.u.;
+	private double [] LCPara_;//[0]gamma1 a.u.; [1]gamma2 a.u.;	
 	protected float[] limitingParam_; // [0] stopping gap (m); [1] moving time gap (t); [2] ?
 //	protected float[] queueParam_; // max speed for queue releasing
-	final static float VEHICLE_LENGTH = 6.0960f; // 单位米， 20 feet
-	final static float CELL_RSP_LOWER = 30.48f; // 单位米，about 200 feet
-	final static float CELL_RSP_UPPER = 91.44f; // 单位米，about 500 feet
+	final static float VEHICLE_LENGTH = 6.0960f; // 单位米， 20 feet	
 	final static double CF_NEAR = 0.1;//meter
 	final static double SEG_NEAR = 1.0;//meter
+	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
 
 	public static MLPParameter getInstance() {
 		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
@@ -32,15 +33,18 @@ public class MLPParameter extends Parameter {
 		LCBuffTime_ = 2.0;
 		updateStepSize_ = 10.0;
 		LCDStepSize_ = 2.0;
-		capacity = 0.5;
-		SDPara_ = new double [] {16.67, 0.0, 0.180, 5.0, 1.8};
-		LCPara_ = new double [] {0.5, 0.5};
+		capacity = 0.5;//default 0.5
+		CELL_RSP_LOWER = 30.87f;
+		CELL_RSP_UPPER = 91.58f;
+		SDPara_ = new double [] {16.67, 0.0, 0.180, 5.0, 1.8};//原{16.67, 0.0, 0.180, 5.0, 1.8}{19.76, 0.0, 0.15875, 2.04, 5.35}
+		LCPara_ = new double [] {10.0, 10.0};
 		limitingParam_ = new float[3];
 //		queueParam_ = new float[3];
 		//从mesolib文件读入的默认参数值
 		limitingParam_[0] = (float) (5.0 * lengthFactor_);// turn to meter
 		limitingParam_[1] = 1.36f;
 		limitingParam_[2] = (float) (5.0 * speedFactor_);// turn to km/hour
+//		SEG_NEAR = SDPara_[0]*SimulationClock.getInstance().getStepSize();
 //		queueParam_[0] = -0.001f;
 //		queueParam_[1] = (float) (25.0 * speedFactor_);
 //		queueParam_[2] = 100.0f;// seconds
@@ -67,7 +71,7 @@ public class MLPParameter extends Parameter {
 	public double maxSpeed(double gap) {
 		double dt = SimulationClock.getInstance().getStepSize() + headwaySpeedSlope();
 		double dx = gap - minHeadwayGap();
-		return Math.max(0.0, Math.min(120/3.6, dx/dt));
+		return Math.max(0.0, Math.min(PHYSICAL_SPD_LIM, dx/dt));
 	}
 	
 	public float minHeadwayGap() {

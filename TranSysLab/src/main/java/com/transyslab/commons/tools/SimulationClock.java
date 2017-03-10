@@ -432,4 +432,7 @@ public class SimulationClock {
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		return RoadNetworkPool.getInstance().getSimulationClock(threadid);
 	}
+	public double getDuration() {
+		return simulationTime_;
+	}
 }

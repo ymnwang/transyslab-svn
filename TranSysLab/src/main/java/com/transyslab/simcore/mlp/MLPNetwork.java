@@ -10,6 +10,7 @@ import org.apache.commons.math3.analysis.function.Max;
 
 import com.transyslab.commons.renderer.JOGLFrameQueue;
 import com.transyslab.commons.tools.Inflow;
+import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.RoadNetwork;
@@ -32,6 +33,7 @@ public class MLPNetwork extends RoadNetwork {
 		veh_list = new ArrayList<MLPVehicle>();
 		loops = new ArrayList<Loop>();
 		sysRand = new Random(System.currentTimeMillis());
+		//sysRand = new Random((long) 1);
 	}
 
 	public static MLPNetwork getInstance() {
@@ -134,20 +136,16 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void buildemittable(boolean needRET){
 		if (needRET) {
-			for (int i = 0; i < nLinks(); i++) {
-				mlpLink(i).emtTable.createRndETables();
-			}			
+			mlpLink(0).emtTable.createRndETables();		
 		}
 		else {
-			for (int i = 0; i < nLinks(); i++) {
-				mlpLink(i).emtTable.readETables();
-			}
+			mlpLink(0).emtTable.readETables();
 		}
 	}
 
 	public void resetReleaseTime(){
-		for (int i = 0; i<nLinks(); i++){
-			mlpLink(i).resetReleaseTime();
+		for (int i = 0; i<nLanes(); i++){
+			mlpLane(i).resetReleaseTime();
 		}
 	}
 	
@@ -167,7 +165,8 @@ public class MLPNetwork extends RoadNetwork {
 				Inflow emitVeh = mlpLink(i).emtTable.getInflow().poll();
 				MLPVehicle newVeh = veh_pool.generate();
 				newVeh.initInfo(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx));
-				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);				
+				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
+				newVeh.initEntrance(SimulationClock.getInstance().getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
 				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
 				mlpLane(emitVeh.laneIdx).appendVeh(newVeh);
 			}
@@ -206,12 +205,12 @@ public class MLPNetwork extends RoadNetwork {
 	}
 	
 	public void setOverallCapacity(double arg) {
-		for (int i = 0; i < nLinks(); i++) {
-			mlpLink(i).capacity_ = arg;
+		for (int i = 0; i < nLanes(); i++) {
+			mlpLane(i).setCapacity(arg);
 		}
 	}	
 	public void setCapacity(int idx, double c) {
-		mlpLink(idx).capacity_ = c;
+		mlpLane(idx).setCapacity(c);
 	}
 	
 	public void setOverallSDParas(double [] args) {
@@ -241,6 +240,22 @@ public class MLPNetwork extends RoadNetwork {
 		}
 		
 	}
+	
+	public void resetNInit(boolean needRET, long seed) {
+		sysRand.setSeed(seed);
+		for (int i = 0; i < nLinks(); i++) {
+			MLPLink LNK = mlpLink(i);
+			LNK.emtTable.clearflow();//未发出的车从emtTable中移除
+			LNK.tripTime.clear();//重置已记录的Trip Time
+			LNK.emtTable.setSeed(seed);//设置随机种子
+		}
+		for (int i = 0; i < nLanes(); i++) {
+			mlpLane(i).vehsOnLn.clear();//从lane上移除在网车辆
+		}
+		veh_pool.recycleAll();//回收所有在网车辆
+		buildemittable(needRET);
+	}
+	
 	public void recordVehicleData(){
 		VehicleData vd;
 		if (!veh_list.isEmpty()) {

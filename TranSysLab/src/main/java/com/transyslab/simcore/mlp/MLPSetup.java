@@ -36,5 +36,7 @@ public class MLPSetup {
 	}
 	
 	public static String ODFormDir = "src/main/resources/demo_neihuan/scenario2/od_form.csv";
-	public static String EmitFormDir = "src/main/resources/demo_neihuan/scenario2/emit_form.csv";
+	public static String EmitFormDir = "src/main/resources/demo_neihuan/scenario2/emit_form_20170228.csv";
+	public static String FCDFormDir = "src/main/resources/demo_neihuan/scenario2/FCD_20160620_ARCID4855inRL6.7.csv";
+	public static String LoopDir = "src/main/resources/demo_neihuan/scenario2/LOOP_A24_20160620_800-1000.csv";
 }

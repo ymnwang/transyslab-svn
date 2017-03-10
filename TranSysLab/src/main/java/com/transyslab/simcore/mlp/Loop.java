@@ -20,7 +20,7 @@ public class Loop {
 	public String detect(){
 		String str = "";
 		for (MLPVehicle veh : lane.vehsOnLn) {
-			if (veh.distance()>distance && veh.newDis<=distance) {
+			if (veh.VirtualType_ == 0 && veh.distance()>distance && veh.newDis<=distance) {
 				str += veh.getCode() + "," +  
 						   veh.VirtualType_ + "," + 
 						   veh.newSpeed + "," + 

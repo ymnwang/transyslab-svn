@@ -8,6 +8,7 @@ import java.util.Random;
 
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.commons.tools.emitTable;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Link;
@@ -17,8 +18,9 @@ public class MLPLink extends Link {
 	public List<JointLane> jointLanes;
 	protected List<MLPVehicle> platoon;//正在处理的车队
 	public Dynamics dynaFun;
-	public double capacity_;//unit: veh/s/lane
-	private double releaseTime_;
+	public List<Double> tripTime;
+//	public double capacity_;//unit: veh/s/lane
+//	private double releaseTime_;
 	
 	
 	public MLPLink(){
@@ -26,7 +28,8 @@ public class MLPLink extends Link {
 		jointLanes = new ArrayList<JointLane>();
 		platoon = new ArrayList<>();
 		dynaFun = new Dynamics();
-		capacity_ = MLPParameter.getInstance().capacity;
+		tripTime = new ArrayList<>();
+//		capacity_ = MLPParameter.getInstance().capacity;
 	}
 	
 	public void checkConnectivity(){
@@ -59,6 +62,20 @@ public class MLPLink extends Link {
 		return (JointLane) null;
 	}
 	
+	public boolean hasNoVeh() {
+//		boolean r = true;
+//		for (JointLane jl : jointLanes) {
+//			r = r && jl.hasNoVeh();
+//		}
+//		return r;
+		ListIterator<JointLane> JLIterator = jointLanes.listIterator();
+		while (JLIterator.hasNext()) {
+			if (!JLIterator.next().hasNoVeh()) 
+				return false;
+		}
+		return true;
+	}
+	
 	public void addLnPosInfo() {
 		MLPSegment theSeg = (MLPSegment) getEndSegment();
 		while (theSeg != null){
@@ -78,7 +95,7 @@ public class MLPLink extends Link {
 		}
 	}
 	
-	public void resetReleaseTime() {
+	/*public void resetReleaseTime() {
 		releaseTime_ = SimulationClock.getInstance().getCurrentTime();
 		scheduleNextEmitTime();
 	}
@@ -92,14 +109,22 @@ public class MLPLink extends Link {
 		}
 	}
 	
+	public boolean checkPass() {
+		if (releaseTime_<=SimulationClock.getInstance().getCurrentTime()) 
+			return true;
+		else 
+			return false;
+	}*/
+	
 	public void lanechange() {
 		double platoonhead;
 		double platoontail;
 		MLPVehicle theveh;//处理中的车辆
-		Collections.shuffle(jointLanes);//任意车道位置排序		
+		Random r = MLPNetwork.getInstance().sysRand;
+		Collections.shuffle(jointLanes,r);//任意车道位置排序
 		for (JointLane JLn: jointLanes){
 			//遍历所有车辆，组成车队以后通过deal来处理
-			if (!JLn.emptyVeh()){
+			if (!JLn.hasNoVeh()){
 				platoon.clear();
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
@@ -125,7 +150,7 @@ public class MLPLink extends Link {
 	
 	public void dealLC(double headDsp, double tailDsp) {
 		Random r = MLPNetwork.getInstance().sysRand;
-		Collections.shuffle(platoon);
+		Collections.shuffle(platoon,r);
 		for (MLPVehicle veh: platoon){
 			//虚拟车及冷却中的车不能换道
 			if (veh.VirtualType_== 0 && veh.buffer_== 0) {
@@ -190,10 +215,11 @@ public class MLPLink extends Link {
 		double platoonhead;
 		double platoontail;
 		MLPVehicle theveh;//处理中的车辆
-		Collections.shuffle(jointLanes);//任意车道位置排序		
+		Random r = MLPNetwork.getInstance().sysRand;
+		Collections.shuffle(jointLanes,r);//任意车道位置排序
 		for (JointLane JLn: jointLanes){
 			//遍历所有车辆，组成车队以后通过deal来处理
-			if (!JLn.emptyVeh()){
+			if (!JLn.hasNoVeh()){
 				platoon.clear();
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);

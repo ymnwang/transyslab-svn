@@ -20,12 +20,18 @@ public class JointLane {
 		lanesCompose = new ArrayList<MLPLane>();
 	}
 
-	public boolean emptyVeh(){
+	public boolean hasNoVeh(){
 		ListIterator<MLPLane> iterator = lanesCompose.listIterator();
 		while (iterator.hasNext()) {
-			if (!iterator.next().vehsOnLn.isEmpty()){
-				return false;
-			}			
+			MLPLane LN = iterator.next();
+			if (!LN.vehsOnLn.isEmpty()){
+				ListIterator<MLPVehicle> VehIterator = LN.vehsOnLn.listIterator();
+				while (VehIterator.hasNext()) {
+					if (VehIterator.next().VirtualType_ == 0) {
+						return false;
+					}
+				}
+			}
 		}
 		return true;
 	}

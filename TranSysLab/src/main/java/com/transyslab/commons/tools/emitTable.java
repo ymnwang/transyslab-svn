@@ -16,11 +16,12 @@ import com.transyslab.simcore.mlp.MLPSetup;
 
 public class emitTable {
 	protected LinkedList<Inflow> inflowlist_;
-	Random r;
+	protected Random r;
 	
 	public emitTable() {
 		inflowlist_ = new LinkedList<Inflow>();
 		r = new Random(System.currentTimeMillis());
+		//r = new Random((long) 1);
 	}
 	public void createRndETables(){
 		String filePath = MLPSetup.ODFormDir;
@@ -97,6 +98,14 @@ public class emitTable {
 	
 	public LinkedList<Inflow> getInflow() {
 		return inflowlist_;		
+	}
+	
+	public void setSeed(long val) {
+		r.setSeed(val);
+	}
+	
+	public void clearflow() {
+		inflowlist_.clear();
 	}
 	
 }

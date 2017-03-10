@@ -21,13 +21,14 @@ public class Dynamics {
 	public double cfFun(MLPVehicle theVeh){
 		double gap = theVeh.leading_.Displacement() - theVeh.leading_.getLength() - theVeh.Displacement(); 
 		double vlead = (double) theVeh.leading_.currentSpeed();
-		double upperGap = MLPParameter.CELL_RSP_UPPER;
+		double upperGap = MLPParameter.getInstance().CELL_RSP_UPPER;
 		if(gap < MLPParameter.CF_NEAR) {
 			return vlead;
 		}
 		else if (gap<upperGap) {
 			double r = gap/upperGap;
-			return r * MLPParameter.getInstance().maxSpeed(gap) + (1.0-r) * vlead; 
+			//return r * sdPara[0] + (1.0-r) * vlead;
+			return r * MLPParameter.getInstance().maxSpeed(gap) + (1.0-r) * vlead;
 		}
 		else {
 			return sdPara[0];
@@ -45,7 +46,7 @@ public class Dynamics {
 			return cfFun(headVeh);
 		}
 		else if (((MLPSegment)headVeh.link_.getEndSegment()).endDSP - headVeh.Displacement() > 
-						MLPParameter.CELL_RSP_UPPER ||
+						MLPParameter.getInstance().CELL_RSP_UPPER ||
 				headVeh.segment_.isTheEnd() != 0) {
 			//距离终点较远 或 处于endSegment(无限制)
 			return sdPara[0];

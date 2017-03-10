@@ -3,6 +3,7 @@ package com.transyslab.simcore.mlp;
 import java.util.HashMap;
 
 import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Vehicle;
 
@@ -22,9 +23,11 @@ public class MLPVehicle extends Vehicle{
 	public double newSpeed;
 	public double newDis;
 	protected int usage;
+	protected double TimeEntrance;
+	protected double DSPEntrance;
+//	protected double TimeExit;
 	//private boolean active_;
 	
-	protected static int[] vhcCounter_ = new int[Constants.THREAD_NUM];  	//在网车辆数统计
 	
 	public MLPVehicle(){
 		trailing_ = null;
@@ -33,11 +36,6 @@ public class MLPVehicle extends Vehicle{
 		stopFlag = false;
 	}
 	
-	public static void setVehicleCounter(int vhcnum){
-		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		vhcCounter_[threadid] = vhcnum;
-	}
 	public MLPSegment getSegment(){
 		return segment_;
 	}
@@ -53,7 +51,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void calState() {
-		if (leading_ != null && distance_-leading_.distance_<=MLPParameter.CELL_RSP_LOWER) {
+		if (leading_ != null && distance_-leading_.distance_<=MLPParameter.getInstance().CELL_RSP_LOWER) {
 			CFState_ = true;
 		}
 		else {
@@ -114,7 +112,8 @@ public class MLPVehicle extends Vehicle{
 			System.out.println(e.getMessage());
 			System.out.println(e.getStackTrace());
 		}
-		return 0.18;		
+		//failed	
+		return 0.0;		
 	}
 	
 	private double [] sum(int turning, MLPSegment seg, double f, double t, double [] count){
@@ -178,8 +177,13 @@ public class MLPVehicle extends Vehicle{
 	
 	public double calLCProbability(int turning, double fDSP, double tDSP, double PlatoonCount){
 		double [] gamma = MLPParameter.getInstance().getLCPara();
-		double u = gamma[0]*calH(turning)*calMLC() + gamma[1]*calDLC(turning, fDSP, tDSP, PlatoonCount);
+		double u = gamma[0]*calH(turning)*(calMLC() - 0.5) + gamma[1]*(calDLC(turning, fDSP, tDSP, PlatoonCount) - 0.5);
 		return Math.exp(u)/(1+Math.exp(u));
+	}
+	
+	public void initEntrance(double time, double dsp) {
+		TimeEntrance = time;
+		DSPEntrance = dsp;
 	}
 	
 	public void initInfo(int virType, MLPLink onLink, MLPSegment onSeg, MLPLane onLane){
@@ -198,29 +202,56 @@ public class MLPVehicle extends Vehicle{
 	 }
 	
 	public int updateMove() {
-		if (buffer_ == 0 && VirtualType_>0) {
+		if (VirtualType_>0 && buffer_ == 0) {
 			lane_.removeVeh(this, true);
 			return 1;
 		}
 		if (newDis < 0.0) 
-			dealPassing();//Passing link or seg
-		currentSpeed_ = (float) newSpeed;
-		distance_ = (float) newDis;
-		buffer_ = Math.max(0, buffer_-1);
+			return dealPassing();//Passing link or seg		
 		return 0;
 	}
 	
-	public void dealPassing() {
-		if (segment_.isEndSeg()) {//passing Link(暂时处理成到达
-			lane_.removeVeh(this, true);
-			return;
+	public void advance() {
+		currentSpeed_ = (float) newSpeed;
+		distance_ = (float) newDis;
+		buffer_ = Math.max(0, buffer_-1);
+	}
+	
+	public int dealPassing() {
+		if (segment_.isEndSeg()) {
+			if (lane_.checkPass()) {//passing Link(暂时处理成到达
+				link_.tripTime.add(SimulationClock.getInstance().getCurrentTime() - TimeEntrance);
+				lane_.scheduleNextEmitTime();
+				lane_.removeVeh(this, true);
+				return 1;
+			}
+			else {
+				//hold still
+				newDis = 0.0;
+				if (currentSpeed_>0.0) 
+					newSpeed = (distance_-newDis)/SimulationClock.getInstance().getStepSize();
+				return 0;
+			}
 		}
-		else {//passing Seg.
+		else {//deal passing Seg.
+			/*if (lane_.checkPass()) {
+				lane_.passVeh2ConnDnLn(this);
+				newDis = segment_.getLength() + newDis;
+				if (newDis < 0.0) {
+					dealPassing();
+				}
+			}
+			else {//hold in this seg
+				newDis = 0.0;
+				if (currentSpeed_>0.0) 
+					newSpeed = (distance_-newDis)/SimulationClock.getInstance().getStepSize();
+			}*/
 			lane_.passVeh2ConnDnLn(this);
 			newDis = segment_.getLength() + newDis;
 			if (newDis < 0.0) {
 				dealPassing();
 			}
+			return 0;
 		}
 	}
 	
@@ -260,6 +291,9 @@ public class MLPVehicle extends Vehicle{
 		length_ = 0.0f;
 		distance_ = 0.0f;
 		currentSpeed_ = 0.0f;
+		TimeEntrance = 0.0;
+		DSPEntrance = 0.0;
+//		TimeExit = 0.0;
 	}
 	
 	public void updateUsage() {

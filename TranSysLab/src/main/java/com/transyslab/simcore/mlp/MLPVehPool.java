@@ -1,6 +1,7 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.LinkedList;
+import java.util.List;
 
 public class MLPVehPool{
 	protected LinkedList<MLPVehicle> vehPool;
@@ -28,6 +29,17 @@ public class MLPVehPool{
 		}
 		else {
 			v = null;
+		}
+	}
+	
+	public void recycleAll() {
+		List<MLPVehicle> vList = MLPNetwork.getInstance().veh_list;
+		if (!vList.isEmpty()) {
+			for (MLPVehicle veh : vList) {
+				veh.clearMLPProperties();
+				vehPool.offer(veh);
+			}
+			vList.clear();
 		}
 	}
 	

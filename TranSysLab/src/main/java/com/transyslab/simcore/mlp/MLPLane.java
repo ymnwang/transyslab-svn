@@ -14,6 +14,8 @@ import com.transyslab.roadnetwork.Segment;
 import jogamp.graph.curve.tess.HEdge;
 
 public class MLPLane extends Lane {
+	private double capacity_;
+	private double releaseTime_;
 	private int lnPosNum_;
 	public LinkedList<MLPVehicle> vehsOnLn;
 //	private MLPVehicle head_;
@@ -31,12 +33,38 @@ public class MLPLane extends Lane {
 	public int di;
 	
 	public MLPLane(){
+		capacity_ = MLPParameter.getInstance().capacity;
 		lnPosNum_ = 0;
 		vehsOnLn = new LinkedList<MLPVehicle>();
 		lateralCutInAllowed = 0;
 //		LfCutinAllowed = true;
 //		RtCutinAllowed = true;
 		enterAllowed = true;
+	}
+	
+	public boolean checkPass() {
+		if (releaseTime_<=SimulationClock.getInstance().getCurrentTime()) 
+			return true;
+		else 
+			return false;
+	}
+	
+	public void resetReleaseTime() {
+		releaseTime_ = SimulationClock.getInstance().getCurrentTime();
+		scheduleNextEmitTime();
+	}
+	
+	public void scheduleNextEmitTime() {
+		if (capacity_ > 1.E-6) {
+			releaseTime_ += 1.0 / capacity_;
+		}
+		else {
+			releaseTime_ = Constants.DBL_INF;
+		}
+	}
+	
+	public void setCapacity(double val) {
+		capacity_ = val;
 	}
 	
 	public void calLnPos() {
