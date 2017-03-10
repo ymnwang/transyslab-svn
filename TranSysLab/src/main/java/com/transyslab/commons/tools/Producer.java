@@ -6,6 +6,7 @@ package com.transyslab.commons.tools;
 import java.util.concurrent.Callable;
 
 import com.transyslab.roadnetwork.Constants;
+import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
@@ -21,7 +22,6 @@ public class Producer implements Callable<SimulationEngine> {
 	private PSO pso_;
 	private DE de_;
 	private SPSA spsa_;
-	private int engineType_;
 
 	public Producer() {
 
@@ -30,30 +30,28 @@ public class Producer implements Callable<SimulationEngine> {
 		this.id_ = id;
 		this.name_ = n;
 	}
-	public Producer(SimulationEngine eg, PSO pso, int type) {
+	public Producer(SimulationEngine eg, PSO pso) {
 		engine_ = eg;
 		pso_ = pso;
-		engineType_ = type;
+
 		// barrier_ = bar;
 	}
-	public Producer(SimulationEngine eg, DE de, int type) {
+	public Producer(SimulationEngine eg, DE de) {
 		engine_ = eg;
 		de_ = de;
-		engineType_ = type;
+
 	}
-	public Producer(SimulationEngine eg, SPSA spsa, int type){
+	public Producer(SimulationEngine eg, SPSA spsa){
 		engine_ = eg;
 		spsa_ = spsa;
-		engineType_ = type;
 	}
-	public Producer(SimulationEngine eg, int type) {
+	public Producer(SimulationEngine eg) {
 		engine_ = eg;
-		engineType_ = type;
 	}
 	@Override
 	public SimulationEngine call() {
 
-		if(engineType_ == 1){
+		if(AppSetup.modelType == 1){
 			// =0:非snapshot启动，按OD流量随机发车；
 	        // =1:非snapshot启动，按过车记录定时发车;
 			// =2:snapshot启动，按OD流量随机发车；
@@ -67,7 +65,7 @@ public class Producer implements Callable<SimulationEngine> {
 			engine_.loadFiles();
 		}
 		// 加载MLP模型
-		else if(engineType_ == 2){
+		else if(AppSetup.modelType == 2){
 			engine_ = new MLPEngine();
 			engine_.loadFiles();
 		}

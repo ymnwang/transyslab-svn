@@ -25,8 +25,8 @@ public class MesoNetworkPool extends RoadNetworkPool {
 	private MesoParameter[] parameterArray_;
 	private SimulationClock[] simClockArray_;
 	private MesoODTable[] odTableArray_;
-	private int[] threadIndex_;
-	private int threadNum_;
+
+
 	//外部车辆数据
 	private MesoVehicleTable[] vhcTableArray_;
 	
@@ -79,18 +79,6 @@ public class MesoNetworkPool extends RoadNetworkPool {
 		}
 	}
 
-	public void organizeHM(Thread[] tl) {
-		if (threadMap_ != null)
-			threadMap_ = null;
-		threadMap_ = new HashMap<String, Integer>();
-		for (int i = 0; i < threadNum_; i++) {
-			threadMap_.put(tl[i].getName(), threadIndex_[i]);
-		}
-	}
-	@Override
-	public HashMap<String, Integer> getHashMap() {
-		return threadMap_;
-	}
 	@Override
 	public MesoNetwork getNetwork(int i) {
 		return networkArray_[i];

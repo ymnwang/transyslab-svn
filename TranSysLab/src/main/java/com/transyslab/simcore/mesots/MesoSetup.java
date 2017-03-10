@@ -6,6 +6,7 @@ package com.transyslab.simcore.mesots;
 import java.util.List;
 
 import com.transyslab.commons.io.XmlParser;
+import com.transyslab.simcore.AppSetup;
 
 /**
  * 静态方法解析各类表格
@@ -14,7 +15,7 @@ import com.transyslab.commons.io.XmlParser;
  *
  */
 public class MesoSetup {
-
+	
 	public static void ParseParameters() {
 
 		/*
@@ -31,7 +32,7 @@ public class MesoSetup {
 	public static void ParseNetwork() {
 		// E:\\MesoInput_Cases\\12.28bestluck\\
 		//src/main/resources/demo/
-		XmlParser.parseNetworkXml("src/main/resources/demo_pre/network.xml");
+		XmlParser.parseNetworkXml(AppSetup.setupParameter.get("路网路径"));
 
 	}
 	public static void ParsePathTables() {
@@ -44,9 +45,6 @@ public class MesoSetup {
 		XmlParser.parseODXml("E:\\MesoInput_Cases\\12.25goodluck\\demand(synthesis).xml", tarid);
 	}
 
-	public static void ParseVehicleTables(double start_time) {
-
-	}
 	public static void ParseFCDTable(float[][] realtime) {
 		// HashMap<String, Integer> hm =
 		// MESO_InfoArrays.getInstance().getHashMap();
@@ -62,7 +60,7 @@ public class MesoSetup {
 		XmlParser.parseSnapshotXml("src/main/resources/demo_snapshot/snapshot.xml", vhclist);
 	}
 	public static void ParseVehicleTable(){
-		XmlParser.parseVehicleTable("src/main/resources/demo_neihuan/scenario2/emitList(12.28).xml");
+		XmlParser.parseVehicleTable("src/main/resources/demo_neihuan/scenario2/emitList(2.28).xml");
 	}
 	public static void SetupMiscellaneous() {
 		// Assign the pointers to control and surveillance devices in

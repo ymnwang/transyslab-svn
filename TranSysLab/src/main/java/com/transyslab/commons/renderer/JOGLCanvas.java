@@ -28,25 +28,38 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 	private GLU glu; // for the GL Utility
 	private RoadNetwork drawableNetwork_;
 	private JOGLCamera cam_;
+	private boolean isFirstRender;
+	//
+	public boolean isPause;
+	//
+	public boolean isRendering;
 
 	/** Constructor to setup the GUI for this Component */
 	public JOGLCanvas() {
 		this.addGLEventListener(this);
 		// 区别于从线程-编号哈希表获取对象
-		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
+//		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
 	}
 	public JOGLCanvas(int width, int height) {
 		this.addGLEventListener(this);
 		// 区别于从线程-编号哈希表获取对象
-		drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
+		//drawableNetwork_ = RoadNetworkPool.getInstance().getNetwork(0);
 		// 设置画布大小
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
 //		this.setPreferredSize(new Dimension(width, height));
 	}
+	public boolean isNetworkReady(){
+		return drawableNetwork_ != null? true : false; 
+	}
+	public void setDrawableNetwork(RoadNetwork network){
+		drawableNetwork_ = network;
+	}
 	public void setCamera(JOGLCamera cam) {
 		cam_ = cam;
 	}
-
+	public void setFirstRender(boolean isFirstRender) {
+		this.isFirstRender = isFirstRender;
+	}
 	// ------ Implement methods declared in GLEventListener ------
 
 	/**
@@ -64,7 +77,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		float widthHeightRatio = (float) getWidth() / (float) getHeight();
 		glu.gluPerspective(45, widthHeightRatio, 0.1, 10000);
 		// YYL end
-//		gl.glClearDepth(1.0f); // set clear depth value to farthest
+		gl.glClearDepth(1.0f); // set clear depth value to farthest
 		gl.glEnable(GL_DEPTH_TEST); // enables depth testing
 		gl.glDepthFunc(GL_LEQUAL); // the type of depth test to do
 		gl.glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // best
@@ -74,8 +87,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 									// lighting
 
 		// ----- Your OpenGL initialization code here -----
-		Point center = drawableNetwork_.getWorldSpace().getCenter();
-		cam_.initCamera(center, 20);
+
 
 	}
 
@@ -117,17 +129,18 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		gl.glMatrixMode(GL_MODELVIEW);
 		gl.glLoadIdentity(); // reset the model-view matrix
 
-		// glu.gluLookAt(center.getX(), center.getY(), 20, center.getX(),
-		// center.getY(), 0, 0, 1, 0);
-
-		glu.gluLookAt(cam_.getEyePosition()[0], cam_.getEyePosition()[1], cam_.getEyePosition()[2],
-				cam_.getTargetPosition()[0], cam_.getTargetPosition()[1], cam_.getTargetPosition()[2], 0, 1, 0);
-		// YYL
 		// ----- Your OpenGL rendering code here (render a white triangle for
 		// testing) -----
-		scene(gl);
-
-
+		if(drawableNetwork_!=null){
+			if(isFirstRender){
+				Point center = drawableNetwork_.getWorldSpace().getCenter();
+				cam_.initCamLookAt(new Point(center.getLocationX(), center.getLocationY(),1000), center);
+				isFirstRender = false;
+			}
+			glu.gluLookAt(cam_.getEyePosition()[0], cam_.getEyePosition()[1], cam_.getEyePosition()[2],
+					cam_.getTargetPosition()[0], cam_.getTargetPosition()[1], cam_.getTargetPosition()[2], 0, 1, 0);
+			scene(gl);
+		}
 	}
 
 	/**
@@ -145,11 +158,9 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		JOGLAnimationFrame frame;
 		Lane tmplane;
 		final float[] liteBlue = new float[]{0.0f,0.75f,1.0f};
-		if(cam_.getEyePosition()[2]<=1000){
-			for (Boundary tmpboundary:boundarys) {
-				JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
-						Constants.COLOR_WHITE);
-			}
+		for (Boundary tmpboundary:boundarys) {
+			JOGLDrawShapes.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
+					Constants.COLOR_WHITE);
 		}
 
 		
@@ -169,27 +180,38 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener {
 		for(Surface sf: surfaces){
 			JOGLDrawShapes.drawPolygon(gl, sf.getKerbList(),Constants.COLOR_GREY);
 		}
-		if(cam_.canStart_){
-			frame =JOGLFrameQueue.getInstance().poll();
+		//暂停时不更新数组索引
+		frame =JOGLFrameQueue.getInstance().poll(isPause);
+		//暂停时保留VehicleData
+		if(isPause){
+			for(VehicleData vd:frame.getVhcDataQueue()){
+				if(vd.getSpecialFlag()==1)
+					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, liteBlue);
+				else if(vd.getSpecialFlag() == 0)
+					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, Constants.COLOR_BLUE);
+			}
+		}
+		else{
+			
 			if(frame!=null){
-				
 				while(!frame.getVhcDataQueue().isEmpty()){
 					VehicleData vd = frame.getVehicleData();
-					
 					//根据摄像机高度调整绘制的车辆大小，2017年1月2日ppt材料
-//					JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),15*(1000-cam_.getEyePosition()[2])/1000, Constants.COLOR_BLUE);
+//						JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),15*(1000-cam_.getEyePosition()[2])/1000, Constants.COLOR_BLUE);
 					if(vd.getSpecialFlag()==1)
-						JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),10, liteBlue);
+						JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, liteBlue);
 					else if(vd.getSpecialFlag() == 0)
-						JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),10, Constants.COLOR_BLUE);
+						JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, Constants.COLOR_BLUE);
 					
 					//回收vehicledata
 					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
 				}
 				//清空frame
 				frame.clean();
-			}		
+			}
 		}
+				
+		
 		
 	}
 }

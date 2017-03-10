@@ -13,9 +13,9 @@ import java.util.concurrent.FutureTask;
 import javax.swing.SwingUtilities;
 
 import com.transyslab.commons.renderer.JOGLFrameQueue;
-import com.transyslab.commons.renderer.MainWindow;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
+import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 
@@ -37,7 +37,7 @@ public class MLP {
 		List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
 		Thread[] threadList = new Thread[Constants.THREAD_NUM];
 		for (int i = 0; i < Constants.THREAD_NUM; i++) {
-			producerList[i] = new Producer(engineList[i], 2);
+			producerList[i] = new Producer(engineList[i]);
 			taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
 			threadList[i] = new Thread(taskList.get(i));
 		}
@@ -64,7 +64,7 @@ public class MLP {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				MainWindow drawnetwork = new MainWindow(); // run the constructor
+				MainWindow drawnetwork = MainWindow.getInstance(); // run the constructor
 				drawnetwork.render();
 			}
 		});

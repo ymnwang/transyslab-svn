@@ -248,7 +248,6 @@ public class myWinForm {
 		button.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				frame.enable(false);
 				new SubWindowPara().setVisible(true);
 			}
 		});

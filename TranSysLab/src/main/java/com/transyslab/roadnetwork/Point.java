@@ -10,23 +10,29 @@ public class Point {
 	public static final double POINT_EPSILON = 0.1;
 	private double locationX;
 	private double locationY;
+	private double locationZ;
 
 	public Point() {
 		locationX = 0;
 		locationY = 0;
+		locationZ = 0;
 	}
+	//二维坐标
 	public Point(double x, double y) {
 		locationX = x;
 		locationY = y;
+		locationZ = 0;
+	}
+	//三维坐标
+	public Point(double x, double y, double z) {
+		locationX = x;
+		locationY = y;
+		locationZ = z;
 	}
 	public Point(Point spt, Point ept, double r) {
 		this.locationX = r * spt.locationX + (1.0 - r) * ept.locationX;
 		this.locationY = r * spt.locationY + (1.0 - r) * ept.locationY;
-	}
-	public int init(double x, double y) {
-		locationX = x;
-		locationY = y;
-		return 0;
+		this.locationZ = r * spt.locationZ + (1.0 - r) * ept.locationZ;
 	}
 
 	/*
@@ -35,7 +41,8 @@ public class Point {
 	 */
 
 	public Point intermediate(Point p, double r) {
-		return new Point(r * locationX + (1.0 - r) * p.locationX, r * locationY + (1.0 - r) * p.locationY);
+		return new Point(r * locationX + (1.0 - r) * p.locationX, r * locationY + (1.0 - r) * p.locationY, 
+				         r * locationZ + (1.0 - r) * p.locationZ);
 	}
 	public double getLocationX() {
 		return locationX;
@@ -43,20 +50,24 @@ public class Point {
 	public double getLocationY() {
 		return locationY;
 	}
+	public double getLocationZ(){
+		return locationZ;
+	}
 	public double getEast() {
 		return locationX;
 	}
 	public double getNorth() {
 		return locationY;
 	}
-	public void setCoodinate(double x, double y) {
-		locationX = x;
-		locationY = y;
+	public double getHeight(){
+		return locationZ;
 	}
+
 	public double distance_squared(Point p) {
 		double n_diff = p.locationY - locationY;
 		double e_diff = p.locationX - locationX;
-		return (n_diff * n_diff + e_diff * e_diff);
+		double h_diff = p.locationZ - locationZ;
+		return (n_diff * n_diff + e_diff * e_diff + h_diff * h_diff);
 	}
 	// Distance to another point
 	public double distance(Point p) {
@@ -89,6 +100,11 @@ public class Point {
 	// 'alpha' wrt point 'p'. The angle must be in radian.
 	public Point bearing(double offset, double alpha) {
 		return new Point(locationX + offset * Math.cos(alpha), locationY + offset * Math.sin(alpha));
+	}
+	public void setLocation(double x, double y, double z) {
+		locationX = x;
+		locationY = y;
+		locationZ = z;	
 	}
 
 }

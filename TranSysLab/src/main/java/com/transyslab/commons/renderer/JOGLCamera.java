@@ -17,29 +17,32 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 	private double keySensitive_;
 	private double keyStep_;
 	private double mouseStep_;
-	private int[] eyePosition_ = {353, 145, 200};
-	private int[] targetPosition_ = {353, 145, -100};
+	private int[] eyeLocation_ = new int[3];
+	private int[] targetLocation_ = new int[3];
 	private boolean isMidButtonPressed_;
-	private int[] prePosition_;
+	private int[] preWinCoordinate_;
 	public boolean canStart_ = false;
 	public JOGLCamera() {
 		keyStep_ = 1.0;
 		mouseStep_ = 1.0;
 		mouseSensitive_ = 5.0;
 		keySensitive_ = 5.0;
-		prePosition_ = new int[2];
+		preWinCoordinate_ = new int[2];
 
 	}
 	public int[] getEyePosition() {
-		return eyePosition_;
+		return eyeLocation_;
 	}
 	public int[] getTargetPosition() {
-		return targetPosition_;
+		return targetLocation_;
 	}
-	public void initCamera(Point p, int zHeight) {
-		targetPosition_[0] = eyePosition_[0] = (int) p.getLocationX();
-		targetPosition_[1] = eyePosition_[1] = (int) p.getLocationY();
-		targetPosition_[2] = eyePosition_[2] = zHeight;
+	public void initCamLookAt(Point curp, Point tarp) {
+		targetLocation_[0] = (int) tarp.getLocationX();  
+		targetLocation_[1] = (int) tarp.getLocationY();
+		targetLocation_[2] = (int) tarp.getLocationZ();
+		eyeLocation_[0] = (int) curp.getLocationX();
+		eyeLocation_[1] = (int) curp.getLocationY();
+		eyeLocation_[2] = (int) curp.getLocationZ();
 	}
 
 	@Override
@@ -54,11 +57,9 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 
 		if(e.getButton()==MouseEvent.BUTTON2 ){
 		
-			prePosition_[0] = e.getX();
-			prePosition_[1] = e.getY();
+			preWinCoordinate_[0] = e.getX();
+			preWinCoordinate_[1] = e.getY();
 			isMidButtonPressed_ = true;
-//			System.out.println(prePosition_[0]);
-//			System.out.println(prePosition_[1]);
 		}
 
 		
@@ -67,7 +68,8 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO 自动生成的方法存根
-		isMidButtonPressed_ =false;
+		if(e.getButton() == MouseEvent.BUTTON2)
+			isMidButtonPressed_ = false;
 
 	}
 
@@ -102,20 +104,20 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 				mouseStep_ -= mouseSensitive_;
 				break;
 			case KeyEvent.VK_UP :
-				eyePosition_[1] += keyStep_;
-				targetPosition_[1] += keyStep_;
+				eyeLocation_[1] += keyStep_;
+				targetLocation_[1] += keyStep_;
 				break;
 			case KeyEvent.VK_DOWN :
-				eyePosition_[1] -= keyStep_;
-				targetPosition_[1] -= keyStep_;
+				eyeLocation_[1] -= keyStep_;
+				targetLocation_[1] -= keyStep_;
 				break;
 			case KeyEvent.VK_RIGHT :
-				eyePosition_[0] += keyStep_;
-				targetPosition_[0] += keyStep_;
+				eyeLocation_[0] += keyStep_;
+				targetLocation_[0] += keyStep_;
 				break;
 			case KeyEvent.VK_LEFT :
-				eyePosition_[0] -= keyStep_;
-				targetPosition_[0] -= keyStep_;
+				eyeLocation_[0] -= keyStep_;
+				targetLocation_[0] -= keyStep_;
 				break;
 			case KeyEvent.VK_SPACE:
 				canStart_ = true;
@@ -135,27 +137,27 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 		// TODO 自动生成的方法存根
 		int count = e.getWheelRotation();
 		if (count > 0)
-			eyePosition_[2] += mouseStep_;
+			eyeLocation_[2] += mouseStep_;
 		if (count < 0)
-			eyePosition_[2] -= mouseStep_;
-		if(eyePosition_[2]<0)
-			eyePosition_[2] = 0;
-//		System.out.println(eyePosition_[2]);
+			eyeLocation_[2] -= mouseStep_;
+		if(eyeLocation_[2]<0)
+			eyeLocation_[2] = 0;
+//		System.out.println(eyeLocation_[2]);
+
 	}
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// TODO Auto-generated method stub
 		if(isMidButtonPressed_){
-			eyePosition_[0] += 0.1*(e.getX()-prePosition_[0]);
-			targetPosition_[0] += 0.1*(e.getX()-prePosition_[0]);
-			eyePosition_[1] -= 0.1*(e.getY()-prePosition_[1]);
-			targetPosition_[1] -= 0.1*(e.getY()-prePosition_[1]);
+			eyeLocation_[0] += 0.1*(e.getX()-preWinCoordinate_[0]);
+			targetLocation_[0] += 0.1*(e.getX()-preWinCoordinate_[0]);
+			eyeLocation_[1] -= 0.1*(e.getY()-preWinCoordinate_[1]);
+			targetLocation_[1] -= 0.1*(e.getY()-preWinCoordinate_[1]);
 			
 		}
 	}
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 

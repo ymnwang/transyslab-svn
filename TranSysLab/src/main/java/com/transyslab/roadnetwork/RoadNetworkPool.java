@@ -12,6 +12,14 @@ public abstract class RoadNetworkPool {
 	protected LinkTimes[] linkTimesArray_;
 	protected Vector<Vector<Random>> randomArray_;
 	protected HashMap<String, Integer> threadMap_;
+	/*
+	protected RoadNetwork[] networkArray_;
+	protected SimulationClock[] simClockArray_;
+	protected Parameter[] parameterArray_;
+	protected ODTable[] odTableArray_;
+	protected VehicleTable[] vhcTableArray_;*/
+	protected int[] threadIndex_;
+	protected int threadNum_;
 
 	private static RoadNetworkPool theRNPool_;
 	public static RoadNetworkPool getInstance() {
@@ -20,10 +28,10 @@ public abstract class RoadNetworkPool {
 	public void setInstance(RoadNetworkPool pool) {
 		theRNPool_ = pool;
 	}
-
+	
 	protected RoadNetworkPool() {
+		
 	}
-	//
 	public abstract void init(int n, RoadNetworkPool pool);
 
 	public abstract void initArrays();
@@ -45,5 +53,12 @@ public abstract class RoadNetworkPool {
 	public Vector<Random> getRandom(int i) {
 		return randomArray_.get(i);
 	}
-
+	public void organizeHM(Thread[] tl) {
+		if (threadMap_ != null)
+			threadMap_ = null;
+		threadMap_ = new HashMap<String, Integer>();
+		for (int i = 0; i < threadNum_; i++) {
+			threadMap_.put(tl[i].getName(), threadIndex_[i]);
+		}
+	}
 }

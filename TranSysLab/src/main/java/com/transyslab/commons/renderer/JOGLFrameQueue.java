@@ -49,10 +49,8 @@ public class JOGLFrameQueue {
         readArray_ = new JOGLAnimationFrame[capacity];  
         writeArray_ = new JOGLAnimationFrame[capacity];  
         
-        writeLock_ = new ReentrantLock();            
-        notFull_ = writeLock_.newCondition();  
-
-
+        writeLock_ = new ReentrantLock();
+        notFull_ = writeLock_.newCondition(); 
     }  
     //插入对象，非线程安全，由加锁函数offer调用保证线程安全
     private void insert(JOGLAnimationFrame e)  
@@ -63,12 +61,14 @@ public class JOGLFrameQueue {
         ++writeCount_;  
     }  
     //取出对象 ，非线程安全，由加锁函数poll调用保证线程安全 
-    private JOGLAnimationFrame extract()  
+    private JOGLAnimationFrame extract(boolean isPause)  
     {  
-    	JOGLAnimationFrame e = readArray_[readArrayHP_];   
-        ++readArrayHP_;
-        //capacity-0
-        --readCount_;  
+    	JOGLAnimationFrame e = readArray_[readArrayHP_];
+    	if(!isPause){
+            ++readArrayHP_;
+            //capacity-0
+            --readCount_;  
+    	}
         return e;  
     }  
   
@@ -163,19 +163,19 @@ public class JOGLFrameQueue {
         	writeLock_.unlock();  
         }  
     }
-    public JOGLAnimationFrame poll(){
+    public JOGLAnimationFrame poll(boolean isPause){
     	//先判断可读队列是否为空
         if(readCount_<=0)  
         {
         	//交换队列失败则返回空帧
         	if(queueSwitch()) 
-        		return extract();
-        	else return null;  
+        		return extract(isPause);
+        	else 
+        		return null;  
         }
         //可读队列不为空则读取数据
-        //注意：这里不能用else if，因为交换队列之后readCount_>0
         if(readCount_>0) 
-        	return extract();
+        	return extract(isPause);
         return null;
-    }  
+    }
 }

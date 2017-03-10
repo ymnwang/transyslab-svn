@@ -6,5 +6,8 @@
 <station type="2" interval="300" zone="5" segid = "3411" id = "7" pos = "0.50">
 <sensor id="-7" laneid = "-1"/>
 </station>
+<station type="2" interval="300" zone="5" segid = "3411" id = "9" pos = "0.99">
+<sensor id="-9" laneid = "-1"/>
+</station>
 </SurvStations>
 </MesoTS>

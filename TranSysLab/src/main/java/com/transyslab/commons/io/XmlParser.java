@@ -25,6 +25,7 @@ import com.transyslab.roadnetwork.Point;
 import com.transyslab.roadnetwork.Sensor;
 import com.transyslab.roadnetwork.Surface;
 import com.transyslab.roadnetwork.SurvStation;
+import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.mesots.MesoLane;
 import com.transyslab.simcore.mesots.MesoLink;
 import com.transyslab.simcore.mesots.MesoNetwork;
@@ -46,8 +47,6 @@ import com.transyslab.simcore.mlp.MLPSegment;
  *
  */
 public class XmlParser {
-	//路网类型，1:MesoTS模型; 2:MLP模型
-	public static int networkType_ = 2;
 	
 	//解析仿真路网
 	public static void parseNetworkXml(String fileName) {
@@ -99,11 +98,11 @@ public class XmlParser {
 
 			}
 			//实例化不同仿真模型的路网要素
-			if(networkType_ == 1){
+			if(AppSetup.modelType == 1){
 				MesoNode tempnode = new MesoNode();
 				tempnode.init(tempid, temptype, tempname);
 			}	
-			else if(networkType_ == 2){
+			else if(AppSetup.modelType == 2){
 				MLPNode tempnode = new MLPNode();
 				tempnode.init(tempid, temptype, tempname);
 			}
@@ -124,11 +123,11 @@ public class XmlParser {
 
 			}
 			//实例化不同仿真模型的路网要素
-			if(networkType_ == 1){
+			if(AppSetup.modelType == 1){
 				MesoLink templink = new MesoLink();
 				templink.init(tempid, temptype, tempupnode, tempdnnode);
 			}	
-			else if(networkType_ == 2){
+			else if(AppSetup.modelType == 2){
 				MLPLink templink = new MLPLink();
 				templink.init(tempid, temptype, tempupnode, tempdnnode);
 			}
@@ -155,12 +154,12 @@ public class XmlParser {
 					endy = Double.parseDouble(attr.getValue());
 
 			}
-			if(networkType_ == 1){
+			if(AppSetup.modelType == 1){
 				MesoSegment tempsegment = new MesoSegment();
 				tempsegment.init(tempid, tempspeedlimit, (float) tempfreespeed, gradient);
 				tempsegment.initArc(beginx, beginy, 0, endx, endy);
 			}	
-			else if(networkType_ == 2){
+			else if(AppSetup.modelType == 2){
 				MLPSegment tempsegment = new MLPSegment();
 				tempsegment.init(tempid, tempspeedlimit, (float) tempfreespeed, gradient);
 				tempsegment.initArc(beginx, beginy, 0, endx, endy);
@@ -188,11 +187,11 @@ public class XmlParser {
 
 			}
 			//创建不同仿真模型的Lane对象
-			if(networkType_ == 1){
+			if(AppSetup.modelType == 1){
 				MesoLane templane = new MesoLane();
 				templane.init(tempid, temptype,beginx,beginy,endx,endy);
 			}	
-			else if(networkType_ == 2){
+			else if(AppSetup.modelType == 2){
 				MLPLane templane = new MLPLane();
 				templane.init(tempid, temptype,beginx,beginy,endx,endy);
 			}
@@ -209,10 +208,10 @@ public class XmlParser {
 
 			}
 			//组织车道纵向拓扑关系
-			if(networkType_ == 1){
+			if(AppSetup.modelType == 1){
 				MesoNetwork.getInstance().addLaneConnector(tempupl, tempdnl);
 			}	
-			else if(networkType_ == 2){
+			else if(AppSetup.modelType == 2){
 				MLPNetwork.getInstance().addLaneConnector(tempupl, tempdnl);
 			}
 			

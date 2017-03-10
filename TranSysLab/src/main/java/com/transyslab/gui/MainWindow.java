@@ -1,29 +1,56 @@
-package com.transyslab.commons.renderer;
+package com.transyslab.gui;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.SystemColor;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.EtchedBorder;
-import com.jogamp.opengl.util.FPSAnimator;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 
-public class MainWindow {
+import com.jogamp.opengl.util.FPSAnimator;
+import com.transyslab.commons.renderer.JOGLCamera;
+import com.transyslab.commons.renderer.JOGLCanvas;
+import com.transyslab.commons.renderer.JOGLFrameQueue;
+import com.transyslab.commons.tools.Producer;
+import com.transyslab.commons.tools.Worker;
+import com.transyslab.roadnetwork.Constants;
+import com.transyslab.roadnetwork.RoadNetwork;
+import com.transyslab.roadnetwork.RoadNetworkPool;
+import com.transyslab.simcore.AppSetup;
+import com.transyslab.simcore.SimulationEngine;
+import com.transyslab.simcore.mesots.MesoNetworkPool;
+import com.transyslab.simcore.mlp.MLPNetworkPool;
+
+import jogamp.common.util.locks.RecursiveThreadGroupLockImpl01Unfairish;
+
+public class MainWindow extends JFrame{
 	// Define constants for the top-level container
 	private String title_ = "TranSysLab"; // window's title
 	private int fps_; // animator's target frames per second
 	private JOGLCanvas canvas_;
 	private FPSAnimator animator_;
 	
-	private JFrame frame;
+//	private JFrame frame;
 	private JTextField textField;
 	private int windowWidth = 810;
 	private int windowHeight = 632;
-	
+	private static MainWindow theWindow = new MainWindow();
+	public static MainWindow getInstance(){
+		return theWindow;
+	}
 	/** Constructor to setup the top-level container and animator */
-	public MainWindow() {
+	private MainWindow() {
 		//Complete window design
 		initialize();
 		// Set rendering canvas
@@ -38,8 +65,8 @@ public class MainWindow {
 		animator_ = new FPSAnimator(canvas_, fps_, true);
 
 		// Create the top-level container frame
-		frame.getContentPane().add(canvas_);
-		frame.addWindowListener(new WindowAdapter() {
+		getContentPane().add(canvas_);
+		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				// Use a dedicate thread to run the stop() to ensure that the
@@ -62,10 +89,10 @@ public class MainWindow {
 		int screenWidth = (int) java.awt.Toolkit.getDefaultToolkit().getScreenSize().getWidth();
 		int screenHeight = (int) java.awt.Toolkit.getDefaultToolkit().getScreenSize().getHeight();
 		canvas_ = new JOGLCanvas();
-		frame = new JFrame();		
-		frame.setBounds(screenWidth/2 - windowWidth/2, screenHeight/2-windowHeight/2, windowWidth, windowHeight);
-//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setTitle(title_);
+		
+		setBounds(screenWidth/2 - windowWidth/2, screenHeight/2-windowHeight/2, windowWidth, windowHeight);
+
+		setTitle(title_);
 		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
@@ -75,8 +102,8 @@ public class MainWindow {
 		panel_1.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentMoved(ComponentEvent e) {
-				windowHeight = frame.getHeight();
-				windowWidth = frame.getWidth();
+				windowHeight = getHeight();
+				windowWidth = getWidth();
 				int referHeight = panel_1.getHeight();
 				int referWidth = panel_1.getWidth();
 				java.awt.Point p = panel_1.getLocation();
@@ -96,7 +123,7 @@ public class MainWindow {
 		
 		JPanel panel_4 = new JPanel();
 		
-		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
+		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
@@ -245,6 +272,15 @@ public class MainWindow {
 		
 		JButton button = new JButton("\u65B0\u5EFA\u9879\u76EE");
 		button.setFont(new Font("宋体", Font.PLAIN, 14));
+		button.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SubWindow.createPanel("新建项目", ProjectPanel.class);
+				SubWindow.getInstance().setVisible(true);
+				
+			}
+		});
 		
 		JButton button_1 = new JButton("\u52A0\u8F7D\u8DEF\u7F51");
 		button_1.setFont(new Font("宋体", Font.PLAIN, 14));
@@ -303,10 +339,53 @@ public class MainWindow {
 		});
 		btnNewButton.setIcon(new ImageIcon("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources\\icon\\play.png"));
 		toolBar.add(btnNewButton);
+		btnNewButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(!canvas_.isNetworkReady()){
+					JOptionPane.showMessageDialog(null, "请先加载路网");
+					return;
+				}
+				//从暂停到播放
+				if(canvas_.isPause){
+					canvas_.isPause = false;
+				}
+				//第一次播放
+				else if(!canvas_.isRendering){
+					SimulationEngine[] engineList = ((CasePanel)SubWindow.getInstance().getContentPane()).getSimEngines();
+					Worker[] workerList = new Worker[Constants.THREAD_NUM];
+					Thread[] threadList = new Thread[Constants.THREAD_NUM];
+
+					JOGLFrameQueue.getInstance().initFrameQueue();
+
+					for (int i = 0; i < Constants.THREAD_NUM; i++) {
+						workerList[i] = new Worker(engineList[i]);
+						threadList[i] = new Thread(workerList[i]);
+					}
+
+					RoadNetworkPool.getInstance().organizeHM(threadList);
+					for (int i = 0; i < Constants.THREAD_NUM; i++) {
+						threadList[i].start();
+					}
+					canvas_.isRendering = true;
+				}
+				
+			
+			}
+		});
 		
 		JButton btnNewButton_1 = new JButton("");
 		btnNewButton_1.setIcon(new ImageIcon("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources\\icon\\pause.png"));
 		toolBar.add(btnNewButton_1);
+		btnNewButton_1.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				canvas_.isPause = true;	
+			}
+		});
 		
 		JButton btnNewButton_2 = new JButton("");
 		btnNewButton_2.setIcon(new ImageIcon("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources\\icon\\stop.png"));
@@ -353,10 +432,14 @@ public class MainWindow {
 		JMenu menu_6 = new JMenu("\u5E2E\u52A9");
 		menu_6.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
 		menuBar.add(menu_6);
-		frame.getContentPane().setLayout(groupLayout);
-		frame.setVisible(true);
+		getContentPane().setLayout(groupLayout);
 	}
 	public void render() {
 		animator_.start(); // start the animation loop
 	}
+	public void setNetworkReady(){
+		canvas_.setFirstRender(true);
+		canvas_.setDrawableNetwork(RoadNetworkPool.getInstance().getNetwork(0));
+	}
+
 }

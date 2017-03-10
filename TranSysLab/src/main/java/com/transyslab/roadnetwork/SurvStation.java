@@ -141,7 +141,6 @@ public class SurvStation extends CodedObject {
 		speedList_ = new ArrayList<Float>();
 		flowList_ = new ArrayList<Integer>();
 		if ((segment_ = RoadNetwork.getInstance().findSegment(seg)) == null) {
-			// cerr << "Error:: Unknown segment <" << seg << ">. ";
 			return -1;
 		}
 		position_ = (float) ((1.0 - pos) * segment_.getLength());

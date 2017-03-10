@@ -28,18 +28,22 @@ public class Worker implements Runnable {
 		engine_ = eg;
 		barrier_ = b;
 	}
+	public Worker(SimulationEngine eg){
+		engine_ = eg;
+	}
 	@Override
 	public void run() {
 		// engine_.run(2);
 		// engine_.exhaustionRun(6f, 0.01f);
 		engine_.run(0);
+		/*
 		try {
 			barrier_.await();
 		}
 		catch (InterruptedException | BrokenBarrierException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 }

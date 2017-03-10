@@ -28,6 +28,7 @@ public class JOGLAnimationFrame{
 		//从头部移除对象
 		return vhcDataQueue_.pollFirst();
 	}
+
 	public void clean(){
 		frameID_ = 0;
 		vhcDataQueue_.clear();

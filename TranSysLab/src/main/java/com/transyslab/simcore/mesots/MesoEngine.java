@@ -115,7 +115,7 @@ public class MesoEngine extends SimulationEngine {
 
 	public void init() {
 		// 通过parameter 赋值,结束时间往后推300s
-		SimulationClock.getInstance().init(0*3600,2*3600, 0.2);
+		SimulationClock.getInstance().init(0*3600,7500, 0.2);
 
 		double now = SimulationClock.getInstance().getCurrentTime();
 		batchTime_ = now;
@@ -215,7 +215,10 @@ public class MesoEngine extends SimulationEngine {
 	// 多次运行
 	public void run(int mode) {
 		if(mode==0){
-//			MesoNetwork.getInstance().updateParaSdfns(0.15f,0.0f, 21.95f, 156.25f,1.61f,6.31f);
+			MesoNetwork.getInstance().updateParaSdfns(0.5f,0.0f, 19.76f, 158.75f,2.04f,5.35f);
+			MesoParameter.getInstance().setRspLower(30.87f);//parameter_[4]);
+			MesoParameter.getInstance().setRspUpper(91.58f);//parameter_[5]);
+			MesoParameter.getInstance().updateCSG();
 			while (simulationLoop() >= 0) {
 
 			}

@@ -68,18 +68,6 @@ public class MLPNetworkPool extends RoadNetworkPool{
 		}
 	}
 
-	public void organizeHM(Thread[] tl) {
-		if (threadMap_ != null)
-			threadMap_ = null;
-		threadMap_ = new HashMap<String, Integer>();
-		for (int i = 0; i < threadNum_; i++) {
-			threadMap_.put(tl[i].getName(), threadIndex_[i]);
-		}
-	}
-	@Override
-	public HashMap<String, Integer> getHashMap() {
-		return threadMap_;
-	}
 	@Override
 	public MLPNetwork getNetwork(int i) {
 		return networkArray_[i];

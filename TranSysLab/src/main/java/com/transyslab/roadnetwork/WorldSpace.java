@@ -73,7 +73,7 @@ public class WorldSpace {
 		// 中心点初始化
 		if (center == null)
 			center = new Point();
-		center.setCoodinate(0.5 * width, 0.5 * height);
+		center.setLocation(0.5 * width, 0.5 * height, 0.0);
 		angle = 0.0;
 	}
 
@@ -90,7 +90,7 @@ public class WorldSpace {
 	}
 	//点要素坐标平移
 	public void translateWorldSpacePoint(Point p){
-		p.setCoodinate(p.getLocationX() - southWestPnt.getLocationX(), p.getLocationY() - southWestPnt.getLocationY());
+		p.setLocation(p.getLocationX() - southWestPnt.getLocationX(), p.getLocationY() - southWestPnt.getLocationY(),0);
 	}
 	// Convert a point from work space coordinates to original
 	// network database cooridinates
