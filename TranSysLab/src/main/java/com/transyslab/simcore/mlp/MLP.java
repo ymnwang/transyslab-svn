@@ -17,6 +17,7 @@ import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.Constants;
+import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 
 public class MLP {
@@ -30,6 +31,7 @@ public class MLP {
 		
 		long begintime = System.currentTimeMillis();
 		long[] endtime = new long[20];
+		AppSetup.modelType = 2;
 		MLPNetworkPool infoarrays = MLPNetworkPool.getInstance();
 		SimulationEngine[] engineList = new SimulationEngine[Constants.THREAD_NUM];
 		Worker[] workerList = new Worker[Constants.THREAD_NUM];
@@ -61,7 +63,7 @@ public class MLP {
 		}
 		endtime[0] = System.currentTimeMillis();
 		System.out.println("引擎初始化所需的运行时间：" + (endtime[0] - begintime) + "ms");
-		SwingUtilities.invokeLater(new Runnable() {
+		/*SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				MainWindow drawnetwork = MainWindow.getInstance(); // run the constructor
@@ -75,7 +77,7 @@ public class MLP {
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+		}*/
 		int runtimes = 1;
 		while (runtimes <= 1) {
 			CyclicBarrier barrier = new CyclicBarrier(Constants.THREAD_NUM + 1);

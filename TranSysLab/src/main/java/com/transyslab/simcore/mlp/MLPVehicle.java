@@ -14,7 +14,7 @@ public class MLPVehicle extends Vehicle{
 	protected MLPSegment segment_;
 	protected MLPLink link_;
 	public int platoonCode;
-	protected int VirtualType_;//0 for real veh; num>0 for virual veh with the connected vheID
+	public int VirtualType_;//0 for real veh; num>0 for virual veh with the connected vheID
 	protected int buffer_;//lane changing cold down remain frames
 	protected int speedLevel_;
 	protected boolean CFState_;
@@ -23,8 +23,8 @@ public class MLPVehicle extends Vehicle{
 	public double newSpeed;
 	public double newDis;
 	protected int usage;
-	protected double TimeEntrance;
-	protected double DSPEntrance;
+	public double TimeEntrance;
+	public double DSPEntrance;
 //	protected double TimeExit;
 	//private boolean active_;
 	

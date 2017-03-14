@@ -10,6 +10,7 @@ import java.util.*;
 
 import com.transyslab.commons.io.JdbcUtils;
 import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.simcore.EngTread;
 
 /**
  * roadnetwork
@@ -89,9 +90,10 @@ public class RoadNetwork {
 		totalLaneLength_ = 0;
 	}
 	public static RoadNetwork getInstance() {
-		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
+		/*HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return RoadNetworkPool.getInstance().getNetwork(threadid);
+		return RoadNetworkPool.getInstance().getNetwork(threadid);*/
+		return ((EngTread) Thread.currentThread()).network;
 	}
 	/*
 	 * public void setMaxCapacity(float mc){ maxCapacity_ = mc; } public float

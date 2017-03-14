@@ -14,6 +14,7 @@ import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.commons.tools.emitTable;
 import com.transyslab.roadnetwork.Constants;
+import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 
 
@@ -22,15 +23,27 @@ public class MLPEngine extends SimulationEngine{
 	//protected int runTimes_; // 仿真运行次数
 	protected double updateTime_;
 	protected double LCDTime_;
-	protected boolean firstEntry = true; // simulationLoop中第一次循环的标记
-	protected boolean needRndETable = false; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
+	protected boolean firstEntry; // simulationLoop中第一次循环的标记
+	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
 	protected TXTUtils loopRecWriter;
-	protected boolean loopRecOn = false;
+	protected boolean loopRecOn;
 	protected TXTUtils trackWriter;
-	protected boolean trackOn = false;
+	protected boolean trackOn;
 	protected TXTUtils infoWriter;
-	protected boolean infoOn = false;
-	protected String msg = "";
+	protected boolean infoOn;
+	protected String msg;
+	public double fitnessVal;
+	
+	public MLPEngine() {
+		super();
+		firstEntry = true;
+		needRndETable = false;
+		loopRecOn = false;
+		trackOn = false;
+		infoOn = false;
+		msg = "";
+		fitnessVal = Double.POSITIVE_INFINITY;
+	}
 	
 	@Override
 	public void run(int mode) {
@@ -58,8 +71,9 @@ public class MLPEngine extends SimulationEngine{
 			// started.
 			
 			//establish writers
-			int threadID = MLPNetworkPool.getInstance().getHashMap().
-									get(Thread.currentThread().getName()).intValue();
+			/*int threadID = MLPNetworkPool.getInstance().getHashMap().
+									get(Thread.currentThread().getName()).intValue();*/
+			String threadID = Thread.currentThread().getName();
 			if (loopRecOn) {
 				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadID + ".csv");
 				loopRecWriter.write("TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
@@ -238,7 +252,7 @@ public class MLPEngine extends SimulationEngine{
 		//设置优化参数
 		setOptParas(paras);
 		//设置fitness fun的变量
-		MLPNetwork mlpNetwork = MLPNetwork.getInstance();
+		MLPNetwork mlp_network = MLPNetwork.getInstance();
 		double calStep = 300;
 		double caltime = calStep;
 		int sampleSize = (int) (SimulationClock.getInstance().getDuration() / calStep);
@@ -250,7 +264,7 @@ public class MLPEngine extends SimulationEngine{
 		while(simulationLoop()>=0) {
 			double now = SimulationClock.getInstance().getCurrentTime();
 			if (now>=caltime) {
-				List<Double> trTlist = mlpNetwork.mlpLink(0).tripTime;
+				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
 
 				double avg_trTime = 0.0;				
 				if (trTlist.size()>0) {
@@ -261,14 +275,14 @@ public class MLPEngine extends SimulationEngine{
 					simLinkFlow[idx] = trTlist.size();	
 				}
 				simTrT[idx] = avg_trTime;
-				
+
 				trTlist.clear();
-				
+
 				double avg_ExpSpeed = 0.0;
-				if (!mlpNetwork.mlpLink(0).hasNoVeh()) {
+				if (!mlp_network.mlpLink(0).hasNoVeh()) {
 					int count = 0;
 					double sum = 0.0;
-					for (JointLane JL : mlpNetwork.mlpLink(0).jointLanes) {
+					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
 						for (MLPLane LN : JL.lanesCompose) {
 							for (MLPVehicle Veh : LN.vehsOnLn) {
 								if (Veh.VirtualType_ == 0) {
@@ -281,7 +295,7 @@ public class MLPEngine extends SimulationEngine{
 					avg_ExpSpeed = sum / count;
 				}
 				simSpeed[idx] = avg_ExpSpeed;
-				
+
 				caltime += calStep;
 				idx += 1;
 			}
@@ -291,9 +305,9 @@ public class MLPEngine extends SimulationEngine{
 		for (int k = 0; k < realLoopDetect.length; k++) {
 			realSpeed[k] = realLoopDetect[k][0];
 		}
-		double answer = MAPE(simSpeed, realSpeed);
-		System.out.println(answer);
-		return answer;
+		fitnessVal = MAPE(simSpeed, realSpeed);
+		//		System.out.println(fitnessVal);
+		return fitnessVal;
 	}
 	
 	public double [][] readFromLoop(String filePath) {

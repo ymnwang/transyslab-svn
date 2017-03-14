@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.TimeZone;
 
 import com.transyslab.roadnetwork.RoadNetworkPool;
+import com.transyslab.simcore.mlp.MLPEngThread;
 
 public class SimulationClock {
 	final int ONE_DAY = 86400;
@@ -428,9 +429,10 @@ public class SimulationClock {
 		// baseTime_ -= currentClockTime();
 	}
 	public static SimulationClock getInstance() {
-		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
+		/*HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return RoadNetworkPool.getInstance().getSimulationClock(threadid);
+		return RoadNetworkPool.getInstance().getSimulationClock(threadid);*/
+		return ((MLPEngThread) Thread.currentThread()).sim_clock;
 	}
 	public double getDuration() {
 		return simulationTime_;

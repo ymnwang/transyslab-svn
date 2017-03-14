@@ -730,5 +730,10 @@ public class MesoEngine extends SimulationEngine {
 		// TODO 自动生成的方法存根
 		
 	}
+	@Override
+	public double calFitness(double[] paras) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
 }

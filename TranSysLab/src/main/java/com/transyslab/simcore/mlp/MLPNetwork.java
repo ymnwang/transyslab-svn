@@ -37,10 +37,13 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	public static MLPNetwork getInstance() {
-		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
+		/*HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return MLPNetworkPool.getInstance().getNetwork(threadid);
+		return MLPNetworkPool.getInstance().getNetwork(threadid);*/
+		MLPEngThread theThread = (MLPEngThread) Thread.currentThread();
+		return (MLPNetwork) theThread.network;
 	}
+	
 /*
 		 * public RN_Sensor newSensor() { return new MLP_Sensor(); }/* public
 		 * RN_Signal newSignal() { return new MLP_Signal(); } public
