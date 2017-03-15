@@ -36,6 +36,8 @@ public class MLPEngine extends SimulationEngine{
 	protected TXTUtils infoWriter;
 	protected boolean infoOn;
 	protected String msg;
+	protected boolean seedFixed;
+	public boolean outputSignal;
 	protected DE de_;
 	protected double tempBestFitness_;
 	protected double[] tempBest_;
@@ -49,6 +51,7 @@ public class MLPEngine extends SimulationEngine{
 		trackOn = false;
 		infoOn = false;
 		msg = "";
+		seedFixed = false;
 //		fitnessVal = Double.POSITIVE_INFINITY;
 	}
 	public void initDE(DE de) {
@@ -59,7 +62,7 @@ public class MLPEngine extends SimulationEngine{
 	public void run(int mode) {
 		if(mode == 0) {
 			//Engine参数与状态的初始化
-			init();
+			resetEngine(0, 6900, 0.2);
 			//优化参数设置
 			setOptParas(null);
 			super.run(mode);
@@ -102,10 +105,14 @@ public class MLPEngine extends SimulationEngine{
 		String time = String.format("%.1f", now - startTime);
 
 		if (firstEntry) {
-			firstEntry = false;
-
 			// This block is called only once just before the simulation gets
 			// started.
+			firstEntry = false;
+			//Network状态重设并准备发车表
+			MLPNetwork.getInstance().resetNetwork(needRndETable, seedFixed? 1 : System.currentTimeMillis());
+			
+			//reset update time
+			mlp_network.resetReleaseTime();
 			
 			//establish writers
 			String threadName = Thread.currentThread().getName();
@@ -119,16 +126,6 @@ public class MLPEngine extends SimulationEngine{
 			}				
 			if (infoOn)
 				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + ".txt");
-			
-			
-			//set overall parameters
-			//mlp_network.setOverallCapacity(0.5);
-//			mlp_network.setOverallSDParas(new double [] {16.67,0.0,0.180,5.0,1.8});
-//			mlp_network.setLoopSection(mlp_network.getLink(0).getCode(), 0.75);
-			
-			//reset update time
-			mlp_network.resetReleaseTime();
-			
 			//信息统计：发车数
 			if (infoOn) {
 				int total = 0;
@@ -266,25 +263,25 @@ public class MLPEngine extends SimulationEngine{
 		return 0;
 	}
 	
-	public void init() {//Engine中需要初始化的属性
-		//固定参数 时间设置
+	public void resetEngine(double timeStart, double timeEnd, double timeStep) {//时间相关的参数
 		firstEntry = true;
-		SimulationClock.getInstance().init(0, 6900, 0.2);		
+		SimulationClock.getInstance().init(timeStart, timeEnd, timeStep);		
 		double now = SimulationClock.getInstance().getCurrentTime();
 		updateTime_ = now;
 		LCDTime_ = now;
-		
-		//Network状态重设并准备发车表
-		MLPNetwork.getInstance().resetNInit(needRndETable, System.currentTimeMillis());
 	}
 	
-	public void initSnapshotData(){
-		
+	public void setOptParas(double [] optparas) {
+		if (optparas != null) {
+			MLPNetwork mlp_network = MLPNetwork.getInstance();
+			mlp_network.setOverallSDParas(new double [] {optparas[0],optparas[1],optparas[2],optparas[3],optparas[4]});
+//			MLPParameter.getInstance().setLCPara(new double[] {optparas[5], optparas[6]});
+		}		
 	}
 	
 	public double calFitness(double [] paras) {
 		//初始化引擎的固定参数（时间）
-		init();
+		resetEngine(0, 6900, 0.2);
 		//设置优化参数
 		setOptParas(paras);
 		//设置fitness fun的变量
@@ -380,14 +377,6 @@ public class MLPEngine extends SimulationEngine{
 			return (sum / count);
 		else 
 			return 0.0;
-	}
-	
-	public void setOptParas(double [] optparas) {
-		if (optparas != null) {
-			MLPNetwork mlp_network = MLPNetwork.getInstance();
-			mlp_network.setOverallSDParas(new double [] {optparas[0],optparas[1],optparas[2],optparas[3],optparas[4]});
-		}
-		
 	}
 
 }

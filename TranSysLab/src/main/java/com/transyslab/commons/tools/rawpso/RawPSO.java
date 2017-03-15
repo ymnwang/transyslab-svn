@@ -72,7 +72,11 @@ public class RawPSO extends Thread{
 	}
 	
 	public boolean checkConstraints(double [] arg) {
-		return true;
+		boolean ans = true;
+		for (int i = 0; i < arg.length; i++) {
+			ans = ans && (arg[i]>lower[i]) && (arg[i]<upper[i]);
+		}
+		return ans;
 	}
 	
 	public void updateGBest(double arg0, double[] arg1) {

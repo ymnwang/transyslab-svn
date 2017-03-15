@@ -33,7 +33,7 @@ public class MLPNetwork extends RoadNetwork {
 		veh_list = new ArrayList<MLPVehicle>();
 		loops = new ArrayList<Loop>();
 //		sysRand = new Random(System.currentTimeMillis());
-		sysRand = new Random((long) 1);
+		sysRand = new Random();
 	}
 
 	public static MLPNetwork getInstance() {
@@ -244,7 +244,7 @@ public class MLPNetwork extends RoadNetwork {
 		
 	}
 	
-	public void resetNInit(boolean needRET, long seed) {
+	public void resetNetwork(boolean needRET, long seed) {
 		sysRand.setSeed(seed);
 		for (int i = 0; i < nLinks(); i++) {
 			MLPLink LNK = mlpLink(i);

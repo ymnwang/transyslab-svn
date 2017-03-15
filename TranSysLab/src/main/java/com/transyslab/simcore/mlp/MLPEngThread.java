@@ -10,7 +10,7 @@ import com.transyslab.simcore.EngTread;
 public class MLPEngThread extends EngTread{
 	private TaskCenter taskCenter;
 	private int mode;
-	protected double [] paras2Cal;
+	protected double [][] paras2Cal;
 	protected double [] bestfit;
 	protected double fitVal;
 	
@@ -46,10 +46,15 @@ public class MLPEngThread extends EngTread{
 		MLPEngine mlp_eng = (MLPEngine) engine;
 		mlp_eng.loadFiles();
 		switch (getMode()) {
-		case 1://calfitness
-			System.out.println("fitness: " + mlp_eng.calFitness(null));;
+		case 1://calfitness solo testing
+			if (paras2Cal == null) {
+				break;
+			}
+			for (int i = 0; i < paras2Cal.length; i++) {
+				System.out.println("fitness: " + mlp_eng.calFitness(paras2Cal[i]));
+			}
 			break;
-		case 2://run only
+		case 2://run only solo testing
 			mlp_eng.run(0);
 			break;
 		case 3://work in taskCenter
@@ -79,8 +84,9 @@ public class MLPEngThread extends EngTread{
 	//此入口作为引擎测试用
 	public static void main(String args[]) {
 		MLPEngThread myThread = new MLPEngThread("testingThread");
-		myThread.paras2Cal = new double []  {1,2};
+		myThread.paras2Cal = new double [][]  {{20,0,0.2,5,3},{20,0,0.2,5,3},{20,0,0.2,5,3},{20,0,0.2,5,3}};
 		myThread.setMode(1);//updatefitness
+		((MLPEngine) myThread.engine).seedFixed = true;
 		myThread.start();
 	}
 }
