@@ -32,8 +32,8 @@ public class MLPNetwork extends RoadNetwork {
 		veh_pool = new MLPVehPool();
 		veh_list = new ArrayList<MLPVehicle>();
 		loops = new ArrayList<Loop>();
-		sysRand = new Random(System.currentTimeMillis());
-		//sysRand = new Random((long) 1);
+//		sysRand = new Random(System.currentTimeMillis());
+		sysRand = new Random((long) 1);
 	}
 
 	public static MLPNetwork getInstance() {

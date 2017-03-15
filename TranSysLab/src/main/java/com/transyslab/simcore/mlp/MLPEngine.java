@@ -1,6 +1,7 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.DoubleToLongFunction;
 import java.util.regex.Matcher;
@@ -10,12 +11,15 @@ import org.apache.commons.math3.util.MathUtils;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.TXTUtils;
+import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.commons.tools.emitTable;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
+import com.transyslab.simcore.mesots.MesoNetwork;
+import com.transyslab.simcore.mesots.MesoNetworkPool;
 
 
 public class MLPEngine extends SimulationEngine{
@@ -32,7 +36,10 @@ public class MLPEngine extends SimulationEngine{
 	protected TXTUtils infoWriter;
 	protected boolean infoOn;
 	protected String msg;
-	public double fitnessVal;
+	protected DE de_;
+	protected double tempBestFitness_;
+	protected double[] tempBest_;
+	//public double fitnessVal;
 	
 	public MLPEngine() {
 		super();
@@ -42,16 +49,46 @@ public class MLPEngine extends SimulationEngine{
 		trackOn = false;
 		infoOn = false;
 		msg = "";
-		fitnessVal = Double.POSITIVE_INFINITY;
+//		fitnessVal = Double.POSITIVE_INFINITY;
 	}
-	
+	public void initDE(DE de) {
+		de_ = de;
+		tempBest_ = new double[de_.getDim()];
+	}
 	@Override
 	public void run(int mode) {
-		//Engine参数与状态的初始化
-		init();
-		//优化参数设置
-		setOptParas(null);
-		super.run(mode);
+		if(mode == 0) {
+			//Engine参数与状态的初始化
+			init();
+			//优化参数设置
+			setOptParas(null);
+			super.run(mode);
+		}
+		else if(mode == 1) {
+			// DE算法同步gbest的标记
+						HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
+						int threadid = hm.get(Thread.currentThread().getName()).intValue();
+						int si = threadid * de_.getPopulation() / Constants.THREAD_NUM;
+						int ei = threadid * de_.getPopulation() / Constants.THREAD_NUM + de_.getPopulation() / Constants.THREAD_NUM;
+						for (int i = si; i < ei; i++) {
+
+
+
+							de_.getNewIdvds()[i].setFitness((float) calFitness(null));
+							de_.selection(i);
+							if (tempBestFitness_ > de_.getFitness(i)) {
+								tempBestFitness_ = de_.getFitness(i);
+								// tempIndex_ = i;
+								for (int j = 0; j < tempBest_.length; j++) {
+									tempBest_[j] = de_.getPosition(i)[j];
+								}
+
+							}
+							de_.changePos(i);
+
+						}
+		}
+
 	}
 
 	@Override
@@ -71,25 +108,23 @@ public class MLPEngine extends SimulationEngine{
 			// started.
 			
 			//establish writers
-			/*int threadID = MLPNetworkPool.getInstance().getHashMap().
-									get(Thread.currentThread().getName()).intValue();*/
-			String threadID = Thread.currentThread().getName();
+			String threadName = Thread.currentThread().getName();
 			if (loopRecOn) {
-				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadID + ".csv");
+				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadName + ".csv");
 				loopRecWriter.write("TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
 			}				
 			if (trackOn) {
-				trackWriter = new TXTUtils("src/main/resources/output/track" + threadID + ".csv");
+				trackWriter = new TXTUtils("src/main/resources/output/track" + threadName + ".csv");
 				trackWriter.write("TIME,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
 			}				
 			if (infoOn)
-				infoWriter = new TXTUtils("src/main/resources/output/info" + threadID + ".txt");
+				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + ".txt");
 			
 			
 			//set overall parameters
 			//mlp_network.setOverallCapacity(0.5);
-			mlp_network.setOverallSDParas(new double [] {16.67,0.0,0.180,5.0,1.8});
-			mlp_network.setLoopSection(mlp_network.getLink(0).getCode(), 0.75);
+//			mlp_network.setOverallSDParas(new double [] {16.67,0.0,0.180,5.0,1.8});
+//			mlp_network.setLoopSection(mlp_network.getLink(0).getCode(), 0.75);
 			
 			//reset update time
 			mlp_network.resetReleaseTime();
@@ -233,6 +268,7 @@ public class MLPEngine extends SimulationEngine{
 	
 	public void init() {//Engine中需要初始化的属性
 		//固定参数 时间设置
+		firstEntry = true;
 		SimulationClock.getInstance().init(0, 6900, 0.2);		
 		double now = SimulationClock.getInstance().getCurrentTime();
 		updateTime_ = now;
@@ -300,12 +336,12 @@ public class MLPEngine extends SimulationEngine{
 				idx += 1;
 			}
 		}
-		double [][] realLoopDetect = readFromLoop(MLPSetup.LoopDir);
+		double [][] realLoopDetect = readFromLoop(MLPSetup.getLoopDir());
 		double [] realSpeed = new double [realLoopDetect.length];
 		for (int k = 0; k < realLoopDetect.length; k++) {
 			realSpeed[k] = realLoopDetect[k][0];
 		}
-		fitnessVal = MAPE(simSpeed, realSpeed);
+		double fitnessVal = MAPE(simSpeed, realSpeed);
 		//		System.out.println(fitnessVal);
 		return fitnessVal;
 	}

@@ -11,5 +11,5 @@ public abstract class EngTread extends Thread{
 	public SimulationEngine engine;
 	public SimulationClock sim_clock;
 	
-	public abstract void doPatch();
+	//public abstract void doPatch();
 }

@@ -24,7 +24,7 @@ public class emitTable {
 		//r = new Random((long) 1);
 	}
 	public void createRndETables(){
-		String filePath = MLPSetup.ODFormDir;
+		String filePath = MLPSetup.getODFormDir();
 		String[] header = {"fLinkID","tLinkID","demand",
 						   "fTime","tTime",
 						   "mean","sd","vlim"};
@@ -51,7 +51,7 @@ public class emitTable {
 	}
 
 	public void readETables(){
-		String filePath = MLPSetup.EmitFormDir;
+		String filePath = MLPSetup.getEmitFormDir();
 		String[] header = {"laneID", "tLinkID", "time", "speed", "dis"};
 		try {
 			List<CSVRecord> rows = CSVUtils.readCSV(filePath,header);
