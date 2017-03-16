@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: team.simulator.common.render:jogl-all-natives-windows-amd64:2.3.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../maven/repository/team/simulator/common/render/jogl-all-natives-windows-amd64/2.3.2/jogl-all-natives-windows-amd64-2.3.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../../../../maven/repository/team/simulator/common/render/jogl-all-natives-windows-amd64/2.3.2/jogl-all-natives-windows-amd64-2.3.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../../../maven/repository/team/simulator/common/render/jogl-all-natives-windows-amd64/2.3.2/jogl-all-natives-windows-amd64-2.3.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
