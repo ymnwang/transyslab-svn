@@ -37,7 +37,7 @@ public class Dynamics {
 	public double updateHeadSpd(MLPVehicle headVeh){
 		MLPLane nextLane = headVeh.lane_.connectedDnLane;
 		if (headVeh.distance() < MLPParameter.SEG_NEAR && 
-				nextLane != null && (nextLane.enterAllowed || nextLane.checkVolum(headVeh))) {
+				nextLane != null && (!nextLane.enterAllowed || !nextLane.checkVolum(headVeh))) {
 			//过于接近seg末端 且 下游seg容量已满， 需停车等待
 			return 0.0;
 		}

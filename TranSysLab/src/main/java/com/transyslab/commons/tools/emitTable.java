@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.math3.distribution.NormalDistribution;
@@ -15,13 +16,10 @@ import com.transyslab.simcore.mlp.MLPSegment;
 import com.transyslab.simcore.mlp.MLPSetup;
 
 public class emitTable {
-	protected LinkedList<Inflow> inflowlist_;
-	protected Random r;
+	protected LinkedBlockingDeque<Inflow> inflowlist_;
 	
 	public emitTable() {
-		inflowlist_ = new LinkedList<Inflow>();
-		r = new Random(System.currentTimeMillis());
-		//r = new Random((long) 1);
+		inflowlist_ = new LinkedBlockingDeque<Inflow>();
 	}
 	public void createRndETables(){
 		String filePath = MLPSetup.getODFormDir();
@@ -52,7 +50,7 @@ public class emitTable {
 
 	public void readETables(){
 		String filePath = MLPSetup.getEmitFormDir();
-		String[] header = {"laneID", "tLinkID", "time", "speed", "dis"};
+		String[] header = {"laneID", "tLinkID", "time", "speed", "dis", "RVID"};
 		try {
 			List<CSVRecord> rows = CSVUtils.readCSV(filePath,header);
 			for(int i = 1; i<rows.size(); i++){
@@ -61,7 +59,8 @@ public class emitTable {
 										   Integer.parseInt(r.get(1)), 
 										   Double.parseDouble(r.get(2)),
 										   Double.parseDouble(r.get(3)),
-										   Double.parseDouble(r.get(4)) );
+										   Double.parseDouble(r.get(4)),
+										   Integer.parseInt(r.get(5)));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -69,6 +68,7 @@ public class emitTable {
 	}
 	
 	private void generate(int demand, double[] speed, double[] time, int[] laneIdxes, int tlnkID){
+		Random r = MLPNetwork.getInstance().sysRand;
 		double mean = speed[0];
 		double sd = speed[1];
 		double vlim = speed[2];
@@ -91,17 +91,14 @@ public class emitTable {
 		}
 	}
 
-	private void appendFromCSV(int LnIdx, int TLnkID, double t, double v, double d){
+	private void appendFromCSV(int LnIdx, int TLnkID, double t, double v, double d, int RVID){
 		Inflow theinflow = new Inflow(LnIdx, TLnkID, t, v, d);
+		theinflow.RVID = RVID;
 		inflowlist_.offer(theinflow);
 	}
 	
-	public LinkedList<Inflow> getInflow() {
-		return inflowlist_;		
-	}
-	
-	public void setSeed(long val) {
-		r.setSeed(val);
+	public LinkedBlockingDeque<Inflow> getInflow() {
+		return inflowlist_;
 	}
 	
 	public void clearflow() {

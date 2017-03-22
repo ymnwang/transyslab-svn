@@ -189,14 +189,14 @@ public class DE extends Thread{
 		int maxTasks = 100;
 		TaskCenter tc = new TaskCenter(maxTasks);
 		int pop = 30;
-		float[] plower = new float[] {15, 0.0f, 0.120f, 3.0f, 1.0f, 0.0f};
-		float[] pupper = new float[] {20, 0.0f, 0.200f, 7.0f, 3.0f, 50.0f};
+		float[] plower = new float[] {15, 0.0f, 0.120f, 3.0f, 1.0f, 0.0f, 2.0f};
+		float[] pupper = new float[] {20, 0.0f, 0.200f, 7.0f, 3.0f, 50.0f, 10.0f};
 		DE de = new DE("DE", tc);
 		de.initDE(pop, plower.length, 0.5f, 0.5f, plower, pupper);
 		de.setMaxGeneration(maxGeneration);
 		de.start();
 		MLPEngThread mlp_eng_thread;
-		for (int i = 0; i < 25; i++) {
+		for (int i = 0; i < 30; i++) {
 			mlp_eng_thread = new MLPEngThread("Eng"+i, tc);
 			mlp_eng_thread.setMode(3);
 			mlp_eng_thread.start();

@@ -2,6 +2,7 @@ package com.transyslab.simcore.mlp;
 
 import java.util.HashMap;
 
+import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.roadnetwork.Constants;
@@ -25,6 +26,8 @@ public class MLPVehicle extends Vehicle{
 	protected int usage;
 	public double TimeEntrance;
 	public double DSPEntrance;
+	public int RVID;
+//	static public TXTUtils fout = new TXTUtils("src/main/resources/output/test.csv");
 //	protected double TimeExit;
 	//private boolean active_;
 	
@@ -109,8 +112,7 @@ public class MLPVehicle extends Vehicle{
 			double [] s = sum(turning, segment_, fDSP, tDSP, new double []{0.0,0.0});
 			return ((s[0] + 1.0) /s[1] - PlatoonCount/(tDSP - fDSP)) / link_.dynaFun.sdPara[2];
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			System.out.println(e.getStackTrace());
+			e.printStackTrace();
 		}
 		//failed	
 		return 0.0;		
@@ -178,7 +180,9 @@ public class MLPVehicle extends Vehicle{
 	public double calLCProbability(int turning, double fDSP, double tDSP, double PlatoonCount){
 		double [] gamma = MLPParameter.getInstance().getLCPara();
 		double u = gamma[0]*calH(turning)*(calMLC() - 0.5) + gamma[1]*(calDLC(turning, fDSP, tDSP, PlatoonCount) - 0.5);
-		return Math.exp(u)/(1+Math.exp(u));
+		double pr = Math.exp(u)/(1+Math.exp(u));
+//		fout.writeNFlush(u + "," + pr + "\r\n");
+		return pr;
 	}
 	
 	public void initEntrance(double time, double dsp) {
@@ -186,11 +190,12 @@ public class MLPVehicle extends Vehicle{
 		DSPEntrance = dsp;
 	}
 	
-	public void initInfo(int virType, MLPLink onLink, MLPSegment onSeg, MLPLane onLane){
+	public void initInfo(int virType, MLPLink onLink, MLPSegment onSeg, MLPLane onLane, int rvid){
 		VirtualType_ = virType;
 		link_ = onLink;
 		segment_ = onSeg;
 		lane_ = onLane;
+		RVID = rvid;
 	}
 	
 	public void init(int id, float len, float dis, float speed){
@@ -293,6 +298,7 @@ public class MLPVehicle extends Vehicle{
 		currentSpeed_ = 0.0f;
 		TimeEntrance = 0.0;
 		DSPEntrance = 0.0;
+		RVID = 0;
 //		TimeExit = 0.0;
 	}
 	

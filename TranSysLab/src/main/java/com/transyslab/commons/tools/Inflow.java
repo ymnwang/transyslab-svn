@@ -8,6 +8,7 @@ public class Inflow {
 	public int laneIdx; 
 	public int tLinkID;
 	public double dis;
+	public int RVID;
 	
 	public Inflow(double[] row){
 		if (row.length != 5) {

@@ -1,6 +1,7 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -21,7 +22,7 @@ import com.transyslab.roadnetwork.VehicleDataPool;
 public class MLPNetwork extends RoadNetwork {
 	protected int[] permuteLink;
 	protected int nPermutedLinks;
-	protected int newVehID_;
+	private int newVehID_;
 	public MLPVehPool veh_pool;
 	public List<MLPVehicle> veh_list;
 	public List<Loop> loops;
@@ -167,7 +168,7 @@ public class MLPNetwork extends RoadNetwork {
 			while (mlpLink(i).checkFirstEmtTableRec()){
 				Inflow emitVeh = mlpLink(i).emtTable.getInflow().poll();
 				MLPVehicle newVeh = veh_pool.generate();
-				newVeh.initInfo(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx));
+				newVeh.initInfo(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx),emitVeh.RVID);
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
 				newVeh.initEntrance(SimulationClock.getInstance().getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
 				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
@@ -246,11 +247,12 @@ public class MLPNetwork extends RoadNetwork {
 	
 	public void resetNetwork(boolean needRET, long seed) {
 		sysRand.setSeed(seed);
+		newVehID_ = 0;
 		for (int i = 0; i < nLinks(); i++) {
 			MLPLink LNK = mlpLink(i);
 			LNK.emtTable.clearflow();//未发出的车从emtTable中移除
 			LNK.tripTime.clear();//重置已记录的Trip Time
-			LNK.emtTable.setSeed(seed);//设置随机种子
+			Collections.sort(LNK.jointLanes, (a,b) -> a.LPNum<b.LPNum ? -1 : a.LPNum==b.LPNum ? 0 : 1);//车道排列顺序复位
 		}
 		for (int i = 0; i < nLanes(); i++) {
 			mlpLane(i).vehsOnLn.clear();//从lane上移除在网车辆

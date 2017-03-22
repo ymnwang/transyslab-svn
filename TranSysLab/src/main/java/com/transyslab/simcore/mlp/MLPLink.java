@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 
+import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TimeMeasureUtil;
@@ -128,21 +129,26 @@ public class MLPLink extends Link {
 				platoon.clear();
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
-				platoonhead = theveh.Displacement();
+//				platoonhead = theveh.Displacement();
+				platoonhead = ((MLPSegment) getSegment(nSegments_-1)).endDSP;
+				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
 					if (theveh.resemblance) {						
 						platoon.add(theveh);
+						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 					else {
-						platoontail = theveh.Displacement();//加尾 处理车队
+//						platoontail = theveh.Displacement();//加尾 处理车队
 						dealLC(platoonhead,platoontail);
 						platoon.clear();
 						platoon.add(theveh);//新车队
-						platoonhead = theveh.Displacement();//新头
+//						platoonhead = theveh.Displacement();//新头
+						platoonhead = platoontail;
+						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 				}
-				platoontail = theveh.Displacement();//余下的尾 处理车队
+//				platoontail = theveh.Displacement();//余下的尾 处理车队
 				dealLC(platoonhead,platoontail);
 			}
 		}
@@ -202,7 +208,7 @@ public class MLPLink extends Link {
 		MLPLane tarLane = thisLane.getAdjacent(turn);
 		//虚拟车(生产->初始化*2->加buff->替换)
 		MLPVehicle newVeh = MLPNetwork.getInstance().veh_pool.generate();
-		newVeh.initInfo(veh.getCode(),veh.link_,veh.segment_,veh.lane_);
+		newVeh.initInfo(veh.getCode(),veh.link_,veh.segment_,veh.lane_,veh.RVID);
 		newVeh.init(MLPNetwork.getInstance().getNewVehID(), MLPParameter.VEHICLE_LENGTH, veh.distance(), veh.currentSpeed());
 		newVeh.buffer_ = MLPParameter.getInstance().getLCBuff();
 		thisLane.substitudeVeh(veh, newVeh);
@@ -223,21 +229,26 @@ public class MLPLink extends Link {
 				platoon.clear();
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
-				platoonhead = theveh.Displacement();
+//				platoonhead = theveh.Displacement();
+				platoonhead = ((MLPSegment) getSegment(nSegments_-1)).endDSP;
+				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
 					if (theveh.resemblance) {
 						platoon.add(theveh);
+						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 					else {
-						platoontail = theveh.Displacement();//加尾 处理车队
+//						platoontail = theveh.Displacement();//加尾 处理车队
 						dealMove(platoonhead,platoontail);
 						platoon.clear();
 						platoon.add(theveh);//新车队
-						platoonhead = theveh.Displacement();//新头
+//						platoonhead = theveh.Displacement();//新头
+						platoonhead = platoontail;
+						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 				}
-				platoontail = theveh.Displacement();//余下的尾 处理车队
+//				platoontail = theveh.Displacement();//余下的尾 处理车队
 				dealMove(platoonhead,platoontail);
 			}
 		}
@@ -251,7 +262,8 @@ public class MLPLink extends Link {
 			double len = headPt - platoon.get(platoon.size()-1).Displacement();
 			for (MLPVehicle veh : platoon) {
 				double r = (headPt - veh.Displacement())/len;
-				veh.setNewState( (1-r)*headspeed+r*tailspeed );
+				double newspd = (1-r)*headspeed+r*tailspeed;
+				veh.setNewState(newspd);
 			}
 		}
 		else {

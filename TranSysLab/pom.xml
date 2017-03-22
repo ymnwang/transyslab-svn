@@ -49,5 +49,10 @@
   	  		<artifactId>commons-math3</artifactId>
   	  		<version>3.6.1</version>
   	  	</dependency>
+  	  	<dependency>
+  	  		<groupId>team.simulator.meso.io</groupId>
+			<artifactId>jgrapht-core</artifactId>
+			<version>1.0.1</version>
+  	  	</dependency>
   </dependencies>
 </project>

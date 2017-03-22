@@ -1,6 +1,8 @@
 package com.transyslab.simcore.mlp;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.DoubleToLongFunction;
@@ -38,9 +40,8 @@ public class MLPEngine extends SimulationEngine{
 	protected String msg;
 	protected boolean seedFixed;
 	public boolean outputSignal;
-	protected DE de_;
-	protected double tempBestFitness_;
-	protected double[] tempBest_;
+	private Object empData;
+	public boolean needEmpData;
 	//public double fitnessVal;
 	
 	public MLPEngine() {
@@ -52,12 +53,10 @@ public class MLPEngine extends SimulationEngine{
 		infoOn = false;
 		msg = "";
 		seedFixed = false;
+		needEmpData = false;
 //		fitnessVal = Double.POSITIVE_INFINITY;
 	}
-	public void initDE(DE de) {
-		de_ = de;
-		tempBest_ = new double[de_.getDim()];
-	}
+
 	@Override
 	public void run(int mode) {
 		if(mode == 0) {
@@ -67,31 +66,6 @@ public class MLPEngine extends SimulationEngine{
 			setOptParas(null);
 			super.run(mode);
 		}
-		else if(mode == 1) {
-			// DE算法同步gbest的标记
-						HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
-						int threadid = hm.get(Thread.currentThread().getName()).intValue();
-						int si = threadid * de_.getPopulation() / Constants.THREAD_NUM;
-						int ei = threadid * de_.getPopulation() / Constants.THREAD_NUM + de_.getPopulation() / Constants.THREAD_NUM;
-						for (int i = si; i < ei; i++) {
-
-
-
-							de_.getNewIdvds()[i].setFitness((float) calFitness(null));
-							de_.selection(i);
-							if (tempBestFitness_ > de_.getFitness(i)) {
-								tempBestFitness_ = de_.getFitness(i);
-								// tempIndex_ = i;
-								for (int j = 0; j < tempBest_.length; j++) {
-									tempBest_[j] = de_.getPosition(i)[j];
-								}
-
-							}
-							de_.changePos(i);
-
-						}
-		}
-
 	}
 
 	@Override
@@ -122,7 +96,7 @@ public class MLPEngine extends SimulationEngine{
 			}				
 			if (trackOn) {
 				trackWriter = new TXTUtils("src/main/resources/output/track" + threadName + ".csv");
-				trackWriter.write("TIME,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
+				trackWriter.write("TIME,RVID,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
 			}				
 			if (infoOn)
 				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + ".txt");
@@ -153,8 +127,7 @@ public class MLPEngine extends SimulationEngine{
 		//路网存在车辆的情况下才进行计算
 		if (mlp_network.veh_list.size()>0) {
 			//车队识别
-			mlp_network.platoonRecognize();
-			
+			mlp_network.platoonRecognize();			
 			//若进入换道决策时刻，进行换道计算与车队重新识别
 			if (now >= LCDTime_) {
 				for (int i = 0; i < mlp_network.nLinks(); i++){
@@ -194,7 +167,7 @@ public class MLPEngine extends SimulationEngine{
 		
 		//输出轨迹
 		if (trackOn) {
-			if (!mlp_network.veh_list.isEmpty()) {
+			if (!mlp_network.veh_list.isEmpty() ) {//&& now - 2*Math.floor(now/2) < 0.001
 				int LV;
 				int FV;
 				for (MLPVehicle v : mlp_network.veh_list) {
@@ -203,17 +176,21 @@ public class MLPEngine extends SimulationEngine{
 						LV = v.leading_.getCode();
 					if (v.trailing_ != null)
 						FV = v.trailing_.getCode();
-					trackWriter.write(time + "," + 
-							 				  v.getCode() + "," +
-							 				  v.VirtualType_ + "," +
-							 				  v.buffer_ + "," +
-							 				  v.lane_.getLnPosNum() + "," +
-							 				  v.segment_.getCode() + "," +
-							 				  v.link_.getCode() + "," +
-							 				  v.Displacement() + "," +
-							 				  v.currentSpeed() + "," + 
-							 				  LV + "," + 
-							 				  FV + "\r\n");
+					String str = time + "," +
+							          v.RVID + "," + 
+							          v.getCode() + "," +
+							          v.VirtualType_ + "," +
+							          v.buffer_ + "," +
+							          v.lane_.getLnPosNum() + "," +
+							          v.segment_.getCode() + "," +
+							          v.link_.getCode() + "," +
+							          v.Displacement() + "," +
+							          v.currentSpeed() + "," + 
+							          LV + "," + 
+							          FV + "\r\n";
+					if (v.VirtualType_==0) {
+						trackWriter.write(str);
+					}
 				}
 			}
 		}
@@ -232,7 +209,7 @@ public class MLPEngine extends SimulationEngine{
 													// is done
 		}
 		else {
-//			System.out.println(time);
+//			System.out.println(time);			
 			return state_ = Constants.STATE_OK;// STATE_OK宏定义
 		}			
 	}
@@ -241,6 +218,10 @@ public class MLPEngine extends SimulationEngine{
 	public void loadFiles() {
 		//读入仿真文件
 		loadSimulationFiles();
+		//读入实测数据用于计算fitness
+		if(needEmpData) {
+			readFromLoop(MLPSetup.getLoopDir());
+		}
 		//其他初始化过程。目前为空
 		start();
 	}
@@ -259,7 +240,7 @@ public class MLPEngine extends SimulationEngine{
 		// 读取路网xml
 		MLPSetup.ParseNetwork();
 		// 读入路网数据后组织路网不同要素的关系
-		MLPNetwork.getInstance().calcStaticInfo();
+		MLPNetwork.getInstance().calcStaticInfo();		
 		return 0;
 	}
 	
@@ -273,9 +254,10 @@ public class MLPEngine extends SimulationEngine{
 	
 	public void setOptParas(double [] optparas) {
 		if (optparas != null) {
-			MLPNetwork mlp_network = MLPNetwork.getInstance();
+			MLPNetwork mlp_network = MLPNetwork.getInstance();			
 			mlp_network.setOverallSDParas(new double [] {optparas[0],optparas[1],optparas[2],optparas[3],optparas[4]});
-//			MLPParameter.getInstance().setLCPara(new double[] {optparas[5], optparas[6]});
+			MLPParameter.getInstance().setLCPara(new double[] {optparas[5], optparas[5]});
+			MLPParameter.getInstance().setLCBuffTime(optparas[6]);
 		}		
 	}
 	
@@ -333,17 +315,17 @@ public class MLPEngine extends SimulationEngine{
 				idx += 1;
 			}
 		}
-		double [][] realLoopDetect = readFromLoop(MLPSetup.getLoopDir());
+		double[][] realLoopDetect =(double[][]) empData;
 		double [] realSpeed = new double [realLoopDetect.length];
 		for (int k = 0; k < realLoopDetect.length; k++) {
 			realSpeed[k] = realLoopDetect[k][0];
 		}
 		double fitnessVal = MAPE(simSpeed, realSpeed);
-		//		System.out.println(fitnessVal);
+//		System.out.println(Arrays.toString(simSpeed));
 		return fitnessVal;
 	}
 	
-	public double [][] readFromLoop(String filePath) {
+	public void readFromLoop(String filePath) {
 		double [][] ans = null;
 		String [] loopheader = {"FromTime","ToTime","ArcID","Speed","Flow","Density"};
 		try {
@@ -357,7 +339,7 @@ public class MLPEngine extends SimulationEngine{
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		return ans;
+		empData = ans;
 	}
 	
 	public double MAPE(double[] sim, double[] real) {
@@ -378,5 +360,5 @@ public class MLPEngine extends SimulationEngine{
 		else 
 			return 0.0;
 	}
-
+	
 }

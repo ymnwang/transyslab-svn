@@ -15,7 +15,7 @@ public class MLPEngThread extends EngTread{
 	protected double fitVal;
 	
 	public MLPEngThread(String arg) {
-		name = arg;
+		setName(arg);
 		AppSetup.modelType = 2;
 		parameter = new MLPParameter();
 		network = new MLPNetwork();
@@ -44,6 +44,7 @@ public class MLPEngThread extends EngTread{
 	public void run() {
 //		System.out.println(Thread.currentThread().getName() + " started");
 		MLPEngine mlp_eng = (MLPEngine) engine;
+		mlp_eng.needEmpData = true;
 		mlp_eng.loadFiles();
 		switch (getMode()) {
 		case 1://calfitness solo testing
@@ -84,7 +85,12 @@ public class MLPEngThread extends EngTread{
 	//此入口作为引擎测试用
 	public static void main(String args[]) {
 		MLPEngThread myThread = new MLPEngThread("testingThread");
-		myThread.paras2Cal = new double [][]  {{20,0,0.2,5,3},{20,0,0.2,5,3},{20,0,0.2,5,3},{20,0,0.2,5,3}};
+		myThread.paras2Cal = new double [][]  {{15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
+																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
+																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
+																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
+																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
+																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505}};
 		myThread.setMode(1);//updatefitness
 		((MLPEngine) myThread.engine).seedFixed = true;
 		myThread.start();
