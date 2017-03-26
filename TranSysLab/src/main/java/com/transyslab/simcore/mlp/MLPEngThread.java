@@ -13,6 +13,7 @@ public class MLPEngThread extends EngTread{
 	protected double [][] paras2Cal;
 	protected double [] bestfit;
 	protected double fitVal;
+	protected int runtimes;
 	
 	public MLPEngThread(String arg) {
 		setName(arg);
@@ -22,6 +23,7 @@ public class MLPEngThread extends EngTread{
 		engine = new MLPEngine();
 		sim_clock = new SimulationClock();
 		fitVal = Double.POSITIVE_INFINITY;
+		runtimes = 100;
 	}
 	public MLPEngThread(String arg, TaskCenter tc) {
 		setName(arg);
@@ -47,7 +49,7 @@ public class MLPEngThread extends EngTread{
 		mlp_eng.needEmpData = true;
 		mlp_eng.loadFiles();
 		switch (getMode()) {
-		case 1://calfitness solo testing
+		case 1://calfitness testing
 			if (paras2Cal == null) {
 				break;
 			}
@@ -55,7 +57,7 @@ public class MLPEngThread extends EngTread{
 				System.out.println("fitness: " + mlp_eng.calFitness(paras2Cal[i]));
 			}
 			break;
-		case 2://run only solo testing
+		case 2://run with graphic
 			mlp_eng.run(0);
 			break;
 		case 3://work in taskCenter
@@ -85,14 +87,15 @@ public class MLPEngThread extends EngTread{
 	//此入口作为引擎测试用
 	public static void main(String args[]) {
 		MLPEngThread myThread = new MLPEngThread("testingThread");
-		myThread.paras2Cal = new double [][]  {{15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
-																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
-																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
-																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
-																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505},
-																	  {15.13066, 0.0, 0.19726124, 5.8963842, 1.7379211, 6.7242527, 2.4392505}};
+		myThread.paras2Cal = new double [][]  {{17.11733627319336, 0.0, 0.16191235184669495, 3.1216490268707275, 2.041151285171509, 0.6942391395568848, 3.5411601066589355},
+																	  /*{15.446934, 0.0, 0.17046615, 4.099085, 1.6467584, 43.413956, 6.3020988},
+																	  {15.446934, 0.0, 0.17046615, 4.099085, 1.6467584, 43.413956, 6.3020988},
+																	  {15.446934, 0.0, 0.17046615, 4.099085, 1.6467584, 43.413956, 6.3020988},
+																	  {15.446934, 0.0, 0.17046615, 4.099085, 1.6467584, 43.413956, 6.3020988},
+																	  {15.446934, 0.0, 0.17046615, 4.099085, 1.6467584, 43.413956, 6.3020988}*/};
 		myThread.setMode(1);//updatefitness
 		((MLPEngine) myThread.engine).seedFixed = true;
+		((MLPEngine) myThread.engine).runningseed = 1490183749797l;
 		myThread.start();
 	}
 }

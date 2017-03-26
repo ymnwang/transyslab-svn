@@ -54,9 +54,9 @@ public abstract class RoadNetworkPool {
 		return randomArray_.get(i);
 	}
 	public void organizeHM(Thread[] tl) {
-		if (threadMap_ != null)
-			threadMap_ = null;
-		threadMap_ = new HashMap<String, Integer>();
+		if (threadMap_ == null)
+			threadMap_ = new HashMap<String, Integer>();
+		threadMap_.clear();
 		for (int i = 0; i < threadNum_; i++) {
 			threadMap_.put(tl[i].getName(), threadIndex_[i]);
 		}

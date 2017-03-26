@@ -212,7 +212,7 @@ public class MLPVehicle extends Vehicle{
 			return 1;
 		}
 		if (newDis < 0.0) 
-			return dealPassing();//Passing link or seg		
+			return dealPassing();//Passing link or seg
 		return 0;
 	}
 	

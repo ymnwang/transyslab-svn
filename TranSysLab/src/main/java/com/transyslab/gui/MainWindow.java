@@ -337,16 +337,17 @@ public class MainWindow extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 			}
 		});
-		btnNewButton.setIcon(new ImageIcon("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources\\icon\\play.png"));
+		btnNewButton.setIcon(new ImageIcon("src/main/resources/icon/play.png"));
 		toolBar.add(btnNewButton);
 		btnNewButton.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				/*
 				if(!canvas_.isNetworkReady()){
 					JOptionPane.showMessageDialog(null, "请先加载路网");
 					return;
-				}
+				}*/
 				//从暂停到播放
 				if(canvas_.isPause){
 					canvas_.isPause = false;
@@ -376,7 +377,7 @@ public class MainWindow extends JFrame{
 		});
 		
 		JButton btnNewButton_1 = new JButton("");
-		btnNewButton_1.setIcon(new ImageIcon("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources\\icon\\pause.png"));
+		btnNewButton_1.setIcon(new ImageIcon("src/main/resources/icon/pause.png"));
 		toolBar.add(btnNewButton_1);
 		btnNewButton_1.addActionListener(new ActionListener() {
 			
@@ -388,7 +389,7 @@ public class MainWindow extends JFrame{
 		});
 		
 		JButton btnNewButton_2 = new JButton("");
-		btnNewButton_2.setIcon(new ImageIcon("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources\\icon\\stop.png"));
+		btnNewButton_2.setIcon(new ImageIcon("src/main/resources/icon/stop.png"));
 		toolBar.add(btnNewButton_2);
 		
 		JSlider slider = new JSlider();
@@ -440,6 +441,7 @@ public class MainWindow extends JFrame{
 	public void setNetworkReady(){
 		canvas_.setFirstRender(true);
 		canvas_.setDrawableNetwork(RoadNetworkPool.getInstance().getNetwork(0));
+		canvas_.requestFocusInWindow();
 	}
 
 }

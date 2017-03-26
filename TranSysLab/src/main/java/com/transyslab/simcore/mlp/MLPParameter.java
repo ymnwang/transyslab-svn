@@ -23,11 +23,15 @@ public class MLPParameter extends Parameter {
 	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
 
 	public static MLPParameter getInstance() {
-		/*HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return MLPNetworkPool.getInstance().getParameter(threadid);*/
-		MLPEngThread theThread = (MLPEngThread) Thread.currentThread();
-		return (MLPParameter) theThread.parameter;
+		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
+		if (hm != null) {			
+			int threadid = hm.get(Thread.currentThread().getName()).intValue();
+			return MLPNetworkPool.getInstance().getParameter(threadid);
+		}
+		else {
+			MLPEngThread theThread = (MLPEngThread) Thread.currentThread();
+			return (MLPParameter) theThread.parameter;
+		}		
 	}
 
 	public MLPParameter() {

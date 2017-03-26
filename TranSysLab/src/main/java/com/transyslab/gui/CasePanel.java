@@ -64,13 +64,13 @@ public class CasePanel extends JPanel{
 		JLabel label = new JLabel("方案名称");
 		label.setFont(new Font("宋体", Font.PLAIN, 15));
 		//设置方案名称
-		textFields[0] = new JTextField();
+		textFields[0] = new JTextField("请输入方案名称");
 		textFields[0].setColumns(10);
 		
 		JLabel label_2 = new JLabel("需求文件");
 		label_2.setFont(new Font("宋体", Font.PLAIN, 15));
 		//设置需求文件路径
-		textFields[1] = new JTextField();
+		textFields[1] = new JTextField("请指定需求文件");
 		textFields[1].setColumns(10);
 		
 		JButton button_2 = new JButton("...");
@@ -104,7 +104,7 @@ public class CasePanel extends JPanel{
 		JLabel label_3 = new JLabel("时");
 		label_3.setFont(new Font("宋体", Font.PLAIN, 15));
 		//设置开始时间:时
-		textFields[2] = new JTextField();
+		textFields[2] = new JTextField("8");
 		textFields[2].setColumns(10);
 		
 		JLabel label_6 = new JLabel("分");
@@ -113,31 +113,31 @@ public class CasePanel extends JPanel{
 		JLabel label_7 = new JLabel("秒");
 		label_7.setFont(new Font("宋体", Font.PLAIN, 15));
 		//设置开始时间:分
-		textFields[3] = new JTextField();
+		textFields[3] = new JTextField("0");
 		textFields[3].setColumns(10);
 		//设置开始时间:秒
-		textFields[4] = new JTextField();
+		textFields[4] = new JTextField("0");
 		textFields[4].setColumns(10);
 		//设置结束时间:时
-		textFields[5] = new JTextField();
+		textFields[5] = new JTextField("9");
 		textFields[5].setColumns(10);
 		
 		JLabel label_8 = new JLabel("时");
 		label_8.setFont(new Font("宋体", Font.PLAIN, 15));
 		//设置结束时间:分
-		textFields[6] = new JTextField();
+		textFields[6] = new JTextField("0");
 		textFields[6].setColumns(10);
 		
 		JLabel label_9 = new JLabel("分");
 		label_9.setFont(new Font("宋体", Font.PLAIN, 15));
 		//设置结束时间:秒
-		textFields[7] = new JTextField();
+		textFields[7] = new JTextField("0");
 		textFields[7].setColumns(10);
 		
 		JLabel label_10 = new JLabel("秒");
 		label_10.setFont(new Font("宋体", Font.PLAIN, 15));
 		//设置仿真步长:秒
-		textFields[8] = new JTextField();
+		textFields[8] = new JTextField("0.2");
 		textFields[8].setColumns(10);
 		
 		JLabel label_11 = new JLabel("秒");
@@ -162,7 +162,7 @@ public class CasePanel extends JPanel{
 		btnNewButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(checkTextFields()){
+//				if(checkTextFields()){
 					//隐藏窗口
 					SubWindow.getInstance().setVisible(false);
 					AppSetup.setupParameter.put("方案名称", textFields[0].getText());
@@ -218,11 +218,11 @@ public class CasePanel extends JPanel{
 					}
 					MainWindow.getInstance().setNetworkReady();
 					
-				}
+	/*			}
 				else{
 					JOptionPane.showMessageDialog(null, "请填写全部信息");
 					return;
-				}
+				}*/
 			}
 		});
 		

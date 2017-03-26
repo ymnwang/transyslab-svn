@@ -21,9 +21,7 @@ public class MLPNetworkPool extends RoadNetworkPool{
 	private MLPParameter[] parameterArray_;
 	private SimulationClock[] simClockArray_;
 	private MLPODTable[] odTableArray_;
-	private int[] threadIndex_;
-	private int threadNum_;
-	private HashMap<String, Integer> threadMap_;
+
 
 	private static MLPNetworkPool theInfoArrays;
 	public static MLPNetworkPool getInstance() {

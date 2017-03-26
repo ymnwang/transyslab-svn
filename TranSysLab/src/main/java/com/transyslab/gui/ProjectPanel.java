@@ -34,16 +34,16 @@ public class ProjectPanel extends JPanel{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(checkTextFields()){
+		/*		if(checkTextFields()){*/
 					SubWindow.createPanel("设置方案", CasePanel.class);
 					AppSetup.setupParameter.put("项目名字", textFields[0].getText());
 					AppSetup.setupParameter.put("项目路径", textFields[1].getText());
 					AppSetup.setupParameter.put("路网路径", textFields[2].getText());
-				}
-				else{
+	//			}
+			/*	else{
 					JOptionPane.showMessageDialog(null, "请填写全部信息");
 					return;
-				}
+				}*/
 			}
 		});
 

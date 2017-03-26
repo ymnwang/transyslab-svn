@@ -63,7 +63,7 @@ public class MLPLink extends Link {
 		return (JointLane) null;
 	}
 	
-	public boolean hasNoVeh() {
+	public boolean hasNoVeh(boolean virtualCount) {
 //		boolean r = true;
 //		for (JointLane jl : jointLanes) {
 //			r = r && jl.hasNoVeh();
@@ -71,7 +71,7 @@ public class MLPLink extends Link {
 //		return r;
 		ListIterator<JointLane> JLIterator = jointLanes.listIterator();
 		while (JLIterator.hasNext()) {
-			if (!JLIterator.next().hasNoVeh()) 
+			if (!JLIterator.next().hasNoVeh(virtualCount)) 
 				return false;
 		}
 		return true;
@@ -125,11 +125,11 @@ public class MLPLink extends Link {
 		Collections.shuffle(jointLanes,r);//任意车道位置排序
 		for (JointLane JLn: jointLanes){
 			//遍历所有车辆，组成车队以后通过deal来处理
-			if (!JLn.hasNoVeh()){
+			if (!JLn.hasNoVeh(false)){
 				platoon.clear();
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
-//				platoonhead = theveh.Displacement();
+//				platoonhead = theveh.Displacement();		
 				platoonhead = ((MLPSegment) getSegment(nSegments_-1)).endDSP;
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
@@ -225,7 +225,7 @@ public class MLPLink extends Link {
 		Collections.shuffle(jointLanes,r);//任意车道位置排序
 		for (JointLane JLn: jointLanes){
 			//遍历所有车辆，组成车队以后通过deal来处理
-			if (!JLn.hasNoVeh()){
+			if (!JLn.hasNoVeh(true)){
 				platoon.clear();
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
@@ -255,7 +255,8 @@ public class MLPLink extends Link {
 	}
 	
 	public void dealMove(double headDsp, double tailDsp){
-		double tailspeed = dynaFun.sdFun(((double)platoon.size())/(headDsp-tailDsp));
+		double k = ((double)platoon.size())/(headDsp-tailDsp);
+		double tailspeed = dynaFun.sdFun(k);
 		double headspeed = dynaFun.updateHeadSpd(platoon.get(0));
 		if (platoon.size()>1) {
 			double headPt = platoon.get(0).Displacement();

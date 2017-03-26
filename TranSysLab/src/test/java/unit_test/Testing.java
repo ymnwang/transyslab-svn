@@ -2,12 +2,17 @@ package unit_test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+
+import com.transyslab.simcore.mlp.MLPNetwork;
+import com.transyslab.simcore.mlp.MLPNetworkPool;
 
 public class Testing {
 
 	public static void main(String[] args) {
+		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
 		for (int i = 0; i < 3; i++) {
 			Random r1 = new Random((long) 1);
 			for (int j = 0; j < 3; j++) {

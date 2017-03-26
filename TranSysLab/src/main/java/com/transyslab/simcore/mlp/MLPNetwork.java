@@ -38,11 +38,15 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	public static MLPNetwork getInstance() {
-		/*HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return MLPNetworkPool.getInstance().getNetwork(threadid);*/
-		MLPEngThread theThread = (MLPEngThread) Thread.currentThread();
-		return (MLPNetwork) theThread.network;
+		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
+		if (hm != null) {
+			int threadid = hm.get(Thread.currentThread().getName()).intValue();
+			return MLPNetworkPool.getInstance().getNetwork(threadid);
+		}
+		else {
+			MLPEngThread theThread = (MLPEngThread) Thread.currentThread();
+			return (MLPNetwork) theThread.network;
+		}
 	}
 	
 /*

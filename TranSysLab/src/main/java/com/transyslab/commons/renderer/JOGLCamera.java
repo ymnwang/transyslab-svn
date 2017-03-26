@@ -17,10 +17,11 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 	private double keySensitive_;
 	private double keyStep_;
 	private double mouseStep_;
-	private int[] eyeLocation_ = new int[3];
-	private int[] targetLocation_ = new int[3];
+	private float[] eyeLocation_ = new float[3];
+	private float[] targetLocation_ = new float[3];
 	private boolean isMidButtonPressed_;
 	private int[] preWinCoordinate_;
+	private java.awt.Point previousMousePoint;
 	public boolean canStart_ = false;
 	public JOGLCamera() {
 		keyStep_ = 1.0;
@@ -28,12 +29,13 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 		mouseSensitive_ = 5.0;
 		keySensitive_ = 5.0;
 		preWinCoordinate_ = new int[2];
+		previousMousePoint = new java.awt.Point();
 
 	}
-	public int[] getEyePosition() {
+	public float[] getEyePosition() {
 		return eyeLocation_;
 	}
-	public int[] getTargetPosition() {
+	public float[] getTargetPosition() {
 		return targetLocation_;
 	}
 	public void initCamLookAt(Point curp, Point tarp) {
@@ -149,16 +151,23 @@ public class JOGLCamera implements KeyListener, MouseListener, MouseWheelListene
 	public void mouseDragged(MouseEvent e) {
 		// TODO Auto-generated method stub
 		if(isMidButtonPressed_){
-			eyeLocation_[0] += 0.1*(e.getX()-preWinCoordinate_[0]);
-			targetLocation_[0] += 0.1*(e.getX()-preWinCoordinate_[0]);
-			eyeLocation_[1] -= 0.1*(e.getY()-preWinCoordinate_[1]);
-			targetLocation_[1] -= 0.1*(e.getY()-preWinCoordinate_[1]);
+			/*eyeLocation_[0] -= 0.05*(e.getX()-preWinCoordinate_[0]);
+			targetLocation_[0] -= 0.05*(e.getX()-preWinCoordinate_[0]);
+			eyeLocation_[1] += 0.05*(e.getY()-preWinCoordinate_[1]);
+			targetLocation_[1] += 0.05*(e.getY()-preWinCoordinate_[1]);*/
 			
+			float dx = (previousMousePoint.x - e.getX()) * eyeLocation_[2] / 500.0f;
+			float dy = (previousMousePoint.y - e.getY()) * eyeLocation_[2] / 500.0f;
+			eyeLocation_[0] += dx;
+			targetLocation_[0] += dx;
+			eyeLocation_[1] -= dy;
+			targetLocation_[1] -= dy;
+			previousMousePoint.setLocation(e.getX(), e.getY());
 		}
 	}
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		
+		previousMousePoint.setLocation(e.getX(), e.getY());
 	}
 
 }

@@ -90,10 +90,16 @@ public class RoadNetwork {
 		totalLaneLength_ = 0;
 	}
 	public static RoadNetwork getInstance() {
-		/*HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return RoadNetworkPool.getInstance().getNetwork(threadid);*/
-		return ((EngTread) Thread.currentThread()).network;
+		RoadNetworkPool pool = RoadNetworkPool.getInstance();		
+		if (pool != null) {
+			HashMap<String, Integer> hm = pool.getHashMap();
+			int threadid = hm.get(Thread.currentThread().getName()).intValue();
+			return RoadNetworkPool.getInstance().getNetwork(threadid);
+		}
+		else {
+			return ((EngTread) Thread.currentThread()).network;
+		}
+		
 	}
 	/*
 	 * public void setMaxCapacity(float mc){ maxCapacity_ = mc; } public float

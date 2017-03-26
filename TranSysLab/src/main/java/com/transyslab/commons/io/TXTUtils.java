@@ -14,8 +14,8 @@ public class TXTUtils {
 			file.createNewFile();
 			writer = new BufferedWriter(new FileWriter(file));
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			System.out.println(e.getStackTrace());
+			e.getMessage();
+			e.getStackTrace();
 		}
 	}
 	
@@ -24,32 +24,32 @@ public class TXTUtils {
 			writer.write(str);
 			writer.flush();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			System.out.println(e.getStackTrace());
+			e.getMessage();
+			e.getStackTrace();
 		}
 	}
 	public void write(String str) {
 		try {
 			writer.write(str);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			System.out.println(e.getStackTrace());
+			e.getMessage();
+			e.getStackTrace();
 		}
 	}
 	public void flushBuffer() {
 		try {
 			writer.flush();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			System.out.println(e.getStackTrace());
+			e.getMessage();
+			e.getStackTrace();
 		}
 	}
 	public void closeWriter() {
 		try {
 			writer.close();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			System.out.println(e.getStackTrace());
+			e.getMessage();
+			e.getStackTrace();
 		}
 	}
 }

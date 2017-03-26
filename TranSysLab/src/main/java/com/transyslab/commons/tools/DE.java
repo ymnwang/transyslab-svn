@@ -10,6 +10,7 @@ import java.util.Random;
 import com.transyslab.commons.tools.rawpso.Particle;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.mlp.MLPEngThread;
+import com.transyslab.simcore.mlp.MLPEngine;
 
 /**
  * @author yali
@@ -30,8 +31,6 @@ public class DE extends Thread{
 	
 	private TaskCenter taskCenter;
 	private int iterationLim;
-	private List<Particle> particles;
-	private Random rand;
 
 	public DE() {
 
@@ -39,8 +38,6 @@ public class DE extends Thread{
 	public DE(String threadName, TaskCenter tc) {
 		setName(threadName);
 		taskCenter = tc;
-		particles = new ArrayList<>();
-		rand = new Random();
 	}
 	public int getDim() {
 		return dims_;
@@ -185,6 +182,7 @@ public class DE extends Thread{
 		taskCenter.Dismiss();//stop eng线程。
 	}
 	public static void main(String[] args) {
+		Individual.rnd_.setSeed(112547852);//固定算法随机数
 		int maxGeneration = 55;
 		int maxTasks = 100;
 		TaskCenter tc = new TaskCenter(maxTasks);
@@ -193,12 +191,13 @@ public class DE extends Thread{
 		float[] pupper = new float[] {20, 0.0f, 0.200f, 7.0f, 3.0f, 50.0f, 10.0f};
 		DE de = new DE("DE", tc);
 		de.initDE(pop, plower.length, 0.5f, 0.5f, plower, pupper);
-		de.setMaxGeneration(maxGeneration);
+		de.setMaxGeneration(maxGeneration);		
 		de.start();
 		MLPEngThread mlp_eng_thread;
 		for (int i = 0; i < 30; i++) {
 			mlp_eng_thread = new MLPEngThread("Eng"+i, tc);
 			mlp_eng_thread.setMode(3);
+//			((MLPEngine) mlp_eng_thread.engine).seedFixed = true;
 			mlp_eng_thread.start();
 		}
 	}

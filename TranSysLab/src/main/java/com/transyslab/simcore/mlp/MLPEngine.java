@@ -38,10 +38,13 @@ public class MLPEngine extends SimulationEngine{
 	protected TXTUtils infoWriter;
 	protected boolean infoOn;
 	protected String msg;
-	protected boolean seedFixed;
+	public boolean seedFixed;
+	public long runningseed;
 	public boolean outputSignal;
 	private Object empData;
 	public boolean needEmpData;
+	private int mod;
+	private boolean displayOn;
 	//public double fitnessVal;
 	
 	public MLPEngine() {
@@ -54,17 +57,31 @@ public class MLPEngine extends SimulationEngine{
 		msg = "";
 		seedFixed = false;
 		needEmpData = false;
+		mod = 0;
+		displayOn = false;
 //		fitnessVal = Double.POSITIVE_INFINITY;
 	}
 
 	@Override
-	public void run(int mode) {
-		if(mode == 0) {
+	public void run(int mode) {//0: no display 1: with display
+		switch (mode) {
+		case 0:
 			//Engine参数与状态的初始化
 			resetEngine(0, 6900, 0.2);
 			//优化参数设置
 			setOptParas(null);
-			super.run(mode);
+			while (simulationLoop()>=0);
+			break;
+		case 1:
+			//Engine参数与状态的初始化
+			resetEngine(0, 6900, 0.2);
+			//优化参数设置
+			setOptParas(null);
+			displayOn = true;
+			while (simulationLoop()>=0);
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -83,7 +100,9 @@ public class MLPEngine extends SimulationEngine{
 			// started.
 			firstEntry = false;
 			//Network状态重设并准备发车表
-			MLPNetwork.getInstance().resetNetwork(needRndETable, seedFixed? 1 : System.currentTimeMillis());
+			if (!seedFixed) 
+				runningseed = System.currentTimeMillis();
+			MLPNetwork.getInstance().resetNetwork(needRndETable, runningseed);
 			
 			//reset update time
 			mlp_network.resetReleaseTime();
@@ -91,15 +110,15 @@ public class MLPEngine extends SimulationEngine{
 			//establish writers
 			String threadName = Thread.currentThread().getName();
 			if (loopRecOn) {
-				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadName + ".csv");
+				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadName + "_" + mod + ".csv");
 				loopRecWriter.write("TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
 			}				
 			if (trackOn) {
-				trackWriter = new TXTUtils("src/main/resources/output/track" + threadName + ".csv");
+				trackWriter = new TXTUtils("src/main/resources/output/track" + threadName + "_" + mod + ".csv");
 				trackWriter.write("TIME,RVID,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
 			}				
 			if (infoOn)
-				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + ".txt");
+				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + "_" + mod + ".txt");
 			//信息统计：发车数
 			if (infoOn) {
 				int total = 0;
@@ -163,7 +182,9 @@ public class MLPEngine extends SimulationEngine{
 		}
 		
 		//可视化渲染
-//		mlp_network.recordVehicleData();
+		if (displayOn) {
+			mlp_network.recordVehicleData();
+		}
 		
 		//输出轨迹
 		if (trackOn) {
@@ -188,8 +209,8 @@ public class MLPEngine extends SimulationEngine{
 							          v.currentSpeed() + "," + 
 							          LV + "," + 
 							          FV + "\r\n";
-					if (v.VirtualType_==0) {
-						trackWriter.write(str);
+					if (true) {//v.VirtualType_==0
+						trackWriter.writeNFlush(str);
 					}
 				}
 			}
@@ -205,6 +226,7 @@ public class MLPEngine extends SimulationEngine{
 				trackWriter.closeWriter();
 			if (infoOn)
 				infoWriter.closeWriter();
+			mod += 1;
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
 													// is done
 		}
@@ -294,7 +316,7 @@ public class MLPEngine extends SimulationEngine{
 				trTlist.clear();
 
 				double avg_ExpSpeed = 0.0;
-				if (!mlp_network.mlpLink(0).hasNoVeh()) {
+				if (!mlp_network.mlpLink(0).hasNoVeh(false)) {
 					int count = 0;
 					double sum = 0.0;
 					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
@@ -321,7 +343,6 @@ public class MLPEngine extends SimulationEngine{
 			realSpeed[k] = realLoopDetect[k][0];
 		}
 		double fitnessVal = MAPE(simSpeed, realSpeed);
-//		System.out.println(Arrays.toString(simSpeed));
 		return fitnessVal;
 	}
 	
