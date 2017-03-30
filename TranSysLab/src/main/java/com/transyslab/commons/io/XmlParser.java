@@ -36,6 +36,7 @@ import com.transyslab.simcore.mesots.MesoSegment;
 import com.transyslab.simcore.mesots.MesoVehicle;
 import com.transyslab.simcore.mesots.MesoVehicleList;
 import com.transyslab.simcore.mesots.MesoVehicleTable;
+import com.transyslab.simcore.mlp.Loop;
 import com.transyslab.simcore.mlp.MLPLane;
 import com.transyslab.simcore.mlp.MLPLink;
 import com.transyslab.simcore.mlp.MLPNetwork;
@@ -508,6 +509,7 @@ public class XmlParser {
 	}
 	public static void listSensorNodes(Element node) {
 		int type = -100;
+		String detName = "Unkown";
 		float interval = -100;
 		int segid = -100;
 		float zone = -100;
@@ -524,6 +526,9 @@ public class XmlParser {
 				// + "---" + attr.getValue());
 				if (attr.getName() == "type")
 					type = Integer.parseInt(attr.getValue());
+				if (attr.getName() == "name") {
+					detName = attr.getValue();
+				}
 				if (attr.getName() == "interval")
 					interval = Float.parseFloat(attr.getValue());
 				if (attr.getName() == "zone")
@@ -536,20 +541,26 @@ public class XmlParser {
 					pos = Float.parseFloat(attr.getValue());
 
 			}
-			SurvStation tmp = new SurvStation();
-			tmp.init(type, interval, zone, segid, id, pos);
-			List<Element> childofp = node.elements();
-			for (Element lofp : childofp) {
-				// station元素下的子元素sensor
-				List<Attribute> listofl = lofp.attributes();
-				for (Attribute attrofl : listofl) {
-					if (attrofl.getName() == "id") 
-						sid = Integer.parseInt(attrofl.getValue());
-					if (attrofl.getName() == "laneid") 
-						lid = Integer.parseInt(attrofl.getValue());
+			if (AppSetup.modelType == 1) {
+				SurvStation tmp = new SurvStation();
+				tmp.init(type, interval, zone, segid, id, pos);
+				List<Element> childofp = node.elements();
+				for (Element lofp : childofp) {
+					// station元素下的子元素sensor
+					List<Attribute> listofl = lofp.attributes();
+					for (Attribute attrofl : listofl) {
+						if (attrofl.getName() == "id") 
+							sid = Integer.parseInt(attrofl.getValue());
+						if (attrofl.getName() == "laneid") 
+							lid = Integer.parseInt(attrofl.getValue());
+					}
+					Sensor tsensor = new Sensor();
+					tsensor.init(sid, lid);
 				}
-				Sensor tsensor = new Sensor();
-				tsensor.init(sid, lid);
+			}
+			else if (AppSetup.modelType == 2) {
+				Loop tmpLoop = new Loop();
+				tmpLoop.init(detName, segid, pos);
 			}
 		}
 

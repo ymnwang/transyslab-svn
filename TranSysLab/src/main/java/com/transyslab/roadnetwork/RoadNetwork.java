@@ -46,6 +46,7 @@ public class RoadNetwork {
 	protected List<Signal> signals_ = new ArrayList<Signal>();
 	protected List<BusStop> busstops_ = new ArrayList<BusStop>();
 	protected List<SurvStation> survStations_ = new ArrayList<SurvStation>();
+	public Random sysRand;
 	// protected Vector < Vector <RN_Sensor > > sensorsOfType_; //IEM(May2) each
 	// vector of sensors is for one interval type
 	// protected void sortSensors() {}; //IEM(May2) Fills sensorsOfType.
@@ -88,6 +89,7 @@ public class RoadNetwork {
 		nProhibitors_ = 0;
 		totalLinkLength_ = 0;
 		totalLaneLength_ = 0;
+		sysRand = new Random();
 	}
 	public static RoadNetwork getInstance() {
 		RoadNetworkPool pool = RoadNetworkPool.getInstance();		

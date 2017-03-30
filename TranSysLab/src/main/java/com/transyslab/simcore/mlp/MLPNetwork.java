@@ -26,15 +26,14 @@ public class MLPNetwork extends RoadNetwork {
 	public MLPVehPool veh_pool;
 	public List<MLPVehicle> veh_list;
 	public List<Loop> loops;
-	public Random sysRand;
+//	public Random sysRand;//已移动至父类
 
 	public MLPNetwork() {
 		newVehID_ = 0;
 		veh_pool = new MLPVehPool();
 		veh_list = new ArrayList<MLPVehicle>();
 		loops = new ArrayList<Loop>();
-//		sysRand = new Random(System.currentTimeMillis());
-		sysRand = new Random();
+//		sysRand = new Random();
 	}
 
 	public static MLPNetwork getInstance() {
@@ -230,7 +229,7 @@ public class MLPNetwork extends RoadNetwork {
 		mlpLink(idx).dynaFun.sdPara = paras;
 	}
 	
-	public void setLoopSection(int linkID, double p) {
+	public void setLoopSection(String name, int linkID, double p) {
 		MLPLink theLink = (MLPLink) findLink(linkID);
 		MLPSegment theSeg = null;
 		MLPLane theLane = null;
@@ -243,10 +242,29 @@ public class MLPNetwork extends RoadNetwork {
 		if (theSeg != null) {
 			for (int k = 0; k<theSeg.nLanes(); k++) {
 				theLane = (MLPLane) theSeg.getLane(k);
-				loops.add(new Loop(theLane, theSeg, theLink, dsp));
+				loops.add(new Loop(theLane, theSeg, theLink, name, dsp));
 			}
 		}
 		
+	}
+	
+	public double loopStatistic(String det_name) {
+		if (loops.size()<1) {
+			System.err.println("no loops in network");
+			return 0.0;
+		}
+		double n = 0.0;
+		double sum = 0.0;
+		for (Loop lp : loops) {
+			if (lp.detName.equals("det2")) {
+				n += lp.detectedSpds.size();
+				sum += lp.detectedSpds.size() / lp.harmmeanNClear();
+			}
+			else {
+				lp.detectedSpds.clear();
+			}
+		}
+		return (sum == 0.0) ? 0.0 : (n/sum);
 	}
 	
 	public void resetNetwork(boolean needRET, long seed) {

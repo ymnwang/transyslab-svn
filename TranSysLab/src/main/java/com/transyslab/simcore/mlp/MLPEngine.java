@@ -167,14 +167,12 @@ public class MLPEngine extends SimulationEngine{
 					k -=1;
 			}
 			//线圈检测
-			if (loopRecOn) {
-				for (int j = 0; j < mlp_network.loops.size(); j++){
-					msg = mlp_network.loops.get(j).detect();
-					if (msg != "") {
-						loopRecWriter.write(time + "," + msg);
-					}
+			for (int j = 0; j < mlp_network.loops.size(); j++){
+				msg = mlp_network.loops.get(j).detect(time);				
+				if (loopRecOn) {//按需输出记录
+					loopRecWriter.write(msg);
 				}
-			}			
+			}
 			//车辆推进
 			for (MLPVehicle vehicle : mlp_network.veh_list) {
 				vehicle.advance();
@@ -262,7 +260,9 @@ public class MLPEngine extends SimulationEngine{
 		// 读取路网xml
 		MLPSetup.ParseNetwork();
 		// 读入路网数据后组织路网不同要素的关系
-		MLPNetwork.getInstance().calcStaticInfo();		
+		MLPNetwork.getInstance().calcStaticInfo();
+		// 读取检测器
+		MLPSetup.ParseSensorTables();
 		return 0;
 	}
 	
@@ -301,9 +301,9 @@ public class MLPEngine extends SimulationEngine{
 		while(simulationLoop()>=0) {
 			double now = SimulationClock.getInstance().getCurrentTime();
 			if (now>=caltime) {
-				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
-
-				double avg_trTime = 0.0;				
+				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;				
+				//SimTrT计算
+				/*double avg_trTime = 0.0;				
 				if (trTlist.size()>0) {
 					for (Double trt : trTlist) {
 						avg_trTime += trt;
@@ -311,11 +311,11 @@ public class MLPEngine extends SimulationEngine{
 					avg_trTime = avg_trTime / trTlist.size();
 					simLinkFlow[idx] = trTlist.size();	
 				}
-				simTrT[idx] = avg_trTime;
-
+				simTrT[idx] = avg_trTime;*/
 				trTlist.clear();
 
-				double avg_ExpSpeed = 0.0;
+				//瞬时平均运行速度
+				/*double avg_ExpSpeed = 0.0;
 				if (!mlp_network.mlpLink(0).hasNoVeh(false)) {
 					int count = 0;
 					double sum = 0.0;
@@ -331,8 +331,11 @@ public class MLPEngine extends SimulationEngine{
 					}
 					avg_ExpSpeed = sum / count;
 				}
-				simSpeed[idx] = avg_ExpSpeed;
-
+				simSpeed[idx] = avg_ExpSpeed;*/
+				
+				//线圈检测地点速度
+				simSpeed[idx] = mlp_network.loopStatistic("det3");
+						
 				caltime += calStep;
 				idx += 1;
 			}
