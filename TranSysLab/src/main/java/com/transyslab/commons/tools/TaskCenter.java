@@ -19,7 +19,6 @@ public class TaskCenter {
 		results = new double [arg];
 		finishCount = 0;
 	}
-	
 	public synchronized double getResult(int i) {
 		while (finishCount < results.length) {
 			try {

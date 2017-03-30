@@ -1,23 +1,28 @@
 package unit_test;
 
-import oracle.net.aso.b;
 
 public class testOverride {
 	public A testa;
-	public B testb;
-	public C testc;
-	public D testd;
+//	public B testb; 
+	public C testc = new C();
+	public D testd = new D();
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-//		testb = new B();
+		testOverride test = new testOverride();
+		B testb = test.new B();
+		testb.getC();
+		((A) testb).getC();
 	}
 	public class A{
 		public C getC(){
-			return null;
+			System.out.println("I'm C");
+			return testc;
 		}
 	}
 	public class B extends A{
 		public D getC(){
+			super.getC();
+			System.out.println("I'm D");
 			return testd;
 		}
 	}

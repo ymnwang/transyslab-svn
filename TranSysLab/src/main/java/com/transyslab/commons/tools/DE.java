@@ -182,13 +182,17 @@ public class DE extends Thread{
 		taskCenter.Dismiss();//stop eng线程。
 	}
 	public static void main(String[] args) {
-		Individual.rnd_.setSeed(112547852);//固定算法随机数
-		int maxGeneration = 55;
+		Individual.rnd_.setSeed(System.currentTimeMillis());//固定算法随机数
+		int maxGeneration = 200;
 		int maxTasks = 100;
 		TaskCenter tc = new TaskCenter(maxTasks);
 		int pop = 30;
-		float[] plower = new float[] {15, 0.0f, 0.120f, 3.0f, 1.0f, 0.0f, 2.0f};
-		float[] pupper = new float[] {20, 0.0f, 0.200f, 7.0f, 3.0f, 50.0f, 10.0f};
+		float[] plower = new float[]{12.0f,0.15f,1.0f,5.0f,25,85};
+		float[] pupper = new float[]{23.0f,0.17f,4.0f,8.0f,35,95};//,180.0f,25,40,100};
+		//Gbest : 0.10734763
+		//Position : 15.475985 0.15889278 1.546905 6.5494165 29.030441 91.544785
+		//Gbest : 0.10625457
+		//Position : 15.993167 0.15445936 1.5821557 6.34795 33.02263 93.043655 
 		DE de = new DE("DE", tc);
 		de.initDE(pop, plower.length, 0.5f, 0.5f, plower, pupper);
 		de.setMaxGeneration(maxGeneration);		

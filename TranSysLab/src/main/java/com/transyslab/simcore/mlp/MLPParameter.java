@@ -2,6 +2,9 @@ package com.transyslab.simcore.mlp;
 
 import java.util.HashMap;
 import com.transyslab.roadnetwork.Parameter;
+
+import oracle.net.aso.d;
+
 import com.transyslab.commons.tools.SimulationClock;
 
 public class MLPParameter extends Parameter {		
@@ -42,7 +45,7 @@ public class MLPParameter extends Parameter {
 		capacity = 0.5;//default 0.5
 		CELL_RSP_LOWER = 30.87f;
 		CELL_RSP_UPPER = 91.58f;
-		SDPara_ = new double [] {16.67, 0.0, 0.180, 5.0, 1.8};//ԭ{16.67, 0.0, 0.180, 5.0, 1.8}{19.76, 0.0, 0.15875, 2.04, 5.35}
+		SDPara_ = new double [] {16.67, 0.0, 0.180, 1.8, 5.0};//ԭ{16.67, 0.0, 0.180, 5.0, 1.8}{19.76, 0.0, 0.15875, 2.04, 5.35}
 		LCPara_ = new double [] {10.0, 10.0};
 		limitingParam_ = new float[3];
 //		queueParam_ = new float[3];
@@ -137,6 +140,12 @@ public class MLPParameter extends Parameter {
 	}
 	public double [] getLCPara(){
 		return LCPara_;
+	}
+	public void setDUpper(float arg) {
+		CELL_RSP_UPPER = arg;
+	}
+	public void setDLower(float arg) {
+		CELL_RSP_LOWER = arg;
 	}
 
 }

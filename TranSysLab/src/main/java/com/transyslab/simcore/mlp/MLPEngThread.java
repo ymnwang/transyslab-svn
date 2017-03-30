@@ -54,7 +54,7 @@ public class MLPEngThread extends EngTread{
 				break;
 			}
 			for (int i = 0; i < paras2Cal.length; i++) {
-				System.out.println("fitness: " + mlp_eng.calFitness(paras2Cal[i]));
+				System.out.println("fitness: " + mlp_eng.calFitness(null));
 			}
 			break;
 		case 2://run with graphic

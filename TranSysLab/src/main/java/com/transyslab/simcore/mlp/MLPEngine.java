@@ -9,11 +9,13 @@ import java.util.function.DoubleToLongFunction;
 import java.util.regex.Matcher;
 
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.math3.genetics.Fitness;
 import org.apache.commons.math3.util.MathUtils;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.DE;
+import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.commons.tools.emitTable;
@@ -277,9 +279,12 @@ public class MLPEngine extends SimulationEngine{
 	public void setOptParas(double [] optparas) {
 		if (optparas != null) {
 			MLPNetwork mlp_network = MLPNetwork.getInstance();			
-			mlp_network.setOverallSDParas(new double [] {optparas[0],optparas[1],optparas[2],optparas[3],optparas[4]});
-			MLPParameter.getInstance().setLCPara(new double[] {optparas[5], optparas[5]});
-			MLPParameter.getInstance().setLCBuffTime(optparas[6]);
+			mlp_network.setOverallSDParas(new double [] {optparas[0],0.0,optparas[1],optparas[2],optparas[3]});
+			MLPParameter.getInstance().setDUpper((float) optparas[5]);
+			MLPParameter.getInstance().setDLower((float) optparas[4]);
+			mlp_network.setOverallCapacity(0.45);
+//			MLPParameter.getInstance().setLCPara(new double[] {optparas[5], optparas[5]});
+//			MLPParameter.getInstance().setLCBuffTime(optparas[6]);
 		}		
 	}
 	
@@ -345,7 +350,11 @@ public class MLPEngine extends SimulationEngine{
 		for (int k = 0; k < realLoopDetect.length; k++) {
 			realSpeed[k] = realLoopDetect[k][0];
 		}
-		double fitnessVal = MAPE(simSpeed, realSpeed);
+		double[] tmpSim = new double[simSpeed.length-4];
+		double[] tmpReal = new double[simSpeed.length-4];
+		System.arraycopy(simSpeed, 4, tmpSim, 0, simSpeed.length-4);
+		System.arraycopy(realSpeed, 4, tmpReal, 0, simSpeed.length-4);
+		double fitnessVal = FitnessFunction.evaRNSE(tmpSim, tmpReal);
 		return fitnessVal;
 	}
 	
