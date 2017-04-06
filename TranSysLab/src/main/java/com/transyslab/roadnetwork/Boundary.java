@@ -1,5 +1,7 @@
 package com.transyslab.roadnetwork;
 
+import jhplot.math.LinearAlgebra;
+
 public class Boundary extends CodedObject {
 	protected Point startPnt_;
 	protected Point endPnt_;
@@ -25,5 +27,8 @@ public class Boundary extends CodedObject {
 	}
 	public Point getEndPnt() {
 		return endPnt_;
+	}
+	public double[] getDelta() {
+		return LinearAlgebra.minus(endPnt_.getLocations(), startPnt_.getLocations());
 	}
 }

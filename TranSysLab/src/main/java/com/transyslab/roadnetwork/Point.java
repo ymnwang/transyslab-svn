@@ -53,6 +53,9 @@ public class Point {
 	public double getLocationZ(){
 		return locationZ;
 	}
+	public double[] getLocations() {
+		return new double[] {locationX, locationY, locationZ};
+	}
 	public double getEast() {
 		return locationX;
 	}
