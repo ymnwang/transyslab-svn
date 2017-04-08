@@ -19,9 +19,11 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
 import com.jogamp.opengl.util.FPSAnimator;
-import com.transyslab.commons.renderer.JOGLCamera;
+import com.transyslab.commons.renderer.BirdEyeCamera;
+import com.transyslab.commons.renderer.Camera;
 import com.transyslab.commons.renderer.JOGLCanvas;
-import com.transyslab.commons.renderer.JOGLFrameQueue;
+import com.transyslab.commons.renderer.FrameQueue;
+import com.transyslab.commons.renderer.OrbitCamera;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
@@ -55,12 +57,12 @@ public class MainWindow extends JFrame{
 		initialize();
 		// Set rendering canvas
 		fps_ = 25;		
-		JOGLCamera cam = new JOGLCamera();
+		Camera cam = new OrbitCamera();
 		canvas_.setCamera(cam);
-		canvas_.addKeyListener(cam);
-		canvas_.addMouseListener(cam);
-		canvas_.addMouseWheelListener(cam);
-		canvas_.addMouseMotionListener(cam);
+		canvas_.addKeyListener(canvas_);
+		canvas_.addMouseListener(canvas_);
+		canvas_.addMouseWheelListener(canvas_);
+		canvas_.addMouseMotionListener(canvas_);
 		// Create a animator that drives canvas' display() at the specified FPS.
 		animator_ = new FPSAnimator(canvas_, fps_, true);
 
@@ -358,7 +360,7 @@ public class MainWindow extends JFrame{
 					Worker[] workerList = new Worker[Constants.THREAD_NUM];
 					Thread[] threadList = new Thread[Constants.THREAD_NUM];
 
-					JOGLFrameQueue.getInstance().initFrameQueue();
+					FrameQueue.getInstance().initFrameQueue();
 
 					for (int i = 0; i < Constants.THREAD_NUM; i++) {
 						workerList[i] = new Worker(engineList[i]);

@@ -5,6 +5,8 @@ package com.transyslab.roadnetwork;
 
 import java.util.*;
 
+import com.transyslab.commons.tools.GeoUtil;
+
 /**
  * Lane
  *
@@ -14,15 +16,16 @@ import java.util.*;
 public class Lane extends CodedObject {
 
 	// 车道宽度
-	public static double LANE_WIDTH = 3.66;
+	public float width = 3.66f;
 
 	protected int index_;
 	protected Segment segment_;
 	protected int rules_;// lane use and change rules
 	protected List<Lane> upLanes_;
 	protected List<Lane> dnLanes_;
-	protected Point startPnt_;
-	protected Point endPnt_;
+	protected GeoPoint startPnt_;
+	protected GeoPoint endPnt_;
+	protected GeoSurface laneSurface;
 	protected int laneType_;
 	protected int state_;
 	protected int cmarker_;// connection marker
@@ -284,8 +287,8 @@ public class Lane extends CodedObject {
 		 * if (ToolKit::debug()) { cout << indent << indent << indent << "<" <<
 		 * c << endc << r << ">" << endl; }
 		 */
-		startPnt_ =new Point(beginx,beginy);
-		endPnt_ =new Point(endx,endy);
+		startPnt_ =new GeoPoint(beginx,beginy);
+		endPnt_ =new GeoPoint(endx,endy);
 		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(startPnt_);
 		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(endPnt_);
 		if (segment_ != null) {
@@ -308,7 +311,17 @@ public class Lane extends CodedObject {
 
 		return 0;
 	}
-
+	// 路网世界坐标平移后再调用
+	public void createLaneSurface(){
+		laneSurface = GeoUtil.lineToRectangle(startPnt_, endPnt_, width);
+		laneSurface.createAabBox();
+	}
+	public GeoSurface getLaneSurface(){
+		return laneSurface;
+	}
+	public double getWidth() {
+		return width;
+	}
 	@Override
 	public void print() {
 
@@ -316,10 +329,10 @@ public class Lane extends CodedObject {
 	public void printDnConnectors() {
 
 	}
-	public Point getStartPnt() {
+	public GeoPoint getStartPnt() {
 		return startPnt_;
 	}
-	public Point getEndPnt() {
+	public GeoPoint getEndPnt() {
 		return endPnt_;
 	}
 	public void calcStaticInfo(WorldSpace world_space) {
@@ -332,6 +345,8 @@ public class Lane extends CodedObject {
 		//起终点坐标平移
 		startPnt_ = world_space.worldSpacePoint(startPnt_);
 		endPnt_ = world_space.worldSpacePoint(endPnt_);
+		//生成车道面
+		createLaneSurface();
 		
 	}
 	/*

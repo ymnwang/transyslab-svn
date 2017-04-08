@@ -12,6 +12,7 @@ public class CodedObject {
 	// 对象ID
 	private int code_;
 	private String name_;
+	private boolean isSelected;
 
 	public CodedObject() {
 		code_ = 0;
@@ -65,5 +66,12 @@ public class CodedObject {
 	// 输出对象id
 	public void print() {
 
+	}
+	// 是否被选中
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(final boolean isSelect){
+		this.isSelected = isSelect;
 	}
 }

@@ -3,11 +3,11 @@ package com.transyslab.commons.renderer;
 import java.util.LinkedList;
 import com.transyslab.roadnetwork.VehicleData;
 
-public class JOGLAnimationFrame{
+public class AnimationFrame{
 	private int frameID_;
 	private LinkedList<VehicleData> vhcDataQueue_;
 
-	public JOGLAnimationFrame(){
+	public AnimationFrame(){
 		vhcDataQueue_ = new LinkedList<VehicleData>();
 	}
 	public LinkedList<VehicleData> getVhcDataQueue(){

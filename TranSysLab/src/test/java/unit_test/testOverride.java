@@ -9,9 +9,9 @@ public class testOverride {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		testOverride test = new testOverride();
-		B testb = test.new B();
+		A testb = test.new B();
 		testb.getC();
-		((A) testb).getC();
+//		((A) testb).getC();
 	}
 	public class A{
 		public C getC(){
@@ -21,7 +21,7 @@ public class testOverride {
 	}
 	public class B extends A{
 		public D getC(){
-			super.getC();
+//			super.getC();
 			System.out.println("I'm D");
 			return testd;
 		}

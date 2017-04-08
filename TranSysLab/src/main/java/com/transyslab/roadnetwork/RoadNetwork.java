@@ -39,7 +39,7 @@ public class RoadNetwork {
 	protected List<Segment> segments_ = new ArrayList<Segment>();
 	protected List<Lane> lanes_ = new ArrayList<Lane>();
 	protected List<Boundary> boundarys_ = new ArrayList<Boundary>();
-	protected List<Surface> surfaces_ = new ArrayList<Surface>();
+	protected List<GeoSurface> surfaces_ = new ArrayList<GeoSurface>();
 	protected List<Label> labels_ = new ArrayList<Label>();
 
 	protected List<Sensor> sensors_ = new ArrayList<Sensor>();
@@ -139,17 +139,6 @@ public class RoadNetwork {
 	public double getTotalLaneLength() {
 		return totalLaneLength_;
 	}
-	// These equal to the numbers objects allocated in arrays
-	/*
-	 * public int nMaxLabels() { return labels_.capacity(); } public int
-	 * nMaxNodes() { return nodes_.capacity(); } public int nMaxLinks() { return
-	 * links_.capacity(); } public int nMaxSegments() { return
-	 * segments_.capacity(); } public int nMaxLanes() { return
-	 * lanes_.capacity(); } public int nMaxSensors() { return
-	 * sensors_.capacity(); } public int nMaxSignals() { return
-	 * signals_.capacity(); } public int nMaxSdFns() { return sdFns_.capacity();
-	 * }
-	 */
 
 	// tomer - where is the capacity() function?
 
@@ -319,6 +308,7 @@ public class RoadNetwork {
 		}
 		return null;
 	}
+	/*
 	public SurvStation findSurvStation(int c) {
 		ListIterator<SurvStation> i = survStations_.listIterator();
 		while (i.hasNext()) {
@@ -351,10 +341,9 @@ public class RoadNetwork {
 		ListIterator<SurvStation> i = survStations_.listIterator();
 		while (i.hasNext()) {
 			SurvStation temp = i.next();
-			if (temp.measureTime_ < SimulationClock.getInstance().getCurrentTime()) {
-				temp.nextMeasureTime();
+			/*if (temp.measureTime_ < SimulationClock.getInstance().getCurrentTime()) {
+				temp.nextMeasureTime();*/
 				temp.aggregate();
-			}
 		}
 
 	}
@@ -416,7 +405,7 @@ public class RoadNetwork {
 	public List<Boundary> getBoundarys() {
 		return boundarys_;
 	}
-	public List<Surface> getSurfaces(){
+	public List<GeoSurface> getSurfaces(){
 		return surfaces_;
 	}
 	public SurvStation getLastSurvStation() {
@@ -447,7 +436,7 @@ public class RoadNetwork {
 	public void addBoundary(Boundary i) {
 		boundarys_.add(i);
 	}
-	public void addSurface(Surface i){
+	public void addSurface(GeoSurface i){
 		surfaces_.add(i);
 	}
 	public void addLabel(Label i) {
@@ -625,9 +614,10 @@ public class RoadNetwork {
 		for (i = 0; i < nBoundarys(); i++) {
 			boundarys_.get(i).translateInWorldSpace(worldSpace_);
 		}
-		// kerbpoint 位置平移
+		// kerbpoint 位置平移,创建包围盒
 		for(i=0;i < nSurfaces(); i++){
-			surfaces_.get(i).translateInWorldSpace(worldSpace_);
+//			surfaces_.get(i).translateInWorldSpace(worldSpace_);
+//			surfaces_.get(i).createAabBox();
 		}
 		// Sort outgoing and incoming arcs at each node.
 		// Make sure RN_Link::comp() is based on angle.
@@ -830,6 +820,7 @@ public class RoadNetwork {
 			e.printStackTrace();
 		}
 	}
+	/*
 	public void outputTaskSensorDataToOracle() {
 		String sql = "insert into sa.Sim_Task_DetState(SimTaskID,DetID, DetBelong, FTime, TTime,LaneCount,Flow, Velocity) values (?, ?, ?, ?, ?, ?, ?, ?)";
 		Connection con;
@@ -861,7 +852,7 @@ public class RoadNetwork {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}
-	}
+	}*/
 	public void outputVhcPosition() throws IOException {
 		Segment seg;
 		for (int i = 0; i < nSegments(); i++) {

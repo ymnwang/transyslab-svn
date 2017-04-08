@@ -9,7 +9,7 @@ import java.util.Random;
 
 import org.apache.commons.math3.analysis.function.Max;
 
-import com.transyslab.commons.renderer.JOGLFrameQueue;
+import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Lane;
@@ -25,14 +25,14 @@ public class MLPNetwork extends RoadNetwork {
 	private int newVehID_;
 	public MLPVehPool veh_pool;
 	public List<MLPVehicle> veh_list;
-	public List<Loop> loops;
+	public List<MLPLoop> loops;
 //	public Random sysRand;//已移动至父类
 
 	public MLPNetwork() {
 		newVehID_ = 0;
 		veh_pool = new MLPVehPool();
 		veh_list = new ArrayList<MLPVehicle>();
-		loops = new ArrayList<Loop>();
+		loops = new ArrayList<MLPLoop>();
 //		sysRand = new Random();
 	}
 
@@ -70,6 +70,13 @@ public class MLPNetwork extends RoadNetwork {
 	public void calcStaticInfo() {
 		superCalcStaticInfo();
 		organize();
+
+	}
+	public void createLoopSurface(){
+		// 创建 Loop面
+		for(MLPLoop loop:loops){
+			loop.createSurface();
+		}
 	}
 	public void setsdIndex() {
 		MLPSegment ps;
@@ -242,12 +249,12 @@ public class MLPNetwork extends RoadNetwork {
 		if (theSeg != null) {
 			for (int k = 0; k<theSeg.nLanes(); k++) {
 				theLane = (MLPLane) theSeg.getLane(k);
-				loops.add(new Loop(theLane, theSeg, theLink, name, dsp));
+				loops.add(new MLPLoop(theLane, theSeg, theLink, name, dsp));
 			}
 		}
 		
 	}
-	
+
 	public double loopStatistic(String det_name) {
 		if (loops.size()<1) {
 			System.err.println("no loops in network");
@@ -255,7 +262,7 @@ public class MLPNetwork extends RoadNetwork {
 		}
 		double n = 0.0;
 		double sum = 0.0;
-		for (Loop lp : loops) {
+		for (MLPLoop lp : loops) {
 			if (lp.detName.equals("det2")) {
 				n += lp.detectedSpds.size();
 				sum += lp.detectedSpds.size() / lp.harmmeanNClear();
@@ -294,7 +301,7 @@ public class MLPNetwork extends RoadNetwork {
 				vd.init(v,false,Math.min(1,v.VirtualType_));
 				//将vehicledata插入frame
 				try {
-					JOGLFrameQueue.getInstance().offer(vd, veh_list.size());
+					FrameQueue.getInstance().offer(vd, veh_list.size());
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

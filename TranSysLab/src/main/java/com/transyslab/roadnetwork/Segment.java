@@ -35,8 +35,8 @@ public class Segment extends CodedObject {
 	protected int localType_; // head, tail, etc
 	protected int sdIndex_; // index to the performance function
 
-	protected Point startPnt_;
-	protected Point endPnt_;
+	protected GeoPoint startPnt_;
+	protected GeoPoint endPnt_;
 	protected double bulge_;
 
 	protected double startAngle_;
@@ -90,16 +90,16 @@ public class Segment extends CodedObject {
 	public int getType() {
 		return (link_.type());
 	}
-	public Point getStartPnt() {
+	public GeoPoint getStartPnt() {
 		return startPnt_;
 	}
-	public Point getEndPnt() {
+	public GeoPoint getEndPnt() {
 		return endPnt_;
 	}
-	public void setStartPnt(Point p) {
+	public void setStartPnt(GeoPoint p) {
 		startPnt_ = p;
 	}
-	public void setEndPnt(Point p) {
+	public void setEndPnt(GeoPoint p) {
 		endPnt_ = p;
 	}
 	public double getLength() {
@@ -214,8 +214,8 @@ public class Segment extends CodedObject {
 		 * << y1 << endc << b << endc << x2 << endc << y2 << ">" << endl; }
 		 */
 		// int ans = initSuperArc(x1, y1, b, x2, y2);
-		startPnt_ = new Point(x1, y1);
-		endPnt_ = new Point(x2, y2);
+		startPnt_ = new GeoPoint(x1, y1);
+		endPnt_ = new GeoPoint(x2, y2);
 		bulge_ = -b;
 
 		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(startPnt_);
@@ -296,7 +296,7 @@ public class Segment extends CodedObject {
 		if (ups != null) {// not the first segment in the link
 			// Find the middle point
 
-			Point p = new Point(ups.getEndPnt(), getStartPnt(), 0.5);
+			GeoPoint p = new GeoPoint(ups.getEndPnt(), getStartPnt(), 0.5);
 
 			// Snap to the middle point
 

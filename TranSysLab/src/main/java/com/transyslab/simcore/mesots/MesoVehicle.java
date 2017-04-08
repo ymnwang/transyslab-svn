@@ -357,9 +357,9 @@ public class MesoVehicle extends Vehicle {
 				SurvStation tmp = i.next();
 				// 车辆是否经过检测断面
 				// 两个检测器之间距离需超过8米
-				if (distance_ <= tmp.position() && tmp.position() - distance_ < 8 && SensorIDFlag_ != tmp.getCode()) {
+				if (distance_ <= tmp.getPosition() && tmp.getPosition() - distance_ < 8 && SensorIDFlag_ != tmp.getCode()) {
 					SensorIDFlag_ = tmp.getCode();
-					tmp.sectionMeasure(currentSpeed_);
+					tmp.measure(currentSpeed_);
 				}
 
 			}

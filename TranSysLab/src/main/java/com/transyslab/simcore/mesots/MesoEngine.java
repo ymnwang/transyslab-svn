@@ -11,7 +11,7 @@ import java.util.List;
 import org.apache.commons.csv.CSVRecord;
 
 import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.renderer.JOGLFrameQueue;
+import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.PSO;
 import com.transyslab.commons.tools.Random;
@@ -330,7 +330,7 @@ public class MesoEngine extends SimulationEngine {
 				vd.init(Integer.parseInt(record.get(1)),Float.parseFloat(record.get(2)));
 				//½«vehicledata²åÈëframe
 				try {
-					JOGLFrameQueue.getInstance().offer(vd, Integer.parseInt(record.get(3)));
+					FrameQueue.getInstance().offer(vd, Integer.parseInt(record.get(3)));
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

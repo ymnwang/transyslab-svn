@@ -3,16 +3,16 @@ package com.transyslab.roadnetwork;
 import jhplot.math.LinearAlgebra;
 
 public class Boundary extends CodedObject {
-	protected Point startPnt_;
-	protected Point endPnt_;
+	protected GeoPoint startPnt_;
+	protected GeoPoint endPnt_;
 	protected int index_;
 	public Boundary() {
 
 	}
 	public void init(int code, double beginx, double beginy, double endx, double endy) {
 		setCode(code);
-		startPnt_ = new Point(beginx, beginy);
-		endPnt_ = new Point(endx, endy);
+		startPnt_ = new GeoPoint(beginx, beginy);
+		endPnt_ = new GeoPoint(endx, endy);
 		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(startPnt_);
 		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(endPnt_);
 		index_ = RoadNetwork.getInstance().nBoundarys();
@@ -22,13 +22,13 @@ public class Boundary extends CodedObject {
 		startPnt_ = world_space.worldSpacePoint(startPnt_);
 		endPnt_ = world_space.worldSpacePoint(endPnt_);
 	}
-	public Point getStartPnt() {
+	public GeoPoint getStartPnt() {
 		return startPnt_;
 	}
-	public Point getEndPnt() {
+	public GeoPoint getEndPnt() {
 		return endPnt_;
 	}
 	public double[] getDelta() {
-		return LinearAlgebra.minus(endPnt_.getLocations(), startPnt_.getLocations());
+		return LinearAlgebra.minus(endPnt_.getLocCoods(), startPnt_.getLocCoods());
 	}
 }

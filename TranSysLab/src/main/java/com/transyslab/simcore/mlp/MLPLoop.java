@@ -2,7 +2,9 @@ package com.transyslab.simcore.mlp;
 
 import java.util.LinkedList;
 
-public class Loop {
+import com.transyslab.roadnetwork.Loop;
+
+public class MLPLoop extends Loop{
 	String detName;
 	MLPLane lane;
 	MLPSegment segment;
@@ -11,10 +13,11 @@ public class Loop {
 	double distance;
 	LinkedList<Double> detectedSpds;
 	
-	public Loop(){
+	public MLPLoop(){
 		detectedSpds = new LinkedList<>();
 	}
-	public Loop(MLPLane LN, MLPSegment Seg, MLPLink LNK, String name, double dsp){
+	public MLPLoop(MLPLane LN, MLPSegment Seg, MLPLink LNK, String name, double dsp){
+		lane_ = LN;
 		lane = LN;
 		segment = Seg;
 		link = LNK;
@@ -30,7 +33,9 @@ public class Loop {
 		double dsp = seg.startDSP + seg.getLength()*present;
 		for (int i = 0; i < seg.nLanes(); i++) {
 			MLPLane ln = (MLPLane) seg.getLane(i);
-			mlp_network.loops.add(new Loop(ln, seg, lnk, name, dsp));
+			MLPLoop loop = new MLPLoop(ln, seg, lnk, name, dsp);
+			loop.position_ = (float) present;
+			mlp_network.loops.add(loop);
 		}
 	}
 	public String detect(String time){

@@ -8,7 +8,7 @@ import com.transyslab.roadnetwork.VehicleData;
 //渲染线程进行读操作，仿真线程进行写操作
 //一般而言，仿真的写入速度>渲染的读取速度
 //为了优先保证渲染读操作，当可读队列为空则马上与可写队列进行交换。
-public class JOGLFrameQueue {
+public class FrameQueue {
 	
 	//队列帧容量
     private final static int capacity_ = 60;
@@ -18,42 +18,42 @@ public class JOGLFrameQueue {
     private Condition notFull_;  
   
     //可读、可写队列  
-    private JOGLAnimationFrame[] writeArray_, readArray_;
+    private AnimationFrame[] writeArray_, readArray_;
     //队列操作数  
     private volatile int writeCount_, readCount_;
     //队列头尾索引  
     private int writeArrayHP_, writeArrayTP_, readArrayHP_, readArrayTP_;  
     
     //单例模式
-    private static JOGLFrameQueue theFrameQueue;
-    public static JOGLFrameQueue getInstance(){
+    private static FrameQueue theFrameQueue;
+    public static FrameQueue getInstance(){
     	if(theFrameQueue == null)
-    		 theFrameQueue = new JOGLFrameQueue(capacity_) ;
+    		 theFrameQueue = new FrameQueue(capacity_) ;
     	return theFrameQueue;
     }
     //main线程调用，初始化数组内元素
     public void initFrameQueue(){
     	
     	for(int i=0;i<capacity_;i++){
-    		writeArray_[i] = new JOGLAnimationFrame();
-    		readArray_[i] = new JOGLAnimationFrame();
+    		writeArray_[i] = new AnimationFrame();
+    		readArray_[i] = new AnimationFrame();
     	}
     }
-    public JOGLFrameQueue(int capacity){
+    public FrameQueue(int capacity){
 
         if(capacity<=0)  
         {  
             throw new IllegalArgumentException("Queue initial capacity can't less than 0!");  
         }  
           
-        readArray_ = new JOGLAnimationFrame[capacity];  
-        writeArray_ = new JOGLAnimationFrame[capacity];  
+        readArray_ = new AnimationFrame[capacity];  
+        writeArray_ = new AnimationFrame[capacity];  
         
         writeLock_ = new ReentrantLock();
         notFull_ = writeLock_.newCondition(); 
     }  
     //插入对象，非线程安全，由加锁函数offer调用保证线程安全
-    private void insert(JOGLAnimationFrame e)  
+    private void insert(AnimationFrame e)  
     {  
         writeArray_[writeArrayTP_] = e;  
         ++writeArrayTP_;
@@ -61,9 +61,9 @@ public class JOGLFrameQueue {
         ++writeCount_;  
     }  
     //取出对象 ，非线程安全，由加锁函数poll调用保证线程安全 
-    private JOGLAnimationFrame extract(boolean isPause)  
+    private AnimationFrame extract(boolean isPause)  
     {  
-    	JOGLAnimationFrame e = readArray_[readArrayHP_];
+    	AnimationFrame e = readArray_[readArrayHP_];
     	if(!isPause){
             ++readArrayHP_;
             //capacity-0
@@ -90,7 +90,7 @@ public class JOGLFrameQueue {
             else  
             {  
             	//队列引用交换
-            	JOGLAnimationFrame[] tmpArray = readArray_;  
+            	AnimationFrame[] tmpArray = readArray_;  
                 readArray_ = writeArray_;  
                 writeArray_ = tmpArray;
                 
@@ -115,7 +115,7 @@ public class JOGLFrameQueue {
         }  
     }  
 
-    public void offer(JOGLAnimationFrame e) throws InterruptedException 
+    public void offer(AnimationFrame e) throws InterruptedException 
     {  
         if(e == null)  
         {  
@@ -163,7 +163,7 @@ public class JOGLFrameQueue {
         	writeLock_.unlock();  
         }  
     }
-    public JOGLAnimationFrame poll(boolean isPause){
+    public AnimationFrame poll(boolean isPause){
     	//先判断可读队列是否为空
         if(readCount_<=0)  
         {

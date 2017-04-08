@@ -3,9 +3,15 @@
  */
 package com.transyslab.roadnetwork;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
+import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.roadnetwork.SurvStation;
+
+import oracle.jdbc.proxy.WeakIdentityHashMap;
 
 /**
  * //-------------------------------------------------------------------- //
@@ -18,20 +24,18 @@ import com.transyslab.commons.tools.SimulationClock;
  * @author YYL
  *
  */
-public class SurvStation extends CodedObject {
+public class SurvStation extends CodedObject implements Sensor{
 	protected int type_; // sensor type 1:loop; 2:microwave;3:video;4:kakou
 	protected int task_; // data items
 	protected Segment segment_; // pointer to segment
-	protected float distance_; // distance from the link end
 	protected float zoneLength_; // length of detection zone
 	protected float position_; // position in % from segment end
 	protected List<Sensor> sensors_; // array of pointers to sensors
-	protected boolean isLinkWide_; // (YYL) is it a section detector
 	protected int nSensors_; // (YYL) number of sensors
 	protected int index_; // (YYL) index in segment.survlist
-	protected int sectionCount_;
+	protected int recordedCount_;
 	protected float sectionAvgSpeed_;
-	protected float sectionSpeed_;
+	protected float recordedSpeed_;
 	protected float interval_;
 	protected float measureTime_;
 	protected List<Float> speedList_; // measure speed in specific time
@@ -39,32 +43,18 @@ public class SurvStation extends CodedObject {
 	protected List<Integer> flowList_; // measure flow in specific time
 										// interval_
 	// protected List<Integer> vhcidList_ = new ArrayList<Integer>();
+	protected GeoSurface surface;
 	public SurvStation() {
 		index_ = -1;
 		nSensors_ = 0;
-		isLinkWide_ = true;
-		sectionCount_ = 0;
+		recordedCount_ = 0;
 		sectionAvgSpeed_ = 0;
-		sectionSpeed_ = 0;
+		recordedSpeed_ = 0;
 	}
 	public int type() {
 		return type_;
 	}
-	public boolean isLinkWide() {
-		return isLinkWide_;
-	}
-	/*
-	 * public int isForEqBus() { return (SENSOR_FOR_EQUIPPED_BUS & type_); }
-	 * //IEM(Jul2) add 16 if for equipped buses only public int tasks(int flag
-	 * /*= 0x0FFFFFFF) { return (task_ & flag); } public int atask() { return
-	 * (task_ & SENSOR_AGGREGATE); } public int itask() { return (task_ &
-	 * SENSOR_INDIVIDUAL); } public int stask() { return (task_ &
-	 * SENSOR_SNAPSHOT); }
-	 */
 
-	public Segment segment() {
-		return segment_;
-	}
 	public Link getLink() {
 		// Returns the link contains the surveillance station
 		return segment_.getLink();
@@ -84,45 +74,28 @@ public class SurvStation extends CodedObject {
 	// there is no sensor in the ith lane.
 
 	public Sensor getSensor(int i) {
-		if (isLinkWide())
-			return sensors_.get(0);
-		else
-			return sensors_.get(i);
+		return sensors_.get(i);
 	}
 
 	// Connect ith point to the sensor
 
-	public void setSensor(int i, Sensor s) {
-		//
-		if (isLinkWide())
-			i = 0;
-		sensors_.add(i, s);
-	}
 	public float getInterval() {
 		return interval_;
 	}
-	public float distance() {
-		return distance_;
-	}
+
 	public float zoneLength() {
 		return zoneLength_;
 	}
-	public float position() {
+	public float getPosition() {
 		return position_;
 	}
-	public void nextMeasureTime() {
-		measureTime_ = measureTime_ + interval_;
-	}
-	public float getMeasureTime() {
-		return measureTime_;
-	}
+	/*
 	public void resetMeasureTime(){
 		measureTime_ = (float) SimulationClock.getInstance().getCurrentTime() + interval_;
-//		measureTime_ = 102 + interval_;
 		sectionAvgSpeed_ = 0;
-		sectionSpeed_ = 0;
-		sectionCount_ = 0;
-	}
+		recordedSpeed_ = 0;
+		recordedCount_ = 0;
+	}*/
 	public List<Float> getSpeedList() {
 		return speedList_;
 	}
@@ -146,7 +119,6 @@ public class SurvStation extends CodedObject {
 		position_ = (float) ((1.0 - pos) * segment_.getLength());
 		// (YYL)
 		sensors_ = new ArrayList<Sensor>();
-		distance_ = (float) (segment_.getDistance() + position_);
 
 		if (segment_.getSurvList() == null)
 			segment_.survList_ = new ArrayList<SurvStation>();
@@ -156,9 +128,42 @@ public class SurvStation extends CodedObject {
 
 		return 0;
 	}
-
+	/*
+	public void outputToOracle(PreparedStatement ps) throws SQLException {
+		int num = flowList_.size();
+		int lanenum;
+		// 卡口和视频属于断面检测
+		if (type_ == 2 || type_ == 3)
+			lanenum = station.nSensors_;
+		else
+			lanenum = station_.segment_.nLanes();
+		for (int i = 0; i < num; i++) {
+			Date date1 = LinkTimes.getInstance().toDate(i);
+			Date date2 = LinkTimes.getInstance().toDate((i + 1));
+			// simtaskid，写死注意更改
+			ps.setInt(1, 5);
+			// 视频或卡口
+			if (station_.type_ == 2 || station_.type_ == 3)
+				ps.setInt(2, station_.getCode());
+			else// 线圈
+				ps.setInt(2, getCode());
+			ps.setInt(3, station_.type_);
+			ps.setDate(4, new java.sql.Date(date1.getTime()));
+			ps.setTimestamp(4, new java.sql.Timestamp(date1.getTime()));
+			ps.setDate(5, new java.sql.Date(date2.getTime()));
+			ps.setTimestamp(5, new java.sql.Timestamp(date2.getTime()));
+			ps.setInt(6, lanenum);
+			ps.setInt(7, Math.round((float) (station_.flowList_.get(i)) / (float) lanenum));
+			if (Float.isNaN(station_.speedList_.get(i))) {
+				System.out.println("x");
+			}
+			ps.setFloat(8, station_.speedList_.get(i));
+			ps.addBatch();
+		}
+		ps.executeBatch();
+	}
 	// computes the flow across the section - used in incident detection
-
+/*
 	public int sumLaneCount() {
 		int sum = 0;
 
@@ -177,37 +182,45 @@ public class SurvStation extends CodedObject {
 		}
 		sumspeed = sumspeed / nSensors_;
 		return sumspeed;
-	}
-	public int getSectionCount() {
-		return sectionCount_;
-	}
-	public float getSectionAvgSpeed() {
-		sectionAvgSpeed_ = sectionSpeed_ / (sectionCount_);
-		return sectionAvgSpeed_;
-	}
-	public void sectionMeasure(float vehspeed) {
-		sectionCount_++;
-		// 转换为km/h
-		vehspeed = 3.6f * vehspeed;
-		if (vehspeed > Constants.SPEED_EPSILON) {
-			sectionSpeed_ += 1.0f / vehspeed;
-		}
-		else {
-			sectionSpeed_ += 1.0f / Constants.SPEED_EPSILON;
-		}
-	}/*
+	}*/
+
+	/*
 		 * public void addVehicleID(MESO_Vehicle pv){
 		 * vhcidList_.add(pv.get_code()); }
 		 */
 	public void aggregate() {
-		flowList_.add(sectionCount_);
-		if (sectionCount_ != 0)
-			sectionAvgSpeed_ = (sectionCount_) / sectionSpeed_;
+		flowList_.add(recordedCount_);
+		if (recordedCount_ != 0)
+			sectionAvgSpeed_ = (recordedCount_) / recordedSpeed_;
 		else
 			sectionAvgSpeed_ = 0.0f;
 		speedList_.add(sectionAvgSpeed_);
-		sectionCount_ = 0;
-		sectionSpeed_ = 0.0f;
+		recordedCount_ = 0;
+		recordedSpeed_ = 0.0f;
 	}
-
+	@Override
+	public void measure(float speed) {
+		recordedCount_++;
+		// 转换为km/h
+		speed = 3.6f * speed;
+		if (speed > Constants.SPEED_EPSILON) {
+			recordedSpeed_ += 1.0f / speed;
+		}
+		else {
+			recordedSpeed_ += 1.0f / Constants.SPEED_EPSILON;
+		}
+		
+	}
+	@Override
+	public void record() {
+		
+	}
+	@Override
+	public void createSurface(){
+		GeoPoint startPnt = new GeoPoint(segment_.getStartPnt(),segment_.getEndPnt(), position_);
+		double lenScale = zoneLength_/segment_.getLength();
+		GeoPoint endPnt = new GeoPoint(startPnt,segment_.getEndPnt(),lenScale);
+		double width = segment_.nLanes_ * segment_.getLeftLane().getWidth();
+		surface = GeoUtil.lineToRectangle(startPnt, endPnt, width);
+	}
 }

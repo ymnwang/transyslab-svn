@@ -12,7 +12,7 @@ import java.util.concurrent.FutureTask;
 
 import javax.swing.SwingUtilities;
 
-import com.transyslab.commons.renderer.JOGLFrameQueue;
+import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.gui.MainWindow;
@@ -123,7 +123,7 @@ public class Meso {
 				drawnetwork.render();
 			}
 		});
-		JOGLFrameQueue.getInstance().initFrameQueue();
+		FrameQueue.getInstance().initFrameQueue();
 		//延迟开始仿真任务
 		try {
 			Thread.sleep(5000);

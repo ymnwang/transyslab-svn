@@ -67,14 +67,14 @@ public class MLPEngine extends SimulationEngine{
 	@Override
 	public void run(int mode) {//0: no display 1: with display
 		switch (mode) {
-		case 0:
+		case 1:
 			//Engine参数与状态的初始化
 			resetEngine(0, 6900, 0.2);
 			//优化参数设置
 			setOptParas(null);
 			while (simulationLoop()>=0);
 			break;
-		case 1:
+		case 0:
 			//Engine参数与状态的初始化
 			resetEngine(0, 6900, 0.2);
 			//优化参数设置
@@ -265,6 +265,7 @@ public class MLPEngine extends SimulationEngine{
 		MLPNetwork.getInstance().calcStaticInfo();
 		// 读取检测器
 		MLPSetup.ParseSensorTables();
+		MLPNetwork.getInstance().createLoopSurface();
 		return 0;
 	}
 	

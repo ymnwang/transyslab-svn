@@ -21,9 +21,9 @@ import com.transyslab.roadnetwork.Boundary;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Path;
 import com.transyslab.roadnetwork.PathTable;
-import com.transyslab.roadnetwork.Point;
+import com.transyslab.roadnetwork.GeoPoint;
 import com.transyslab.roadnetwork.Sensor;
-import com.transyslab.roadnetwork.Surface;
+import com.transyslab.roadnetwork.GeoSurface;
 import com.transyslab.roadnetwork.SurvStation;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.mesots.MesoLane;
@@ -36,7 +36,7 @@ import com.transyslab.simcore.mesots.MesoSegment;
 import com.transyslab.simcore.mesots.MesoVehicle;
 import com.transyslab.simcore.mesots.MesoVehicleList;
 import com.transyslab.simcore.mesots.MesoVehicleTable;
-import com.transyslab.simcore.mlp.Loop;
+import com.transyslab.simcore.mlp.MLPLoop;
 import com.transyslab.simcore.mlp.MLPLane;
 import com.transyslab.simcore.mlp.MLPLink;
 import com.transyslab.simcore.mlp.MLPNetwork;
@@ -248,7 +248,7 @@ public class XmlParser {
 
 			}
 			//创建Surface对象，用于绘制路面，与仿真模型无关
-			Surface surface = new Surface();
+			GeoSurface surface = new GeoSurface();
 			surface.init(tmpsurface, arcid);
 			List<Element> kerblist = node.elements();
 			for(Element p : kerblist){
@@ -259,7 +259,7 @@ public class XmlParser {
 					if(attr.getName()=="KerbY")
 						kerby = Double.parseDouble(attr.getValue());
 				}
-				surface.addKerbPoint(new Point(kerbx,kerby));
+				surface.addKerbPoint(new GeoPoint(kerbx,kerby));
 			}
 			
 		}
@@ -544,7 +544,7 @@ public class XmlParser {
 			if (AppSetup.modelType == 1) {
 				SurvStation tmp = new SurvStation();
 				tmp.init(type, interval, zone, segid, id, pos);
-				List<Element> childofp = node.elements();
+				/*List<Element> childofp = node.elements();
 				for (Element lofp : childofp) {
 					// station元素下的子元素sensor
 					List<Attribute> listofl = lofp.attributes();
@@ -556,10 +556,10 @@ public class XmlParser {
 					}
 					Sensor tsensor = new Sensor();
 					tsensor.init(sid, lid);
-				}
+				}*/
 			}
 			else if (AppSetup.modelType == 2) {
-				Loop tmpLoop = new Loop();
+				MLPLoop tmpLoop = new MLPLoop();
 				tmpLoop.init(detName, segid, pos);
 			}
 		}

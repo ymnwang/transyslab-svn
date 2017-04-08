@@ -11,8 +11,8 @@ import java.util.ListIterator;
 import org.apache.commons.csv.CSVRecord;
 
 import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.renderer.JOGLAnimationFrame;
-import com.transyslab.commons.renderer.JOGLFrameQueue;
+import com.transyslab.commons.renderer.AnimationFrame;
+import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.tools.Random;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
@@ -293,7 +293,7 @@ public class MesoNetwork extends RoadNetwork {
 		for(i=0;i<nSurvStation();i++){
 			survStations_.get(i).getflowList().clear();
 			survStations_.get(i).getSpeedList().clear();
-			survStations_.get(i).resetMeasureTime();
+//			survStations_.get(i).resetMeasureTime();
 		}
 	}
 
@@ -351,7 +351,7 @@ public class MesoNetwork extends RoadNetwork {
 					vd.init(vhc,true,0);
 					//½«vehicledata²åÈëframe
 					try {
-						JOGLFrameQueue.getInstance().offer(vd, MesoVehicle.nVehicles());
+						FrameQueue.getInstance().offer(vd, MesoVehicle.nVehicles());
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
