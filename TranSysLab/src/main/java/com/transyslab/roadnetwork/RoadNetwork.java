@@ -783,7 +783,7 @@ public class RoadNetwork {
 			}
 			JdbcUtils.release(con, null, ps);
 		}
-		catch (ClassNotFoundException | SQLException e) {
+		catch (SQLException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}
@@ -799,7 +799,7 @@ public class RoadNetwork {
 			}
 			JdbcUtils.release(con, null, ps);
 		}
-		catch (ClassNotFoundException | SQLException e) {
+		catch (SQLException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}
@@ -815,7 +815,7 @@ public class RoadNetwork {
 			}
 			JdbcUtils.release(con, null, ps);
 		}
-		catch (ClassNotFoundException | SQLException e) {
+		catch (SQLException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}

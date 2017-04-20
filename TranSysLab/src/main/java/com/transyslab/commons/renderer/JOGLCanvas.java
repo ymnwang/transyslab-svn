@@ -118,6 +118,9 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 
 		// ----- Your OpenGL initialization code here -----
 		this.addMouseListener(this);
+		this.addKeyListener(this);
+		this.addMouseWheelListener(this);
+		this.addMouseMotionListener(this);
 		this.textRenderer = new TextRenderer(new Font("SansSerif", Font.BOLD, 100));
 
 	}
@@ -236,6 +239,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					Constants.COLOR_WHITE);
 
 		}
+//		gl.glReadPixels(x, y, width, height, format, type, pixels_buffer_offset);
 		//…‰œﬂ≤‚ ‘
 		/*
 		float[] rayDir = calcRay(gl, 0.0f,2);

@@ -5,6 +5,7 @@ import com.transyslab.roadnetwork.GeoPoint;
 import com.transyslab.roadnetwork.GeoSurface;
 
 import jhplot.math.LinearAlgebra;
+import math.geom3d.Vector3D;
 
 public class GeoUtil {
 	public static GeoPoint intersect(Boundary upBound, Boundary dnBound) {
@@ -45,7 +46,13 @@ public class GeoUtil {
 			// coods.X
 			translation[0] = (-vecDir[1]/vecDir[0]) * translation[1];
 		}
-		// 矩形四个顶点，顺序按顺时针或逆时针
+		Vector3D normVec = new Vector3D(translation[0],translation[1],translation[2]);
+		Vector3D dirVec = new Vector3D(vecDir[0],vecDir[1],vecDir[2]);
+		normVec = Vector3D.crossProduct(normVec, dirVec);
+		if(normVec.getZ()<0)
+			// z>=0的面朝上，适应opengl右手坐标系
+			LinearAlgebra.divide(translation, -1);
+		// 矩形四个顶点，按逆时针顺序存储
 		sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
 		sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
 		sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
