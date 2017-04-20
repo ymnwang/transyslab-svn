@@ -10,6 +10,7 @@ import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
+import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.roadnetwork.Boundary;
 import com.transyslab.roadnetwork.CodedObject;
 import com.transyslab.roadnetwork.Constants;
@@ -195,7 +196,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				*/
 				for(int i=0;i<drawableNetwork_.nLanes();i++){
 					GeoSurface laneSf = drawableNetwork_.getLane(i).getLaneSurface();
-					if(laneSf.getAabBox().intersectsRay(raycast)){
+					if(GeoUtil.isIntersect(raycast,laneSf)){
 						//被选中对象用黄色渲染
 						laneSf.setSelected(true);
 						pickedObject.add(laneSf);
