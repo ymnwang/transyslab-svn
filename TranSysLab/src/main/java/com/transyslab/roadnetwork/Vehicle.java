@@ -4,6 +4,9 @@
 package com.transyslab.roadnetwork;
 import java.util.HashMap;
 
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+
 import com.transyslab.commons.tools.SimulationClock;
 
 /**
@@ -11,7 +14,7 @@ import com.transyslab.commons.tools.SimulationClock;
  *
  * @author YYL 2016-6-3
  */
-public class Vehicle extends CodedObject {
+public abstract class Vehicle extends CodedObject {
 
 	protected int type_; // vehicle type and class
 
@@ -74,6 +77,14 @@ public class Vehicle extends CodedObject {
 
 	} // called by init()
 
+	//wym
+	public void initPath(Node oriNode, Node desNode) {
+		GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(RoadNetwork.getInstance(), oriNode, desNode);
+		path_ = new Path(gpath);
+		//调试阶段暂时固定路径
+		fixPath();
+	}
+	
 	public int init(int id, int t, ODPair od, Path p) {
 		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
@@ -136,7 +147,7 @@ public class Vehicle extends CodedObject {
 
         return 1;
     }
-	public int initBus(int bid, ODPair od, Path p) {
+    public int initBus(int bid, ODPair od, Path p) {
 		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
 		int threadid = hm.get(Thread.currentThread().getName()).intValue();
 		int c;
@@ -297,6 +308,12 @@ public class Vehicle extends CodedObject {
 	public int infoType() {
 		return isGuided();
 	}
+	
+	//wym
+	public void fixPath() {
+		type_ |= Constants.VEHICLE_FIXEDPATH;
+	}
+	
 	public float departTime() {
 		return departTime_;
 	}
@@ -321,9 +338,7 @@ public class Vehicle extends CodedObject {
 
 	// Current link the vehicle stays
 
-	public Link getLink() {
-		return null;
-	}
+	public abstract Link getLink();
 	public Segment getSegment() {
 		return null;
 	}
@@ -447,12 +462,12 @@ public class Vehicle extends CodedObject {
 				advancePathIndex();
 			}
 			else { // decide whether to switch
-					// node.routeSwitchingModel(this,null);
+					 node.routeSwitchingModel(this,null);
 			}
 		}
 		else { // no path assigned
 				// generate route dynamically
-				// node.routeGenerationModel(this);
+				 node.routeGenerationModel(this);
 		}
 	}
 	public void PretripChoosePath(ODCell od) {
@@ -467,12 +482,10 @@ public class Vehicle extends CodedObject {
 			// 由于无最短路径计算，这里不更新路径，由pretrip路径决定直到车辆到达目的地
 			// pathtable决定的路径只有一条
 			// 改变了源程序的运行逻辑
-			setPath(od.paths_.get(0));
-			nextLink_ = path_.getFirstLink();
-			// od.oriNode().routeSwitchingModel(this, od);
+			 od.getOriNode().routeSwitchingModel(this, od);
 		}
 		else { // At origin and no path specified for the OD pair
-				// od.oriNode().routeGenerationModel(this);
+				 od.getOriNode().routeGenerationModel(this);
 		}
 	}
 
@@ -489,6 +502,11 @@ public class Vehicle extends CodedObject {
 				// od_.getOriNode().routeGenerationModel(this);
 		}
 	}
+	
+	public Route routingInfo() {
+		//暂不区分guidance
+		return (Route) Route.getInstance();
+	}
 
 	// MOE
 
@@ -497,6 +515,9 @@ public class Vehicle extends CodedObject {
 	}
 	public float timeEntersLink() {
 		return timeEntersLink_;
+	}
+	public void timeEntersLink(float arg) {
+		timeEntersLink_ = arg;
 	}
 
 	// Returns the time spent in this link

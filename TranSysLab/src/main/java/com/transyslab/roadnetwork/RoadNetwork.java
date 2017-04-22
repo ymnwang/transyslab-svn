@@ -8,16 +8,18 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 
+import org.jgrapht.graph.SimpleDirectedWeightedGraph;
+
 import com.transyslab.commons.io.JdbcUtils;
+import com.transyslab.commons.tools.EngTread;
 import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.simcore.EngTread;
 
 /**
  * roadnetwork
  *
  * @author YYL 2016-6-4
  */
-public class RoadNetwork {
+public class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link>{
 
 	// These default initial number of objects
 
@@ -77,6 +79,7 @@ public class RoadNetwork {
 	// public static String getName() { return name_; }
 	// public static char **nameptr() { return &name_; }
 	public RoadNetwork() {
+		super(Link.class);
 		description_ = null;
 		// name_ = "network.xml";
 		nDestNodes_ = 0;

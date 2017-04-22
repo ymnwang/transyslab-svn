@@ -6,7 +6,7 @@ import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngThread;
 
 //同步扰动随机逼近算法
-public class SPSA extends Thread{
+public class SPSA extends SchedulerThread{
 	private int dims_;
 	//需要标定的参数，已做归一化操作
 	private float[] parameters_;
@@ -23,17 +23,18 @@ public class SPSA extends Thread{
 	private double gamma_;
 	private double perturbationStep_;
 	private int[] perturbationValue_;
-	private TaskCenter taskCenter;
 	private int iterationLim;
 	private double fitness;
 	//二项分布
 	private BinomialDistribution bd_;
 	
 	public SPSA(){
+		super("Unknown", null);//不作为SchedulerThread使用
 		//伯努利分布
-		bd_ = new BinomialDistribution(1,0.5);
+		bd_ = new BinomialDistribution(1,0.5);		
 	}
 	public SPSA(int dims){
+		super("Unknown", null);//不作为SchedulerThread使用
 		dims_ = dims;
 		parameters_ = new float[dims];
 		newPara = new float[3][dims];
@@ -42,14 +43,14 @@ public class SPSA extends Thread{
 		perturbationValue_ = new int[dims];
 	}
 	public SPSA(int dims,String threadName, TaskCenter tc ){
+		super(threadName,tc);
 		dims_ = dims;
 		parameters_ = new float[dims];
 		newPara = new float[3][dims];
 		bd_ = new BinomialDistribution(1,0.5);
 		gradient_ = new double[dims];
 		perturbationValue_ = new int[dims];
-		setName(threadName);
-		taskCenter = tc;
+		
 		fitness = Double.MAX_VALUE;
 	}
 	public int getDimention(){
@@ -145,46 +146,33 @@ public class SPSA extends Thread{
 	public void setMaxGeneration(int arg) {
 		iterationLim = arg;
 	}
-	public double[] organizeTask(int idx, float[] arg){
-		double[] ans = new double[dims_ + 1];
-		ans[0] = (double) idx;
-		for (int k = 0; k < dims_; k++) {
-			ans[k+1] = arg[k];
-		}
-		return ans;
-	}
+	
 	@Override
 	public void run(){
 		for (int i = 0; i < iterationLim; i++) {
-			taskCenter.setTaskAmount(3);
+			resetTaskPool(3);
 
 			//扰动参数，更新第一、二个engine的参数
 			perturbation(i, newPara[0], newPara[1]);
 			newPara[2] = inverseNomal(parameters_);
 			long tb = System.currentTimeMillis();
 			for (int j = 0; j < 3; j++) {
-				double[] tmp = organizeTask(j, newPara[j]);
-				try {
-					taskCenter.undoneTasks.put(tmp);//dispatch task
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				dispatchTask(j, newPara[j]);
 			}
-			if(taskCenter.getResult(2)<fitness)
-				fitness = taskCenter.getResult(2);
+			if(fetchResult(2)<fitness)
+				fitness = fetchResult(2);
 			
 			System.out.println("Gbest : " + fitness);
 			System.out.println("Position : " + showGBestPos());
 			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
 			if(i!=iterationLim-1){
 				//梯度逼近
-				estimateGradient(taskCenter.getResult(0), taskCenter.getResult(1));
+				estimateGradient(fetchResult(0), fetchResult(1));
 				//更新spsa里面的parameter（属于[0,1]区间），同时更新第三个engine的参数
 				updateParameters(i);
 			}
 		}
-		taskCenter.Dismiss();//stop eng线程。
+		dismissAllWorkingThreads();//stop eng线程。
 	}
 	public static void main(String[] args) {
 		int maxGeneration = 2000;

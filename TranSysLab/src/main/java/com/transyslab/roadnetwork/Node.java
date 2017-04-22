@@ -6,6 +6,8 @@ package com.transyslab.roadnetwork;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.transyslab.commons.tools.SimulationClock;
+
 /**
  *
  * @author YYL 2016-5-24
@@ -161,6 +163,7 @@ public class Node extends CodedObject {
 		super.setName(n);
 		index_ = RoadNetwork.getInstance().nNodes();
 		RoadNetwork.getInstance().addNode(this);
+		RoadNetwork.getInstance().addVertex(this);//graph
 		return 0;
 	}/*
 		 * public void print(){
@@ -170,6 +173,304 @@ public class Node extends CodedObject {
 	public void superCalcStaticInfo() {
 
 	}
+	
+	public void routeGenerationModel(Vehicle pv){
+		// the link by which vehicle pv came
+		
+		Link slink = pv.getLink();
+
+		if (slink!=null && slink.getDnNode() != this) {
+			// Error in calling this function
+			pv.donePathIndex();
+			return;
+		}
+
+		// destination node of this vehicle
+
+		Node  dnode = pv.desNode();
+
+		if (nDnLinks() < 1 || this == dnode) {
+			// reached destination
+			pv.donePathIndex();
+			return;
+		}
+
+		double[] util = new double [nDnLinks()];
+		double NOT_CONNECTED = Double.POSITIVE_INFINITY - 1.0;
+
+		Route info = pv.routingInfo();
+
+		double sum = 0.0;		// sum of utilities
+		double cost;			// travel time
+		int i;
+		int itype = pv.infoType(); // to be checked
+		float beta = Parameter.routingBeta(itype);
+		double entry = SimulationClock.getInstance().getCurrentTime();
+
+		// expected travel time from this node to destination node
+
+		double cost0;
+		Link  plink;
+
+		if (slink != null) {
+
+			cost0 = info.dnRouteTime(slink, dnode, entry);
+			entry += info.linkTime(slink.getIndex(), entry);
+
+		} else {
+			cost0 = Double.POSITIVE_INFINITY;
+			for (i = 0; i < nDnLinks(); i ++) {
+				plink = getDnLink(i);//当前节点的下游节段
+				cost = info.upRouteTime(plink, dnode, entry);
+
+				if (cost < cost0) {
+					cost0 = cost;
+				}
+			}
+		}
+
+		plink = null;
+		for (i = 0; i < nDnLinks(); i ++) {
+			plink = getDnLink(i);
+
+			if (slink!=null && (slink.isMovementAllowed(plink))==0) {
+
+				util[i] = 0.0;	// Turn is not allowed
+
+			} else if ((plink.isCorrect(pv))==0) {
+
+				util[i] = 0.0;	// Can not use the link
+
+			} else if ((cost = info.upRouteTime(
+					plink, dnode, entry)) >= NOT_CONNECTED) {
+
+				util[i] = 0.0;	// Not connected to destination
+
+			} else if (cost < cost0 * Parameter.getInstance().validPathFactor()) {
+
+				// Cost1 is the travel time on next link.
+
+				double cost1 = info.linkTime(plink, entry);
+
+				// Cost2 is the travel time on the shorted path from the
+				// downstream end of plink to pv's destination.
+
+				double cost2 = cost - cost1;
+
+				// Add the diversion penalty if change from freeway to
+				// ramp/urban
+
+
+				// tomer - adding restriction such that the driver doesn't choose 
+				// a link that takes it further away from the destination.			
+
+				if (Parameter.getInstance().rationalLinkFactor() * cost2 <= cost0) {
+					double cost3;
+
+					if (slink != null &&
+							slink.linkType() == Constants.LINK_TYPE_FREEWAY &&
+							plink.linkType() != Constants.LINK_TYPE_FREEWAY) {
+						cost3 = Parameter.getInstance().diversionPenalty();
+					} else {
+						cost3 = 0;
+					}
+
+					cost = cost1 + cost2 + cost3;
+
+					util[i] = Math.exp(beta * cost / cost0);
+					sum += util[i];
+					//System.out.println(" util "+util[i]+" cost "+cost+" cost0 "+cost0+" cost1 "+cost1+" cost2 "+cost2+" cost3 "+cost3);
+				}
+			} else { 
+				//System.out.println("--"+plink.get_code()+" "+dnode.get_code());
+				util[i] = 0.0;	// this path is too long or contains a cycle
+			}
+
+		}
+
+		// Select one of the outgoing links based on the probabilities
+		// calculated using a logit model
+
+		if (sum > 0.0) {	// At least one link is valid sum > Constants.DBL_EPSILON
+
+			// a uniform (0,1] random number
+
+			double rnd = RoadNetwork.getInstance().sysRand.nextDouble();
+			double cdf;
+			for (i = nDnLinks() - 1, cdf = util[i] / sum;
+					i > 0 && rnd > cdf;
+					i --) {
+				cdf += util[i-1] / sum;
+			}
+			pv.setPathIndex(getDnLink(i).getIndex());
+			//System.out.println(getDnLink(i).get_code());
+
+		} else {			// No link is valid
+
+			if (slink==null ||		// not enter the network yet
+					type(Constants.NODE_TYPE_EXTERNAL)!=0) {
+
+				// will be removed (ori or external node)
+
+				pv.donePathIndex();
+
+			} else if ((i = slink.getRightDnIndex()) != 0xFF) {
+
+				// choose the right most link, hopefully it is a off-ramp if
+				// freeway
+
+				pv.setPathIndex(getDnLink(i).getIndex());
+
+
+			} else {			// no where to go
+
+				pv.donePathIndex();
+			}
+		}
+	}
+
+    // For vehicles that already has a path, they use this function
+    // to check whether they should keep their current paths or
+    // enroute
+      
+    public void routeSwitchingModel(Vehicle pv, ODCell od){
+    	// the link from which the vehicle pv came
+
+    	   Link slink = pv.getLink();
+
+    	   if (slink!=null && slink.getDnNode() != this) {
+
+    	      // Error in calling this function
+
+    	      pv.donePathIndex();
+    	      return;
+    	   }
+
+    	   // destination node of this vehicle
+
+    	   Node dnode = pv.desNode();
+
+    	   // Information used to routing the vehicle
+
+    	   Route info = pv.routingInfo();
+
+    	  // RN_PathPointer pp;
+    	   int flag;
+    	   int i, j, n;
+    	   float cost;
+
+    	   //Vector<Pointer<RN_PathPointer> ALLOCATOR> choices;
+    	   //Vector<float ALLOCATOR> costs;
+    	   ArrayList<Float>costs = new ArrayList<>();
+    	   ArrayList<Path>choices = new ArrayList<>();
+    	   // Prepare the choice sets and find the shortest route
+    	   
+    	   float smallest = Float.POSITIVE_INFINITY;
+    	   if (slink!=null) {					// enroute
+    		  for (i = 0; i < slink.nPaths(); i ++) {
+    			 Path pp = slink.pathPointer(i);
+    			 if (pp.getDesNode() == dnode) { // goes to my desination
+    				// add to my choice set
+    				cost = pp.cost(info);
+    				costs.add(cost);
+    				choices.add(pp);
+    				if (cost < smallest) {
+    				   smallest = cost;
+    				}
+    			 }
+    		  }
+    		  flag = 1;
+    	   } else {						// at the origin
+    		  for (i = 0; i < nDnLinks(); i ++) { // check each out going link
+    			 slink = getDnLink(i);
+    			 for (j = 0; j < slink.nPaths(); j ++) { // each path
+    				 Path pp = slink.pathPointer(j);
+
+    				// Dan: bus run paths should not be considered
+
+    			//	if (!theBusAssignmentTable || 
+    	        //                        (theBusAssignmentTable && !theBusRunTable.findPath(pp.path().code()))) 
+    				 
+    			          if (pp.getDesNode() == dnode && // goes to my desination
+    			              (od!=null || pp.IsUsedBy(od))) {// this path should be also in my ODCell path set
+    				       // add to my choice set
+    				       cost = pp.cost(info);
+    				       costs.add(cost);
+    				       choices.add(pp);
+    				       if (cost < smallest) {
+    				            smallest = cost;
+    				       }
+    			          }
+    				
+    			 }
+    		  }
+    		  flag = 0;
+    	   }
+
+    	   n = choices.size();
+
+    	   if (n > 1) {
+
+    		  // Find the utility of choosing each route
+
+    		  double util[] = new double[n];
+    		  int itype = pv.infoType();
+    		  float beta = Parameter.routingBeta(itype);
+    		  float alpha = Parameter.getInstance().commonalityFactor();
+    		  double sum = 0.0;		// sum of utilities
+
+    		  for (i = 0; i < n; i ++) {
+    			  Path pp = choices.get(i);
+    			 // diversion penalty
+    			//wym 更改判断逻辑 考虑到在行驶中改变path 原逻辑： && pp != pv.path()
+    			 if (flag==1 && pv.path_.links_.containsAll(pp.links_)) {
+    				cost = Parameter.getInstance().pathDiversionPenalty();
+    			 } else {
+    				cost = 0;
+    			 }
+    			 cost += costs.get(i);
+    			 util[i] = Math.exp(beta * cost / smallest + alpha * pp.cf());
+    			 sum += util[i];
+    		  }
+    		 
+    		  // Select path based on the probabilities calculated using a
+    		  // logit model
+
+    		  if (sum > 0.0) {
+
+    			 // a uniform (0,1] random number
+
+    			 double rnd = RoadNetwork.getInstance().sysRand.nextDouble();
+
+    			 double cdf;
+    			 for (i = n - 1, cdf = util[i] / sum;
+    				  i > 0 && rnd > cdf;
+    				  i --) {
+    				cdf += util[i-1] / sum;
+    			 }
+    		  } else {
+    			 i = RoadNetwork.getInstance().sysRand.nextInt(choices.size());
+    		  }
+
+    		  Path pp = choices.get(i);
+    		  pv.setPath(pp, flag);
+
+
+    	   } else if (n==1) {				// n == 1
+
+    		  Path pp = choices.get(0);
+    		  pv.setPath(pp, flag);
+
+    	   } else {
+
+    	      // No available path at this node. Switch to route generation
+    	      // model
+
+    	      pv.setPath(null);
+    	      routeGenerationModel(pv);
+    	   }
+    }
+	
 
 	// Dynamically generate vehicle path
 	/*

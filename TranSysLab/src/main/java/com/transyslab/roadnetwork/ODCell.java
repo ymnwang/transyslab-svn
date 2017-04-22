@@ -4,6 +4,10 @@
 package com.transyslab.roadnetwork;
 import java.util.Vector;
 
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+
+import com.jogamp.newt.awt.NewtCanvasAWT;
 import com.transyslab.commons.tools.Random;
 import com.transyslab.commons.tools.SimulationClock;
 
@@ -326,7 +330,14 @@ public class ODCell {
 				// headway_);
 			}
 			else
+			{
 				pv.init(0, type_, od_, null);
+				
+				//wym
+				pv.initPath(od_.getOriNode(), od_.getDesNode());
+			}		
+			
+			
 
 			// Find the first link to travel. Variable 'oriNode', 'desNode' and
 			// 'type' must have valid values before the route choice model is
@@ -359,7 +370,11 @@ public class ODCell {
 	// Return a route if path table and splits are specified
 
 	Path chooseRoute(Vehicle pv) {
-		int i = (Random.getInstance().get(2)).drandom(nPaths(), splits_);
+//		int i = (Random.getInstance().get(2)).drandom(nPaths(), splits_);
+		double r = RoadNetwork.getInstance().sysRand.nextDouble();
+		int n = nPaths();
+		int i;
+		for (n = n - 1, i = 0; i < n && r > splits_[i]; i++);
 		return path(i);
 	}
 	public ODCell workingCell() {

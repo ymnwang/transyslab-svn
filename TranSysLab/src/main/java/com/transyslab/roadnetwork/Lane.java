@@ -469,5 +469,5 @@ public class Lane extends CodedObject {
 	public double getDistance() {
 		return segment_.getDistance();
 	}
-
+	
 }

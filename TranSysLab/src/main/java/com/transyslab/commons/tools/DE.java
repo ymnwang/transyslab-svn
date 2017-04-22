@@ -16,7 +16,7 @@ import com.transyslab.simcore.mlp.MLPEngine;
  * @author yali
  *
  */
-public class DE extends Thread{
+public class DE extends SchedulerThread{
 
 	private float F_;
 	private Individual[] newidvds_;
@@ -29,15 +29,13 @@ public class DE extends Thread{
 	private float gbestFitness_;
 	private float[] gbest_;
 	
-	private TaskCenter taskCenter;
 	private int iterationLim;
 
-	public DE() {
-
+	public DE() {//旧代码中使用DE，但不作为SchedulerThread使用
+		super("Unknown", null);
 	}
 	public DE(String threadName, TaskCenter tc) {
-		setName(threadName);
-		taskCenter = tc;
+		super(threadName, tc);
 	}
 	public int getDim() {
 		return dims_;
@@ -134,14 +132,7 @@ public class DE extends Thread{
 	public void setMaxGeneration(int arg) {
 		iterationLim = arg;
 	}
-	public double[] organizeTask(int idx, float[] arg){
-		double[] ans = new double[dims_ + 1];
-		ans[0] = (double) idx;
-		for (int k = 0; k < dims_; k++) {
-			ans[k+1] = arg[k];
-		}
-		return ans;
-	}
+	
 	public String showGBestPos() {
 		String s = "";		
 		for (int i = 0; i < gbest_.length; i++) {
@@ -152,21 +143,14 @@ public class DE extends Thread{
 	@Override
 	public void run() {
 		for (int i = 0; i < iterationLim; i++) {
-			taskCenter.setTaskAmount(population_);
+			resetTaskPool(population_);
 			long tb = System.currentTimeMillis();
 			for (int j = 0; j < population_; j++) {
-				float[] testingPara = newidvds_[j].pos_;
-				double[] tmp = organizeTask(j, testingPara);
-				try {
-					taskCenter.undoneTasks.put(tmp);//dispatch task
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				dispatchTask(j, newidvds_[j].pos_);//dispatch task
 			}
 			
 			for (int j = 0; j < population_; j++) {
-				float fval = (float)taskCenter.getResult(j);//fetch result
+				float fval = (float)fetchResult(j);//fetch result
 				newidvds_[j].setFitness(fval);				
 				if (fval<gbestFitness_) {
 					setGbest(newidvds_[j].pos_);
@@ -179,7 +163,7 @@ public class DE extends Thread{
 			System.out.println("Position : " + showGBestPos());
 			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
 		}
-		taskCenter.Dismiss();//stop eng线程。
+		dismissAllWorkingThreads();//stop eng线程。
 	}
 	public static void main(String[] args) {
 		Individual.rnd_.setSeed(System.currentTimeMillis());//固定算法随机数

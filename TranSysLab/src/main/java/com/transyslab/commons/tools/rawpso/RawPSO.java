@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.transyslab.commons.tools.SchedulerThread;
 import com.transyslab.commons.tools.TaskCenter;
 import com.transyslab.simcore.mlp.MLPEngThread;
 
-public class RawPSO extends Thread{
+public class RawPSO extends SchedulerThread{
 	int dim;	
 	double[] lower;
 	double[] upper;
@@ -19,11 +20,8 @@ public class RawPSO extends Thread{
 	double[] ag_para;
 	Random rand;
 	
-	TaskCenter taskCenter;
-	
 	public RawPSO(String threadName, TaskCenter tc) {
-		setName(threadName);
-		taskCenter = tc;
+		super(threadName, tc);
 		particles = new ArrayList<>();
 	}
 	
@@ -96,21 +94,15 @@ public class RawPSO extends Thread{
 	@Override
 	public void run() {
 		for (int i = 0; i < iterationLim; i++) {
-			taskCenter.setTaskAmount(population);
+			resetTaskPool(population);
 			long tb = System.currentTimeMillis();
 			for (int j = 0; j < population; j++) {
 				double[] testingPara = posTrans(particles.get(j).pos);
-				double[] tmp = organizeTask(j, testingPara);
-				try {
-					taskCenter.undoneTasks.put(tmp);//dispatch task
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				dispatchTask(j, testingPara);
 			}
 			
 			for (int j = 0; j < population; j++) {
-				double val = taskCenter.getResult(j);//fetch result
+				double val = fetchResult(j);//fetch result
 				System.out.println(val);
 				if (checkConstraints(particles.get(j).pos)) {
 					particles.get(j).updateBest(val);
@@ -125,7 +117,7 @@ public class RawPSO extends Thread{
 			System.out.println("Position : " + showGBestPos());
 			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
 		}
-		taskCenter.Dismiss();//stop eng线程。
+		dismissAllWorkingThreads();//stop eng线程。
 	}
 	public static void main(String[] args) {
 		int pop = 50;

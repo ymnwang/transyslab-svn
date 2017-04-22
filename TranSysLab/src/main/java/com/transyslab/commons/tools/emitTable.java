@@ -8,6 +8,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.random.RandomAdaptor;
+import org.apache.commons.math3.random.RandomDataGenerator;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.simcore.mlp.MLPLink;
@@ -78,11 +80,11 @@ public class emitTable {
 		double simStep = SimulationClock.getInstance().getStepSize();
 		int stepCount = (int) Math.floor((endTime-startTime)/simStep);		
 		double expect =(double) demand/stepCount;
-		NormalDistribution nd = new NormalDistribution(mean, sd);
+//		NormalDistribution nd = new NormalDistribution(mean, sd);		
 		for (int i = 1; i<=stepCount; i++){
 			if (r.nextDouble()<=expect){
 				Inflow theinflow = new Inflow(startTime+i*simStep, 
-											  Math.min(vlim, Math.max(0.01,nd.sample())), 
+											  Math.min(vlim, Math.max(0.01,r.nextGaussian()*sd+mean)), 
 											  laneIdxes[r.nextInt(laneCount)],
 											  tlnkID,
 											  -1.0);

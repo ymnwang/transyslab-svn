@@ -8,7 +8,7 @@ import com.transyslab.commons.io.XmlParser;
 public class MLPSetup {
 	
 	public synchronized static void ParseNetwork() {
-		XmlParser.parseNetworkXml("src/main/resources/demo_neihuan/scenario2/network.xml");
+		XmlParser.parseNetworkXml("src/main/resources/demo/network.xml");
 	}
 	
 	public static void ParsePathTables() {		
@@ -59,7 +59,7 @@ public class MLPSetup {
 		ODFormDir = oDFormDir;
 	}
 
-	private static String ODFormDir = "src/main/resources/demo_neihuan/scenario2/od_form.csv";
+	private static String ODFormDir = "src/main/resources/demo/od_form.csv";
 	private static String EmitFormDir = "src/main/resources/demo_neihuan/scenario2/emit_form_20170228.csv";
 	private static String FCDFormDir = "src/main/resources/demo_neihuan/scenario2/FCD_20160620_ARCID4855inRL6.7.csv";
 	private static String LoopDir = "src/main/resources/demo_neihuan/scenario2/LOOP_A24_20160620_800-1000.csv";

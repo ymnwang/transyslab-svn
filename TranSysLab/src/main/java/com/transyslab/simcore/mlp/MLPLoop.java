@@ -38,7 +38,7 @@ public class MLPLoop extends Loop{
 			mlp_network.loops.add(loop);
 		}
 	}
-	public String detect(String time){
+	public String detect(String time){//当处于seg边界上存在漏洞
 		String str = "";
 		for (MLPVehicle veh : lane.vehsOnLn) {
 			if (veh.VirtualType_ == 0 && veh.distance()>distance && veh.newDis<=distance) {

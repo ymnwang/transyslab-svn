@@ -6,6 +6,7 @@ import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.roadnetwork.Constants;
+import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.Vehicle;
 
 public class MLPVehicle extends Vehicle{
@@ -14,19 +15,20 @@ public class MLPVehicle extends Vehicle{
 	protected MLPLane lane_;
 	protected MLPSegment segment_;
 	protected MLPLink link_;
-	public int platoonCode;
-	public int VirtualType_;//0 for real veh; num>0 for virual veh with the connected vheID
+	protected int platoonCode;
+	protected int VirtualType_;//0 for real veh; num>0 for virual veh with the connected vheID
 	protected int buffer_;//lane changing cold down remain frames
 	protected int speedLevel_;
 	protected boolean CFState_;
-	public boolean resemblance;
-	public boolean stopFlag;
-	public double newSpeed;
-	public double newDis;
+	protected boolean resemblance;
+	protected boolean stopFlag;
+	protected double newSpeed;
+	protected double newDis;
 	protected int usage;
-	public double TimeEntrance;
-	public double DSPEntrance;
-	public int RVID;
+//	public double TimeEntrance;
+	protected double DSPEntrance;
+	protected int RVID;
+	protected double time2Dispatch;
 //	static public TXTUtils fout = new TXTUtils("src/main/resources/output/test.csv");
 //	protected double TimeExit;
 	//private boolean active_;
@@ -37,6 +39,11 @@ public class MLPVehicle extends Vehicle{
 		leading_ = null;
 		platoonCode = 0;
 		stopFlag = false;
+	}
+	
+	@Override
+	public MLPLink getLink() {
+		return link_;
 	}
 	
 	public MLPSegment getSegment(){
@@ -99,10 +106,10 @@ public class MLPVehicle extends Vehicle{
 			}			
 			if (frontVeh != null) 
 				frontCheck = (frontVeh.Displacement() - frontVeh.getLength() - Displacement() >=
-										MLPParameter.getInstance().minGap(currentSpeed_));
+										MLPParameter.getInstance().minGap(currentSpeed_));//currentSpeed_
 			if (backVeh!=null) 
 				backCheck = (Displacement() - length_ - backVeh.Displacement() >=
-										MLPParameter.getInstance().minGap(backVeh.currentSpeed_));
+										MLPParameter.getInstance().minGap(backVeh.currentSpeed_));//backVeh.currentSpeed_
 			return (frontCheck && backCheck);
 		}
 	}
@@ -186,7 +193,8 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void initEntrance(double time, double dsp) {
-		TimeEntrance = time;
+		departTime_ = (float) time;
+		timeEntersLink_ = (float) time;
 		DSPEntrance = dsp;
 	}
 	
@@ -224,19 +232,8 @@ public class MLPVehicle extends Vehicle{
 	
 	public int dealPassing() {
 		if (segment_.isEndSeg()) {
-			if (lane_.checkPass()) {//passing Link(暂时处理成到达
-				link_.tripTime.add(SimulationClock.getInstance().getCurrentTime() - TimeEntrance);
-				lane_.scheduleNextEmitTime();
-				lane_.removeVeh(this, true);
-				return 1;
-			}
-			else {
-				//hold still
-				newDis = 0.0;
-				if (currentSpeed_>0.0) 
-					newSpeed = (distance_-newDis)/SimulationClock.getInstance().getStepSize();
-				return 0;
-			}
+			MLPNode server = (MLPNode) link_.getDnNode();
+			return server.serve(this);
 		}
 		else {//deal passing Seg.
 			/*if (lane_.checkPass()) {
@@ -260,6 +257,12 @@ public class MLPVehicle extends Vehicle{
 		}
 	}
 	
+	protected void holdAtLinkDnEnd() {
+		newDis = 0.0;
+		if (currentSpeed_>0.0) 
+			newSpeed = (distance_-newDis)/SimulationClock.getInstance().getStepSize();
+	}
+	
 	public void setNewState(double spd) {
 		if (stopFlag) {
 			newSpeed = 0.0;
@@ -278,6 +281,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void clearMLPProperties() {
+		type_ = 0;
 		leading_ = null;
 		trailing_ = null;
 		lane_ = null;
@@ -296,9 +300,12 @@ public class MLPVehicle extends Vehicle{
 		length_ = 0.0f;
 		distance_ = 0.0f;
 		currentSpeed_ = 0.0f;
-		TimeEntrance = 0.0;
+		departTime_ = 0.0f;
+		timeEntersLink_ = 0.0f;
 		DSPEntrance = 0.0;
 		RVID = 0;
+		time2Dispatch = 0.0;
+		donePathIndex();
 //		TimeExit = 0.0;
 	}
 	

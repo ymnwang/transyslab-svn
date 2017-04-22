@@ -12,12 +12,14 @@ import java.sql.SQLException;
 
 import java.util.*;
 
+import org.jgrapht.graph.DefaultWeightedEdge;
+
 /**
  * Link实体
  *
  * @author YYL 2016-5-31
  */
-public class Link extends CodedObject {
+public class Link extends DefaultWeightedEdge {
 
 	protected List<SurvStation> SurvList;
 	protected List<CtrlStation> CtrlList;
@@ -81,6 +83,11 @@ public class Link extends CodedObject {
 	protected float[] sumOfTravelTimeEnteringAt_;
 	// protected List<Integer> idList_ = new ArrayList<Integer>();
 	protected static int last = -1;
+	
+	//wjw
+//	protected int predecessor_;// for storing path uesd in RN_LinkGraph
+//	protected float[] penalties_;
+	protected ArrayList<Path>pathSet_;
 	// 未处理
 	/*
 	 * public List ctrlList; public List survList; public List lastCtrl; public
@@ -88,11 +95,73 @@ public class Link extends CodedObject {
 	 *
 	 * public List prevSurv; public List nextSurv;
 	 */
+	
+	
+	//*******************CodedObject移植
+	private int code_;
+	private String name_;
+
+	public void codedObject() {
+		code_ = 0;
+		name_ = "Not named";
+	}
+	public void codedObject(int i) {
+		code_ = i;
+	}
+	public void setCode(int i) {
+		code_ = i;
+	}
+	public int getCode() {
+		return code_;
+	}
+	// 对象名字，由子类NamedObject实现赋值
+	public String getName() {
+		return name_;
+	}
+	public void setName(String name) {
+		name_ = name;
+	}
+	public boolean needDeepCopy() {
+		return false;
+	}
+	// 对象复制
+	public void deepCopy(CodedObject i) {
+		code_ = i.getCode();
+	}
+	// 对象id排序
+	public int cmp(CodedObject i) {
+		if (code_ < i.getCode())
+			return (-1);
+		else if (code_ > i.getCode())
+			return (1);
+		else
+			return (0);
+	}
+	// 识别对象是否相同
+	public boolean eq(CodedObject i) {
+		return (code_ == i.getCode());
+	}
+	// 根据id寻找对象
+	public int cmp(int c) {
+		if (code_ < c)
+			return (-1);
+		else if (code_ > c)
+			return (1);
+		else
+			return (0);
+	}
+	// 输出对象id
+	public void print() {
+
+	}
+	//*******************CodedObject移植
 
 	public Link() {
+		codedObject();
 		state_ = 0;
 		nSamplesTravelTimeEnteringAt_ = null;
 		sumOfTravelTimeEnteringAt_ = null;
+		pathSet_ =new ArrayList<>();
 	}
 	public void setType(int t) {
 		type_ = t;
@@ -399,14 +468,12 @@ public class Link extends CodedObject {
 		nSegments_ = 0;
 		startSegmentIndex_ = RoadNetwork.getInstance().nSegments();
 		RoadNetwork.getInstance().addLink(this);
+		RoadNetwork.getInstance().addEdge(upNode_, dnNode_, this);
+		RoadNetwork.getInstance().setEdgeWeight(this, Double.POSITIVE_INFINITY);
 
 		return 0;
 	}
 
-	@Override
-	public void print() {
-
-	}
 	public void printSensors() {
 
 	}
@@ -812,6 +879,17 @@ public class Link extends CodedObject {
 			ps.addBatch();
 		}
 		ps.executeBatch();
+	}
+	public int nPaths() { return pathSet_.size(); }
+	public Path pathPointer(int i)
+	{
+		if (i < 0) {
+			  return null;
+			} else if (i >= pathSet_.size()) {
+			  return null;
+			} else {
+			  return pathSet_.get(i);
+			}
 	}
 
 }

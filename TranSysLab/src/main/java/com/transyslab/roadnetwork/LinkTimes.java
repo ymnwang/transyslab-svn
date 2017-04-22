@@ -5,6 +5,9 @@ package com.transyslab.roadnetwork;
 
 import java.util.Date;
 import java.util.HashMap;
+
+import org.apache.commons.math3.ml.neuralnet.Network;
+
 import com.transyslab.commons.tools.SimulationClock;
 
 /**
@@ -238,7 +241,8 @@ public class LinkTimes {
 		}
 		else {
 			avgLinkTime_ = linkTimes_;
-		}
+		}		
+		update2Graph(RoadNetwork.getInstance());
 	}
 	// Update the link travel times. The result is a linear combination
 	// of the previous data and new data calculated in the simulation
@@ -274,6 +278,7 @@ public class LinkTimes {
 				avgLinkTime_[i] = x;
 			}
 		}
+		update2Graph(RoadNetwork.getInstance());
 	}
 	// Read link travel time from a file. This is another way to update
 	// the link travel time.
@@ -290,6 +295,13 @@ public class LinkTimes {
 	}
 	public int preTripGuidance() {
 		return preTripGuidance_;
+	}
+	//wym 将结果更新至RoadNetwork图结构中
+	protected void update2Graph(RoadNetwork theRN) {		
+		for (int i = 0; i < avgLinkTime_.length; i++) {
+			Link theLink = theRN.getLink(i);
+			theRN.setEdgeWeight(theLink, avgLinkTime_[i]);
+		}
 	}
 
 }

@@ -32,26 +32,26 @@ public class Constants {
 	public final static float DEFAULT_SQUEEZE_FACTOR = 1.0f;
 	public static final double POINT_EPSILON = 0.1;
 	public static final double BULGE_EPSILON = 1.0e-5;
-	public final static int LANE_CHANGE_RIGHT = 0x00000001;
-	public final static int LANE_CHANGE_LEFT = 0x00000002;
-	public final static int LANE_CHANGE = 0x00000003;
+	public final static int LANE_CHANGE_RIGHT = 0x00000001;//说明：用于rules
+	public final static int LANE_CHANGE_LEFT = 0x00000002;//说明：用于rules
+	public final static int LANE_CHANGE = 0x00000003;//说明：用于rules
 
-	public final static int LANE_CHANGE_RIGHT_REQUIRED = 0x00000004;
-	public final static int LANE_CHANGE_LEFT_REQUIRED = 0x00000008;
-	public final static int LANE_CHANGE_REQUIRED = 0x0000000C;
+	public final static int LANE_CHANGE_RIGHT_REQUIRED = 0x00000004;//0100
+	public final static int LANE_CHANGE_LEFT_REQUIRED = 0x00000008;//1000
+	public final static int LANE_CHANGE_REQUIRED = 0x0000000C;//1100
 
-	public final static int LANE_TYPE_SHOULDER = 0x00000003;
-	public final static int LANE_TYPE_RIGHT_MOST = 0x00000001;
-	public final static int LANE_TYPE_LEFT_MOST = 0x00000002;
+	public final static int LANE_TYPE_SHOULDER = 0x00000003;//0011
+	public final static int LANE_TYPE_RIGHT_MOST = 0x00000001;//0001
+	public final static int LANE_TYPE_LEFT_MOST = 0x00000002;//0010
 
-	public final static int LANE_TYPE_RAMP = 0x000000F0;
-	public final static int LANE_TYPE_UP_RAMP = 0x00000030;
-	public final static int LANE_TYPE_UP_ONRAMP = 0x00000010;
-	public final static int LANE_TYPE_UP_OFFRAMP = 0x00000020;
+	public final static int LANE_TYPE_RAMP = 0x000000F0;//1111,0000
+	public final static int LANE_TYPE_UP_RAMP = 0x00000030;//0011,0000
+	public final static int LANE_TYPE_UP_ONRAMP = 0x00000010;//0001,0000
+	public final static int LANE_TYPE_UP_OFFRAMP = 0x00000020;//0010,0000
 
-	public final static int LANE_TYPE_DN_RAMP = 0x000000C0;
-	public final static int LANE_TYPE_DN_ONRAMP = 0x00000040;
-	public final static int LANE_TYPE_DN_OFFRAMP = 0x00000080;
+	public final static int LANE_TYPE_DN_RAMP = 0x000000C0;//1100,0000
+	public final static int LANE_TYPE_DN_ONRAMP = 0x00000040;//0100,0000
+	public final static int LANE_TYPE_DN_OFFRAMP = 0x00000080;//1000,0000
 
 	public final static int LANE_TYPE_BOUNDARY = 0x00000200;
 	public final static int LANE_TYPE_DROPPED = 0x00000100;
@@ -74,7 +74,10 @@ public class Constants {
 	public static final int NODE_TYPE_GEOMETRY = 15;
 	public static final int NODE_TYPE_CENTRIOD = 0;
 	public static final int NODE_TYPE_EXTERNAL = 1;
-	public static final int NODE_TYPE_INTERSECTION = 2;
+	//wym
+	public static final int NODE_TYPE_INTERSECTION = 6; // changed from 2
+	public static final int NODE_TYPE_NONSIGNALIZED_INTERSECTION = 2;
+	public static final int NODE_TYPE_SIGNALIZED_INTERSECTION = 4;
 
 	public static final int NODE_TYPE_OD = 48;
 	public static final int NODE_TYPE_ORI = 16;
@@ -138,10 +141,10 @@ public class Constants {
 	 * information availability, etc.
 	 */
 
-	public static final int VEHICLE_CLASS = 0x0000000F; // 15
-	public static final int VEHICLE_GROUP = 0x0000FFF0;
+	public static final int VEHICLE_CLASS = 0x0000000F; // 15 //wym 1111 in binary
+	public static final int VEHICLE_GROUP = 0x0000FFF0;//  wym 65520 1111111111110000 in binary
 
-	public static final int VEHICLE_LANE_USE = 0x000007F0; // 2032 sum
+	public static final int VEHICLE_LANE_USE = 0x000007F0; // 2032 sum //wym 11111110000 in binary
 
 	public static final int VEHICLE_SMALL = 0x00000010; // 16
 	public static final int VEHICLE_LOW = 0x00000020; // 32

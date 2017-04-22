@@ -160,6 +160,9 @@ public class MLPLink extends Link {
 		for (MLPVehicle veh: platoon){
 			//虚拟车及冷却中的车不能换道
 			if (veh.VirtualType_== 0 && veh.buffer_== 0) {
+				if (SimulationClock.getInstance().getCurrentTime() == 34.8 && veh.getCode()==18) {
+					System.out.println("BUG");
+				}
 				//根据acceptance及道路规则，获取可换道车道信息，计算概率并排序
 				double [] pr = new double [] {0.0, 0.0};
 				int [] turning = new int [] {0,1};
@@ -262,6 +265,9 @@ public class MLPLink extends Link {
 			double headPt = platoon.get(0).Displacement();
 			double len = headPt - platoon.get(platoon.size()-1).Displacement();
 			for (MLPVehicle veh : platoon) {
+				if (SimulationClock.getInstance().getCurrentTime() == 34.8 && veh.getCode()==18) {
+					System.out.println("BUG");
+				}
 				double r = (headPt - veh.Displacement())/len;
 				double newspd = (1-r)*headspeed+r*tailspeed;
 				veh.setNewState(newspd);
@@ -269,6 +275,9 @@ public class MLPLink extends Link {
 		}
 		else {
 			MLPVehicle veh = platoon.get(0);
+			if (SimulationClock.getInstance().getCurrentTime() == 34.8 && veh.getCode()==18) {
+				System.out.println("BUG");
+			}
 			veh.setNewState(headspeed);
 		}
 	}

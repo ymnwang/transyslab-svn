@@ -1,6 +1,8 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,7 +15,7 @@ import com.transyslab.roadnetwork.Segment;
 
 import jogamp.graph.curve.tess.HEdge;
 
-public class MLPLane extends Lane {
+public class MLPLane extends Lane implements Comparator<MLPLane>{
 	private double capacity_;
 	private double releaseTime_;
 	private int lnPosNum_;
@@ -31,6 +33,7 @@ public class MLPLane extends Lane {
 	public MLPLane connectedDnLane;
 	public MLPLane connectedUpLane;
 	public int di;
+	protected List<MLPLane> sucessiveLanes;
 	
 	public MLPLane(){
 		capacity_ = MLPParameter.getInstance().capacity;
@@ -40,6 +43,7 @@ public class MLPLane extends Lane {
 //		LfCutinAllowed = true;
 //		RtCutinAllowed = true;
 		enterAllowed = true;
+		sucessiveLanes = new ArrayList<>();
 	}
 	
 	public boolean checkPass() {
@@ -124,8 +128,7 @@ public class MLPLane extends Lane {
 			mlpveh.leading_.updateLeadNTrail();
 		if (mlpveh.trailing_ != null)
 			mlpveh.trailing_.updateLeadNTrail();
-		//processing veh的lane, seg, link的注册
-		//MUST Done before called.
+		//processing veh的lane, seg, link的注册 也需要在调用本函数之前完成
 	}
 	
 	public void removeVeh(MLPVehicle mlpveh, boolean recycleNeeded){
@@ -307,5 +310,33 @@ public class MLPLane extends Lane {
 			}
 			di = Math.max(count1, count2);
 		}
+	}
+	
+	public List<MLPLane> selectDnLane(Segment nextSeg) {
+		List<MLPLane> tmp = new ArrayList<>();
+		for (int i = 0; i < nextSeg.nLanes(); i++) {
+			MLPLane theLane = (MLPLane) nextSeg.getLane(i);
+			if (dnLanes_.contains(theLane)) {
+				tmp.add(theLane);
+			}
+		}
+		tmp.sort(this);
+		return tmp;
+	}
+
+	@Override
+	public int compare(MLPLane o1, MLPLane o2) {
+		MLPLane tmp = null;
+		for (int i = 0; i < sucessiveLanes.size(); i++) {
+			tmp = sucessiveLanes.get(i);
+			if (tmp.segment_.getCode() == o1.segment_.getCode()) {
+				break;
+			}
+		}
+		if (tmp == null) 
+			return 0;
+		int d1 = Math.abs(tmp.lnPosNum_ - lnPosNum_);
+		int d2 = Math.abs(tmp.lnPosNum_ - lnPosNum_);
+		return ( d1 - d2 );
 	}
 }

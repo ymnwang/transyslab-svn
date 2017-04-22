@@ -14,6 +14,7 @@ import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
+import com.transyslab.roadnetwork.Node;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
 import com.transyslab.roadnetwork.VehicleData;
@@ -46,6 +47,11 @@ public class MLPNetwork extends RoadNetwork {
 			MLPEngThread theThread = (MLPEngThread) Thread.currentThread();
 			return (MLPNetwork) theThread.network;
 		}
+	}
+	
+	@Override
+	public MLPNode getNode(int i) {
+		return (MLPNode) super.getNode(i);
 	}
 	
 /*
@@ -133,6 +139,9 @@ public class MLPNetwork extends RoadNetwork {
 			//将jointLane信息装入Link中
 			((MLPLink) l).addLnPosInfo();
 		}
+		for (Segment seg: segments_) {
+			((MLPSegment) seg).setSucessiveLanes();
+		}
 	}
 	/*
 	 * public void resetSensorReadings() { for (int i = 0; i < nSensors(); i ++
@@ -180,6 +189,8 @@ public class MLPNetwork extends RoadNetwork {
 				MLPVehicle newVeh = veh_pool.generate();
 				newVeh.initInfo(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx),emitVeh.RVID);
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
+				newVeh.initPath(mlpLink(i).getUpNode(), findLink(emitVeh.tLinkID).getDnNode());
+				newVeh.setPathIndex(1);//正式进入路网时需要设置
 				newVeh.initEntrance(SimulationClock.getInstance().getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
 				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
 				mlpLane(emitVeh.laneIdx).appendVeh(newVeh);

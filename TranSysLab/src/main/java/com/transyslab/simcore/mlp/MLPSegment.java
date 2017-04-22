@@ -1,6 +1,9 @@
 package com.transyslab.simcore.mlp;
 
+import java.time.OffsetDateTime;
+
 import com.jogamp.common.util.ReflectionUtil;
+import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
 
@@ -100,4 +103,53 @@ public class MLPSegment extends Segment{
 		// return (density_);//vehicle/km
 	}*/
 
+	public void setSucessiveLanes() {
+		MLPSegment dnSeg = getDnSegment();
+		if (dnSeg != null) {
+			dealSucessive(dnSeg);
+			return;
+		}
+		int ndnLinks = link_.nDnLinks();
+		if (ndnLinks > 0) {
+			for (int i = 0; i < ndnLinks; i++) {
+				MLPSegment startSeg = (MLPSegment) link_.dnLink(i).getStartSegment();
+				dealSucessive(startSeg);
+			}
+		}
+	}
+	private void dealSucessive(MLPSegment dnSeg) {
+		if (nLanes_ == dnSeg.nLanes()) {
+			for (int i = 0; i < nLanes_; i++) {
+				getLane(i).sucessiveLanes.add(dnSeg.getLane(i));
+			}
+		}
+		else {
+			int m = Math.min(nLanes_, dnSeg.nLanes());
+			double sumLF = 0.0, sumLFSquared = 0.0, sumRT = 0.0, sumRTSquared = 0.0;
+			for (int i = 0; i < m; i++) {
+				double tmpLF = getLane(i).getEndPnt().distanceSquared(dnSeg.getLane(i).getStartPnt());
+				double tmpRT = getLane(nLanes_-1-i).getEndPnt().distanceSquared(dnSeg.getLane(dnSeg.nLanes()-1-i).getStartPnt());
+				sumLFSquared += tmpLF;
+				sumLF += Math.sqrt(tmpLF);
+				sumRTSquared += tmpRT;
+				sumRT += Math.sqrt(tmpRT);
+			}
+			double coefVarLF = Math.sqrt(sumLFSquared/m - Math.pow(sumLF/m, 2))/(sumLF/m);
+			double coefVarRT = Math.sqrt(sumRTSquared/m - Math.pow(sumRT/m, 2))/(sumRT/m);
+			if (coefVarLF <= coefVarRT) {
+				for (int i = 0; i < m; i++) {
+					getLane(i).sucessiveLanes.add(dnSeg.getLane(i));
+				}
+			}
+			else {
+				for (int i = 0; i < m; i++) {
+					getLane(nLanes_-1-i).sucessiveLanes.add(dnSeg.getLane(dnSeg.nLanes()-1-i));
+				}
+			}			
+		}
+	}
+	@Override
+	public MLPLane getLane(int i) {
+		return (MLPLane) super.getLane(i);
+	}
 }

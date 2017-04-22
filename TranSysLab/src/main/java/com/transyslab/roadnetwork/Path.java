@@ -5,16 +5,20 @@ package com.transyslab.roadnetwork;
 
 import java.util.*;
 
+import org.jgrapht.GraphPath;
+
 import com.transyslab.commons.tools.SimulationClock;
+
 /**
  * @author YYL 2016-6-4
  */
+
 public class Path extends CodedObject {
 	protected static int sorted_; // 1=sorted 0=arbitrary order
 
 	protected int index_; // index in the array;
 	// สตภýปฏ
-	protected Vector<Link> links_ = new Vector<Link>(); // list of links of the
+	protected Vector<Link> links_; // list of links of the
 														// path
 	protected Node oriNode_; // origin node
 	protected Node desNode_; // destination node
@@ -26,8 +30,10 @@ public class Path extends CodedObject {
 	protected static int last = -1;
 	protected static int idx = 0;
 
+	private float cf_;				// commonality factor
+	
 	public Path() {
-
+		links_ = new Vector<Link>();
 	}
 
 	public static int sorted() {
@@ -171,4 +177,38 @@ public class Path extends CodedObject {
 	public void print() {
 
 	}
+	
+	public float cost(LinkTimes info)
+	{
+	   return travelTime(info, 0);
+	}
+	
+	public boolean IsUsedBy(ODCell od)
+	{
+		if (od==null) return false ;
+		for (int i = 0; i < od.nPaths(); i ++) {
+			if (this == od.path(i)) return true ;
+		}
+		return false ;
+	}
+	
+	public float cf() {
+		return cf_;
+	}
+	
+	public void cf(float arg) {
+		cf_ = arg;
+	}
+	
+	//wym
+	public Path(GraphPath<Node, Link> GPath) {
+		links_ = new Vector<>();
+		List<Link> gp_links = GPath.getEdgeList();
+		for (Link LN : gp_links) {
+			links_.add(LN);
+		}
+		oriNode_ = GPath.getStartVertex();
+		desNode_ = GPath.getEndVertex();
+	}
+
 }

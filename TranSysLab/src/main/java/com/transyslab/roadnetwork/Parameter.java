@@ -44,10 +44,10 @@ public class Parameter {
 																	// route
 																	// choice
 																	// model
-	protected float commonalityFactor_; // in path choice model
-	protected float[] diversionPenalty_; // cost added in util func
-	protected float validPathFactor_; // compared to shorted path
-	protected float rationalLinkFactor_; // reduces irrational link choices
+	protected float commonalityFactor_ = 0.0f; // in path choice model
+	protected float[] diversionPenalty_ = {300}; // cost added in util func
+	protected float validPathFactor_ = 1.5f; // compared to shorted path
+	protected float rationalLinkFactor_ = 0.0f; // reduces irrational link choices
 	protected float freewayBias_ = 1.0f; // travel time
 	protected float busToStopVisibility_; // distance from bus stop at which bus
 											// begins to change lanes
