@@ -55,21 +55,23 @@ public class GeoUtil {
 		}
 		Vector3D normVec = new Vector3D(translation[0],translation[1],translation[2]);
 		Vector3D dirVec = new Vector3D(vecDir[0],vecDir[1],vecDir[2]);
+		//注意叉乘次序，a x b ！= b x a
 		normVec = Vector3D.crossProduct(normVec, dirVec);
 		if(normVec.getZ()<0)
 			// z>=0的面朝上，适应opengl右手坐标系
-			LinearAlgebra.divide(translation, -1);
+			translation = LinearAlgebra.divide(translation, -1);
 		// 矩形四个顶点，按逆时针顺序存储
 		if(bothSide){
-			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
 			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
-			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
+			
 			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(tPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
 		}
 		else{
 			sf.addKerbPoint(new GeoPoint(fPoint));
-			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
-			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(tPoint.getLocCoods(),translation)));
 			sf.addKerbPoint(new GeoPoint(tPoint));
 		}
 		return sf;
