@@ -65,6 +65,7 @@ public class MainWindow extends JFrame{
 	
 	private SimulationEngine[] engines;
 	private Trace2DSimple traceRT;
+	public boolean needRTPlot;
 	private static MainWindow theWindow = new MainWindow();
 	public static MainWindow getInstance(){
 		return theWindow;
@@ -74,7 +75,7 @@ public class MainWindow extends JFrame{
 		//Complete window design
 		initialize();
 		// Set rendering canvas
-		fps_ = 25;		
+		fps_ = 120;		
 		Camera cam = new OrbitCamera();
 		canvas_.setCamera(cam);
 		// Create a animator that drives canvas' display() at the specified FPS.
@@ -349,21 +350,26 @@ public class MainWindow extends JFrame{
 			}
 		});
 		JButton button_2 = new JButton("车速统计");
-		button_2.setFont(new Font("宋体", Font.PLAIN, 14));
+		button_2.setFont(new Font("宋体", Font.PLAIN, 13));
 		//TODO 限制多次点击
 		button_2.addActionListener(new ActionListener() {	
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				//TODO 硬写未设计
+				needRTPlot = true;
 				new Thread(new Runnable() {
 					
 					@Override
 					public void run() {
 			
 						QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
-						String sql = "select C,ROUND(S/C*12*5/4) as hourfolw,meanspeed, D from (select count(\"FLOW\") AS C,sum(\"FLOW\") AS S,sum(\"FLOW\"*\"SPEED\")/(sum(\"FLOW\")+0.0000001) as meanspeed, floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-01-21 00:00:00'))/300)*300 AS D from nhschema.\"Loop\"  where \"CPN\" = 'LP/B9' and (to_char(\"CTIME\",'mm-dd') = '01-21') group by floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-01-21 00:00:00'))/300)*300) as derivedtable order by D";
+						String sql = "select C,round(S/C*12.0*5.0/4) as hourfolw,meanspeed, D from (select count(\"FLOW\") AS C,sum(\"FLOW\") AS S,sum(\"FLOW\"*\"SPEED\")/(sum(\"FLOW\")+0.0000001) as meanspeed, floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300 AS D from nhschema.\"Loop\"  where \"CPN\" = 'LP/A24' "
+								+ "   and (extract(epoch from \"CTIME\")>=extract(epoch from timestamp without time zone '2016-06-20 07:55:00')) and (extract(epoch from \"CTIME\")<=extract(epoch from timestamp without time zone '2016-06-20 09:50:00'))"
+								+ " group by floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300) as derivedtable order by D";
 						try {
-							List result = (List) qr.query(sql, new ColumnListHandler(2));
-							traceRT = new Trace2DSimple();
+							List result = (List) qr.query(sql, new ColumnListHandler(3));
+							traceRT = new Trace2DSimple("仿真车速");
+							
 							DataVisualization.realTimePlot(traceRT, null, result);
 							//System.out.println("");
 						} catch (SQLException e1) {

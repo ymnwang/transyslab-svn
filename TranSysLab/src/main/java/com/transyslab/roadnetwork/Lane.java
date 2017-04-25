@@ -16,7 +16,7 @@ import com.transyslab.commons.tools.GeoUtil;
 public class Lane extends CodedObject {
 
 	// 车道宽度
-	public float width = 3.66f;
+	public float width = 3.5f;
 
 	protected int index_;
 	protected Segment segment_;
@@ -313,7 +313,7 @@ public class Lane extends CodedObject {
 	}
 	// 路网世界坐标平移后再调用
 	public void createLaneSurface(){
-		laneSurface = GeoUtil.lineToRectangle(startPnt_, endPnt_, width);
+		laneSurface = GeoUtil.lineToRectangle(startPnt_, endPnt_, width, true);
 		laneSurface.createAabBox();
 	}
 	public GeoSurface getLaneSurface(){

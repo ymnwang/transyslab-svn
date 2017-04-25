@@ -221,6 +221,6 @@ public class SurvStation extends CodedObject implements Sensor{
 		double lenScale = zoneLength_/segment_.getLength();
 		GeoPoint endPnt = new GeoPoint(startPnt,segment_.getEndPnt(),lenScale);
 		double width = segment_.nLanes_ * segment_.getLeftLane().getWidth();
-		surface = GeoUtil.lineToRectangle(startPnt, endPnt, width);
+		surface = GeoUtil.lineToRectangle(startPnt, endPnt, width,true);
 	}
 }

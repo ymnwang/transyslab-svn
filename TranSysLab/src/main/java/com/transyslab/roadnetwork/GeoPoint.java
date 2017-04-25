@@ -27,6 +27,12 @@ public class GeoPoint {
 		locCoods[1] = y;
 		locCoods[2] = z;
 	}
+	public GeoPoint(GeoPoint gPoint){
+		locCoods = new double[3];
+		this.locCoods[0] = gPoint.locCoods[0];
+		this.locCoods[1] = gPoint.locCoods[1];
+		this.locCoods[2] = gPoint.locCoods[2];
+	}
 	public GeoPoint(GeoPoint spt, GeoPoint ept, double r) {
 		locCoods = new double[3];
 		for(int i=0; i<3; i++){

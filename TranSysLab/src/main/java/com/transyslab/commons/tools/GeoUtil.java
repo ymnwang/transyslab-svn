@@ -34,11 +34,14 @@ public class GeoUtil {
 			return null;
 		}
 	}
-	public static GeoSurface lineToRectangle(final GeoPoint fPoint, final GeoPoint tPoint, final double width){
+	public static GeoSurface lineToRectangle(final GeoPoint fPoint, final GeoPoint tPoint, final double width, final boolean bothSide){
 		GeoSurface sf = new GeoSurface();
 		double[] vecDir = LinearAlgebra.minus(tPoint.getLocCoods(), fPoint.getLocCoods());
-		// 从中心线扩展成矩形面
-		double distance = width/2.0f;
+		double distance;
+		if(bothSide)// 从中心线扩展成矩形面
+			distance = width/2.0f;
+		else // 从中心线向右拓宽
+			distance = width;
 		double[] translation = new double[3];
 		if(vecDir[0] == 0.0){
 			// coods.Y
@@ -57,12 +60,21 @@ public class GeoUtil {
 			// z>=0的面朝上，适应opengl右手坐标系
 			LinearAlgebra.divide(translation, -1);
 		// 矩形四个顶点，按逆时针顺序存储
-		sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
-		sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
-		sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
-		sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(tPoint.getLocCoods(),translation)));
+		if(bothSide){
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(tPoint.getLocCoods(),translation)));
+		}
+		else{
+			sf.addKerbPoint(new GeoPoint(fPoint));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
+			sf.addKerbPoint(new GeoPoint(tPoint));
+		}
 		return sf;
 	}
+
 	public static boolean isIntersect(Ray ray, GeoSurface surf) {
 		boolean Intersect = true;
 

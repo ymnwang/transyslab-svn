@@ -10,7 +10,8 @@ public class DataVisualization {
 	
 	public static int realTimePlot(Trace2DSimple traceSim, List<Double> simData,List<Object> realData){
 		HPlotRT plotRT = new HPlotRT();
-		Trace2DSimple traceReal = new Trace2DSimple();
+		plotRT.getChart();
+		Trace2DSimple traceReal = new Trace2DSimple("ÏßÈ¦¼ì²â³µËÙ");
 		traceSim.setColor(Color.RED);
 		traceReal.setColor(Color.BLUE);
 		plotRT.add(traceSim);
