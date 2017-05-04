@@ -16,9 +16,6 @@ public class MLPNode extends Node{
 		statedVehs = new LinkedList<>();
 	}
 	public int serve(MLPVehicle veh) {
-		if (SimulationClock.getInstance().getCurrentTime() == 34.8 && veh.getCode()==18) {
-			System.out.println("BUG");
-		}
 		MLPLane lane_ = veh.lane_;
 		MLPLink link_ = veh.link_;
 		if (lane_.checkPass()) {
@@ -38,39 +35,39 @@ public class MLPNode extends Node{
 				return 0;
 			}
 			//deal with non-intersection nodes
-			List<MLPLane> candidates = lane_.selectDnLane(veh.nextLink().getStartSegment());
-			if (!candidates.isEmpty()) {// at least one topology available down lane
-				for (int i = 0; i < candidates.size(); i++) {
-					MLPLane nextLane = candidates.get(i);
-					if (nextLane.checkVolum(veh)) {//check every down lane' volume
-						//no priority control for now
-						boolean canpass = true;
-						for (int j = 0; j < nextLane.nUpLanes() && canpass; j++) {
-							MLPLane confLane = (MLPLane) nextLane.upLane(j);
-							canpass &= confLane.getCode() == lane_.getCode() ||
-											   confLane.vehsOnLn.isEmpty() ||
-											   // lane_.priority > confLane.priority || //路权较大时可以直接通过
-											   !need2Giveway(veh, confLane.vehsOnLn.get(0)) || 
-											   reachFirst(veh, confLane.vehsOnLn.get(0));//同等路权下先到先得，加入路权后替换成下面的代码
-							                   //(lane_.priority == confLane.priority && reachFirst(veh, confLane.vehsOnLn.get(0))
-						}
-						if (canpass) {//pass to this very nexlane
-							lane_.scheduleNextEmitTime();//passed upstream lane
-							link_.tripTime.add((double) veh.timeInLink());//record linkTravelTime
-							double now = SimulationClock.getInstance().getCurrentTime();
-							veh.timeEntersLink((float)now);
-							lane_.removeVeh(veh, false);
-							veh.time2Dispatch = now;
-							statVeh(veh, nextLane);
-							veh.OnRouteChoosePath(veh.link_.getDnNode());
-							return 0;
-						}
+//			List<MLPLane> candidates = lane_.selectDnLane(veh.nextLink().getStartSegment());//不以successiveDnLane运行
+			MLPLane nextLane = lane_.successiveDnLaneInLink((MLPLink) veh.nextLink());
+			if (nextLane != null) {// at least one topology available down lane
+				if (nextLane.checkVolum(veh)) {//check every down lane' volume
+					//no priority control for now
+					boolean canpass = true;
+//						for (int j = 0; j < nextLane.nUpLanes() && canpass; j++) { //不以successiveDnLane运行
+//							MLPLane confLane = (MLPLane) nextLane.upLane(j); //不以successiveDnLane运行
+					for (int j = 0; j < nextLane.successiveUpLanes.size() && canpass; j++) {
+						MLPLane confLane = nextLane.successiveUpLanes.get(j);
+						canpass &= confLane.getCode() == lane_.getCode() ||
+								confLane.vehsOnLn.isEmpty() ||
+								// lane_.priority > confLane.priority || //路权较大时可以直接通过
+								!need2Giveway(veh, confLane.vehsOnLn.get(0)) ||
+								reachFirst(veh, confLane.vehsOnLn.get(0));//同等路权下先到先得，加入路权后替换成下面的代码
+						//(lane_.priority == confLane.priority && reachFirst(veh, confLane.vehsOnLn.get(0))
+					}
+					if (canpass && !checkPlaceTaken(veh, nextLane)) {//pass to this very nexlane
+						lane_.scheduleNextEmitTime();//passed upstream lane
+						link_.tripTime.add((double) veh.timeInLink());//record linkTravelTime
+						double now = SimulationClock.getInstance().getCurrentTime();
+						veh.timeEntersLink((float)now);
+						lane_.removeVeh(veh, false);
+						veh.time2Dispatch = now;
+						statVeh(veh, nextLane);
+						veh.OnRouteChoosePath(veh.link_.getDnNode());
+						return 0;
 					}
 				}
 			}
 		}
 		//hold still
-		veh.holdAtLinkDnEnd();
+		veh.holdAtDnEnd();
 		return 0;	
 	}
 	private boolean need2Giveway(MLPVehicle vehPass, MLPVehicle vehCheck) {		
@@ -79,7 +76,7 @@ public class MLPNode extends Node{
 		float followerLen;
 		if (dis_headway > 0) {
 			crSpeed = vehPass.newSpeed;
-			followerLen = vehCheck.getLength();			
+			followerLen = vehCheck.getLength();
 		}
 		else {
 			dis_headway *= -1;
@@ -89,14 +86,16 @@ public class MLPNode extends Node{
 		return dis_headway - followerLen < MLPParameter.getInstance().minGap(crSpeed);
 	}
 	private boolean reachFirst(MLPVehicle vehPass, MLPVehicle vehCheck) {
-		double dis_headway = vehCheck.distance() - vehPass.newDis - vehCheck.currentSpeed();
-		if (dis_headway != 0) {
-			return dis_headway > 0;
-		}
-		else {
-			//边界问题，若相等，VID较大的等待 (或使用其他的随机规则；要求冲突两次查询结果一致)
-			return vehPass.getCode() < vehCheck.getCode();
-		}
+		double dis_headway = vehCheck.distance() - vehPass.newDis - vehCheck.currentSpeed()*SimulationClock.getInstance().getStepSize();
+		return dis_headway >= 0;
+		//加入了checkPlaceTaken机制，可以不判断边界
+//		if (dis_headway != 0) {
+//			return dis_headway > 0;
+//		}
+//		else {
+//			//边界问题，若相等，VID较大的等待 (或使用其他的随机规则；要求冲突两次查询结果一致)
+//			return vehPass.getCode() < vehCheck.getCode();
+//		}
 		
 	}
 	private void statVeh(MLPVehicle veh, MLPLane nextLane) {
@@ -121,5 +120,16 @@ public class MLPNode extends Node{
 				i -= 1;
 			}
 		}
+	}
+	protected boolean checkPlaceTaken(MLPVehicle veh, MLPLane nextLane){
+		boolean ans = false;
+		for (int i=0; i<statedVehs.size() && (!ans); i++){
+			MLPVehicle v = statedVehs.get(i);
+			if (v.lane_.getCode() == nextLane.getCode()){
+				double gap = veh.newDis + nextLane.getLength() - v.newDis - v.getLength();
+				ans |= ( gap < MLPParameter.getInstance().minGap(veh.newSpeed) );
+			}
+		}
+		return ans;
 	}
 }

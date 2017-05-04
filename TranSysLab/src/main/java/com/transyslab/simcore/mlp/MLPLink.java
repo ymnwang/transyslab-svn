@@ -6,12 +6,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 
-import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.commons.tools.emitTable;
-import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Link;
 
 public class MLPLink extends Link {	
@@ -55,12 +52,13 @@ public class MLPLink extends Link {
 			ListIterator<JointLane> lpIterator = jointLanes.listIterator();
 			while (lpIterator.hasNext()){
 				JointLane candidate = lpIterator.next();
-				if (candidate.LPNum == ln.getLnPosNum()) {
+				if (candidate.lanesCompose.contains(ln) ||
+					(!ln.getSegment().isEndSeg() && !ln.successiveDnLanes.isEmpty() && candidate.lanesCompose.contains(ln.successiveDnLanes.get(0))) || //非末端Seg的lane只有一个successiveLn
+						(!ln.getSegment().isStartSeg() && !ln.successiveUpLanes.isEmpty() && candidate.lanesCompose.contains(ln.successiveUpLanes.get(0)))) //非始端Seg的lane只有一个successiveUpLn
 					return candidate;
-				}
-			}			
+			}
 		}
-		return (JointLane) null;
+		return null;
 	}
 	
 	public boolean hasNoVeh(boolean virtualCount) {
@@ -79,12 +77,14 @@ public class MLPLink extends Link {
 	
 	public void addLnPosInfo() {
 		MLPSegment theSeg = (MLPSegment) getEndSegment();
+		int JLNUM = 1;
 		while (theSeg != null){
 			for (int i = 0; i<theSeg.nLanes(); i++){
 				MLPLane ln = (MLPLane) theSeg.getLane(i);
 				JointLane tmpJLn = findJointLane(ln);
 				if (tmpJLn == null) {
-					JointLane newJLn = new JointLane(ln.getLnPosNum());
+					JointLane newJLn = new JointLane(JLNUM);
+					JLNUM += 1;
 					newJLn.lanesCompose.add(ln);
 					jointLanes.add(newJLn);
 				}
@@ -160,9 +160,6 @@ public class MLPLink extends Link {
 		for (MLPVehicle veh: platoon){
 			//虚拟车及冷却中的车不能换道
 			if (veh.VirtualType_== 0 && veh.buffer_== 0) {
-				if (SimulationClock.getInstance().getCurrentTime() == 34.8 && veh.getCode()==18) {
-					System.out.println("BUG");
-				}
 				//根据acceptance及道路规则，获取可换道车道信息，计算概率并排序
 				double [] pr = new double [] {0.0, 0.0};
 				int [] turning = new int [] {0,1};
@@ -172,7 +169,7 @@ public class MLPLink extends Link {
 							tarLane.checkLCAllowen((i+1)%2) &&
 							//tarLane.RtCutinAllowed &&
 							veh.checkGapAccept(tarLane)) {
-						//换道概率计算						
+						//换道概率计算
 						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
 					}
 				}
@@ -186,21 +183,21 @@ public class MLPLink extends Link {
 				}
 				//按先后顺序做蒙特卡洛，操作成功的进行换道，不成功换道的MLC车进行停车标识计算
 				if (r.nextDouble()<pr[0]){
-					if (veh.lane_.getAdjacent(turning[0]).di==0) {
+					if (veh.lane_.getAdjacent(turning[0]).diEqualsZero(veh)) {
 						veh.stopFlag = false;
 					}
 					LCOperate(veh, turning[0]);
 				}
 				else{
 					if (r.nextDouble()<pr[1]){
-						if (veh.lane_.getAdjacent(turning[1]).di==0) {
+						if (veh.lane_.getAdjacent(turning[1]).diEqualsZero(veh)) {
 							veh.stopFlag = false;
 						}
 						LCOperate(veh, turning[1]);
 					}					
 				}
 			}
-			if (veh.lane_.di>0 && veh.calMLC()>0.99){
+			if ((!veh.lane_.diEqualsZero(veh)) && veh.calMLC()>0.99){
 				veh.stopFlag = true;
 			}
 		}
@@ -264,10 +261,10 @@ public class MLPLink extends Link {
 		if (platoon.size()>1) {
 			double headPt = platoon.get(0).Displacement();
 			double len = headPt - platoon.get(platoon.size()-1).Displacement();
+			if (len == 0.0){
+				System.out.println("BUG 车队长度为0");
+			}
 			for (MLPVehicle veh : platoon) {
-				if (SimulationClock.getInstance().getCurrentTime() == 34.8 && veh.getCode()==18) {
-					System.out.println("BUG");
-				}
 				double r = (headPt - veh.Displacement())/len;
 				double newspd = (1-r)*headspeed+r*tailspeed;
 				veh.setNewState(newspd);
@@ -275,9 +272,6 @@ public class MLPLink extends Link {
 		}
 		else {
 			MLPVehicle veh = platoon.get(0);
-			if (SimulationClock.getInstance().getCurrentTime() == 34.8 && veh.getCode()==18) {
-				System.out.println("BUG");
-			}
 			veh.setNewState(headspeed);
 		}
 	}

@@ -12,7 +12,11 @@ public class Dynamics {
 	public double sdFun(double k) {
 		if (k <= sdPara[2]){
 			 //vMin + (vMax - vMin)*(1-(K/kJam).^a).^b;
-			return (sdPara[1] + (sdPara[0]-sdPara[1]) * Math.pow(1.0-Math.pow(k/sdPara[2], sdPara[3]), sdPara[4]));
+			double ans = sdPara[1] + (sdPara[0]-sdPara[1]) * Math.pow(1.0-Math.pow(k/sdPara[2], sdPara[3]), sdPara[4]);
+			if (Double.isNaN(ans)){
+				System.out.println("BUG SD函数输出异常");
+			}
+			return ans;
 		}
 		else {
 			return 0.0;
@@ -28,7 +32,10 @@ public class Dynamics {
 		else if (gap<upperGap) {
 			double r = gap/upperGap;
 			//return r * sdPara[0] + (1.0-r) * vlead;
-			return r * MLPParameter.getInstance().maxSpeed(gap) + (1.0-r) * vlead;
+			double ans = r * MLPParameter.getInstance().maxSpeed(gap) + (1.0-r) * vlead;
+			if (Double.isNaN(ans))
+				System.out.println("BUG CF函数输出异常");
+			return ans;
 		}
 		else {
 			return sdPara[0];
@@ -56,6 +63,6 @@ public class Dynamics {
 			//暂时不加限制，以后的版本此处与节点状态结合，综合考虑进入同一节点的其他link的状态给出headSpeed
 			return sdPara[0];
 		}
-	}	
+	}
 	
 }

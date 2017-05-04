@@ -1,9 +1,8 @@
 package com.transyslab.simcore.mlp;
 
-import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.jogamp.common.util.ReflectionUtil;
-import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
 
@@ -11,10 +10,12 @@ public class MLPSegment extends Segment{
 	private int[] laneIdxs_;
 	public double startDSP;//在当前link中的起点里程
 	public double endDSP;//当前link中的segment终点里程
+	protected List<MLPLane> lanes;//seg 含有的Lanes
 	
 	public MLPSegment() {
 		startDSP = 0;
 		endDSP = 0;
+		lanes = new ArrayList<>();
 		//laneIdxs_ = new int[nLanes_];//不能在此实例化laneIdxsx此时nLanes_的值未被计算
 	}
 	
@@ -64,12 +65,11 @@ public class MLPSegment extends Segment{
 	}
 	
 	public boolean isEndSeg() {
-		if (link_.getEndSegment().getCode()==this.getCode()) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return link_.getEndSegment().getCode() == this.getCode();
+	}
+
+	public boolean isStartSeg() {
+		return link_.getStartSegment().getCode() == this.getCode();
 	}
 	/*public void calcState() {
 		density_ = (float) (1000.0f * nVehicles() / (length_ * nLanes()));
@@ -106,21 +106,22 @@ public class MLPSegment extends Segment{
 	public void setSucessiveLanes() {
 		MLPSegment dnSeg = getDnSegment();
 		if (dnSeg != null) {
-			dealSucessive(dnSeg);
+			dealSuccessive(dnSeg);
 			return;
 		}
 		int ndnLinks = link_.nDnLinks();
 		if (ndnLinks > 0) {
 			for (int i = 0; i < ndnLinks; i++) {
 				MLPSegment startSeg = (MLPSegment) link_.dnLink(i).getStartSegment();
-				dealSucessive(startSeg);
+				dealSuccessive(startSeg);
 			}
 		}
 	}
-	private void dealSucessive(MLPSegment dnSeg) {
+	private void dealSuccessive(MLPSegment dnSeg) {
 		if (nLanes_ == dnSeg.nLanes()) {
 			for (int i = 0; i < nLanes_; i++) {
-				getLane(i).sucessiveLanes.add(dnSeg.getLane(i));
+				getLane(i).successiveDnLanes.add(dnSeg.getLane(i));
+				dnSeg.getLane(i).successiveUpLanes.add(getLane(i));
 			}
 		}
 		else {
@@ -138,18 +139,36 @@ public class MLPSegment extends Segment{
 			double coefVarRT = Math.sqrt(sumRTSquared/m - Math.pow(sumRT/m, 2))/(sumRT/m);
 			if (coefVarLF <= coefVarRT) {
 				for (int i = 0; i < m; i++) {
-					getLane(i).sucessiveLanes.add(dnSeg.getLane(i));
+					getLane(i).successiveDnLanes.add(dnSeg.getLane(i));
+					dnSeg.getLane(i).successiveUpLanes.add(getLane(i));
 				}
 			}
 			else {
 				for (int i = 0; i < m; i++) {
-					getLane(nLanes_-1-i).sucessiveLanes.add(dnSeg.getLane(dnSeg.nLanes()-1-i));
+					getLane(nLanes_-1-i).successiveDnLanes.add(dnSeg.getLane(dnSeg.nLanes()-1-i));
+					dnSeg.getLane(dnSeg.nLanes()-1-i).successiveUpLanes.add(getLane(nLanes_-1-i));
 				}
-			}			
+			}
 		}
 	}
+
 	@Override
 	public MLPLane getLane(int i) {
 		return (MLPLane) super.getLane(i);
+	}
+	public void organizeLanes(){
+		for (int i = 0; i < nLanes_; i++) {
+			lanes.add(getLane(i));
+		}
+	}
+
+	protected List<MLPLane> getValidLanes(MLPVehicle veh){
+		List<MLPLane> ans = new ArrayList<>();
+		for(MLPLane LN: lanes){
+			if (LN.enterAllowed){//下版本改变
+				ans.add(LN);
+			}
+		}
+		return ans;
 	}
 }

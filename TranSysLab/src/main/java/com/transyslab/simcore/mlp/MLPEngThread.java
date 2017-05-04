@@ -72,7 +72,8 @@ public class MLPEngThread extends EngTread{
 					uploadResult((int) task[0], fitVal);//将结果返回任务中心taskCenter
 				}
 			}
-			
+			break;
+
 		default:
 			break;
 		}

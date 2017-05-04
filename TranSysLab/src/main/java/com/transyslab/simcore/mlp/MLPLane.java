@@ -1,19 +1,14 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.omg.PortableServer.ID_ASSIGNMENT_POLICY_ID;
 
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Segment;
-
-import jogamp.graph.curve.tess.HEdge;
 
 public class MLPLane extends Lane implements Comparator<MLPLane>{
 	private double capacity_;
@@ -32,8 +27,9 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	public boolean enterAllowed;	//true=允许（后方）车道车辆驶入;false=不允许车道车辆驶入(等于道路封闭)
 	public MLPLane connectedDnLane;
 	public MLPLane connectedUpLane;
-	public int di;
-	protected List<MLPLane> sucessiveLanes;
+//	public int di;//弃用
+	protected List<MLPLane> successiveDnLanes;
+	protected List<MLPLane> successiveUpLanes;
 	
 	public MLPLane(){
 		capacity_ = MLPParameter.getInstance().capacity;
@@ -43,7 +39,8 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 //		LfCutinAllowed = true;
 //		RtCutinAllowed = true;
 		enterAllowed = true;
-		sucessiveLanes = new ArrayList<>();
+		successiveDnLanes = new ArrayList<>();
+		successiveUpLanes = new ArrayList<>();
 	}
 	
 	public boolean checkPass() {
@@ -87,7 +84,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	public boolean checkVolum(MLPVehicle mlpv) {
 		MLPVehicle tail_ = getTail();
 		if (tail_ != null &&
-			getLength() - tail_.distance() < 
+			getLength() - tail_.distance() <
 			(mlpv.getLength() +MLPParameter.getInstance().minGap(mlpv.currentSpeed()))) {
 			return false;
 		}
@@ -229,7 +226,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	}
 	
 	public MLPLane getAdjacent(int dir){
-		if (dir ==0){
+		if (dir == 0){
 			return (MLPLane) getRightLane();
 		}
 		else {
@@ -280,38 +277,115 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 			return c;
 		}
 	}
-	
-	public void calDi() {
-		if (((MLPSegment) segment_).isEndSeg()) {
-			di = 0;
-			return;
+
+	private boolean connect2DnLanes(List<MLPLane> DnLanes) {
+		for (MLPLane tmpLN: DnLanes){
+			if (tmpLN.upLanes_.contains(this))
+				return true;
 		}
-		if (connectedDnLane.enterAllowed) {
-			di = 0;
+		return false;
+	}
+
+	protected MLPLane successiveDnLaneInLink(MLPLink arg) {
+		for (MLPLane ln : successiveDnLanes) {
+			if (ln.getLink().getCode() == arg.getCode())
+				return ln;
 		}
-		else {
-			MLPLane tmp = (MLPLane) getLeftLane();
-			int count1 = 1;
-			while(tmp != null){
-				if (tmp.connectedDnLane.enterAllowed) {
-					break;
-				}
-				count1 += 1;
-				tmp = (MLPLane) tmp.getLeftLane();
-			}
-			tmp = (MLPLane) getRightLane();
-			int count2 = 1;
-			while (tmp != null) {
-				if (tmp.connectedDnLane.enterAllowed) {
-					break;
-				}
-				count2 += 1;
-				tmp = (MLPLane) tmp.getRightLane();
-			}
-			di = Math.max(count1, count2);
-		}
+		return null;
 	}
 	
+	public int calDi(MLPVehicle theVeh) {
+		//last seg of this link
+		if (((MLPSegment) segment_).isEndSeg()) {
+			MLPLink nextLink = (MLPLink) theVeh.nextLink();
+
+			//on the last link
+			if (nextLink == null){
+				return 0;
+			}
+
+			//this lane connects with next link; find out if nextNode is an intersection
+
+			//next node is an intersection
+			if (getLink().getDnNode().type(Constants.NODE_TYPE_INTERSECTION)!=0) {
+				List<MLPLane> nextValidLanes = ((MLPSegment) nextLink.getStartSegment()).getValidLanes(theVeh);
+				if (connect2DnLanes(nextValidLanes)) {
+					return 0;
+				}
+				//check neighbor lane
+				MLPLane tmpLN = (MLPLane) getLeft();
+				int count1 = 1;
+				while(tmpLN != null && !tmpLN.connect2DnLanes(nextValidLanes)) {
+					tmpLN = (MLPLane) tmpLN.getLeft();
+					count1 += 1;
+				}
+				if (index_ - count1 < segment_.getLeftLaneIndex())
+					count1 = Integer.MAX_VALUE;
+				tmpLN = (MLPLane) getRight();
+				int count2 = 1;
+				while(tmpLN != null && !tmpLN.connect2DnLanes(nextValidLanes)) {
+					tmpLN = (MLPLane) tmpLN.getRight();
+					count2 += 1;
+				}
+				if (index_ + count2 > segment_.getLeftLaneIndex() + segment_.nLanes() - 1)
+					count2 = Integer.MAX_VALUE;
+				return Math.min(count1, count2);
+			}
+
+			//next node is NOT an intersection
+			List<MLPLane> nextValidLanes = ((MLPSegment) nextLink.getStartSegment()).getValidLanes(theVeh);
+			MLPLane theSuDnLane = successiveDnLaneInLink(nextLink);
+			if (nextValidLanes.contains(theSuDnLane))
+				return 0;
+			int count = Integer.MAX_VALUE;
+			for (int i = 0; i < segment_.nLanes(); i++) {
+				MLPLane tmpLN = (MLPLane) segment_.getLane(i);
+				if ( tmpLN != this && nextValidLanes.contains(tmpLN.successiveDnLaneInLink(nextLink)) ) {
+					int tmp = Math.abs(tmpLN.getLnPosNum() - lnPosNum_);
+					count = tmp<=count ? tmp : count;
+				}
+			}
+			return count;
+		}
+
+		//break point between Segments: (within the link)
+		if (connectedDnLane!=null && connectedDnLane.enterAllowed) {
+			return 0;
+		}
+		MLPLane tmp = (MLPLane) getLeftLane();
+		int count1 = 1;
+		while(tmp != null){
+			if (tmp.connectedDnLane!=null && tmp.connectedDnLane.enterAllowed) {
+				break;
+			}
+			count1 += 1;
+			tmp = (MLPLane) tmp.getLeftLane();
+		}
+		if (index_ - count1 < segment_.getLeftLaneIndex())
+			count1 = Integer.MAX_VALUE;
+		tmp = (MLPLane) getRightLane();
+		int count2 = 1;
+		while (tmp != null) {
+			if (tmp.connectedDnLane!=null && tmp.connectedDnLane.enterAllowed) {
+				break;
+			}
+			count2 += 1;
+			tmp = (MLPLane) tmp.getRightLane();
+		}
+		if (index_ + count2 > segment_.getLeftLaneIndex() + segment_.nLanes() - 1)
+			count2 = Integer.MAX_VALUE;
+		return Math.min(count1, count2);
+	}
+
+	public boolean diEqualsZero(MLPVehicle theVeh){
+		if (((MLPSegment) segment_).isEndSeg()) {//last seg of this link
+			MLPLink nextLink = (MLPLink) theVeh.nextLink();
+			return ( nextLink == null ||
+					 connect2DnLanes( ( (MLPSegment) nextLink.getStartSegment() ).getValidLanes(theVeh) ) );
+		}
+		return (connectedDnLane!=null && connectedDnLane.enterAllowed);
+	}
+
 	public List<MLPLane> selectDnLane(Segment nextSeg) {
 		List<MLPLane> tmp = new ArrayList<>();
 		for (int i = 0; i < nextSeg.nLanes(); i++) {
@@ -327,8 +401,8 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	@Override
 	public int compare(MLPLane o1, MLPLane o2) {
 		MLPLane tmp = null;
-		for (int i = 0; i < sucessiveLanes.size(); i++) {
-			tmp = sucessiveLanes.get(i);
+		for (int i = 0; i < successiveDnLanes.size(); i++) {
+			tmp = successiveDnLanes.get(i);
 			if (tmp.segment_.getCode() == o1.segment_.getCode()) {
 				break;
 			}

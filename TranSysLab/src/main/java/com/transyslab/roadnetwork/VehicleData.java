@@ -51,10 +51,8 @@ public class VehicleData {
 			Lane lane = vhc.getLane();
 			double l = lane.getLength();
 			double s = l-vhc.distance();
-//			vhcLocationX_ = lane.getStartPnt().getLocationX() + s * (lane.getEndPnt().getLocationX() - lane.getStartPnt().getLocationX()) / l;
-//			vhcLocationY_ = lane.getStartPnt().getLocationY() + s * (lane.getEndPnt().getLocationY() - lane.getStartPnt().getLocationY()) / l;
-			vhcLocationX_ = lane.getEndPnt().getLocationX() + s * (lane.getStartPnt().getLocationX() - lane.getEndPnt().getLocationX()) / l;
-			vhcLocationY_ = lane.getEndPnt().getLocationY() + s * (lane.getStartPnt().getLocationY() - lane.getEndPnt().getLocationY()) / l;
+			vhcLocationX_ = lane.getStartPnt().getLocationX() + s * (lane.getEndPnt().getLocationX() - lane.getStartPnt().getLocationX()) / l;
+			vhcLocationY_ = lane.getStartPnt().getLocationY() + s * (lane.getEndPnt().getLocationY() - lane.getStartPnt().getLocationY()) / l;
 		}
 		
 	}

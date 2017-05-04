@@ -4,17 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Random;
-
-import org.apache.commons.math3.analysis.function.Max;
 
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
-import com.transyslab.roadnetwork.Node;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
 import com.transyslab.roadnetwork.VehicleData;
@@ -120,9 +115,6 @@ public class MLPNetwork extends RoadNetwork {
 		for (Lane l: lanes_){
 			((MLPLane) l).checkConectedLane();
 		}
-		for (Lane l: lanes_){
-			((MLPLane) l).calDi();
-		}
 		
 		for (Segment seg: segments_){
 			Segment tmpseg = seg;
@@ -132,15 +124,20 @@ public class MLPNetwork extends RoadNetwork {
 			}
 			((MLPSegment) seg).endDSP = ((MLPSegment) seg).startDSP + seg.getLength();
 		}
-		
+
+		for (int i = 0; i < nSegments(); i++) {
+			getSegment(i).organizeLanes();
+		}
+
+		for (Segment seg: segments_) {
+			((MLPSegment) seg).setSucessiveLanes();
+		}
+
 		for (Link l: links_){
 			//预留
 			((MLPLink) l).checkConnectivity();
 			//将jointLane信息装入Link中
 			((MLPLink) l).addLnPosInfo();
-		}
-		for (Segment seg: segments_) {
-			((MLPSegment) seg).setSucessiveLanes();
 		}
 	}
 	/*
@@ -284,6 +281,21 @@ public class MLPNetwork extends RoadNetwork {
 		}
 		return (sum == 0.0) ? 0.0 : (n/sum);
 	}
+
+	public double calLoopFlow(String det_name) {
+		if (loops.size()<1) {
+			System.err.println("no loops in network");
+			return 0.0;
+		}
+		double flow = 0.0;
+		for (MLPLoop lp : loops) {
+			if (lp.detName.equals("det2")) {
+				flow += lp.detectedSpds.size();
+			}
+			lp.detectedSpds.clear();
+		}
+		return flow;
+	}
 	
 	public void resetNetwork(boolean needRET, long seed) {
 		sysRand.setSeed(seed);
@@ -292,7 +304,7 @@ public class MLPNetwork extends RoadNetwork {
 			MLPLink LNK = mlpLink(i);
 			LNK.emtTable.clearflow();//未发出的车从emtTable中移除
 			LNK.tripTime.clear();//重置已记录的Trip Time
-			Collections.sort(LNK.jointLanes, (a,b) -> a.LPNum<b.LPNum ? -1 : a.LPNum==b.LPNum ? 0 : 1);//车道排列顺序复位
+			Collections.sort(LNK.jointLanes, (a,b) -> a.jlNum <b.jlNum ? -1 : a.jlNum ==b.jlNum ? 0 : 1);//车道排列顺序复位
 		}
 		for (int i = 0; i < nLanes(); i++) {
 			mlpLane(i).vehsOnLn.clear();//从lane上移除在网车辆
@@ -319,5 +331,10 @@ public class MLPNetwork extends RoadNetwork {
 				}
 			}
 		}
+	}
+
+	@Override
+	public MLPSegment getSegment(int i) {
+		return (MLPSegment) super.getSegment(i);
 	}
 }

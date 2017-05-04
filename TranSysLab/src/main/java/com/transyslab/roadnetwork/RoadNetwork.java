@@ -98,7 +98,7 @@ public class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link>{
 		RoadNetworkPool pool = RoadNetworkPool.getInstance();		
 		if (pool != null) {
 			HashMap<String, Integer> hm = pool.getHashMap();
-			int threadid = hm.get(Thread.currentThread().getName()).intValue();
+			int threadid = hm.get(Thread.currentThread().getName());
 			return RoadNetworkPool.getInstance().getNetwork(threadid);
 		}
 		else {

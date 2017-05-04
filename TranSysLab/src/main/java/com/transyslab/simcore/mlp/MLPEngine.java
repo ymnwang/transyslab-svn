@@ -68,11 +68,14 @@ public class MLPEngine extends SimulationEngine{
 	public void run(int mode) {//0: no display 1: with display 2: run with logs
 		switch (mode) {		
 		case 0:
+			needRndETable = true;//测试
+			seedFixed = true;//测试
+			runningseed = 1490183749797l;//测试
+			displayOn = true;
 			//Engine参数与状态的初始化
 			resetEngine(0, 6900, 0.2);
 			//优化参数设置
 			setOptParas(null);
-			displayOn = true;
 			while (simulationLoop()>=0);
 			break;
 		case 1:
@@ -184,13 +187,15 @@ public class MLPEngine extends SimulationEngine{
 					loopRecWriter.write(msg);
 				}
 			}
-			for (int i = 0; i < mlp_network.nNodes(); i++) {
-				mlp_network.getNode(i).dispatchStatedVeh();
-			}
 			//车辆推进
 			for (MLPVehicle vehicle : mlp_network.veh_list) {
 				vehicle.advance();
-			}						
+			}
+			//加载transpose车辆
+			for (int i = 0; i < mlp_network.nNodes(); i++) {
+				mlp_network.getNode(i).dispatchStatedVeh();
+			}
+
 		}
 		
 		//可视化渲染
@@ -243,7 +248,7 @@ public class MLPEngine extends SimulationEngine{
 													// is done
 		}
 		else {
-			System.out.println(time);			
+			System.out.println(time);
 			return state_ = Constants.STATE_OK;// STATE_OK宏定义
 		}			
 	}

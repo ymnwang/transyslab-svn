@@ -5,18 +5,18 @@ import java.util.List;
 import java.util.ListIterator;
 
 public class JointLane {
-	public int LPNum;
-	public List<MLPLane> lanesCompose;
+	protected int jlNum;
+	protected List<MLPLane> lanesCompose;
 	public double stPtDsp;
 	public double endPtDsp;
 
 	public JointLane(){
-		LPNum = 0;
+		jlNum = 0;
 		lanesCompose = new ArrayList<MLPLane>();
 	}
 
 	public JointLane(int num){
-		LPNum = num;
+		jlNum = num;
 		lanesCompose = new ArrayList<MLPLane>();
 	}
 

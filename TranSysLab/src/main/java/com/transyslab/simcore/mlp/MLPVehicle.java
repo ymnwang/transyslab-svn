@@ -170,7 +170,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	private double calH(int turning){
-		int h = lane_.di - lane_.getAdjacent(turning).di;
+		int h = lane_.calDi(this) - lane_.getAdjacent(turning).calDi(this);
 		if (h==0){
 			return 0;
 		}
@@ -215,6 +215,8 @@ public class MLPVehicle extends Vehicle{
 	 }
 	
 	public int updateMove() {
+		if ( Math.abs(distance_ - newDis - newSpeed*SimulationClock.getInstance().getStepSize()) > 0.001 )
+			System.out.println("BUG 未在本计算帧内处理此车");
 		if (VirtualType_>0 && buffer_ == 0) {
 			lane_.removeVeh(this, true);
 			return 1;
@@ -232,6 +234,10 @@ public class MLPVehicle extends Vehicle{
 	
 	public int dealPassing() {
 		if (segment_.isEndSeg()) {
+			if (VirtualType_ != 0) {
+				lane_.removeVeh(this, true);//虚车最多影响到Link末端
+				return 1;
+			}
 			MLPNode server = (MLPNode) link_.getDnNode();
 			return server.serve(this);
 		}
@@ -248,6 +254,15 @@ public class MLPVehicle extends Vehicle{
 				if (currentSpeed_>0.0) 
 					newSpeed = (distance_-newDis)/SimulationClock.getInstance().getStepSize();
 			}*/
+			if (lane_.connectedDnLane == null) {//has no successive lane
+				if (VirtualType_ == 0){
+					System.err.println("Vehicle No. " + getCode() +" has no successive lane to go");
+					holdAtDnEnd();
+				}
+				else
+					lane_.removeVeh(this, true);//如果虚车触发此条件（successive lane不可用），则消失
+				return 0;
+			}
 			lane_.passVeh2ConnDnLn(this);
 			newDis = segment_.getLength() + newDis;
 			if (newDis < 0.0) {
@@ -257,7 +272,7 @@ public class MLPVehicle extends Vehicle{
 		}
 	}
 	
-	protected void holdAtLinkDnEnd() {
+	protected void holdAtDnEnd() {
 		newDis = 0.0;
 		if (currentSpeed_>0.0) 
 			newSpeed = (distance_-newDis)/SimulationClock.getInstance().getStepSize();
@@ -319,13 +334,24 @@ public class MLPVehicle extends Vehicle{
 			//是lane上的第一辆车，先将前车为null
 			leading_ = (MLPVehicle) null;
 			//只要前方存在lane且允许通行，则一直取前方lane，直到前方lane上有车，此时取前方lane的最后一辆作为前车
-			MLPLane thelane = lane_.connectedDnLane;
-			while (thelane != null && thelane.enterAllowed) {
-				if (!thelane.vehsOnLn.isEmpty()) {
-					leading_ = thelane.vehsOnLn.getLast();
+//			MLPLane thelane = lane_.connectedDnLane;
+//			while (thelane != null && thelane.enterAllowed) {
+//				if (!thelane.vehsOnLn.isEmpty()) {
+//					leading_ = thelane.vehsOnLn.getLast();
+//					break;
+//				}
+//				thelane = thelane.connectedDnLane;
+//			}
+			MLPSegment theSeg = segment_;
+			MLPLane theLN = lane_;
+			while (!theSeg.isEndSeg() && theLN.successiveDnLanes.size()==1){
+				//检查下游LN，并推进
+				theLN = theLN.successiveDnLanes.get(0);
+				theSeg = theLN.getSegment();
+				if (!theLN.vehsOnLn.isEmpty()) {
+					leading_ = theLN.vehsOnLn.getLast();
 					break;
 				}
-				thelane = thelane.connectedDnLane;				
 			}
 		}
 		else
@@ -333,13 +359,24 @@ public class MLPVehicle extends Vehicle{
 			leading_ = lane_.vehsOnLn.get(p-1);
 		if (p == lane_.vehsOnLn.size() - 1) {
 			trailing_ = (MLPVehicle) null;
-			MLPLane thelane = lane_.connectedUpLane;
-			while (thelane != null && thelane.enterAllowed) {
-				if (!thelane.vehsOnLn.isEmpty()) {
-					trailing_ = thelane.vehsOnLn.getFirst();
+//			MLPLane thelane = lane_.connectedUpLane;
+//			while (thelane != null && thelane.enterAllowed) {
+//				if (!thelane.vehsOnLn.isEmpty()) {
+//					trailing_ = thelane.vehsOnLn.getFirst();
+//					break;
+//				}
+//				thelane = thelane.connectedUpLane;
+//			}
+			MLPSegment theSeg = segment_;
+			MLPLane theLN = lane_;
+			while (!theSeg.isStartSeg() && theLN.successiveUpLanes.size()==1){
+				//检查上游LN，并推进
+				theLN = theLN.successiveUpLanes.get(0);
+				theSeg = theLN.getSegment();
+				if (!theLN.vehsOnLn.isEmpty()) {
+					trailing_ = theLN.vehsOnLn.getFirst();
 					break;
 				}
-				thelane = thelane.connectedUpLane;				
 			}
 		}
 		else 
