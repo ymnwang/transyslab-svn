@@ -28,8 +28,12 @@ import com.transyslab.simcore.mesots.MesoNetworkPool;
 
 
 public class MLPEngine extends SimulationEngine{
-	
-	//protected int runTimes_; // 仿真运行次数
+
+    public boolean seedFixed;
+    public long runningseed;
+    public boolean outputSignal;
+    public boolean needEmpData;
+    //protected int runTimes_; // 仿真运行次数
 	protected double updateTime_;
 	protected double LCDTime_;
 	protected boolean firstEntry; // simulationLoop中第一次循环的标记
@@ -41,11 +45,7 @@ public class MLPEngine extends SimulationEngine{
 	protected TXTUtils infoWriter;
 	protected boolean infoOn;
 	protected String msg;
-	public boolean seedFixed;
-	public long runningseed;
-	public boolean outputSignal;
 	private Object empData;
-	public boolean needEmpData;
 	private int mod;
 	private boolean displayOn;
 	//public double fitnessVal;
@@ -66,9 +66,9 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	@Override
-	public void run(int mode) {//0: no display 1: with display 2: run with logs
-		switch (mode) {
-		    case 0:
+    public void run(int mode) {//0: with display default 1: no display silent 2: no display run with logs 3: with display for testing
+        switch (mode) {
+            case 0:
                 //Engine参数与状态的初始化
                 resetEngine(0, 6900, 0.2);
                 //优化参数设置
@@ -93,34 +93,34 @@ public class MLPEngine extends SimulationEngine{
                     }
                 }
                 break;
-		case 3:
-			needRndETable = true;//测试
-			seedFixed = true;//测试
-			runningseed = 1490183749797l;//测试
-			displayOn = true;
-			//Engine参数与状态的初始化
-			resetEngine(0, 6900, 0.2);
-			//优化参数设置
-			setOptParas(null);
-			while (simulationLoop()>=0);
-			break;
-		case 1:
-			//Engine参数与状态的初始化
-			resetEngine(0, 6900, 0.2);
-			//优化参数设置
-			setOptParas(null);
-			while (simulationLoop()>=0);
-			break;
-		case 2:
-			trackOn = true;
-			needRndETable = true;
-			seedFixed = true;
-			runningseed = 1490183749797l;
-			resetEngine(0, 6900, 0.2);
-			setOptParas(null);
-			while (simulationLoop()>=0);
-			break;
-		default:
+            case 1:
+                //Engine参数与状态的初始化
+                resetEngine(0, 6900, 0.2);
+                //优化参数设置
+                setOptParas(null);
+                while (simulationLoop() >= 0) ;
+                break;
+            case 2:
+                trackOn = true;
+                needRndETable = true;
+                seedFixed = true;
+                runningseed = 1490183749797l;
+                resetEngine(0, 6900, 0.2);
+                setOptParas(null);
+                while (simulationLoop() >= 0) ;
+                break;
+            case 3:
+                needRndETable = true;//测试
+                seedFixed = true;//测试
+                runningseed = 1490183749797l;//测试
+                displayOn = true;
+                //Engine参数与状态的初始化
+                resetEngine(0, 6900, 0.2);
+                //优化参数设置
+                setOptParas(null);
+                while (simulationLoop() >= 0) ;
+                break;
+            default:
 			break;
 		}
 	}
@@ -227,8 +227,8 @@ public class MLPEngine extends SimulationEngine{
 		//可视化渲染
 		SimulationClock clock = SimulationClock.getInstance();
 		int tmp = (int) Math.floor(clock.getCurrentTime()*clock.getStepSize());
-		if (displayOn && (tmp%10)==0) {
-			mlp_network.recordVehicleData();
+        if (displayOn) { // && (tmp%10)==0
+            mlp_network.recordVehicleData();
 		}
 		
 		//输出轨迹
