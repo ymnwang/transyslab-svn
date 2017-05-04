@@ -4,6 +4,9 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -22,6 +25,13 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+
+import com.transyslab.commons.io.FileUtils;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
@@ -43,8 +53,7 @@ public class CasePanel extends JPanel{
 	private JTextField textField[7]; //结束时间:second
 	private JTextField textField[8]; //仿真步长:second*/
 	private JTextField[] textFields;
-	private SimulationEngine[] engines;
-	private RoadNetworkPool networkPool;
+	
 
 	public CasePanel(){
 		textFields = new JTextField[9];
@@ -79,7 +88,7 @@ public class CasePanel extends JPanel{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fileChooser = new JFileChooser("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources");
+				JFileChooser fileChooser = new JFileChooser("src/main/resources");
 				fileChooser.setDialogTitle("选择交通需求文件");
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setFileFilter(new FileNameExtensionFilter("XML/CSV文件","xml","csv"));
@@ -165,6 +174,10 @@ public class CasePanel extends JPanel{
 //				if(checkTextFields()){
 					//隐藏窗口
 					SubWindow.getInstance().setVisible(false);
+					//读入面板设置的参数
+					Configurations configs = new Configurations();
+					
+
 					AppSetup.setupParameter.put("方案名称", textFields[0].getText());
 					AppSetup.setupParameter.put("需求路径", textFields[1].getText());
 					AppSetup.startTime = Double.parseDouble(textFields[2].getText())*3600
@@ -179,44 +192,44 @@ public class CasePanel extends JPanel{
 						AppSetup.modelType = 1;
 					else
 						AppSetup.modelType = 2;
+					StringBuilder projPath = new StringBuilder(AppSetup.setupParameter.get("项目路径"));
+					projPath.append("\\").append(AppSetup.setupParameter.get("项目名称")).append(".properties");
+					//新建文件
+					if(FileUtils.createFile(projPath.toString())){
+						//写入.properties文件
+						try{
+							FileBasedConfigurationBuilder<PropertiesConfiguration> builder = 
+									configs.propertiesBuilder(projPath.toString());
+							PropertiesConfiguration config = builder.getConfiguration();
+							config.addProperty("projectName", AppSetup.setupParameter.get("项目名称"));
+							config.addProperty("networkPath", AppSetup.setupParameter.get("路网路径"));
+							config.addProperty("caseName", textFields[0].getText());
+							LocalDateTime createDateTime = LocalDateTime.now();
+							config.addProperty("createTime", createDateTime.toString());
+							config.addProperty("demandPath", AppSetup.setupParameter.get("需求路径"));
+							config.addProperty("simModel", modelName);
+							//开始时间，时：分：秒
+							LocalTime stTime = LocalTime.of(Integer.parseInt(textFields[2].getText()), 
+									                      Integer.parseInt(textFields[3].getText()), 
+									                      Integer.parseInt(textFields[4].getText()));
+							
+							config.addProperty("startTime", stTime.toString());
+							//结束时间，时：分：秒
+							LocalTime edTime = LocalTime.of(Integer.parseInt(textFields[5].getText()), 
+				                      Integer.parseInt(textFields[6].getText()), 
+				                      Integer.parseInt(textFields[7].getText()));
+							config.addProperty("endTime", edTime.toString());
+							config.addProperty("simStep", textFields[8].getText());
+							builder.save();
+						}catch(ConfigurationException cex){
+						    cex.printStackTrace();
+						}
+					}
+					
 					//text内容置空
 					clearTextFields();
-					
-					RoadNetworkPool infoarrays;
-					if(AppSetup.modelType == 1)
-						infoarrays = MesoNetworkPool.getInstance();
-					else {
-						infoarrays = MLPNetworkPool.getInstance();
-					}
-					engines = new SimulationEngine[Constants.THREAD_NUM];
-					Worker[] workerList = new Worker[Constants.THREAD_NUM];
-					Producer[] producerList = new Producer[Constants.THREAD_NUM];
-					List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
-					Thread[] threadList = new Thread[Constants.THREAD_NUM];
-					for (int i = 0; i < Constants.THREAD_NUM; i++) {
-						//选择仿真模型
-						producerList[i] = new Producer(engines[i]);
-						taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
-						threadList[i] = new Thread(taskList.get(i));
-					}
-					infoarrays.init(Constants.THREAD_NUM, infoarrays);
-					infoarrays.organizeHM(threadList);
-					for (int i = 0; i < Constants.THREAD_NUM; i++) {
-						threadList[i].start();
-					}
-
-					int tempi = 0;
-					for (FutureTask<SimulationEngine> task : taskList) {
-						try {
-							engines[tempi] = task.get();
-						}
-						catch (InterruptedException | ExecutionException e1) {
-							
-							e1.printStackTrace();
-						}
-						tempi++;
-					}
-					MainWindow.getInstance().setNetworkReady();
+					//TODO 避免打开项目与新建项目按钮的冲突
+					MainWindow.getInstance().initSimEngines();
 					
 	/*			}
 				else{
@@ -355,7 +368,5 @@ public class CasePanel extends JPanel{
 			text.setText("");
 		}
 	}
-	public SimulationEngine[] getSimEngines(){
-		return engines;
-	}
+
 }

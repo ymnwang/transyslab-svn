@@ -1,12 +1,9 @@
 package com.transyslab.commons.renderer;
 
-import java.awt.event.KeyEvent;
 
 import com.jogamp.newt.event.MouseEvent;
 import com.jogamp.opengl.math.VectorUtil;
 import com.transyslab.roadnetwork.GeoPoint;
-
-import jhplot.fit.BreitWigner;
 
 public class OrbitCamera extends Camera{
 	private float zoomSpeed, rotateSpeed, panSpeed;
@@ -42,13 +39,12 @@ public class OrbitCamera extends Camera{
 	public void calcMouseMotion(final int deltaWinX, final int deltaWinY, final int mouseButton){
 
 		if( mouseButton == MouseEvent.BUTTON2){
+			//关于高度radius自适应调整旋转速度
+			//TODO 改成与画布高宽相关
+			rotateSpeed = (float) (rotateSpeed*radius/500.0f);
 			this.thetaDelta -= (2.0*Math.PI*(deltaWinX)/PIXELS_PER_ROUND * rotateSpeed);
 			this.phiDelta -= (2.0*Math.PI*(deltaWinY)/PIXELS_PER_ROUND * rotateSpeed);
 			float[] offset = new float[3];
-	/*		VectorUtil.subVec3(offset, eyeLocation, tarLocation);
-			this.theta =  Math.atan2(offset[0], offset[2]);
-			this.phi = Math.atan2(Math.sqrt(offset[0] * offset[0] + offset[2] * offset[2]), offset[1]);
-			*/
 			this.theta += this.thetaDelta;
 			this.phi += this.phiDelta;
 			
@@ -62,21 +58,27 @@ public class OrbitCamera extends Camera{
 			VectorUtil.addVec3(eyeLocation, tarLocation, offset);
 			this.thetaDelta = 0.0;
 			this.phiDelta = 0.0;
+			this.rotateSpeed = 1.0f;
 		}
 		else if(mouseButton == MouseEvent.BUTTON3){
 			float[] dir = new float[3];
+			//关于高度radius自适应调整平移速度
+			//TODO 改成与画布高宽相关
+			panSpeed = (float) (panSpeed*radius/1000.0f);
 			VectorUtil.subVec3(dir, eyeLocation, tarLocation);
 			float[] right = new float[3];
 			VectorUtil.crossVec3(right, dir, this.camUp);
 			float[] up = new float[3];
 			VectorUtil.crossVec3(up, right, dir);
 			VectorUtil.normalizeVec3(up);
-			VectorUtil.scaleVec3(up, up, deltaWinY);
+			VectorUtil.scaleVec3(up, up, deltaWinY*panSpeed);
 			VectorUtil.normalizeVec3(right);
-			VectorUtil.scaleVec3(right, right, deltaWinX);
+			VectorUtil.scaleVec3(right, right, deltaWinX*panSpeed);
 			VectorUtil.addVec3(eyeMotion, right, up);
 			VectorUtil.addVec3(tarMotion, right, up);
+			panSpeed = 1.0f;
 			update();
+			
 		}
 		
 	}

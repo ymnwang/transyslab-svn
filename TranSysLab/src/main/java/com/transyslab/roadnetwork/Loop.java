@@ -192,7 +192,7 @@ public class Loop extends CodedObject implements Sensor{
 		GeoPoint startPnt = new GeoPoint(lane_.getStartPnt(),lane_.getEndPnt(), (1-position_));
 		double lenScale = zoneLength/lane_.getLength();
 		GeoPoint endPnt = new GeoPoint(startPnt,lane_.getEndPnt(),(1-lenScale));
-		surface = GeoUtil.lineToRectangle(startPnt, endPnt, lane_.getWidth());
+		surface = GeoUtil.lineToRectangle(startPnt, endPnt, lane_.getWidth(),true);
 		surface.createAabBox();
 	}
 	public GeoSurface getSurface(){

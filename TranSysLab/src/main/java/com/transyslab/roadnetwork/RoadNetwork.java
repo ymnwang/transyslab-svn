@@ -786,7 +786,7 @@ public class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link>{
 			}
 			JdbcUtils.release(con, null, ps);
 		}
-		catch (ClassNotFoundException | SQLException e) {
+		catch (SQLException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}
@@ -802,7 +802,7 @@ public class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link>{
 			}
 			JdbcUtils.release(con, null, ps);
 		}
-		catch (ClassNotFoundException | SQLException e) {
+		catch (SQLException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}
@@ -818,7 +818,7 @@ public class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link>{
 			}
 			JdbcUtils.release(con, null, ps);
 		}
-		catch (ClassNotFoundException | SQLException e) {
+		catch (SQLException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}

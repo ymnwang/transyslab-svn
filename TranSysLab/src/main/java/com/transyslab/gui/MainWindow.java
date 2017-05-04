@@ -4,6 +4,10 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.SystemColor;
 import java.awt.event.*;
+import java.io.File;
+import java.sql.SQLException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
@@ -17,13 +21,24 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.ArrayListHandler;
+import org.apache.commons.dbutils.handlers.ColumnListHandler;
 
 import com.jogamp.opengl.util.FPSAnimator;
+import com.transyslab.commons.io.JdbcUtils;
 import com.transyslab.commons.renderer.BirdEyeCamera;
 import com.transyslab.commons.renderer.Camera;
 import com.transyslab.commons.renderer.JOGLCanvas;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.renderer.OrbitCamera;
+import com.transyslab.commons.tools.DataVisualization;
 import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
@@ -34,6 +49,7 @@ import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoNetworkPool;
 import com.transyslab.simcore.mlp.MLPNetworkPool;
 
+import info.monitorenter.gui.chart.traces.Trace2DSimple;
 import jogamp.common.util.locks.RecursiveThreadGroupLockImpl01Unfairish;
 
 public class MainWindow extends JFrame{
@@ -43,10 +59,13 @@ public class MainWindow extends JFrame{
 	private JOGLCanvas canvas_;
 	private FPSAnimator animator_;
 	
-//	private JFrame frame;
 	private JTextField textField;
 	private int windowWidth = 810;
 	private int windowHeight = 632;
+	
+	private SimulationEngine[] engines;
+	private Trace2DSimple traceRT;
+	public boolean needRTPlot;
 	private static MainWindow theWindow = new MainWindow();
 	public static MainWindow getInstance(){
 		return theWindow;
@@ -56,13 +75,9 @@ public class MainWindow extends JFrame{
 		//Complete window design
 		initialize();
 		// Set rendering canvas
-		fps_ = 25;		
+		fps_ = 120;		
 		Camera cam = new OrbitCamera();
 		canvas_.setCamera(cam);
-		canvas_.addKeyListener(canvas_);
-		canvas_.addMouseListener(canvas_);
-		canvas_.addMouseWheelListener(canvas_);
-		canvas_.addMouseMotionListener(canvas_);
 		// Create a animator that drives canvas' display() at the specified FPS.
 		animator_ = new FPSAnimator(canvas_, fps_, true);
 
@@ -123,7 +138,6 @@ public class MainWindow extends JFrame{
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		
-		JPanel panel_4 = new JPanel();
 		
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
@@ -284,12 +298,88 @@ public class MainWindow extends JFrame{
 			}
 		});
 		
-		JButton button_1 = new JButton("\u52A0\u8F7D\u8DEF\u7F51");
+		JButton button_1 = new JButton("打开项目");
 		button_1.setFont(new Font("宋体", Font.PLAIN, 14));
-		
-		JButton button_2 = new JButton("\u53E6\u5B58\u4E3A");
-		button_2.setFont(new Font("宋体", Font.PLAIN, 14));
-		
+		button_1.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fileChooser = new JFileChooser("src/main/resources");
+				fileChooser.setDialogTitle("选择项目文件");
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setFileFilter(new FileNameExtensionFilter("配置文件","properties"));
+				int state = fileChooser.showOpenDialog(null);
+				if(state == JFileChooser.APPROVE_OPTION){
+					File file = fileChooser.getSelectedFile();
+					Configurations configs = new Configurations();
+
+					try{
+						Configuration config = configs.properties(file);
+						String projectName = config.getString("projectName");
+					    String networkPath = config.getString("networkPath");
+					    String caseName = config.getString("caseName");
+					    String createTime = config.getString("createTime");
+					    String simModel = config.getString("simModel");
+					    String startTime =  config.getString("startTime");
+					    String endTime = config.getString("endTime");
+					    String demandPath = config.getString("demandPath");
+					    Float simStep = config.getFloat("simStep");
+					    LocalTime stTime = LocalTime.parse(startTime);
+					    AppSetup.startTime = stTime.getHour()*3600+stTime.getMinute()*60+stTime.getSecond();
+					    LocalTime edTime = LocalTime.parse(endTime);
+					    AppSetup.endTime = edTime.getHour()*3600+edTime.getMinute()*60+edTime.getSecond();
+					    AppSetup.setupParameter.put("项目名称", projectName);
+					    AppSetup.setupParameter.put("路网路径",networkPath);
+					    AppSetup.setupParameter.put("方案名称", caseName);
+					    AppSetup.setupParameter.put("需求路径", demandPath);
+					    AppSetup.timeStep = simStep;
+					    if(simModel.equals("MesoTS"))	    	
+					    	AppSetup.modelType = 1;
+					    else {
+					    	AppSetup.modelType = 2;
+						}
+					    initSimEngines();
+					}
+					catch(ConfigurationException cex)
+					{
+					    // loading of the configuration file failed
+					}
+					
+				}
+				
+			}
+		});
+		JButton button_2 = new JButton("车速统计");
+		button_2.setFont(new Font("宋体", Font.PLAIN, 13));
+		//TODO 限制多次点击
+		button_2.addActionListener(new ActionListener() {	
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//TODO 硬写未设计
+				needRTPlot = true;
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+			
+						QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
+						String sql = "select C,round(S/C*12.0*5.0/4) as hourfolw,meanspeed, D from (select count(\"FLOW\") AS C,sum(\"FLOW\") AS S,sum(\"FLOW\"*\"SPEED\")/(sum(\"FLOW\")+0.0000001) as meanspeed, floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300 AS D from nhschema.\"Loop\"  where \"CPN\" = 'LP/A24' "
+								+ "   and (extract(epoch from \"CTIME\")>=extract(epoch from timestamp without time zone '2016-06-20 07:55:00')) and (extract(epoch from \"CTIME\")<=extract(epoch from timestamp without time zone '2016-06-20 09:50:00'))"
+								+ " group by floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300) as derivedtable order by D";
+						try {
+							List result = (List) qr.query(sql, new ColumnListHandler(3));
+							traceRT = new Trace2DSimple("仿真车速");
+							
+							DataVisualization.realTimePlot(traceRT, null, result);
+							//System.out.println("");
+						} catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				}).start();
+			}	
+		});
 		JButton button_3 = new JButton("\u9000\u51FA");
 		button_3.setFont(new Font("宋体", Font.PLAIN, 14));
 		GroupLayout gl_panel_6 = new GroupLayout(panel_6);
@@ -356,14 +446,14 @@ public class MainWindow extends JFrame{
 				}
 				//第一次播放
 				else if(!canvas_.isRendering){
-					SimulationEngine[] engineList = ((CasePanel)SubWindow.getInstance().getContentPane()).getSimEngines();
+				
 					Worker[] workerList = new Worker[Constants.THREAD_NUM];
 					Thread[] threadList = new Thread[Constants.THREAD_NUM];
 
 					FrameQueue.getInstance().initFrameQueue();
 
 					for (int i = 0; i < Constants.THREAD_NUM; i++) {
-						workerList[i] = new Worker(engineList[i]);
+						workerList[i] = new Worker(engines[i]);
 						threadList[i] = new Thread(workerList[i]);
 					}
 
@@ -440,10 +530,51 @@ public class MainWindow extends JFrame{
 	public void render() {
 		animator_.start(); // start the animation loop
 	}
-	public void setNetworkReady(){
+	public SimulationEngine[] getSimEngines(){
+		return engines;
+	}
+	public Trace2DSimple getTrace2D(){
+		return traceRT;
+	}
+	public void initSimEngines(){
+		RoadNetworkPool infoarrays;
+		//选择仿真模型
+		if(AppSetup.modelType == 1)
+			infoarrays = MesoNetworkPool.getInstance();
+		else {
+			infoarrays = MLPNetworkPool.getInstance();
+		}
+		engines = new SimulationEngine[Constants.THREAD_NUM];
+
+		Producer[] producerList = new Producer[Constants.THREAD_NUM];
+		List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
+		Thread[] threadList = new Thread[Constants.THREAD_NUM];
+		for (int i = 0; i < Constants.THREAD_NUM; i++) {
+			
+			producerList[i] = new Producer(engines[i]);
+			taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
+			threadList[i] = new Thread(taskList.get(i));
+		}
+		infoarrays.init(Constants.THREAD_NUM, infoarrays);
+		infoarrays.organizeHM(threadList);
+		for (int i = 0; i < Constants.THREAD_NUM; i++) {
+			threadList[i].start();
+		}
+
+		int tempi = 0;
+		for (FutureTask<SimulationEngine> task : taskList) {
+			try {
+				engines[tempi] = task.get();
+			}
+			catch (InterruptedException | ExecutionException e1) {
+				
+				e1.printStackTrace();
+			}
+			tempi++;
+		}
+		// Network is ready for simulation
 		canvas_.setFirstRender(true);
 		canvas_.setDrawableNetwork(RoadNetworkPool.getInstance().getNetwork(0));
 		canvas_.requestFocusInWindow();
 	}
-
 }

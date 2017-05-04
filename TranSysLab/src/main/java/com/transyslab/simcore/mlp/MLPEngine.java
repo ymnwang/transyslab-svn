@@ -19,6 +19,7 @@ import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.commons.tools.emitTable;
+import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
@@ -66,8 +67,33 @@ public class MLPEngine extends SimulationEngine{
 
 	@Override
 	public void run(int mode) {//0: no display 1: with display 2: run with logs
-		switch (mode) {		
-		case 0:
+		switch (mode) {
+		    case 0:
+                //Engine参数与状态的初始化
+                resetEngine(0, 6900, 0.2);
+                //优化参数设置
+                double[] param = new double[]{15.993167, 0.15445936, 1.5821557, 6.34795, 33.02263, 93.043655};
+                setOptParas(param);
+                displayOn = true;
+                int idata = 0;
+                double calStep = 300;
+                double caltime = calStep;
+                MLPNetwork mlp_network = MLPNetwork.getInstance();
+                while (simulationLoop()>=0){
+                    double now = SimulationClock.getInstance().getCurrentTime();
+                    if (now>=caltime) {
+                        List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
+                        trTlist.clear();
+                        //线圈检测地点速度
+                        if(MainWindow.getInstance().needRTPlot){
+                            MainWindow.getInstance().getTrace2D().addPoint(idata, mlp_network.loopStatistic("det3")*3.6);
+                        }
+                        caltime += calStep;
+                        idata++;
+                    }
+                }
+                break;
+		case 3:
 			needRndETable = true;//测试
 			seedFixed = true;//测试
 			runningseed = 1490183749797l;//测试
@@ -91,7 +117,7 @@ public class MLPEngine extends SimulationEngine{
 			seedFixed = true;
 			runningseed = 1490183749797l;
 			resetEngine(0, 6900, 0.2);
-			setOptParas(null);			
+			setOptParas(null);
 			while (simulationLoop()>=0);
 			break;
 		default:
@@ -199,7 +225,9 @@ public class MLPEngine extends SimulationEngine{
 		}
 		
 		//可视化渲染
-		if (displayOn) {
+		SimulationClock clock = SimulationClock.getInstance();
+		int tmp = (int) Math.floor(clock.getCurrentTime()*clock.getStepSize());
+		if (displayOn && (tmp%10)==0) {
 			mlp_network.recordVehicleData();
 		}
 		

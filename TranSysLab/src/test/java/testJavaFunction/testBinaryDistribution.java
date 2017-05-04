@@ -1,4 +1,4 @@
-package unit_test;
+package testJavaFunction;
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class testBinaryDistribution {

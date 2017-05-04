@@ -10,6 +10,7 @@ import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
+import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.roadnetwork.Boundary;
 import com.transyslab.roadnetwork.CodedObject;
 import com.transyslab.roadnetwork.Constants;
@@ -118,6 +119,9 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 
 		// ----- Your OpenGL initialization code here -----
 		this.addMouseListener(this);
+		this.addKeyListener(this);
+		this.addMouseWheelListener(this);
+		this.addMouseMotionListener(this);
 		this.textRenderer = new TextRenderer(new Font("SansSerif", Font.BOLD, 100));
 
 	}
@@ -192,7 +196,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				*/
 				for(int i=0;i<drawableNetwork_.nLanes();i++){
 					GeoSurface laneSf = drawableNetwork_.getLane(i).getLaneSurface();
-					if(laneSf.getAabBox().intersectsRay(raycast)){
+					if(GeoUtil.isIntersect(raycast,laneSf)){
 						//被选中对象用黄色渲染
 						laneSf.setSelected(true);
 						pickedObject.add(laneSf);
@@ -219,7 +223,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	public void scene(GL2 gl) {
 		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
 		List<GeoSurface> surfaces = drawableNetwork_.getSurfaces();
-		
+		float camHeight =  cam_.getEyeLocation()[2];
 		Segment tmpsegment;
 		AnimationFrame frame;
 		Lane tmplane;
@@ -234,8 +238,17 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			tmpsegment = drawableNetwork_.getSegment(i);
 			ShapeUtil.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 2,
 					Constants.COLOR_WHITE);
+			if(camHeight>=200){
+				double width = tmpsegment.nLanes()*Constants.LANE_WIDTH;
+				double offset = Math.max(width, 0.0008*camHeight*width);
+				GeoSurface tmpSurface = GeoUtil.lineToRectangle(tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), offset, false);
+				ShapeUtil.drawPolygon(gl, tmpSurface.getKerbList(), Constants.COLOR_GREY, false);
+			}
+//			ShapeUtil.drawPoint(gl, tmpsegment.getStartPnt().getLocationX(), tmpsegment.getStartPnt().getLocationY(),0.5, 10, Constants.COLOR_RED);
+//			ShapeUtil.drawPoint(gl, tmpsegment.getEndPnt().getLocationX(), tmpsegment.getEndPnt().getLocationY(),1, 10, Constants.COLOR_BLUE);
 
 		}
+//		gl.glReadPixels(x, y, width, height, format, type, pixels_buffer_offset);
 		//射线测试
 		/*
 		float[] rayDir = calcRay(gl, 0.0f,2);
@@ -254,18 +267,16 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			JOGLDrawShapes.drawPoint(gl, tmplane.getEndPnt().getLocationX(), tmplane.getEndPnt().getLocationY(), 5, Constants.COLOR_GREEN);
 			
 		}*/
-		/*
-		for(GeoSurface sf: surfaces){
-			JOGLDrawShapes.drawPolygon(gl, sf.getKerbList(),Constants.COLOR_GREY, sf.isSelected());
-		}*/
-		for(int i=0;i<drawableNetwork_.nLanes();i++){
-			GeoSurface lanesf = drawableNetwork_.getLane(i).getLaneSurface();
-			/*for(GeoPoint pt:lanesf.getKerbList()){
-				JOGLDrawShapes.drawPoint(gl, pt.getLocationX(), pt.getLocationY(),0.5, 10, Constants.COLOR_BLUE);
-			}*/
-			
-			ShapeUtil.drawPolygon(gl, lanesf.getKerbList(),Constants.COLOR_GREY, lanesf.isSelected());
+		if(camHeight<200){
+			for(int i=0;i<drawableNetwork_.nLanes();i++){
+				GeoSurface lanesf = drawableNetwork_.getLane(i).getLaneSurface();
+//				ShapeUtil.drawPoint(gl, drawableNetwork_.getLane(i).getStartPnt().getLocationX(), drawableNetwork_.getLane(i).getStartPnt().getLocationY(),0.5, 10, Constants.COLOR_RED);
+//				ShapeUtil.drawPoint(gl, drawableNetwork_.getLane(i).getEndPnt().getLocationX(), drawableNetwork_.getLane(i).getEndPnt().getLocationY(),0.5, 10, Constants.COLOR_BLUE);
+				
+				ShapeUtil.drawPolygon(gl, lanesf.getKerbList(),Constants.COLOR_GREY, lanesf.isSelected());
+			}
 		}
+		
 		for(int i=0;i<((MLPNetwork)drawableNetwork_).loops.size();i++){
 			GeoSurface loopsf = ((MLPNetwork)drawableNetwork_).loops.get(i).getSurface();
 			ShapeUtil.drawPolygon(gl, loopsf.getKerbList(),Constants.COLOR_GREEN, loopsf.isSelected());

@@ -16,7 +16,7 @@ public class VehicleData {
 	
 	public int getVehicleID(){
 		return vehicleID_;
-	}
+	}                      
 	public int getVehicleType(){
 		return vehicleType_;
 	}

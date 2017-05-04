@@ -36,7 +36,7 @@ public class ProjectPanel extends JPanel{
 			public void actionPerformed(ActionEvent e) {
 		/*		if(checkTextFields()){*/
 					SubWindow.createPanel("设置方案", CasePanel.class);
-					AppSetup.setupParameter.put("项目名字", textFields[0].getText());
+					AppSetup.setupParameter.put("项目名称", textFields[0].getText());
 					AppSetup.setupParameter.put("项目路径", textFields[1].getText());
 					AppSetup.setupParameter.put("路网路径", textFields[2].getText());
 	//			}
@@ -79,7 +79,7 @@ public class ProjectPanel extends JPanel{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//文件选择器，选择项目文件保存的路径
-				JFileChooser fileChooser = new JFileChooser();
+				JFileChooser fileChooser = new JFileChooser("src/main/resources");
 				fileChooser.setDialogTitle("选择项目文件保存的路径");
 				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				int state = fileChooser.showSaveDialog(null);
@@ -103,7 +103,7 @@ public class ProjectPanel extends JPanel{
 		button_2.addActionListener(new ActionListener() {		
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fileChooser = new JFileChooser("E:\\javacode\\git\\TranSysLab\\TranSysLab\\src\\main\\resources");
+				JFileChooser fileChooser = new JFileChooser("src/main/resources");
 				fileChooser.setDialogTitle("选择路网文件");
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setFileFilter(new FileNameExtensionFilter("XML文件","xml"));

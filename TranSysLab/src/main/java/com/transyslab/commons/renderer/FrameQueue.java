@@ -11,7 +11,7 @@ import com.transyslab.roadnetwork.VehicleData;
 public class FrameQueue {
 	
 	//队列帧容量
-    private final static int capacity_ = 60;
+    private final static int capacity_ = 120;
     //互斥锁，保证写操作和队列交换操作的线程安全
     private ReentrantLock  writeLock_;  
     //条件变量，用于唤醒仿真写入操作

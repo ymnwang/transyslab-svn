@@ -2,10 +2,20 @@
  *
  */
 package com.transyslab.commons.io;
+import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.sql.DataSource;
+
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbutils.DbUtils;
+//import org.apache.commons.logging.Log;
+//import org.apache.commons.logging.LogFactory;
+
 import java.sql.PreparedStatement;
 
 /**
@@ -14,56 +24,68 @@ import java.sql.PreparedStatement;
  */
 public class JdbcUtils {
 
-	private static String driver_ = "oracle.jdbc.driver.OracleDriver";
-	private static String url_ = "jdbc:oracle:thin:@192.168.8.138:1521:orcl";
-	private static String user_ = "sa";
-	private static String pwd_ = "sa";
-
+//	private static String driver_ = "org.postgresql.Driver";  //"oracle.jdbc.driver.OracleDriver";
+//	private static String url_ = "jdbc:postgresql://192.168.8.23:5432/neihuandb";//"jdbc:oracle:thin:@192.168.8.138:1521:orcl";
+//	private static String user_ = "postgres";
+//	private static String pwd_ = "its312";
+	private static DataSource dataSource;
+	// log4j2 通过 log4j-jcl 实现Common logging接口
+	// 可修改配置文件，设置输出优先级DEBUG以上
+//	private static Log logger = LogFactory.getLog(JdbcUtils.class);; 
 	public JdbcUtils() {
-	}
 
-	public static Connection getConnection(String driver, String url, String user, String pwd)
-			throws ClassNotFoundException, SQLException {
-		Class.forName(driver);
-		Connection con = DriverManager.getConnection(url, user, pwd);
-		return con;
 	}
-	public static Connection getConnection() throws ClassNotFoundException, SQLException {
-		Class.forName(driver_);
-		Connection con = DriverManager.getConnection(url_, user_, pwd_);
-		return con;
+	public static void initDataSource(){		
+		/*Parameters params = new Parameters();
+		FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
+		    new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+		    .configure(params.properties()
+		        .setFileName("src/main/resources/demo_neihuan/scenario2/dbcp.properties"));*/
+		Configurations configs = new Configurations();
+
+		try
+		{
+//			Configuration config = builder.getConfiguration();
+			Configuration config = configs.properties(new File("src/main/resources/demo_neihuan/scenario2/dbcp.properties"));
+			String driver = config.getString("dbcp.driverClassName");
+		    String url = config.getString("dbcp.url");
+		    String user = config.getString("dbcp.username");
+		    String pwd = config.getString("dbcp.password");
+		    int initialSize = config.getInt("dbcp.initialSize");
+		    int maxActive = config.getInt("dbcp.maxActive");
+		    int minIdle = config.getInt("dbcp.minIdle");
+		    int maxIdle = config.getInt("dbcp.maxIdle");
+		    int maxWait = config.getInt("dbcp.maxWait");
+		    BasicDataSource bds = new BasicDataSource();
+		    bds.setDriverClassName(driver);
+			bds.setUrl(url);
+			bds.setUsername(user);
+			bds.setPassword(pwd);
+	        bds.setInitialSize(initialSize); 
+	        bds.setMaxTotal(maxActive); 
+	        bds.setMinIdle(minIdle);  
+	        bds.setMaxIdle(maxIdle);  
+	        bds.setMaxWaitMillis(maxWait); 
+	        dataSource = bds;
+		    
+		}
+		catch(ConfigurationException cex)
+		{
+		    // loading of the configuration file failed
+		}
+		
+	}
+	public static DataSource getDataSource(){
+		if(dataSource == null)
+			initDataSource();
+		return dataSource;
+	}
+	public static Connection getConnection() throws SQLException{
+		if(dataSource == null)
+			initDataSource();
+		return dataSource .getConnection();
 	}
 	public static void release(Connection con, ResultSet rs, PreparedStatement pstm) {
-		if (rs != null) {
-			try {
-				rs.close();
-			}
-			catch (SQLException e1) {
-				// TODO 自动生成的 catch 块
-				e1.printStackTrace();
-			}
-		}
-		if (pstm != null) {
-			try {
-				pstm.close();
-
-			}
-			catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-		try {
-			if (con != null && (!con.isClosed())) {
-				try {
-					con.close();
-				}
-				catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbUtils.closeQuietly(con, pstm, rs);
 	}
 }

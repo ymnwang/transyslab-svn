@@ -1,4 +1,4 @@
-package unit_test;
+package testJavaFunction;
 
 import java.io.FileReader;
 import java.io.FileWriter;
