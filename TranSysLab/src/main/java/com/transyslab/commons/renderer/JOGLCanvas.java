@@ -11,6 +11,7 @@ import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
+import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.Boundary;
 import com.transyslab.roadnetwork.CodedObject;
 import com.transyslab.roadnetwork.Constants;
@@ -18,12 +19,12 @@ import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.GeoPoint;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
+import com.transyslab.roadnetwork.Vehicle;
 import com.transyslab.roadnetwork.GeoSurface;
 import com.transyslab.roadnetwork.VehicleData;
 import com.transyslab.roadnetwork.VehicleDataPool;
 import com.transyslab.simcore.mlp.MLPNetwork;
 
-import oracle.net.aso.f;
 
 import static com.jogamp.opengl.GL.*; // GL constants
 import static com.jogamp.opengl.GL2ES1.GL_PERSPECTIVE_CORRECTION_HINT;
@@ -42,8 +43,6 @@ import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math3.ode.sampling.FieldStepNormalizer;
-
 public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener, MouseListener, 
                                                     MouseWheelListener, MouseMotionListener {
 	
@@ -55,25 +54,28 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	private boolean isMidBtnDragged, isRightBtnDragged;
 	private boolean isPicking;
 	private boolean isFirstRender;
-	private List<CodedObject> pickedObject;
+	private List<CodedObject> pickedObjects;
+	// 临时记录已选择的对象
+	private CodedObject preObject;
+	private AnimationFrame curFrame; 
 	//
 	public boolean isPause;
 	//
 	public boolean isRendering;
-		
+	
 	
 
 	/** Constructor to setup the GUI for this Component */
 	public JOGLCanvas() {
 		this.addGLEventListener(this);
 		preWinCoods = new java.awt.Point();
-		pickedObject = new ArrayList<CodedObject>();
+		pickedObjects = new ArrayList<CodedObject>();
 
 	}
 	public JOGLCanvas(int width, int height) {
 		this.addGLEventListener(this);
 		preWinCoods = new java.awt.Point();
-		pickedObject = new ArrayList<CodedObject>();
+		pickedObjects = new ArrayList<CodedObject>();
 		// 设置画布大小
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
 //		this.setPreferredSize(new Dimension(width, height));
@@ -194,6 +196,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 						
 				}
 				*/
+				//车道选择
+				/*
 				for(int i=0;i<drawableNetwork_.nLanes();i++){
 					GeoSurface laneSf = drawableNetwork_.getLane(i).getLaneSurface();
 					if(GeoUtil.isIntersect(raycast,laneSf)){
@@ -201,8 +205,28 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 						laneSf.setSelected(true);
 						pickedObject.add(laneSf);
 					}
+				}*/
+				//选择车辆
+				if(isPause && curFrame!=null){
+					for(VehicleData vd:curFrame.getVhcDataQueue()){
+						if(GeoUtil.isIntersect(raycast, vd.getVhcShape())){
+							//被选中对象用黄色渲染
+							vd.setSelected(true);
+							pickedObjects.add(vd);
+						}
+					}
+				}
+				if(!pickedObjects.isEmpty()){
+					//TODO 写死读取第一个对象
+					VehicleData vd = (VehicleData)pickedObjects.get(0);
+					//先清除后写信息
+					MainWindow.getInstance().getTXTConsole().setText(vd.getVhcInfo());
+					//在原有文本上追加信息
+//					MainWindow.getInstance().getTXTConsole().append(vd.getVhcInfo()+"\n");	
 				}
 			}
+			
+				
 			/*
 			textRenderer.begin3DRendering();
 				textRenderer.setColor(1.0f, 0.2f, 0.2f, 0.8f);
@@ -222,18 +246,12 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	}
 	public void scene(GL2 gl) {
 		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
-		List<GeoSurface> surfaces = drawableNetwork_.getSurfaces();
 		float camHeight =  cam_.getEyeLocation()[2];
 		Segment tmpsegment;
-		AnimationFrame frame;
-		Lane tmplane;
-		final float[] liteBlue = new float[]{0.0f,0.75f,1.0f};
 		for (Boundary tmpboundary:boundarys) {
 			ShapeUtil.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
 					Constants.COLOR_WHITE);
 		}
-
-		
 		for(int i=0;i<drawableNetwork_.nSegments();i++){
 			tmpsegment = drawableNetwork_.getSegment(i);
 			ShapeUtil.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 2,
@@ -282,33 +300,34 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			ShapeUtil.drawPolygon(gl, loopsf.getKerbList(),Constants.COLOR_GREEN, loopsf.isSelected());
 		}
 		//暂停时不更新数组索引
-		frame =FrameQueue.getInstance().poll(isPause);
+		curFrame =FrameQueue.getInstance().poll(isPause);
 		//暂停时保留VehicleData
 		if(isPause){
-			for(VehicleData vd:frame.getVhcDataQueue()){
+			for(VehicleData vd:curFrame.getVhcDataQueue()){
 				if(vd.getSpecialFlag()==1)
-					ShapeUtil.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, liteBlue);
+					ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected());
 				else if(vd.getSpecialFlag() == 0)
-					ShapeUtil.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, Constants.COLOR_BLUE);
+					ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected());
 			}
 		}
 		else{
 			
-			if(frame!=null){
-				while(!frame.getVhcDataQueue().isEmpty()){
-					VehicleData vd = frame.getVehicleData();
+			if(curFrame!=null){
+				while(!curFrame.getVhcDataQueue().isEmpty()){
+					VehicleData vd = curFrame.getVehicleData();
 					//根据摄像机高度调整绘制的车辆大小，2017年1月2日ppt材料
 //						JOGLDrawShapes.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),15*(1000-cam_.getEyePosition()[2])/1000, Constants.COLOR_BLUE);
 					if(vd.getSpecialFlag()==1)
-						ShapeUtil.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, liteBlue);
+//						ShapeUtil.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, liteBlue);
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected());
 					else if(vd.getSpecialFlag() == 0)
-						ShapeUtil.drawPoint(gl, vd.getVhcLocationX(), vd.getVhcLocationY(),0.1, 10, Constants.COLOR_BLUE);
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected());
 					
 					//回收vehicledata
 					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
 				}
 				//清空frame
-				frame.clean();
+				curFrame.clean();
 			}
 		}
 				
@@ -362,7 +381,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	}
 	
 	private void deselect(){
-		for(CodedObject co:pickedObject){
+		for(CodedObject co:pickedObjects){
 			co.setSelected(false);
 		}
 	}
@@ -375,9 +394,10 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		switch(e.getButton()){
 			case MouseEvent.BUTTON1:
 				isPicking = true;
-				if(!pickedObject.isEmpty()){
+				//清空前一帧已选对象
+				if(!pickedObjects.isEmpty()){
 					deselect();
-					pickedObject.clear();
+					pickedObjects.clear();
 				}
 			break;
 			case MouseEvent.BUTTON2:

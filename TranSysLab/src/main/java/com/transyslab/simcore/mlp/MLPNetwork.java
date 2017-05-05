@@ -321,7 +321,7 @@ public class MLPNetwork extends RoadNetwork {
 				//从对象池获取vehicledata对象
 				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
 				//记录车辆信息
-				vd.init(v,false,Math.min(1,v.VirtualType_));
+				vd.init(v,false,Math.min(1,v.VirtualType_),String.valueOf(v.Displacement()));
 				//将vehicledata插入frame
 				try {
 					FrameQueue.getInstance().offer(vd, veh_list.size());

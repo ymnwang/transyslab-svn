@@ -317,6 +317,7 @@ public class MesoEngine extends SimulationEngine {
 			evaRMSN();
 			resetBeforeSimLoop();
 		}
+		//假运行，读取matlab计算结果进行渲染
 		else if(mode == 4){
 			int tmpframeid =-1;
 			for(CSVRecord record: vhcData_){
@@ -327,7 +328,7 @@ public class MesoEngine extends SimulationEngine {
 				//从对象池获取vehicledata对象
 				VehicleData vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
 				//记录车辆信息
-				vd.init(Integer.parseInt(record.get(1)),Float.parseFloat(record.get(2)));
+//				vd.init(Integer.parseInt(record.get(1)),Float.parseFloat(record.get(2)));
 				//将vehicledata插入frame
 				try {
 					FrameQueue.getInstance().offer(vd, Integer.parseInt(record.get(3)));
