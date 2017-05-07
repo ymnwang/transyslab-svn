@@ -1,6 +1,8 @@
 package com.transyslab.simcore.mlp;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
@@ -117,7 +119,7 @@ public class MLPVehicle extends Vehicle{
 	private double calDLC(int turning, double fDSP, double tDSP, double PlatoonCount){
 		try {
 			double [] s = sum(turning, segment_, fDSP, tDSP, new double []{0.0,0.0});
-			return ((s[0] + 1.0) /s[1] - PlatoonCount/(tDSP - fDSP)) / link_.dynaFun.sdPara[2];
+			return (PlatoonCount/(tDSP - fDSP) - (s[0] + 1.0) /s[1]) / link_.dynaFun.sdPara[2];
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -186,7 +188,10 @@ public class MLPVehicle extends Vehicle{
 	
 	public double calLCProbability(int turning, double fDSP, double tDSP, double PlatoonCount){
 		double [] gamma = MLPParameter.getInstance().getLCPara();
-		double u = gamma[0]*calH(turning)*(calMLC() - 0.5) + gamma[1]*(calDLC(turning, fDSP, tDSP, PlatoonCount) - 0.5);
+		double h = calH(turning);
+		double Umlc = calMLC();
+		double Udlc = calDLC(turning, fDSP, tDSP, PlatoonCount);
+		double u = gamma[0]*h*Umlc + gamma[1]*Udlc - (gamma[0] + gamma[1])*0.5;
 		double pr = Math.exp(u)/(1+Math.exp(u));
 //		fout.writeNFlush(u + "," + pr + "\r\n");
 		return pr;
@@ -235,8 +240,11 @@ public class MLPVehicle extends Vehicle{
 	public int dealPassing() {
 		if (segment_.isEndSeg()) {
 			if (VirtualType_ != 0) {
-				lane_.removeVeh(this, true);//虚车最多影响到Link末端
-				return 1;
+				//虚车最多影响到Link末端
+//				lane_.removeVeh(this, true);
+//				return 1;
+				holdAtDnEnd();
+				return 0;
 			}
 			MLPNode server = (MLPNode) link_.getDnNode();
 			return server.serve(this);
