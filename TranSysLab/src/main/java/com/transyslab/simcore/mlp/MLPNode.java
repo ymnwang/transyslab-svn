@@ -12,13 +12,15 @@ import com.transyslab.roadnetwork.Node;
 
 public class MLPNode extends Node{
 	private LinkedList<MLPVehicle> statedVehs;
+	public int stopCount;
 	public MLPNode() {
 		statedVehs = new LinkedList<>();
+		stopCount = 0;
 	}
 	public int serve(MLPVehicle veh) {
 		MLPLane lane_ = veh.lane_;
 		MLPLink link_ = veh.link_;
-		if (lane_.checkPass()) {
+		if (lane_.checkPass()) {//lane_.checkPass()
 			//passed output capacity checking
 			if (veh.nextLink() == null) {
 				lane_.scheduleNextEmitTime();//passed upstream lane
@@ -38,7 +40,7 @@ public class MLPNode extends Node{
 //			List<MLPLane> candidates = lane_.selectDnLane(veh.nextLink().getStartSegment());//不以successiveDnLane运行
 			MLPLane nextLane = lane_.successiveDnLaneInLink((MLPLink) veh.nextLink());
 			if (nextLane != null) {// at least one topology available down lane
-				if (nextLane.checkVolum(veh)) {//check every down lane' volume
+				if (nextLane.checkVolum(MLPParameter.VEHICLE_LENGTH,0.0)) {//check every down lane' volume //before: checkVolum(veh)
 					//no priority control for now
 					boolean canpass = true;
 //						for (int j = 0; j < nextLane.nUpLanes() && canpass; j++) { //不以successiveDnLane运行
@@ -63,9 +65,17 @@ public class MLPNode extends Node{
 						veh.OnRouteChoosePath(veh.link_.getDnNode());
 						return 0;
 					}
+					else
+						System.out.println("BUG Can NOT pass or has been taken place");
 				}
+				else
+					System.out.println("BUG Failed checking volume");
 			}
+			else
+				System.out.println("BUG Error Next Lane is null");
 		}
+		else
+			stopCount += 1;
 		//hold still
 		veh.holdAtDnEnd();
 		return 0;	
@@ -131,5 +141,9 @@ public class MLPNode extends Node{
 			}
 		}
 		return ans;
+	}
+	protected void clearStatedVehs() {
+		statedVehs.clear();
+		stopCount = 0;
 	}
 }

@@ -2,6 +2,8 @@ package com.transyslab.commons.tools;
 
 import com.transyslab.simcore.mlp.MLPNetwork;
 
+import java.util.Comparator;
+
 public class Inflow {
 	public double time;
 	public double speed; // unit m/s
@@ -47,4 +49,5 @@ public class Inflow {
 		else
 			dis = d;
 	}
+
 }

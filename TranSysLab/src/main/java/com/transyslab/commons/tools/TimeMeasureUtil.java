@@ -11,7 +11,7 @@ public class TimeMeasureUtil {
 	}
 	
 	public double toc() {
-		double DelT = System.currentTimeMillis() -timeBegin; 
+		double DelT = System.currentTimeMillis() - timeBegin;
 		timeuse += DelT;
 		return DelT;
 	}

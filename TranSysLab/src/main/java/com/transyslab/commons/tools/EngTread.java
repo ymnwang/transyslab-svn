@@ -29,8 +29,9 @@ public abstract class EngTread extends Thread{
 		return null;
 	}
 	
-	protected void uploadResult(int idx, double fitVal) {
+	protected void uploadResult(int idx, double[] fitVal) {
 		taskCenter.setResult(idx, fitVal);
+//		System.out.println("Task: " + idx + " finished.");
 	}
 	
 	protected double[] unzipTask(double[] task) {

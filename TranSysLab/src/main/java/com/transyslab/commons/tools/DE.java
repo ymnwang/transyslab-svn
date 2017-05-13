@@ -150,7 +150,8 @@ public class DE extends SchedulerThread{
 			}
 			
 			for (int j = 0; j < population_; j++) {
-				float fval = (float)fetchResult(j);//fetch result
+				double tmp = fetchResult(j)[0];
+				float fval = (float) tmp;//fetch result
 				newidvds_[j].setFitness(fval);				
 				if (fval<gbestFitness_) {
 					setGbest(newidvds_[j].pos_);
@@ -168,10 +169,12 @@ public class DE extends SchedulerThread{
 	public static void main(String[] args) {
 		Individual.rnd_.setSeed(System.currentTimeMillis());//固定算法随机数
 		int maxGeneration = 200;
-		int maxTasks = 100;
+		int maxTasks = 30;
 		TaskCenter tc = new TaskCenter(maxTasks);
 		int pop = 30;
-		float[] plower = new float[]{12.0f,0.15f,1.0f,5.0f,25,85};
+
+		//*********************旧实验*******************************
+		/*float[] plower = new float[]{12.0f,0.15f,1.0f,5.0f,25,85};
 		float[] pupper = new float[]{23.0f,0.17f,4.0f,8.0f,35,95};//,180.0f,25,40,100};
 		//Gbest : 0.10734763
 		//Position : 15.475985 0.15889278 1.546905 6.5494165 29.030441 91.544785
@@ -185,6 +188,23 @@ public class DE extends SchedulerThread{
 		for (int i = 0; i < 30; i++) {
 			mlp_eng_thread = new MLPEngThread("Eng"+i, tc);
 			mlp_eng_thread.setMode(3);
+//			((MLPEngine) mlp_eng_thread.engine).seedFixed = true;
+			mlp_eng_thread.start();
+		}*/
+		//*********************旧实验*******************************
+
+
+
+		float[] plower = new float[]{12.0f,0.12f,0.01f,0.01f, 1.0f, 30.0f};
+		float[] pupper = new float[]{23.0f,0.17f,4.0f,8.0f, 2.0f, 40.0f};//,180.0f,25,40,100};
+		DE de = new DE("DE", tc);
+		de.initDE(pop, plower.length, 0.5f, 0.5f, plower, pupper);
+		de.setMaxGeneration(maxGeneration);
+		de.start();
+		MLPEngThread mlp_eng_thread;
+		for (int i = 0; i < 30; i++) {
+			mlp_eng_thread = new MLPEngThread("Eng"+i, tc);
+			mlp_eng_thread.setMode(6);
 //			((MLPEngine) mlp_eng_thread.engine).seedFixed = true;
 			mlp_eng_thread.start();
 		}

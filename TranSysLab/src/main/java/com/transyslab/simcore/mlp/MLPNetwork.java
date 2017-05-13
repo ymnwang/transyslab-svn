@@ -1,11 +1,11 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.BlockingDeque;
 
+import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.renderer.FrameQueue;
+import com.transyslab.commons.tools.EMTTable;
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Lane;
@@ -23,6 +23,7 @@ public class MLPNetwork extends RoadNetwork {
 	public List<MLPVehicle> veh_list;
 	public List<MLPLoop> loops;
 //	public Random sysRand;//已移动至父类
+	private TXTUtils writer = new TXTUtils("src/main/resources/output/EMTR.csv");
 
 	public MLPNetwork() {
 		newVehID_ = 0;
@@ -156,10 +157,13 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void buildemittable(boolean needRET){
 		if (needRET) {
-			mlpLink(0).emtTable.createRndETables();		
+			EMTTable.createRndETables();
+			for (int i = 0; i < nLinks(); i++) {
+				Collections.sort(mlpLink(i).emtTable.getInflow(), (a,b) -> a.time < b.time ? -1 : a.time > b.time ? 1 : 0);
+			}
 		}
 		else {
-			mlpLink(0).emtTable.readETables();
+			EMTTable.readETables();
 		}
 	}
 
@@ -179,7 +183,8 @@ public class MLPNetwork extends RoadNetwork {
 	}
 	
 	public void loadEmtTable(){
-		//double now = SimulationClock.getInstance().getCurrentTime();
+		double now = SimulationClock.getInstance().getCurrentTime();
+		int count = 0;
 		for (int i = 0; i<nLinks(); i++){
 			while (mlpLink(i).checkFirstEmtTableRec()){
 				Inflow emitVeh = mlpLink(i).emtTable.getInflow().poll();
@@ -191,8 +196,11 @@ public class MLPNetwork extends RoadNetwork {
 				newVeh.initEntrance(SimulationClock.getInstance().getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
 				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
 				mlpLane(emitVeh.laneIdx).appendVeh(newVeh);
+				count += 1;
 			}
 		}
+		if (count > 0)
+			writer.write(now + "," + count + "\r\n");
 	}
 	
 	public void platoonRecognize() {
@@ -240,6 +248,11 @@ public class MLPNetwork extends RoadNetwork {
 			mlpLink(i).dynaFun.sdPara = args;
 		}
 	}
+	public void setOverallSDParas(double[] args, int mask) {
+		for (int i = 0; i < nLinks(); i++) {
+			mlpLink(i).dynaFun.setPartialSD(args, mask);
+		}
+	}
 	public void setSDParas(int idx, double [] paras) {
 		mlpLink(idx).dynaFun.sdPara = paras;
 	}
@@ -263,38 +276,52 @@ public class MLPNetwork extends RoadNetwork {
 		
 	}
 
-	public double loopStatistic(String det_name) {
+	public double sectionMeanSpd(String det_name, double fTime, double tTime) {
 		if (loops.size()<1) {
 			System.err.println("no loops in network");
 			return 0.0;
 		}
-		double n = 0.0;
-		double sum = 0.0;
+		List<Double> tmpAll = new ArrayList<>();
 		for (MLPLoop lp : loops) {
-			if (lp.detName.equals("det2")) {
-				n += lp.detectedSpds.size();
-				sum += lp.detectedSpds.size() / lp.harmmeanNClear();
-			}
-			else {
-				lp.detectedSpds.clear();
+			if (lp.detName.equals(det_name)) {
+				tmpAll.addAll(lp.getPeriodSpds(fTime, tTime));
 			}
 		}
-		return (sum == 0.0) ? 0.0 : (n/sum);
+		if (tmpAll.size()>0){
+			double sum = 0.0;
+			for(Double val : tmpAll)
+				sum += val;
+			return sum/tmpAll.size();
+		}
+		return 0.0;
 	}
 
-	public double calLoopFlow(String det_name) {
+	public double sectionFlow(String det_name, double fTime, double tTime, boolean useMeanVal) {
 		if (loops.size()<1) {
 			System.err.println("no loops in network");
 			return 0.0;
 		}
-		double flow = 0.0;
+		double sumFlow = 0.0;
+		double laneCount = 0.0;
 		for (MLPLoop lp : loops) {
-			if (lp.detName.equals("det2")) {
-				flow += lp.detectedSpds.size();
+			if (lp.detName.equals(det_name)) {
+				laneCount += 1.0;
+				sumFlow += lp.countPeriodFlow(fTime, tTime);
 			}
-			lp.detectedSpds.clear();
 		}
-		return flow;
+		return useMeanVal ?
+				laneCount > 0.0 ?
+						sumFlow / laneCount /(tTime-fTime) :
+						0.0 :
+				sumFlow;
+	}
+
+	public double sectionMeanFlow(String det_name, double fTime, double tTime, boolean useMeanVal) {
+		return sectionFlow(det_name,fTime,tTime,true);
+	}
+
+	public double sectionSumFlow(String det_name, double fTime, double tTime, boolean useMeanVal) {
+		return sectionFlow(det_name,fTime,tTime,false);
 	}
 	
 	public void resetNetwork(boolean needRET, long seed) {
@@ -309,6 +336,12 @@ public class MLPNetwork extends RoadNetwork {
 		for (int i = 0; i < nLanes(); i++) {
 			mlpLane(i).vehsOnLn.clear();//从lane上移除在网车辆
 		}
+		for (int i = 0; i < nNodes(); i++) {
+			mlpNode(i).clearStatedVehs();//从Node上清除未加入路段的车辆
+		}
+		for (int i = 0; i < loops.size(); i++) {
+			loops.get(i).clearRecords();//清除检测器记录结果
+		}
 		veh_pool.recycleAll();//回收所有在网车辆
 		buildemittable(needRET);
 	}
@@ -321,7 +354,7 @@ public class MLPNetwork extends RoadNetwork {
 				//从对象池获取vehicledata对象
 				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
 				//记录车辆信息
-				vd.init(v,false,Math.min(1,v.VirtualType_),String.valueOf(v.Displacement()));
+				vd.init(v,false,Math.min(1,v.VirtualType_),String.valueOf(v.nextLink()==null ? "NA" : v.lane_.successiveDnLanes.get(0).getLink().getCode()==v.nextLink().getCode()));
 				//将vehicledata插入frame
 				try {
 					FrameQueue.getInstance().offer(vd, veh_list.size());

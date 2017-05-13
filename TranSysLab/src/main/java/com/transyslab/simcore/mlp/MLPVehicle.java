@@ -1,14 +1,6 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.commons.tools.TimeMeasureUtil;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.Vehicle;
 
 public class MLPVehicle extends Vehicle{
@@ -188,11 +180,14 @@ public class MLPVehicle extends Vehicle{
 	
 	public double calLCProbability(int turning, double fDSP, double tDSP, double PlatoonCount){
 		double [] gamma = MLPParameter.getInstance().getLCPara();
+		double lambda1 = MLPParameter.LC_Lambda1;
+		double lambda2 = MLPParameter.LC_Lambda2;
 		double h = calH(turning);
 		double Umlc = calMLC();
 		double Udlc = calDLC(turning, fDSP, tDSP, PlatoonCount);
-		double u = gamma[0]*h*Umlc + gamma[1]*Udlc - (gamma[0] + gamma[1])*0.5;
-		double pr = Math.exp(u)/(1+Math.exp(u));
+		double W = gamma[0]*h*Umlc + gamma[1]*Udlc;// - (gamma[0] + gamma[1])*0.5
+		double U = lambda1*W + lambda2;
+		double pr = Math.exp(U)/(1+Math.exp(U));
 //		fout.writeNFlush(u + "," + pr + "\r\n");
 		return pr;
 	}
@@ -220,8 +215,8 @@ public class MLPVehicle extends Vehicle{
 	 }
 	
 	public int updateMove() {
-		if ( Math.abs(distance_ - newDis - newSpeed*SimulationClock.getInstance().getStepSize()) > 0.001 )
-			System.out.println("BUG 未在本计算帧内处理此车");
+//		if ( Math.abs(distance_ - newDis - newSpeed*SimulationClock.getInstance().getStepSize()) > 0.001 )
+//			System.out.println("BUG 未在本计算帧内处理此车");
 		if (VirtualType_>0 && buffer_ == 0) {
 			lane_.removeVeh(this, true);
 			return 1;

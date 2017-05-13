@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import com.transyslab.commons.tools.EngTread;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.TaskCenter;
+import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.simcore.AppSetup;
 
 public class MLPEngThread extends EngTread{
@@ -49,6 +50,7 @@ public class MLPEngThread extends EngTread{
 		switch (getMode()) {
 		
 		case 1://calfitness testing
+			mlp_eng.needEmpData = true;
 			if (paras2Cal == null) {
 				break;
 			}
@@ -62,6 +64,7 @@ public class MLPEngThread extends EngTread{
 			break;
 			
 		case 3://work in taskCenter
+			mlp_eng.needEmpData = true;
 			while (!isDismissed()) {
 				double[] task = null;
 				task = retrieveTask();//尝试从任务中心taskCenter取回任务
@@ -69,11 +72,43 @@ public class MLPEngThread extends EngTread{
 //					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
 					double [] p = unzipTask(task);
 					double fitVal = mlp_eng.calFitness(p);
-					uploadResult((int) task[0], fitVal);//将结果返回任务中心taskCenter
+					uploadResult((int) task[0], new double[]{fitVal});//将结果返回任务中心taskCenter
 				}
 			}
 			break;
-
+			case 4:
+				mlp_eng.needEmpData = true;
+				mlp_eng.needRndETable = true;
+				mlp_eng.seedFixed = true;
+				if (mlp_eng.seedFixed) {
+					mlp_eng.runningseed = 1490183749797l;
+				}
+				TimeMeasureUtil timer = new TimeMeasureUtil();
+				for (int i = 0; i < 10; i++) {
+					timer.tic();
+					System.out.println(mlp_eng.calFitness(new double [] {16.87, 0.137, 0.2519, 1.8502, 1.3314, 33.3333}));
+					System.out.println(timer.toc());
+				}
+				break;
+			case 5://calculated para
+				mlp_eng.needRndETable = true;
+				mlp_eng.infoOn = true;
+				//{17.251682, 0.13062555, 2.286993, 4.1652145, 1.0193955, 39.612854}
+				System.out.println("Capacity activated: " + mlp_eng.validate(new double [] {20.37, 0.1042, 0.1458, 0.7649, 0.8069, 19.81}));
+			break;
+			case 6://work in workCenter Ver. 2
+				mlp_eng.needEmpData = true;
+				while (!isDismissed()) {
+					double[] task = null;
+					task = retrieveTask();//尝试从任务中心taskCenter取回任务
+					if (task != null) {
+//					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
+						double [] p = unzipTask(task);
+						double fitVal = mlp_eng.calFitness2(p);
+						uploadResult((int) task[0], new double[]{fitVal});//将结果返回任务中心taskCenter
+					}
+				}
+				break;
 		default:
 			break;
 		}
@@ -92,8 +127,9 @@ public class MLPEngThread extends EngTread{
 //		((MLPEngine) myThread.engine).seedFixed = true;
 //		((MLPEngine) myThread.engine).runningseed = 1490183749797l;
 //		myThread.start();
+
 		MLPEngThread myThread = new MLPEngThread("testingThread");
-		myThread.setMode(2);
+		myThread.setMode(4);
 		myThread.start();
 	}
 }

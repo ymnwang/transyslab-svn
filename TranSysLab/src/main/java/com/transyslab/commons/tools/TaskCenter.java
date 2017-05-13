@@ -7,29 +7,35 @@ import java.util.concurrent.TimeUnit;
 public class TaskCenter {
 	protected BlockingQueue<double[]> undoneTasks;
 	private Integer finishCount;
-	protected double [] results;
+	protected double [][] results;
 	private boolean killThreadSignal;
 	
 	public TaskCenter(int arg0) {
 		undoneTasks = new ArrayBlockingQueue<>(arg0);
-		results = new double [arg0];
+		results = new double [arg0] [1];
+		killThreadSignal = false;
+	}
+
+	public TaskCenter(int arg0, int resultLength) {
+		undoneTasks = new ArrayBlockingQueue<>(arg0);
+		results = new double [arg0] [resultLength];
 		killThreadSignal = false;
 	}
 	
 	public TaskCenter() {
 		undoneTasks = new ArrayBlockingQueue<>(100);
-		results = new double [100];
+		results = new double [100] [1];
 		killThreadSignal = false;
 	}
 	
 	protected void setTaskAmount(int arg) {
 		if (arg > results.length) {
-			results = new double [arg];
+			results = new double [arg] [results[0].length];
 		}
 		finishCount = 0;
 	}
 	
-	protected synchronized double getResult(int i) {
+	protected synchronized double[] getResult(int i) {
 		while (finishCount < results.length) {
 			try {
 				System.out.println("waiting for result ");
@@ -43,9 +49,10 @@ public class TaskCenter {
 		return results[i];
 	}
 	
-	protected synchronized void setResult(int idx, double fitVal) {
+	protected synchronized void setResult(int idx, double[] fitVal) {
 		results[idx] = fitVal;
 		finishCount += 1;
+//		System.out.println(finishCount);
 		if (finishCount >= results.length) 
 			notify();
 //		System.out.println(Thread.currentThread().getName() + " finished TID " + idx);

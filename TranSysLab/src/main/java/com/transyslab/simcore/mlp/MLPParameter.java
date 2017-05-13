@@ -16,13 +16,17 @@ public class MLPParameter extends Parameter {
 	protected double capacity;// veh/s/lane
 	protected float CELL_RSP_LOWER; // 单位米，about 200 feet 30.48f
 	protected float CELL_RSP_UPPER; // 单位米，about 500 feet 91.44f
+	protected float CF_FAR;
+	protected float CF_NEAR;
 	private double [] SDPara_;//[0]VMax m/s; [1]VMin m/s; [2]KJam veh/m; [3]Alpha a.u.; [4]Beta a.u.;
 	private double [] LCPara_;//[0]gamma1 a.u.; [1]gamma2 a.u.;	
 	protected float[] limitingParam_; // [0] stopping gap (m); [1] moving time gap (t); [2] ?
 //	protected float[] queueParam_; // max speed for queue releasing
 	final static float VEHICLE_LENGTH = 6.0960f; // 单位米， 20 feet	
-	final static double CF_NEAR = 0.1;//meter
+//	final static double CF_NEAR = 0.1;//meter
 	final static double SEG_NEAR = 1.0;//meter
+	final static double LC_Lambda1 = 18.4204;//换道logit模型常数项
+	final static double LC_Lambda2 = -9.2102;//换道logit模型常数项
 	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
 
 	public static MLPParameter getInstance() {
@@ -45,8 +49,10 @@ public class MLPParameter extends Parameter {
 		capacity = 0.5;//default 0.5
 		CELL_RSP_LOWER = 30.87f;
 		CELL_RSP_UPPER = 91.58f;
+		CF_FAR = 91.58f;
+		CF_NEAR = (float) (5.0 * lengthFactor_);
 		SDPara_ = new double [] {16.67, 0.0, 0.180, 1.8, 5.0};//原{16.67, 0.0, 0.180, 5.0, 1.8}{19.76, 0.0, 0.15875, 2.04, 5.35}
-		LCPara_ = new double [] {10.0, 10.0};
+		LCPara_ = new double [] {20.0, 20.0};
 		limitingParam_ = new float[3];
 //		queueParam_ = new float[3];
 		//从mesolib文件读入的默认参数值

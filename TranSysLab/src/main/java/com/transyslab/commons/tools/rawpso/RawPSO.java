@@ -102,7 +102,7 @@ public class RawPSO extends SchedulerThread{
 			}
 			
 			for (int j = 0; j < population; j++) {
-				double val = fetchResult(j);//fetch result
+				double val = fetchResult(j)[0];//fetch result
 				System.out.println(val);
 				if (checkConstraints(particles.get(j).pos)) {
 					particles.get(j).updateBest(val);

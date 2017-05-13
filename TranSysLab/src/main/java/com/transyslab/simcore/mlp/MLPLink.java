@@ -8,21 +8,22 @@ import java.util.Random;
 
 import com.transyslab.commons.tools.Inflow;
 import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.commons.tools.emitTable;
+import com.transyslab.commons.tools.EMTTable;
 import com.transyslab.roadnetwork.Link;
 
 public class MLPLink extends Link {	
-	public emitTable emtTable;
+	public EMTTable emtTable;
 	public List<JointLane> jointLanes;
 	protected List<MLPVehicle> platoon;//正在处理的车队
 	public Dynamics dynaFun;
 	public List<Double> tripTime;
+//	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
 //	public double capacity_;//unit: veh/s/lane
 //	private double releaseTime_;
 	
 	
 	public MLPLink(){
-		emtTable = new emitTable();
+		emtTable = new EMTTable();
 		jointLanes = new ArrayList<JointLane>();
 		platoon = new ArrayList<>();
 		dynaFun = new Dynamics();
@@ -41,7 +42,7 @@ public class MLPLink extends Link {
 		Inflow rec1 = emtTable.getInflow().getFirst();
 		if (rec1.time<=SimulationClock.getInstance().getCurrentTime() &&
 				MLPNetwork.getInstance().mlpLane(rec1.laneIdx).checkVolum(MLPParameter.VEHICLE_LENGTH
-																			,rec1.speed))
+																			,0.0))//rec1.speed
 			return true;
 		else 
 			return false;
@@ -186,6 +187,7 @@ public class MLPLink extends Link {
 					if (veh.lane_.getAdjacent(turning[0]).diEqualsZero(veh)) {
 						veh.stopFlag = false;
 					}
+//					tmpWriter.write(pr[0] + "\r\n");
 					LCOperate(veh, turning[0]);
 				}
 				else{
@@ -193,12 +195,16 @@ public class MLPLink extends Link {
 						if (veh.lane_.getAdjacent(turning[1]).diEqualsZero(veh)) {
 							veh.stopFlag = false;
 						}
+//						tmpWriter.write(pr[1] + "\r\n");
 						LCOperate(veh, turning[1]);
 					}					
 				}
 			}
-			if ((!veh.lane_.diEqualsZero(veh)) && veh.calMLC()>0.99){
-				veh.stopFlag = true;
+			if ((!veh.lane_.diEqualsZero(veh))){
+				if (veh.calMLC()>0.99)
+					veh.stopFlag = true;
+				if (veh.calMLC()>0.7)
+					System.out.println("BUG: too late to LC");
 			}
 		}
 	}
@@ -261,9 +267,9 @@ public class MLPLink extends Link {
 		if (platoon.size()>1) {
 			double headPt = platoon.get(0).Displacement();
 			double len = headPt - platoon.get(platoon.size()-1).Displacement();
-			if (len == 0.0){
-				System.out.println("BUG 车队长度为0");
-			}
+//			if (len == 0.0){
+//				System.out.println("BUG 车队长度为0");
+//			}
 			for (MLPVehicle veh : platoon) {
 				double r = (headPt - veh.Displacement())/len;
 				double newspd = (1-r)*headspeed+r*tailspeed;

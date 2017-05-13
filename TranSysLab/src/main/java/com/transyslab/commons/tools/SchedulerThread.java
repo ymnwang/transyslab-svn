@@ -50,7 +50,7 @@ public abstract class SchedulerThread extends Thread{
 		}
 	}
 	
-	protected double fetchResult(int task_idx) {
+	protected double[] fetchResult(int task_idx) {
 		return taskCenter.getResult(task_idx);
 	}
 	

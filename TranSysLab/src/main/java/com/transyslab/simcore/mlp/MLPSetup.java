@@ -1,14 +1,12 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.List;
-
 import com.transyslab.commons.io.XmlParser;
 
 
 public class MLPSetup {
 	
 	public synchronized static void ParseNetwork() {
-		XmlParser.parseNetworkXml("src/main/resources/demo/network.xml");
+		XmlParser.parseNetworkXml(rootDir + network_fileName);
 	}
 	
 	public static void ParsePathTables() {		
@@ -35,32 +33,38 @@ public class MLPSetup {
 		XmlParser.parseVehicleTable("src/main/resources/demo_snapshot/vehicletable.xml");
 	}
 	
-	public synchronized static String getEmitFormDir() {
-		return EmitFormDir;
+	public synchronized static String getEmitForm_fileName() {
+		return rootDir + emitForm_fileName;
 	}
 
-	public synchronized static void setEmitFormDir(String emitFormDir) {
-		EmitFormDir = emitFormDir;
+	public synchronized static void setEmitForm_fileName(String emitForm_fileName) {
+		MLPSetup.emitForm_fileName = emitForm_fileName;
 	}
 
-	public synchronized static String getLoopDir() {
-		return LoopDir;
+	public synchronized static String getLoopData_fileName() {
+		return rootDir + loopData_fileName;
 	}
 
-	public synchronized static void setLoopDir(String loopDir) {
-		LoopDir = loopDir;
+	public synchronized static void setLoopData_fileName(String loopData_fileName) {
+		MLPSetup.loopData_fileName = loopData_fileName;
 	}
 
-	public synchronized static String getODFormDir() {
-		return ODFormDir;
+	public synchronized static String getOdFormDir() {
+		return rootDir + odForm_fileName;
 	}
 
-	public synchronized static void setODFormDir(String oDFormDir) {
-		ODFormDir = oDFormDir;
+	public synchronized static void setOdForm_fileName(String oDForm) {
+		odForm_fileName = oDForm;
 	}
 
-	private static String ODFormDir = "src/main/resources/demo/od_form.csv";
-	private static String EmitFormDir = "src/main/resources/demo_neihuan/scenario2/emit_form_20170228.csv";
-	private static String FCDFormDir = "src/main/resources/demo_neihuan/scenario2/FCD_20160620_ARCID4855inRL6.7.csv";
-	private static String LoopDir = "src/main/resources/demo_neihuan/scenario2/LOOP_A24_20160620_800-1000.csv";
+	public synchronized static void setRootDir(String arg){
+		rootDir = arg;
+	}
+
+	private static String rootDir = "src/main/resources/DemoNeihuan/";//DemoNeihuan demo_neihuan/scenario2
+	private static String network_fileName = "network.xml";
+	private static String odForm_fileName = "od_form.csv";
+	private static String emitForm_fileName = "emit_form.csv";
+	private static String FCDForm_fileName = "FCD.csv";
+	private static String loopData_fileName = "LOOP_A24_20160620_800-1000.csv";
 }

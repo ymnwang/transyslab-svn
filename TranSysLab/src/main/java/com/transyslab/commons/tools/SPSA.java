@@ -159,15 +159,18 @@ public class SPSA extends SchedulerThread{
 			for (int j = 0; j < 3; j++) {
 				dispatchTask(j, newPara[j]);
 			}
-			if(fetchResult(2)<fitness)
-				fitness = fetchResult(2);
+			double tmp2 = fetchResult(2)[0];
+			if(tmp2<fitness)
+				fitness = tmp2;
 			
 			System.out.println("Gbest : " + fitness);
 			System.out.println("Position : " + showGBestPos());
 			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
 			if(i!=iterationLim-1){
 				//梯度逼近
-				estimateGradient(fetchResult(0), fetchResult(1));
+				double tmp0 = fetchResult(0)[0];
+				double tmp1 = fetchResult(1)[0];
+				estimateGradient(tmp0, tmp1);
 				//更新spsa里面的parameter（属于[0,1]区间），同时更新第三个engine的参数
 				updateParameters(i);
 			}

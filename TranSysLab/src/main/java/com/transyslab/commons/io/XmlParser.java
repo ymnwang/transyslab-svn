@@ -559,8 +559,7 @@ public class XmlParser {
 				}*/
 			}
 			else if (AppSetup.modelType == 2) {
-				MLPLoop tmpLoop = new MLPLoop();
-				tmpLoop.init(detName, segid, pos);
+				MLPLoop.init(detName, segid, pos);
 			}
 		}
 

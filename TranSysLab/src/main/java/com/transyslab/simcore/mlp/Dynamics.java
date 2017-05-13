@@ -13,9 +13,9 @@ public class Dynamics {
 		if (k <= sdPara[2]){
 			 //vMin + (vMax - vMin)*(1-(K/kJam).^a).^b;
 			double ans = sdPara[1] + (sdPara[0]-sdPara[1]) * Math.pow(1.0-Math.pow(k/sdPara[2], sdPara[3]), sdPara[4]);
-			if (Double.isNaN(ans)){
-				System.out.println("BUG SD函数输出异常");
-			}
+//			if (Double.isNaN(ans)){
+//				System.out.println("BUG SD函数输出异常");
+//			}
 			return ans;
 		}
 		else {
@@ -25,16 +25,16 @@ public class Dynamics {
 	public double cfFun(MLPVehicle theVeh){
 		double gap = theVeh.leading_.Displacement() - theVeh.leading_.getLength() - theVeh.Displacement(); 
 		double vlead = (double) theVeh.leading_.currentSpeed();
-		double upperGap = MLPParameter.getInstance().CELL_RSP_UPPER;
-		if(gap < MLPParameter.CF_NEAR) {
+		double upperGap = MLPParameter.getInstance().CF_FAR;
+		if(gap < MLPParameter.getInstance().CF_NEAR) {
 			return vlead;
 		}
 		else if (gap<upperGap) {
 			double r = gap/upperGap;
 			//return r * sdPara[0] + (1.0-r) * vlead;
 			double ans = r * MLPParameter.getInstance().maxSpeed(gap) + (1.0-r) * vlead;
-			if (Double.isNaN(ans))
-				System.out.println("BUG CF函数输出异常");
+//			if (Double.isNaN(ans))
+//				System.out.println("BUG CF函数输出异常");
 			return ans;
 		}
 		else {
@@ -62,6 +62,20 @@ public class Dynamics {
 			//准备处于Link Passing的头车
 			//暂时不加限制，以后的版本此处与节点状态结合，综合考虑进入同一节点的其他link的状态给出headSpeed
 			return sdPara[0];
+		}
+	}
+
+	public void setPartialSD(double[] para, int mask) {
+		int idx = 0;
+		for (int i = 0; i < 5; i++) {
+			if ((1<<i & mask) != 0) {
+				if (idx < para.length) {
+					sdPara[i] = para[idx];
+					idx += 1;
+				}
+				else
+					System.err.println("idx越界");
+			}
 		}
 	}
 	
