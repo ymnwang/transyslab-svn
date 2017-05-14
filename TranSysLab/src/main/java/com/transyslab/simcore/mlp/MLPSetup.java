@@ -8,7 +8,7 @@ import com.transyslab.commons.io.XmlParser;
 public class MLPSetup {
 	
 	public synchronized static void ParseNetwork() {
-		XmlParser.parseNetworkXml("src/main/resources/demo/network.xml");
+		XmlParser.parseNetworkXml("src/main/resources/demo_neihuan/scenario2/network.xml");
 	}
 	
 	public static void ParsePathTables() {		

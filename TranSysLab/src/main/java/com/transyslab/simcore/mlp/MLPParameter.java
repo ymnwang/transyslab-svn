@@ -41,12 +41,12 @@ public class MLPParameter extends Parameter {
 		SegLenBuff_ = 10.0;
 		LCBuffTime_ = 2.0;
 		updateStepSize_ = 10.0;
-		LCDStepSize_ = 2.0;
+		LCDStepSize_ = 0.0;//2.0
 		capacity = 0.5;//default 0.5
 		CELL_RSP_LOWER = 30.87f;
 		CELL_RSP_UPPER = 91.58f;
 		SDPara_ = new double [] {16.67, 0.0, 0.180, 1.8, 5.0};//原{16.67, 0.0, 0.180, 5.0, 1.8}{19.76, 0.0, 0.15875, 2.04, 5.35}
-		LCPara_ = new double [] {10.0, 10.0};
+		LCPara_ = new double [] {20.0, 20.0};
 		limitingParam_ = new float[3];
 //		queueParam_ = new float[3];
 		//从mesolib文件读入的默认参数值

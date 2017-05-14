@@ -1,22 +1,28 @@
-/**
- *
- */
 package com.transyslab.commons.tools;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import com.transyslab.commons.tools.rawpso.Particle;
+import org.apache.commons.csv.CSVRecord;
+
+import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.mlp.MLPEngThread;
 import com.transyslab.simcore.mlp.MLPEngine;
 
 /**
- * @author yali
- *
- */
-public class DE extends SchedulerThread{
+* @author yali
+*
+*/
+
+public class DEWithPython extends SchedulerThread{
+
 
 	private float F_;
 	private Individual[] newidvds_;
@@ -31,10 +37,10 @@ public class DE extends SchedulerThread{
 	
 	private int iterationLim;
 
-	public DE() {//旧代码中使用DE，但不作为SchedulerThread使用
+	public DEWithPython() {//旧代码中使用DE，但不作为SchedulerThread使用
 		super("Unknown", null);
 	}
-	public DE(String threadName, TaskCenter tc) {
+	public DEWithPython(String threadName, TaskCenter tc) {
 		super(threadName, tc);
 	}
 	public int getDim() {
@@ -142,28 +148,87 @@ public class DE extends SchedulerThread{
 	}
 	@Override
 	public void run() {
-		for (int i = 0; i < iterationLim; i++) {
-			resetTaskPool(population_);
-			long tb = System.currentTimeMillis();
-			for (int j = 0; j < population_; j++) {
-				dispatchTask(j, newidvds_[j].pos_);//dispatch task
-			}
+		System.out.println("java端启动...");  
+		//创建一个流套接字并将其连接到指定主机上的指定端口号  
+        Socket client;
+		try {
+			client = new Socket("127.0.0.1", 1025);
+		     //读取服务器端数据    
+	        BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
+	        //向服务器端发送数据    
+	        PrintWriter output = new PrintWriter(client.getOutputStream(), true);
+			// 消息以\n结尾
+	        String firstLine;
 			
-			for (int j = 0; j < population_; j++) {
-				float fval = (float)fetchResult(j);//fetch result
-				newidvds_[j].setFitness(fval);
-				selection(j);
-				if (fval<gbestFitness_) {
-					setGbest(newidvds_[j].pos_);
-					setGbestFitness(fval);
-				}
-				changePos(j);
-			}
+			firstLine = input.readLine();
 			
-			System.out.println("Gbest : " + gbestFitness_);
-			System.out.println("Position : " + showGBestPos());
-			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
-		}
+	        if (firstLine.equals("Connection built")){
+	        	System.out.println("Connection success");
+	        	// 开始DE迭代
+	        	for (int i = 0; i < iterationLim; i++) {
+					resetTaskPool(population_);
+					long tb = System.currentTimeMillis();
+					for (int j = 0; j < population_; j++) {
+						dispatchTask(j, newidvds_[j].pos_);//dispatch task
+					}
+					// TODO 取回所有仿真结果，输出到csv
+					// 命令python开始做平稳性检验
+		            output.print("calcFitness");
+		            output.flush();
+		            while (true) {
+		            	try {
+		            		//消息以\n结尾
+		                    String line = input.readLine();
+		                    //接收python计算结果
+		                    if(line.equals("done")){
+		                    	try {
+		                    		// TODO 处理结果
+		                			List<CSVRecord> dataList = CSVUtils.readCSV("R:\\ADFullerTest.csv", null);
+		                			for (int j = 0; j < population_; j++) {
+		        						float fval = (float)fetchResult(j);//fetch result
+		        						newidvds_[j].setFitness(fval);
+		        						selection(j);
+		        						if (fval<gbestFitness_) {
+		        							setGbest(newidvds_[j].pos_);
+		        							setGbestFitness(fval);
+		        						}
+		        						changePos(j);
+		        					}
+
+		                		} catch (IOException e) {
+		                			e.printStackTrace();
+		                		}
+		                    	if(i== iterationLim-1){
+		                    		// 计算完成
+			                    	output.print("exit");
+			                    	output.flush();
+		                    	}
+		                    	// 跳出while进行下一代迭代计算
+		                    	break;
+		                    }
+		                    if(line.equals("Connection closed")){
+		                    	break;
+		                    } 
+		                      
+		                } catch (Exception e) {  
+		                    System.out.println("客户端异常:" + e.getMessage());   
+		                } 
+		            }
+		            System.out.println("Gbest : " + gbestFitness_);
+					System.out.println("Position : " + showGBestPos());
+					System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
+					
+	        	}// DE完成所有迭代
+	            input.close();
+	            output.close();
+	            client.close();
+
+			}
+
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}    	
 		dismissAllWorkingThreads();//stop eng线程。
 	}
 	public static void main(String[] args) {
@@ -186,8 +251,10 @@ public class DE extends SchedulerThread{
 		for (int i = 0; i < 30; i++) {
 			mlp_eng_thread = new MLPEngThread("Eng"+i, tc);
 			mlp_eng_thread.setMode(3);
-//			((MLPEngine) mlp_eng_thread.engine).seedFixed = true;
+//				((MLPEngine) mlp_eng_thread.engine).seedFixed = true;
 			mlp_eng_thread.start();
 		}
+		
 	}
+
 }

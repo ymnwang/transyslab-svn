@@ -1,5 +1,6 @@
 package com.transyslab.simcore.mlp;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,8 +13,10 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.math3.genetics.Fitness;
 import org.apache.commons.math3.util.MathUtils;
 
+import com.jstatcom.ts.TSTable;
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.TXTUtils;
+import com.transyslab.commons.tools.ADFullerTest;
 import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.SimulationClock;
@@ -25,6 +28,8 @@ import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoNetwork;
 import com.transyslab.simcore.mesots.MesoNetworkPool;
+
+import Jampack.Print;
 
 
 public class MLPEngine extends SimulationEngine{
@@ -74,10 +79,13 @@ public class MLPEngine extends SimulationEngine{
                 //优化参数设置
                 double[] param = new double[]{15.993167, 0.15445936, 1.5821557, 6.34795, 33.02263, 93.043655};
                 setOptParas(param);
-                displayOn = true;
+                displayOn = false;
                 int idata = 0;
-                double calStep = 300;
-                double caltime = calStep;
+                double calStep = 30;
+                //15分钟用于仿真预热
+                double caltime = calStep+900;
+                int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
+                double []  simSpeed = new double [sampleSize];
                 MLPNetwork mlp_network = MLPNetwork.getInstance();
                 while (simulationLoop()>=0){
                     double now = SimulationClock.getInstance().getCurrentTime();
@@ -85,13 +93,24 @@ public class MLPEngine extends SimulationEngine{
                         List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
                         trTlist.clear();
                         //线圈检测地点速度
-                        if(MainWindow.getInstance().needRTPlot){
+                        /*if(MainWindow.getInstance().needRTPlot){
                             MainWindow.getInstance().getTrace2D().addPoint(idata, mlp_network.loopStatistic("det3")*3.6);
-                        }
+                        }*/
+        				//线圈检测地点速度
+        				simSpeed[idata] = mlp_network.loopStatistic("det3")*3.6;
+        						
                         caltime += calStep;
                         idata++;
                     }
                 }
+				try {
+					CSVUtils.writeCSV("R:\\SimResults.csv", null, simSpeed);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+//                ADFullerTest test = new ADFullerTest(simSpeed);
+//                System.out.println(test.isNeedsDiff());
                 break;
             case 1:
                 //Engine参数与状态的初始化
@@ -120,6 +139,7 @@ public class MLPEngine extends SimulationEngine{
                 setOptParas(null);
                 while (simulationLoop() >= 0) ;
                 break;
+     
             default:
 			break;
 		}
@@ -276,7 +296,7 @@ public class MLPEngine extends SimulationEngine{
 													// is done
 		}
 		else {
-			System.out.println(time);
+//			System.out.println(time);
 			return state_ = Constants.STATE_OK;// STATE_OK宏定义
 		}			
 	}
@@ -308,9 +328,9 @@ public class MLPEngine extends SimulationEngine{
 		MLPSetup.ParseNetwork();
 		// 读入路网数据后组织路网不同要素的关系
 		MLPNetwork.getInstance().calcStaticInfo();
-//		// 读取检测器
-//		MLPSetup.ParseSensorTables();
-//		MLPNetwork.getInstance().createLoopSurface();
+		// 读取检测器
+		MLPSetup.ParseSensorTables();
+		MLPNetwork.getInstance().createLoopSurface();
 		return 0;
 	}
 	

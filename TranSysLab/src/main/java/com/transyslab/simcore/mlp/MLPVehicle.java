@@ -191,7 +191,7 @@ public class MLPVehicle extends Vehicle{
 		double h = calH(turning);
 		double Umlc = calMLC();
 		double Udlc = calDLC(turning, fDSP, tDSP, PlatoonCount);
-		double u = gamma[0]*h*Umlc + gamma[1]*Udlc - (gamma[0] + gamma[1])*0.5;
+		double u = gamma[0]*h*Umlc + gamma[1]*Udlc - 9.2102;
 		double pr = Math.exp(u)/(1+Math.exp(u));
 //		fout.writeNFlush(u + "," + pr + "\r\n");
 		return pr;
