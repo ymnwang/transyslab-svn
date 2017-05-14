@@ -50,7 +50,7 @@ public class MLPSetup {
 	}
 
 	public synchronized static String getODFormDir() {
-		return ODFormDir;
+		return rootDir + odForm_fileName;
 	}
 
 	public synchronized static void setOdForm_fileName(String oDForm) {

@@ -150,7 +150,8 @@ public class DE extends SchedulerThread{
 			}
 			
 			for (int j = 0; j < population_; j++) {
-				float fval = (float)fetchResult(j);//fetch result
+				double tmp = fetchResult(j)[0];
+				float fval = (float) tmp;//fetch result
 				newidvds_[j].setFitness(fval);
 				selection(j);
 				if (fval<gbestFitness_) {

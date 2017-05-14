@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.transyslab.commons.tools.Inflow;
 import org.apache.commons.csv.CSVRecord;
+import java.io.IOException;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.TXTUtils;
@@ -79,7 +80,7 @@ public class MLPEngine extends SimulationEngine{
                             MainWindow.getInstance().getTrace2D().addPoint(idata, mlp_network.loopStatistic("det3")*3.6);
                         }*/
         				//线圈检测地点速度
-        				simSpeed[idata] = mlp_network.loopStatistic("det3")*3.6;
+ //       				simSpeed[idata] = mlp_network.loopStatistic("det3")*3.6;
 
                         caltime += calStep;
                         idata++;
@@ -88,7 +89,6 @@ public class MLPEngine extends SimulationEngine{
 				try {
 					CSVUtils.writeCSV("R:\\SimResults.csv", null, simSpeed);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 //                ADFullerTest test = new ADFullerTest(simSpeed);
