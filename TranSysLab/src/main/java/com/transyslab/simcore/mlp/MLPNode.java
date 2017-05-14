@@ -65,14 +65,14 @@ public class MLPNode extends Node{
 						veh.OnRouteChoosePath(veh.link_.getDnNode());
 						return 0;
 					}
-					else
-						System.out.println("BUG Can NOT pass or has been taken place");
+//					else
+//						System.out.println("BUG Can NOT pass or has been taken place");
 				}
-				else
-					System.out.println("BUG Failed checking volume");
+//				else
+//					System.out.println("BUG Failed checking volume");
 			}
-			else
-				System.out.println("BUG Error Next Lane is null");
+//			else
+//				System.out.println("BUG Error Next Lane is null");
 		}
 		else
 			stopCount += 1;

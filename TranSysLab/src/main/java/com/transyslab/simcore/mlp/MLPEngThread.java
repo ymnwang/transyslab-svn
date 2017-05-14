@@ -63,7 +63,7 @@ public class MLPEngThread extends EngTread{
 			mlp_eng.run(2);
 			break;
 			
-		case 3://work in taskCenter
+		case 3://work in taskCenter,带速度序列的结果返回
 			mlp_eng.needEmpData = true;
 			while (!isDismissed()) {
 				double[] task = null;
@@ -71,8 +71,8 @@ public class MLPEngThread extends EngTread{
 				if (task != null) {
 //					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
 					double [] p = unzipTask(task);
-					double fitVal = mlp_eng.calFitness(p);
-					uploadResult((int) task[0], new double[]{fitVal});//将结果返回任务中心taskCenter
+					double[] fitVal = mlp_eng.calFitness3(p);
+					uploadResult((int) task[0], fitVal);//将结果返回任务中心taskCenter
 				}
 			}
 			break;

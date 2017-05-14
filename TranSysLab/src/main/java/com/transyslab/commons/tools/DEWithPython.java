@@ -185,7 +185,7 @@ public class DEWithPython extends SchedulerThread{
 		                    		// TODO 处理结果
 		                			List<CSVRecord> dataList = CSVUtils.readCSV("R:\\ADFullerTest.csv", null);
 		                			for (int j = 0; j < population_; j++) {
-		        						float fval = (float)fetchResult(j);//fetch result
+		        						float fval = (float)fetchResult(j)[0];//fetch result
 		        						newidvds_[j].setFitness(fval);
 		        						selection(j);
 		        						if (fval<gbestFitness_) {

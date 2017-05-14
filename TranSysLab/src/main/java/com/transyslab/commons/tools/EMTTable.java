@@ -18,7 +18,7 @@ public class EMTTable {
 		inflowlist_ = new LinkedList<>();
 	}
 	public static void createRndETables(){
-		String filePath = MLPSetup.getOdFormDir();
+		String filePath = MLPSetup.getODFormDir();
 		String[] header = {"fLinkID","tLinkID","demand",
 						   "fTime","tTime",
 						   "mean","sd","vlim"};

@@ -86,13 +86,15 @@ public class MLPEngine extends SimulationEngine{
                         idata++;
                     }
                 }
+                /* 
+                // 连接python测试
 				try {
 					CSVUtils.writeCSV("R:\\SimResults.csv", null, simSpeed);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 //                ADFullerTest test = new ADFullerTest(simSpeed);
-//                System.out.println(test.isNeedsDiff());
+//                System.out.println(test.isNeedsDiff());*/
                 break;
             case 1:
                 //Engine参数与状态的初始化
@@ -297,9 +299,9 @@ public class MLPEngine extends SimulationEngine{
 													// is done
 		}
 		else {
-			System.out.println(String.valueOf(now/3600));
+			/*System.out.println(String.valueOf(now/3600));
 			if(Math.abs(now/3600-8)<0.001)
-				System.out.println("BUG");
+				System.out.println("BUG");*/
 			return state_ = Constants.STATE_OK;// STATE_OK宏定义
 		}			
 	}
@@ -310,7 +312,20 @@ public class MLPEngine extends SimulationEngine{
 		loadSimulationFiles();
 		//读入实测数据用于计算fitness
 		if(needEmpData) {
-			readFromLoop(MLPSetup.getLoopData_fileName());
+			//TODO DE优化临时修改
+			try {
+				// 单列表格
+				List<CSVRecord> results = CSVUtils.readCSV("R:\\DetSpeed.csv", null);
+				double[] tmpEmpData = new double[results.size()]; 
+				for(int i=0;i<tmpEmpData.length;i++){
+					tmpEmpData[i] = Double.parseDouble(results.get(i).get(0));
+				}
+				empData = tmpEmpData;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//readFromLoop(MLPSetup.getLoopData_fileName());
 		}
 		//其他初始化过程。目前为空
 		start();
@@ -318,7 +333,6 @@ public class MLPEngine extends SimulationEngine{
 
 	@Override
 	public void start() {
-		// TODO 自动生成的方法存根
 		
 	}
 	
@@ -441,7 +455,50 @@ public class MLPEngine extends SimulationEngine{
 		double fitnessVal = FitnessFunction.evaRNSE(tmpSim, tmpReal);
 		return fitnessVal;
 	}
+	public double[] calFitness3(double [] paras) {
+		//初始化引擎的固定参数（时间）
+		resetEngine(0, 6900, 0.2);
+		double[] paras1 = new double[3];
+		double[] paras2 = new double[6];
+		for(int i =0;i<paras.length;i++){
+			if(i<3)
+				paras1[i] = paras[i];
+			else
+				paras2[i-3] = paras[i];
+		}
+		setObservedParas(paras1);
+		//设置优化参数
+		setOptParas(paras2);
+		//设置fitness fun的变量
+		MLPNetwork mlp_network = MLPNetwork.getInstance();
+		double calStep = 300;
+		double caltime = calStep+900;
+		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
+		double []  simTrT = new double [sampleSize];
+		double []  simSpeed = new double [sampleSize];
+		double []  simLinkFlow = new double [sampleSize];
+		int idx = 0;
+		//运行仿真，定时进行输出统计
+		while(simulationLoop()>=0) {
+			double now = SimulationClock.getInstance().getCurrentTime();
+			if (now>=caltime) {
+				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;				
+				trTlist.clear();
+				//线圈检测地点速度
+				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime);
+						
+				caltime += calStep;
+				idx += 1;
+			}
+		}
+		double[] realLoopDetect =(double[])empData;
 
+		double fitnessVal = FitnessFunction.evaKSDistance(simSpeed, realLoopDetect);
+		double[] results = new double[simSpeed.length+1];
+		results[0] = fitnessVal;
+		System.arraycopy(simSpeed, 0, results, 1, simSpeed.length);
+		return results;
+	}
 	public double calFitness2(double [] paras) {
 		//初始化引擎的固定参数（时间）
 		resetEngine(0, 6900, 0.2);
