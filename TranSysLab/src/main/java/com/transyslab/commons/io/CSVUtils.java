@@ -38,7 +38,7 @@ public class CSVUtils {
        
         return records;    
     }
-    public static void writeCSV(String filePath,String[] headers, List data) throws IOException{
+    public static void writeCSV(String filePath,String[] headers, double[] data) throws IOException{
         
         //创建CSVFormat
     	CSVFormat formator;
@@ -49,21 +49,18 @@ public class CSVUtils {
     		formator = CSVFormat.DEFAULT.withHeader(headers);
     	FileWriter fileWriter = new FileWriter(filePath);
         CSVPrinter printer = new CSVPrinter(fileWriter,formator);
+        for(int i=0;i<data.length;i++){
+        	printer.printRecord(data[i]);
+        }
+        fileWriter.flush();
+        fileWriter.close();
+        printer.close();
  /*       
         for (int i=0;i<data.size();i++ ) {
             List<String> records = new ArrayList<>();
             records.add(data.get(i));
             printer.printRecord(records);
         }*/
-/*        
-        //创建CSVParser对象
-        CSVParser parser=new CSVParser(fileReader,formator);
-        
-        List<CSVRecord> records=parser.getRecords();
-        
-        parser.close();
-        fileReader.close();
-        
-        return records;  */  
+
     }
 }

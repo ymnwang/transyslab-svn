@@ -49,8 +49,8 @@ public class MLPSetup {
 		MLPSetup.loopData_fileName = loopData_fileName;
 	}
 
-	public synchronized static String getOdFormDir() {
-		return rootDir + odForm_fileName;
+	public synchronized static String getODFormDir() {
+		return ODFormDir;
 	}
 
 	public synchronized static void setOdForm_fileName(String oDForm) {

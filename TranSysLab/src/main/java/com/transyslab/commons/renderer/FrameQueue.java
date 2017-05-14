@@ -24,6 +24,9 @@ public class FrameQueue {
     //队列头尾索引  
     private int writeArrayHP_, writeArrayTP_, readArrayHP_, readArrayTP_;  
     
+    //帧号
+    private int frameCount;
+    
     //单例模式
     private static FrameQueue theFrameQueue;
     public static FrameQueue getInstance(){
@@ -33,11 +36,14 @@ public class FrameQueue {
     }
     //main线程调用，初始化数组内元素
     public void initFrameQueue(){
-    	
+    	frameCount = 0;
     	for(int i=0;i<capacity_;i++){
     		writeArray_[i] = new AnimationFrame();
     		readArray_[i] = new AnimationFrame();
     	}
+    }
+    public int getFrameCount(){
+    	return frameCount;
     }
     public FrameQueue(int capacity){
 
@@ -55,6 +61,7 @@ public class FrameQueue {
     //插入对象，非线程安全，由加锁函数offer调用保证线程安全
     private void insert(AnimationFrame e)  
     {  
+    	
         writeArray_[writeArrayTP_] = e;  
         ++writeArrayTP_;
         //0-capacity
@@ -152,6 +159,7 @@ public class FrameQueue {
         	writeArray_[writeArrayTP_].addVehicleData(vd);
         	//确保写完每一帧所有车辆的位置信息
         	if(writeArray_[writeArrayTP_].getVhcDataQueue().size() == vhcnum){
+        		frameCount ++;
         		//索引跳到下一帧
                 ++writeArrayTP_;
                 ++writeCount_; 

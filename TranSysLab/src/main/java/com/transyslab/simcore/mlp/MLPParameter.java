@@ -45,7 +45,7 @@ public class MLPParameter extends Parameter {
 		SegLenBuff_ = 10.0;
 		LCBuffTime_ = 2.0;
 		updateStepSize_ = 10.0;
-		LCDStepSize_ = 2.0;
+		LCDStepSize_ = 0.0;//2.0
 		capacity = 0.5;//default 0.5
 		CELL_RSP_LOWER = 30.87f;
 		CELL_RSP_UPPER = 91.58f;

@@ -225,14 +225,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 //					MainWindow.getInstance().getTXTConsole().append(vd.getVhcInfo()+"\n");	
 				}
 			}
-			
-				
-			/*
-			textRenderer.begin3DRendering();
-				textRenderer.setColor(1.0f, 0.2f, 0.2f, 0.8f);
-				textRenderer.draw3D("Text to draw", cam_.getEyePosition()[0], cam_.getEyePosition()[1],0.0f,1);
-			    // ... more draw commands, color changes, etc.
-			textRenderer.end3DRendering();*/
 			    
 		}
 	}
@@ -309,6 +301,15 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				else if(vd.getSpecialFlag() == 0)
 					ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected());
 			}
+			float[] infoPostion = calcRay(gl, 0.0f, 2, 10, 20);
+			StringBuilder sBuilder = new StringBuilder();
+			sBuilder.append("FrameID:");
+			sBuilder.append(FrameQueue.getInstance().getFrameCount());
+			textRenderer.begin3DRendering();
+				textRenderer.setColor(1.0f, 0.2f, 0.2f, 0.8f);
+				textRenderer.draw3D(sBuilder, infoPostion[0], infoPostion[1],infoPostion[2],0.5f*cam_.getEyeLocation()[2]/1000);
+			    // ... more draw commands, color changes, etc.
+			textRenderer.end3DRendering();
 		}
 		else{
 			
@@ -326,6 +327,15 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					//回收vehicledata
 					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
 				}
+				float[] infoPostion = calcRay(gl, 0.0f, 2, 10, 20);
+				StringBuilder sBuilder = new StringBuilder();
+				sBuilder.append("Clock:");
+				sBuilder.append(FrameQueue.getInstance().getFrameCount());
+				textRenderer.begin3DRendering();
+					textRenderer.setColor(1.0f, 0.2f, 0.2f, 0.8f);
+					textRenderer.draw3D(sBuilder, infoPostion[0], infoPostion[1],infoPostion[2],0.5f*cam_.getEyeLocation()[2]/1000);
+				    // ... more draw commands, color changes, etc.
+				textRenderer.end3DRendering();
 				//清空frame
 				curFrame.clean();
 			}
@@ -336,7 +346,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	}
 	//计算拾取射线与x/y/z = intersectPlane 平面的交点
 	// offset=0,1,2:x,y,z
-	public float[] calcRay(final GL2 gl, final float intersectPlane, final int offset){
+	public float[] calcRay(final GL2 gl, final float intersectPlane, final int offset, final int winx, final int winy){
 		int[] viewport = new int[4];
 		float[] projmatrix = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
 		float[] mvmatrix = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
@@ -345,8 +355,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		gl.glGetIntegerv(GL2.GL_VIEWPORT, viewport, 0);
 		gl.glGetFloatv(GL2.GL_MODELVIEW_MATRIX, mvmatrix, 0);
 		gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, projmatrix, 0);
-		float winX = preWinCoods.x;
-		float winY = viewport[3] - preWinCoods.y;
+		float winX = winx;
+		float winY = viewport[3] - winy;
 		if(!glu.gluUnProject(winX, winY, 0.0f, mvmatrix, 0, projmatrix, 0, viewport, 0, posNear, 0) ||
 		   !glu.gluUnProject(winX, winY, 1.0f, mvmatrix, 0, projmatrix, 0, viewport, 0, posFar, 0))
 			System.out.println("The matrix can not be inverted");

@@ -27,11 +27,6 @@ public class SimulationClock {
 	protected String startStringTime_;
 	protected String stopStringTime_;
 
-	// structure tms is defined in <sys/times.h> and filled by
-	// calling times(&cputms_)
-
-	// protected Struct tms cputimes_; // time-accounting information
-
 	protected long baseClkTcks_; // returned by first call of times();
 
 	// These three are filled in advance(double), which is assumed

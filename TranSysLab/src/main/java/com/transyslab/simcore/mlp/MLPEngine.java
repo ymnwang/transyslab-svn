@@ -61,10 +61,13 @@ public class MLPEngine extends SimulationEngine{
                 //优化参数设置
                 double[] param = new double[]{15.993167, 0.15445936, 1.5821557, 6.34795, 33.02263, 93.043655};
                 setOptParas(param);
-                displayOn = true;
+                displayOn = false;
                 int idata = 0;
-                double calStep = 300;
-                double caltime = calStep;
+                double calStep = 30;
+                //15分钟用于仿真预热
+                double caltime = calStep+900;
+                int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
+                double []  simSpeed = new double [sampleSize];
                 MLPNetwork mlp_network = MLPNetwork.getInstance();
                 while (simulationLoop()>=0){
                     double now = SimulationClock.getInstance().getCurrentTime();
@@ -72,13 +75,24 @@ public class MLPEngine extends SimulationEngine{
                         List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
                         trTlist.clear();
                         //线圈检测地点速度
-                        if(MainWindow.getInstance().needRTPlot){
-                            MainWindow.getInstance().getTrace2D().addPoint(idata, mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6);
-                        }
+                        /*if(MainWindow.getInstance().needRTPlot){
+                            MainWindow.getInstance().getTrace2D().addPoint(idata, mlp_network.loopStatistic("det3")*3.6);
+                        }*/
+        				//线圈检测地点速度
+        				simSpeed[idata] = mlp_network.loopStatistic("det3")*3.6;
+
                         caltime += calStep;
                         idata++;
                     }
                 }
+				try {
+					CSVUtils.writeCSV("R:\\SimResults.csv", null, simSpeed);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+//                ADFullerTest test = new ADFullerTest(simSpeed);
+//                System.out.println(test.isNeedsDiff());
                 break;
             case 1:
                 //Engine参数与状态的初始化
@@ -343,7 +357,7 @@ public class MLPEngine extends SimulationEngine{
 		allParas.limitingParam_[0] = (float) (1.0/ob_paras[2] - allParas.VEHICLE_LENGTH);
 		allParas.CF_NEAR = allParas.limitingParam_[0];//锁定与kjam吻合
 	}
-	
+
 	public void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.(是否要考虑dlower dupper)
 		if (optparas != null) {
 			MLPParameter allParas = MLPParameter.getInstance();
