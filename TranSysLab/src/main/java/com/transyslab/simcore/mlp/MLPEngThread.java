@@ -63,7 +63,7 @@ public class MLPEngThread extends EngTread{
 			mlp_eng.run(2);
 			break;
 			
-		case 3://work in taskCenter,带速度序列的结果返回
+		case 3://work in taskCenter,带30s速度序列的结果返回
 			mlp_eng.needEmpData = true;
 			while (!isDismissed()) {
 				double[] task = null;
@@ -76,17 +76,29 @@ public class MLPEngThread extends EngTread{
 				}
 			}
 			break;
+		case 7://work in taskCenter,带5min速度序列的结果返回
+			while (!isDismissed()) {
+				double[] task = null;
+				task = retrieveTask();//尝试从任务中心taskCenter取回任务
+				if (task != null) {
+//					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
+					double [] p = unzipTask(task);
+					double[] fitVal = mlp_eng.calFitness4(p);
+					uploadResult((int) task[0], fitVal);//将结果返回任务中心taskCenter
+				}
+			}
+			break;
 			case 4:
 				mlp_eng.needEmpData = true;
-				mlp_eng.needRndETable = true;
-				mlp_eng.seedFixed = true;
+				/*mlp_eng.seedFixed = true;
 				if (mlp_eng.seedFixed) {
-					mlp_eng.runningseed = 1490183749797l;
-				}
+					mlp_eng.runningseed = 89267437;//1490183749797l;
+				}*/
 				TimeMeasureUtil timer = new TimeMeasureUtil();
 				for (int i = 0; i < 10; i++) {
 					timer.tic();
-					System.out.println(mlp_eng.calFitness(new double [] {16.87, 0.137, 0.2519, 1.8502, 1.3314, 33.3333}));
+					System.out.println(mlp_eng.calFitness4(new double[]{89267437,0.5122,20.37,0.1928,
+	        			     1.2412, 19.8103, 0.1458,  1.4803, 1.0, 1.0})[0]);
 					System.out.println(timer.toc());
 				}
 				break;
@@ -109,6 +121,11 @@ public class MLPEngThread extends EngTread{
 					}
 				}
 				break;
+				case 8:
+					boolean ans = ((MLPParameter) parameter).constraints(new double[]{0.5122,20.37,0.1928,
+		        			0.14, 5.1846, 1.8,  5.0, 1.0, 1.0});
+					System.out.println(ans);
+					break;
 		default:
 			break;
 		}
@@ -129,7 +146,7 @@ public class MLPEngThread extends EngTread{
 //		myThread.start();
 
 		MLPEngThread myThread = new MLPEngThread("testingThread");
-		myThread.setMode(4);
+		myThread.setMode(8);
 		myThread.start();
 	}
 }

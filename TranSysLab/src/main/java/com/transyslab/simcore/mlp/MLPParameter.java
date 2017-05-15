@@ -153,5 +153,35 @@ public class MLPParameter extends Parameter {
 	public void setDLower(float arg) {
 		CELL_RSP_LOWER = arg;
 	}
-
+	public boolean constraints(double[] paras) {
+		double Qm = paras[0];
+		double Vf = paras[1];
+		double Kj = paras[2];
+		
+		double ts = paras[3];
+		double xc = paras[4];
+		double alpha =paras[5];
+		double beta = paras[6];
+		double gamma1 = paras[7];
+		double gamma2 = paras[8];
+		
+		double delta_t = SimulationClock.getInstance().getStepSize();
+		double leff = 1/Kj;
+		double Vp = PHYSICAL_SPD_LIM;
+		boolean check1 = false;
+		check1 |= (ts==1/Qm - leff/Vf - delta_t && xc<=Vf/Qm) || //condition 1
+						 (xc==leff/(1-Qm*(delta_t+ts)) && ts < 1/Qm-delta_t
+								 										  && ts < (Vf-Qm*leff)/Qm/Vf-delta_t
+								 										  && ts <= (Vp-Qm*leff)/Qm/Vp
+								 										  && Vp-Qm*leff>0) || //condition 2
+						 (ts==1/Qm-leff/Vp-delta_t && xc>Vp*(delta_t+ts)+leff); //condition 3
+		
+		boolean check2;
+		double xb = Vp*(delta_t+ts)+leff, Qb = Vp/xb;
+		double Km_star = Kj/Math.pow(1+alpha*beta, 1/alpha); 
+		double Qm_star = Km_star * Vf * Math.pow(1-Math.pow(Km_star/Kj, alpha), beta);
+		//double root = solve((1/x-leff)/(delta_t+ts)==Vf*(1-(x/Kj)^alpha)^beta);//非线性方程，要造轮子才能解；暂时不考虑这个条件
+		check2 =  Qb/(Kj-1/xb)>Qm_star/(Kj-Km_star) ? Qm==Qm_star : true; //Qm==root*(1/root-leff)/(delta_t+ts);
+		return check1 && check2;
+	}
 }

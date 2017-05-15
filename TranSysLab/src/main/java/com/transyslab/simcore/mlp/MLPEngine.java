@@ -315,7 +315,7 @@ public class MLPEngine extends SimulationEngine{
 			//TODO DE优化临时修改
 			try {
 				// 单列表格
-				List<CSVRecord> results = CSVUtils.readCSV("R:\\DetSpeed.csv", null);
+				List<CSVRecord> results = CSVUtils.readCSV("R:\\DetSpeed2.csv", null);
 				double[] tmpEmpData = new double[results.size()]; 
 				for(int i=0;i<tmpEmpData.length;i++){
 					tmpEmpData[i] = Double.parseDouble(results.get(i).get(0));
@@ -460,11 +460,59 @@ public class MLPEngine extends SimulationEngine{
 		resetEngine(0, 6900, 0.2);
 		double[] paras1 = new double[3];
 		double[] paras2 = new double[6];
-		for(int i =0;i<paras.length;i++){
-			if(i<3)
-				paras1[i] = paras[i];
+		seedFixed = true;
+		runningseed = (long) paras[0];
+		for(int i =1;i<paras.length;i++){
+			if(i<4)
+				paras1[i-1] = paras[i];
 			else
-				paras2[i-3] = paras[i];
+				paras2[i-4] = paras[i];
+		}
+		setObservedParas(paras1);
+		//设置优化参数
+		setOptParas(paras2);
+		//设置fitness fun的变量
+		MLPNetwork mlp_network = MLPNetwork.getInstance();
+		double calStep = 30;
+		double caltime = calStep+900;
+		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
+		double []  simTrT = new double [sampleSize];
+		double []  simSpeed = new double [sampleSize];
+		double []  simLinkFlow = new double [sampleSize];
+		int idx = 0;
+		//运行仿真，定时进行输出统计
+		while(simulationLoop()>=0) {
+			double now = SimulationClock.getInstance().getCurrentTime();
+			if (now>=caltime) {
+				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;				
+				trTlist.clear();
+				//线圈检测地点速度
+				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
+						
+				caltime += calStep;
+				idx += 1;
+			}
+		}
+		double[] realLoopDetect =(double[])empData;
+
+		double fitnessVal = FitnessFunction.evaKSDistance(simSpeed, realLoopDetect);
+		double[] results = new double[simSpeed.length+1];
+		results[0] = fitnessVal;
+		System.arraycopy(simSpeed, 0, results, 1, simSpeed.length);
+		return results;
+	}
+	public double[] calFitness4(double [] paras) {		
+		//初始化引擎的固定参数（时间）
+		resetEngine(0, 6900, 0.2);
+		double[] paras1 = new double[3];
+		double[] paras2 = new double[6];
+		seedFixed = true;
+		runningseed = (long) paras[0];
+		for(int i =1;i<paras.length;i++){
+			if(i<4)
+				paras1[i-1] = paras[i];
+			else
+				paras2[i-4] = paras[i];
 		}
 		setObservedParas(paras1);
 		//设置优化参数
@@ -485,7 +533,7 @@ public class MLPEngine extends SimulationEngine{
 				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;				
 				trTlist.clear();
 				//线圈检测地点速度
-				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime);
+				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
 						
 				caltime += calStep;
 				idx += 1;
@@ -493,7 +541,7 @@ public class MLPEngine extends SimulationEngine{
 		}
 		double[] realLoopDetect =(double[])empData;
 
-		double fitnessVal = FitnessFunction.evaKSDistance(simSpeed, realLoopDetect);
+		double fitnessVal = FitnessFunction.evaRNSE(simSpeed, realLoopDetect);
 		double[] results = new double[simSpeed.length+1];
 		results[0] = fitnessVal;
 		System.arraycopy(simSpeed, 0, results, 1, simSpeed.length);

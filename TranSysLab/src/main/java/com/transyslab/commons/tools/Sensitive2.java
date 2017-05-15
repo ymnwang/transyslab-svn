@@ -8,27 +8,25 @@ import java.net.Socket;
 import java.util.List;
 
 import org.apache.commons.csv.CSVRecord;
-import org.scilab.forge.jlatexmath.tcaronAtom;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.simcore.mlp.MLPEngThread;
 
-public class SensitiveTest extends SchedulerThread{
-
-	public SensitiveTest(String thread_name, TaskCenter task_center) {
+public class Sensitive2 extends SchedulerThread{
+	public Sensitive2(String thread_name, TaskCenter task_center) {
 		super(thread_name, task_center);
 		// TODO Auto-generated constructor stub
 	}
 
 	public static void main(String[] args) {
 		int maxTasks = 10;
-		TaskCenter tc = new TaskCenter(maxTasks,201);
-		SensitiveTest st = new SensitiveTest("SA", tc);
+		TaskCenter tc = new TaskCenter(maxTasks,21);
+		Sensitive2 st = new Sensitive2("SA2", tc);
 		st.start();
 		MLPEngThread mlp_eng_thread;
 		for (int i = 0; i < 10; i++) {
 			mlp_eng_thread = new MLPEngThread("Eng"+i, tc);
-			mlp_eng_thread.setMode(3);
+			mlp_eng_thread.setMode(7);
 //				((MLPEngine) mlp_eng_thread.engine).seedFixed = true;
 			mlp_eng_thread.start();
 		}
@@ -39,8 +37,8 @@ public class SensitiveTest extends SchedulerThread{
 		// 运行100次仿真
 		int tasks = 10;
 		int iterationLim = 1;
-		// 30秒一个车速采样
-		double[][] simSpeed = new double[200][tasks];
+		// 5min一个车速采样
+		double[][] simSpeed = new double[20][tasks];
 		double[] fitness = new double[tasks];
 		System.out.println("java端启动...");  
 		//创建一个流套接字并将其连接到指定主机上的指定端口号  
@@ -66,7 +64,8 @@ public class SensitiveTest extends SchedulerThread{
 	        		double [] randomSeed = new double[]{52499178,89267437,83743587,3757102,99688480,89731513,44129919,
 	        				 78995983,61932935,3493463};
 		        	double[] modelParam = new double[]{0.5122,20.37,0.1928,
-	        			     1.2412, 19.8103, 0.1458,  1.4803, 1.0, 1.0};
+		        			0.14, 5.1846, 1.8,  5.0, 1.0, 1.0};/*{0.5122,20.37,0.1928,
+		        			     0.14, 5.1846, 1.8, 5.0, 1.0, 1.0};fitness = 0.18*/
 		        	double[] disturbParam = new double[tasks];
 		        	for(int i=0;i<tasks;i++){
 		        		disturbParam[i] = modelParam[disturbIndex] + i*disturbStep; 
@@ -99,13 +98,13 @@ public class SensitiveTest extends SchedulerThread{
 						dispatchTask(j, param[j]);//dispatch task
 					}
 		        	for(int i=0;i<tasks;i++){
-	    				for(int j=0;j<200;j++){
+	    				for(int j=0;j<20;j++){
 	    					simSpeed[j][i] = fetchResult(i)[j+1];
 	    				}
 	    				fitness[i] = fetchResult(i)[0];
 	    			}// 一代仿真计算已完成
-		        	CSVUtils.writeCSV("R:\\SimResults.csv", null, simSpeed);
-		        	CSVUtils.writeCSV("R:\\fitnessKS.csv", null, fitness);
+		        	CSVUtils.writeCSV("R:\\SimResults2.csv", null, simSpeed);
+		        	CSVUtils.writeCSV("R:\\fitnessKS2.csv", null, fitness);
 		            output.print("calcFitness");
 		            output.flush();
 		            while (true) {
@@ -117,7 +116,7 @@ public class SensitiveTest extends SchedulerThread{
 		                    	try {
 		                    		
 		                    		//处理结果
-		                    		List<CSVRecord> dataList = CSVUtils.readCSV("R:\\ADFullerTest.csv", null);
+		                    		List<CSVRecord> dataList = CSVUtils.readCSV("R:\\ADFullerTest2.csv", null);
 		                			for (int j = 0; j <dataList.size(); j++) {
 		                				double adftest = Double.parseDouble(dataList.get(j).get(0));
 		                				if(adftest==0){

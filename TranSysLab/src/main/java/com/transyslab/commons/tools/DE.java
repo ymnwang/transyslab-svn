@@ -79,6 +79,7 @@ public class DE extends SchedulerThread{
 
 	}
 	public void selection(int pi) {
+		//5.15选择策略文献
 		if (newidvds_[pi].fitness_ < idvds_[pi].fitness_) {
 			for (int j = 0; j < dims_; j++) {
 				idvds_[pi].pos_[j] = newidvds_[pi].pos_[j];
@@ -115,10 +116,14 @@ public class DE extends SchedulerThread{
 		} while (pi1 == pi3 || pi2 == pi3);
 		// int counter=0;
 		for (int j = 0; j < dims_; j++) {
+			// 5.15
+			int jrand = Individual.rnd_.nextInt(dims_);
 			newidvds_[pi].pos_[j] = idvds_[pi1].pos_[j] + F_ * (idvds_[pi2].pos_[j] - idvds_[pi3].pos_[j]);
+			// 5.15约束添加
 			if (newidvds_[pi].pos_[j] > pupper_[j] || newidvds_[pi].pos_[j] < plower_[j])
 				newidvds_[pi].pos_[j] = idvds_[pi].pos_[j];
-			if (Individual.rnd_.nextFloat() > Cr_)
+			// 5.15添加&&
+			if (Individual.rnd_.nextFloat() > Cr_ && j!=jrand)
 				newidvds_[pi].pos_[j] = idvds_[pi].pos_[j];
 		}
 	}
