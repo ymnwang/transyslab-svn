@@ -3,6 +3,8 @@
  */
 package com.transyslab.commons.tools;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.transyslab.roadnetwork.Constants;
@@ -17,11 +19,15 @@ public class Individual {
 	protected float fitness_;
 	protected boolean flag_;
 	protected static Random rnd_ = new Random();
+	protected double[] constrainsViolate;
+	protected double[] results;
 	public Individual(int dims) {
 		dims_ = dims;
 		pos_ = new float[dims];
 		fitness_ = Constants.FLT_INF;
 		flag_ = true;
+		results = new double[2];
+
 	}
 	public float[] getPos() {
 		return pos_;

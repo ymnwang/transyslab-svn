@@ -8,9 +8,9 @@ import java.io.IOException;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.TXTUtils;
+import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 
@@ -508,6 +508,7 @@ public class MLPEngine extends SimulationEngine{
 		double[] paras2 = new double[6];
 		seedFixed = true;
 		runningseed = (long) paras[0];
+		
 		for(int i =1;i<paras.length;i++){
 			if(i<4)
 				paras1[i-1] = paras[i];
@@ -547,16 +548,39 @@ public class MLPEngine extends SimulationEngine{
 		System.arraycopy(simSpeed, 0, results, 1, simSpeed.length);
 		return results;
 	}
-	public double calFitness2(double [] paras) {
+	// 5.17实验 xc,kstar,gama1,gama2
+	public double[] calFitness2(double [] paras) {
+
 		//初始化引擎的固定参数（时间）
 		resetEngine(0, 6900, 0.2);
+		seedFixed = false;
+		double[] paras1 = new double[]{0.5122,20.37,0.1928};
+		// xc,kstar,gama1,gama2
+		//double[] paras2 = new double[4];
+		/*
+		for(int i =0;i<paras.length;i++){
+			paras2[i] = paras[i];
+		}*/
+		MLPParameter mlp_paras = MLPParameter.getInstance();
+		//QM,VF,Kj,输出ts,alpha,beta
+		double[] results = mlp_paras.genSolution(paras1, paras[0], paras[1]);
 		//设置优化参数
-		setOptParas2(paras);
+		setObservedParas(paras1);
+		double[] orgParas2 = new double[6];
+		orgParas2[0] = results[0];
+		orgParas2[1] = paras[0];
+		orgParas2[4] = paras[2];
+		orgParas2[5] = paras[3];
+		orgParas2[2] = results[1];
+		orgParas2[3] = results[2];
+		//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2
+		setOptParas(orgParas2);
+		
 		//设置fitness fun的变量
 		MLPNetwork mlp_network = MLPNetwork.getInstance();
 		double calStep = 300;
-		double caltime = calStep;
-		int sampleSize = (int) (SimulationClock.getInstance().getDuration() / calStep);
+		double caltime = calStep+900;
+		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
 		double []  simTrT = new double [sampleSize];
 		double []  simSpeed = new double [sampleSize];
 		double []  simLinkFlow = new double [sampleSize];
@@ -566,16 +590,6 @@ public class MLPEngine extends SimulationEngine{
 			double now = SimulationClock.getInstance().getCurrentTime();
 			if (now>=caltime) {
 				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
-				//SimTrT计算
-				/*double avg_trTime = 0.0;
-				if (trTlist.size()>0) {
-					for (Double trt : trTlist) {
-						avg_trTime += trt;
-					}
-					avg_trTime = avg_trTime / trTlist.size();
-					simLinkFlow[idx] = trTlist.size();
-				}
-				simTrT[idx] = avg_trTime;*/
 				trTlist.clear();
 
 				//瞬时平均运行速度
@@ -598,13 +612,14 @@ public class MLPEngine extends SimulationEngine{
 				simSpeed[idx] = avg_ExpSpeed;*/
 
 				//线圈检测地点速度
-				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime);
+				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
 
 				caltime += calStep;
 				idx += 1;
 			}
 
 		}
+		/*
 		double[][] realLoopDetect =(double[][]) empData;
 		double [] realSpeed = new double [realLoopDetect.length];
 		for (int k = 0; k < realLoopDetect.length; k++) {
@@ -613,10 +628,98 @@ public class MLPEngine extends SimulationEngine{
 		double[] tmpSim = new double[simSpeed.length-4];
 		double[] tmpReal = new double[simSpeed.length-4];
 		System.arraycopy(simSpeed, 4, tmpSim, 0, simSpeed.length-4);
-		System.arraycopy(realSpeed, 4, tmpReal, 0, simSpeed.length-4);
-		double fitnessVal = FitnessFunction.evaRNSE(tmpSim, tmpReal);
+		System.arraycopy(realSpeed, 4, tmpReal, 0, simSpeed.length-4);*/
+		double[] realLoopDetect =(double[])empData;
+		double fitnessVal = FitnessFunction.evaRNSE(simSpeed, realLoopDetect);
+		double[] rewards = new double[]{fitnessVal,results[1],results[2]};
+		return rewards;
+	}
+	public double calFitness6(double [] paras) {
+
+		//初始化引擎的固定参数（时间）
+		resetEngine(0, 6900, 0.2);
+		seedFixed = false;
+		double[] paras1 = new double[]{0.5122,20.37,0.1928};;
+		// xc,alpha,beta,gama1,gama2
+		/*double[] paras2 = new double[5];
+		for(int i =0;i<paras.length;i++){
+			if(i<3)
+				paras1[i] = paras[i];
+			else
+				paras2[i-3] = paras[i];
+		}*/
+		MLPParameter mlp_paras = MLPParameter.getInstance();
+		double ts = mlp_paras.genSolution2(paras1, paras[0]);
+		//设置优化参数
+		setObservedParas(paras1);
+		double[] orgParas2 = new double[6];
+		orgParas2[0] = ts;
+		orgParas2[1] = paras[0];
+		orgParas2[4] = paras[3];
+		orgParas2[5] = paras[4];
+		orgParas2[2] = paras[1];
+		orgParas2[3] = paras[2];
+		//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2
+		setOptParas(orgParas2);
+		
+		//设置fitness fun的变量
+		MLPNetwork mlp_network = MLPNetwork.getInstance();
+		double calStep = 300;
+		double caltime = calStep+900;
+		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
+		double []  simTrT = new double [sampleSize];
+		double []  simSpeed = new double [sampleSize];
+		double []  simLinkFlow = new double [sampleSize];
+		int idx = 0;
+		//运行仿真，定时进行输出统计
+		while(simulationLoop()>=0) {
+			double now = SimulationClock.getInstance().getCurrentTime();
+			if (now>=caltime) {
+				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
+				trTlist.clear();
+
+				//瞬时平均运行速度
+				/*double avg_ExpSpeed = 0.0;
+				if (!mlp_network.mlpLink(0).hasNoVeh(false)) {
+					int count = 0;
+					double sum = 0.0;
+					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
+						for (MLPLane LN : JL.lanesCompose) {
+							for (MLPVehicle Veh : LN.vehsOnLn) {
+								if (Veh.VirtualType_ == 0) {
+									sum += (Veh.Displacement() - Veh.DSPEntrance)  /  (now - Veh.TimeEntrance);
+									count += 1;
+								}
+							}
+						}
+					}
+					avg_ExpSpeed = sum / count;
+				}
+				simSpeed[idx] = avg_ExpSpeed;*/
+
+				//线圈检测地点速度
+				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
+
+				caltime += calStep;
+				idx += 1;
+			}
+
+		}
+		/*
+		double[][] realLoopDetect =(double[][]) empData;
+		double [] realSpeed = new double [realLoopDetect.length];
+		for (int k = 0; k < realLoopDetect.length; k++) {
+			realSpeed[k] = realLoopDetect[k][0];
+		}
+		double[] tmpSim = new double[simSpeed.length-4];
+		double[] tmpReal = new double[simSpeed.length-4];
+		System.arraycopy(simSpeed, 4, tmpSim, 0, simSpeed.length-4);
+		System.arraycopy(realSpeed, 4, tmpReal, 0, simSpeed.length-4);*/
+		double[] realLoopDetect =(double[])empData;
+		double fitnessVal = FitnessFunction.evaRNSE(simSpeed, realLoopDetect);
 		return fitnessVal;
 	}
+
 
 	public void setOptParas2(double [] optparas) {
 		if (optparas != null) {

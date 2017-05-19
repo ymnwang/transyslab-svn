@@ -2,9 +2,16 @@ package com.transyslab.simcore.mlp;
 
 import java.util.HashMap;
 import com.transyslab.roadnetwork.Parameter;
-
-import oracle.net.aso.d;
-
+import com.transyslab.simcore.mlp.Functions.FunsCombination1;
+import com.transyslab.simcore.mlp.Functions.FunsCombination2;
+import com.transyslab.simcore.mlp.Functions.KSDM_Eq;
+import com.transyslab.simcore.mlp.Functions.QSDFun;
+import com.transyslab.simcore.mlp.Functions.QSDFun_Eq;
+import com.transyslab.simcore.mlp.Functions.QSDM_Eq;
+import com.transyslab.simcore.mlp.Functions.TSFun;
+import com.transyslab.commons.tools.BroydenMethod;
+import com.transyslab.commons.tools.DE;
+import com.transyslab.commons.tools.Function;
 import com.transyslab.commons.tools.SimulationClock;
 
 public class MLPParameter extends Parameter {		
@@ -28,6 +35,14 @@ public class MLPParameter extends Parameter {
 	final static double LC_Lambda1 = 18.4204;//换道logit模型常数项
 	final static double LC_Lambda2 = -9.2102;//换道logit模型常数项
 	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
+	/*public KSDM_Eq ksdm_Eq;
+	public QSDFun_Eq qsdFun_Eq;
+	public QSDM_Eq qsdm_Eq;*/
+	public FunsCombination1 funsCombination1;
+	public FunsCombination2 funsCombination2;
+	public FunsCombination1 funsCombination3;
+	public TSFun tsFun;
+	private DE de;
 
 	public static MLPParameter getInstance() {
 		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
@@ -63,6 +78,11 @@ public class MLPParameter extends Parameter {
 //		queueParam_[0] = -0.001f;
 //		queueParam_[1] = (float) (25.0 * speedFactor_);
 //		queueParam_[2] = 100.0f;// seconds
+		funsCombination1 = new FunsCombination1();
+		funsCombination2 = new FunsCombination2();
+		funsCombination3 = new FunsCombination1();
+		tsFun = new TSFun();
+		de = new DE();
 	}
 	public double getUpdateStepSize() {
 		return updateStepSize_;
@@ -152,6 +172,45 @@ public class MLPParameter extends Parameter {
 	}
 	public void setDLower(float arg) {
 		CELL_RSP_LOWER = arg;
+	}
+
+	public double[] genSolution(double[] obsParas, double xc, double kstar){//QM,VF,Kj
+		double[] XC = new double[]{xc};
+		//detaT,VP
+		double detaT = SimulationClock.getInstance().getStepSize();
+		tsFun.setParas(obsParas,detaT ,PHYSICAL_SPD_LIM);
+		double tsValue = tsFun.cal(XC);
+		// 当k = k1
+		double k1 = obsParas[0]/PHYSICAL_SPD_LIM;
+		funsCombination1.setParas(k1, obsParas[0], obsParas[1], obsParas[2], kstar);
+		funsCombination2.setParas(obsParas[1], obsParas[2], obsParas[0], kstar);
+		double k2 = (1-obsParas[0]*(tsValue+detaT))*obsParas[2]; 
+		// 当k = k2
+		funsCombination3.setParas(k2, obsParas[0], obsParas[1], obsParas[2], kstar);
+		double[] results ;
+		double[] initValue = new double[]{0.01,0.01};
+		if(kstar<k1)
+			results = de.solve(funsCombination1, new float[]{0.01f,0.01f}, new float[]{10.0f,10.0f});//BroydenMethod.solve(funsCombination1, initValue);
+		else if(k1<=kstar&&kstar<k2)
+			results = de.solve(funsCombination2, new float[]{0.01f,0.01f}, new float[]{10.0f,10.0f});
+		else if(kstar>k2)
+			results = de.solve(funsCombination3, new float[]{0.01f,0.01f}, new float[]{10.0f,10.0f});
+		else{
+			System.out.println("check kstar!");
+			results = new double[]{-1,-1};
+		}
+		double[] finalRes = new double[3];
+		finalRes[0] = tsValue;
+		System.arraycopy(results, 0, finalRes, 1, results.length);
+		return finalRes;
+	}
+	public double genSolution2(double[] obsParas, double xc){//QM,VF,Kj
+		double[] XC = new double[]{xc};
+		//detaT,VP
+		double detaT = SimulationClock.getInstance().getStepSize();
+		tsFun.setParas(obsParas,detaT ,PHYSICAL_SPD_LIM);
+		double tsValue = tsFun.cal(XC);
+		return tsValue;
 	}
 	public boolean constraints(double[] paras) {
 		double Qm = paras[0];

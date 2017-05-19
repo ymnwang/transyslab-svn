@@ -116,16 +116,36 @@ public class MLPEngThread extends EngTread{
 					if (task != null) {
 //					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
 						double [] p = unzipTask(task);
-						double fitVal = mlp_eng.calFitness2(p);
+						double[] fitVal = mlp_eng.calFitness2(p);
+						uploadResult((int) task[0], fitVal);//将结果返回任务中心taskCenter
+					}
+				}
+				break;
+			case 9://work in workCenter Ver. 2
+				mlp_eng.needEmpData = true;
+				while (!isDismissed()) {
+					double[] task = null;
+					task = retrieveTask();//尝试从任务中心taskCenter取回任务
+					if (task != null) {
+//					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
+						double [] p = unzipTask(task);
+						double fitVal = mlp_eng.calFitness6(p);
 						uploadResult((int) task[0], new double[]{fitVal});//将结果返回任务中心taskCenter
 					}
 				}
 				break;
 				case 8:
+					/*
 					boolean ans = ((MLPParameter) parameter).constraints(new double[]{0.5122,20.37,0.1928,
 		        			0.14, 5.1846, 1.8,  5.0, 1.0, 1.0});
 					System.out.println(ans);
-					break;
+					break;*/
+					mlp_eng.needEmpData = true;
+					// xc,alpha,beta,gama1,gama2
+					double[] p = new double[]{45.50056, 0.92191446, 7.792739, 1.6195029, 0.6170239};
+					double fitVal = mlp_eng.calFitness6(p);
+					System.out.println(fitVal);
+					
 		default:
 			break;
 		}

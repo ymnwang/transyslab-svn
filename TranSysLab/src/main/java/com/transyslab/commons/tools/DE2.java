@@ -1,26 +1,17 @@
-/**
- *
- */
 package com.transyslab.commons.tools;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.io.IOException;
 
-import com.transyslab.commons.tools.rawpso.Particle;
+import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.mlp.MLPEngThread;
-import com.transyslab.simcore.mlp.MLPEngine;
 import com.transyslab.simcore.mlp.Functions.QSDFun;
-import com.transyslab.simcore.mlp.Functions.QSDM_Eq;
 import com.transyslab.simcore.mlp.Functions.QSDMax;
 import com.transyslab.simcore.mlp.Functions.TSFun;
 
-/**
- * @author yali
- *
- */
-public class DE extends SchedulerThread{
+import au.com.bytecode.opencsv.CSVWriter;
+
+public class DE2 extends SchedulerThread{
 
 	private float F_;
 	private Individual[] newidvds_;
@@ -33,17 +24,17 @@ public class DE extends SchedulerThread{
 	private float gbestFitness_;
 	private float[] gbest_;
 	private TSFun tsFun;
-	private QSDFun qsdFun;
+	private static double[] res_;
+	/*private QSDFun qsdFun;
 	private QSDMax qsdMax;
-	private int feasibleCount = 0;
-	private int gBestIndex = 0;
+	private int feasibleCount = 0;*/
 	
 	private int iterationLim;
 
-	public DE() {//旧代码中使用DE，但不作为SchedulerThread使用
+	public DE2() {//旧代码中使用DE，但不作为SchedulerThread使用
 		super("Unknown", null);
 	}
-	public DE(String threadName, TaskCenter tc) {
+	public DE2(String threadName, TaskCenter tc) {
 		super(threadName, tc);
 	}
 	public int getDim() {
@@ -88,28 +79,17 @@ public class DE extends SchedulerThread{
 		tsFun = new TSFun();
 		double[] obsParas = new double[]{0.5122,20.37,0.1928};
 		tsFun.setParas(obsParas, 0.2, 120.0/3.6);
-		qsdFun = new QSDFun();
-		qsdMax = new QSDMax();
-		qsdMax.setParas(20.37, 0.1928);
 	}
 	public void selection(int pi) {
 		//5.15选择策略文献
-		if(true){//constrains(pi)){ // 可行解
+//		if(constrains(pi)){ // 可行解
 			if (newidvds_[pi].fitness_ < idvds_[pi].fitness_) {
 				for (int j = 0; j < dims_; j++) {
 					idvds_[pi].pos_[j] = newidvds_[pi].pos_[j];
 				}
-				idvds_[pi].results[0] = newidvds_[pi].results[0];
-				idvds_[pi].results[1] = newidvds_[pi].results[1];
 				idvds_[pi].fitness_ = newidvds_[pi].fitness_;
-				if (idvds_[pi].fitness_<gbestFitness_) {
-					setGbest(idvds_[pi].pos_);
-					setGbestFitness(idvds_[pi].fitness_);
-					gBestIndex = pi;
-				}
-				feasibleCount++;
 			}
-		}
+//		}
 		
 
 	}
@@ -139,12 +119,10 @@ public class DE extends SchedulerThread{
 		do {
 			pi3 = Individual.rnd_.nextInt(population_);
 		} while (pi1 == pi3 || pi2 == pi3);
-		// int counter=0;
 		// 5.15
 //		int jrand = Individual.rnd_.nextInt(dims_);
 		for (int j = 0; j < dims_; j++) {
 			newidvds_[pi].pos_[j] = idvds_[pi1].pos_[j] + F_ * (idvds_[pi2].pos_[j] - idvds_[pi3].pos_[j]);
-			// 5.15约束添加
 			if (newidvds_[pi].pos_[j] > pupper_[j] || newidvds_[pi].pos_[j] < plower_[j])
 				newidvds_[pi].pos_[j] = idvds_[pi].pos_[j];
 			// 5.15添加&&
@@ -163,32 +141,31 @@ public class DE extends SchedulerThread{
 		iterationLim = arg;
 	}
 	public boolean constrains(int pi){
-		double tol = 0.05;
 		double vf = 20.37;
 		double qm = 0.5122;
 		double kj = 0.1928;
 		double k1 = qm/(120.0/3.6);
 		double ts = tsFun.cal(new double[]{newidvds_[pi].pos_[0]});
 		double k2 = (1-qm*(ts+0.2))*kj;
-		
+		/*
 		if(newidvds_[pi].pos_[1]<k1){
 			qsdFun.setParas(vf, kj, newidvds_[pi].results[0], newidvds_[pi].results[1]);
-			if(Math.abs(qsdFun.cal(new double[]{k1})-qm)>tol)
+			if(Math.abs(qsdFun.cal(new double[]{k1})-qm)>0.001)
 				return false;
 		}
 		else if(k1<=newidvds_[pi].pos_[1]&&newidvds_[pi].pos_[1]<k2){
 			double tmp = qsdMax.cal(new double[]{newidvds_[pi].results[0], newidvds_[pi].results[1]});
-			if(Math.abs(tmp-qm)>tol)
+			if(Math.abs(tmp-qm)>0.001)
 				return false;
 		}
 		else if(newidvds_[pi].pos_[1]>k2){
 			qsdFun.setParas(vf, kj, newidvds_[pi].results[0], newidvds_[pi].results[1]);
-			if(Math.abs(qsdFun.cal(new double[]{k2})-qm)>tol)
+			if(Math.abs(qsdFun.cal(new double[]{k2})-qm)>0.001)
 				return false;
 		}
 		else{
 			System.out.println("warning");
-		}
+		}*/
 		return true;	
 	}
 	public String showGBestPos() {
@@ -211,46 +188,35 @@ public class DE extends SchedulerThread{
 				double[] tmpResults = fetchResult(j);
 				float fval = (float) tmpResults[0];//fetch result
 				newidvds_[j].setFitness(fval);
-				newidvds_[j].results[0] = tmpResults[1];
-				newidvds_[j].results[1] = tmpResults[2];
-				selection(j);
-				changePos(j);
-			}
-			
-			System.out.println("Gbest : " + gbestFitness_);
-			System.out.println("Position : " + showGBestPos()+","+idvds_[gBestIndex].results[0]+","+idvds_[gBestIndex].results[1]);
-			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
-		}
-		dismissAllWorkingThreads();//stop eng线程。
-	}
-	public double[] solve(Function fitFun, float[] plower, float[] pupper) {
-		int maxGeneration = 200;
-		int pop = 30;
-		initDE(pop, plower.length, 0.5f, 0.5f, plower, pupper);
-		setMaxGeneration(maxGeneration);
-		
-		for (int i = 0; i < iterationLim; i++) {
-			for (int j = 0; j < population_; j++) {
-				float fval = (float) fitFun.cal(fitFun.translate(newidvds_[j].pos_));
-				newidvds_[j].setFitness(fval);
+//				newidvds_[j].results[0] = tmpResults[1];
+//				newidvds_[j].results[1] = tmpResults[2];
 				selection(j);
 				if (fval<gbestFitness_) {
-					setGbest(idvds_[j].pos_);
+					setGbest(newidvds_[j].pos_);
 					setGbestFitness(fval);
 				}
 				changePos(j);
 			}
+			res_[i]=gbestFitness_;
+			System.out.println("Gbest : " + gbestFitness_);
+			System.out.println("Position : " + showGBestPos());
+			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
 		}
-		
-		return fitFun.translate(gbest_);
+		try {
+			CSVUtils.writeCSV("R://resultsDE.csv", null, res_);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		dismissAllWorkingThreads();//stop eng线程。
 	}
-
 	public static void main(String[] args) {
 		Individual.rnd_.setSeed(System.currentTimeMillis());//固定算法随机数
-		int maxGeneration = 200;
+		int maxGeneration = 1000;
 		int maxTasks = 20;
 		TaskCenter tc = new TaskCenter(maxTasks);
 		int pop = 20;
+		res_ = new double[maxGeneration];
 
 		//*********************旧实验*******************************
 		/*float[] plower = new float[]{12.0f,0.15f,1.0f,5.0f,25,85};
@@ -289,17 +255,18 @@ public class DE extends SchedulerThread{
 			mlp_eng_thread.start();
 		}*/
 		//*********************旧实验2*******************************
-		float[] plower = new float[]{5.7787f,0.0002f,0.00f,0.00f};
-		float[] pupper = new float[]{65.0787f,1.798f,10.00f,10.00f};
-		DE de = new DE("DE", tc);
-		de.initDE(pop, plower.length, 0.5f, 0.5f, plower, pupper);
+		float[] plower = new float[]{5.7787f,0.1f,0.1f,0.00f,0.00f};
+		float[] pupper = new float[]{65.0787f,10f,10f,10.00f,10.00f};
+		DE2 de = new DE2("DE2", tc);
+		de.initDE(pop, plower.length, 0.7f, 0.5f, plower, pupper);
 		de.setMaxGeneration(maxGeneration);
 		de.start();
 		MLPEngThread mlp_eng_thread;
 		for (int i = 0; i < 20; i++) {
 			mlp_eng_thread = new MLPEngThread("Eng"+i, tc);
-			mlp_eng_thread.setMode(6);
+			mlp_eng_thread.setMode(9);
 			mlp_eng_thread.start();
 		}
 	}
+
 }

@@ -1,9 +1,14 @@
 package com.transyslab.commons.tools;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.xmlgraphics.util.io.Finalizable;
+
+import com.transyslab.commons.io.CSVUtils;
 
 public class FitnessFunction {
 	public static double evaRNSE(double[] sim, double[] obs){
@@ -85,5 +90,26 @@ public class FitnessFunction {
 		if(tarid == 0)
 			System.out.println("Error:Fail to find the approprate index to insert");
 		return tarid;
+	}
+	public static void main(String[] args) {
+		double[] empData;
+		try {
+			// 单列表格
+			List<CSVRecord> results = CSVUtils.readCSV("R:\\DetSpeed2.csv", null);
+			double[] tmpEmpData = new double[results.size()]; 
+			for(int i=0;i<tmpEmpData.length;i++){
+				tmpEmpData[i] = Double.parseDouble(results.get(i).get(0));
+			}
+			empData = tmpEmpData;
+			double[] simData = new double[]{58.8063757,61.41356076,59.46558025,60.55506715,60.23640314,61.70664375,60.22416935
+					,62.23609696,57.74289612,57.1121967,58.86835477,56.34740228,60.26346681,60.28685208,61.09150313,59.73280032
+					,60.16183973,58.14598878,61.02911202,59.97470777};
+			double fitness = evaRNSE(simData, empData);
+			System.out.println(fitness);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 }
