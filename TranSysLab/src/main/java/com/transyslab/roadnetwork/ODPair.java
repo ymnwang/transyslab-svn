@@ -63,7 +63,7 @@ public class ODPair implements NetworkObject{
 	public int getId(){
 		return this.id;
 	}
-	public String getName(){
+	public String getObjInfo(){
 		return this.name;
 	}
 	public Node getOriNode() {
