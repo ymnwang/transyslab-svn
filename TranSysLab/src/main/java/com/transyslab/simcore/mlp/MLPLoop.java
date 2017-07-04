@@ -9,7 +9,7 @@ import com.transyslab.roadnetwork.Loop;
 
 public class MLPLoop extends Loop{
 	String detName;
-	MLPLane lane;
+	lane lane;
 	MLPSegment segment;
 	MLPLink link;
 	double displacement;
@@ -22,7 +22,7 @@ public class MLPLoop extends Loop{
 		records = new LinkedList<>();
 	}
 	public MLPLoop(MLPLane LN, MLPSegment Seg, MLPLink LNK, String name, double dsp){
-		lane_ = LN;
+		this.lane = LN;
 		lane = LN;
 		segment = Seg;
 		link = LNK;
@@ -40,7 +40,7 @@ public class MLPLoop extends Loop{
 		for (int i = 0; i < seg.nLanes(); i++) {
 			MLPLane ln = (MLPLane) seg.getLane(i);
 			MLPLoop loop = new MLPLoop(ln, seg, lnk, name, dsp);
-			loop.position_ = (float) present;
+			loop.position = (float) present;
 			mlp_network.loops.add(loop);
 		}
 	}
@@ -48,12 +48,12 @@ public class MLPLoop extends Loop{
 		String str = "";
 		double now = SimulationClock.getInstance().getCurrentTime();
 		for (MLPVehicle veh : lane.vehsOnLn) {
-			if (veh.VirtualType_ == 0 && veh.distance()>distance && veh.newDis<=distance) {
+			if (veh.virtualType == 0 && veh.getDistance()>distance && veh.newDis<=distance) {
 //				detectedSpds.add(veh.newSpeed);
 				records.add(new double[] {now, veh.newSpeed});
 				str += time + "," +
 						   veh.getCode() + "," +  
-						   veh.VirtualType_ + "," + 
+						   veh.virtualType + "," +
 						   veh.newSpeed + "," + 
 						   lane.getLnPosNum() + "," +
 						   link.getCode() + "," +

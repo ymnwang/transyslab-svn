@@ -2,10 +2,6 @@
  *
  */
 package com.transyslab.roadnetwork;
-import java.util.HashMap;
-
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
 import com.transyslab.commons.tools.SimulationClock;
 
@@ -14,138 +10,139 @@ import com.transyslab.commons.tools.SimulationClock;
  *
  * @author YYL 2016-6-3
  */
-public abstract class Vehicle extends CodedObject {
+public abstract class Vehicle implements NetworkObject {
 
-	protected int type_; // vehicle type and class
+	protected int id;
+	protected String objInfo;
+	protected int type; // vehicle type and class
+//	protected ODPair od; // od pair
 
-	protected int busType_; // if vehicle is a bus, type of bus != 0
+	protected int busType; // if vehicle is a bus, type of bus != 0
 							// if not a bus, type of bus = 0 (Dan)
-	protected int routeID_; // if vehicle is a bus, route ID != 0
+	protected int routeID; // if vehicle is a bus, route ID != 0
 							// if not a bus, route ID = 0 (Dan)
 
-	protected float length_; // vehicle length
+	protected double length; // vehicle length
 
-	protected int attrs_; // driver attributes
+	protected int attrs; // driver attributes
 
-	protected ODPair od_; // od pair
+	protected Path path; // getPath this vehicle will follow
 
-	protected Path path_; // path this vehicle will follow
+	// index in getPath (list of links) if getPath is defined or index to
+	// network link array if getPath is not defined.
 
-	// index in path (list of links) if path is defined or index to
-	// network link array if path is not defined.
+	protected int pathIndex;
+	protected int info; // previous received info (e.g. vms)
 
-	protected int pathIndex_;
-	protected int info_; // previous received info (e.g. vms)
+	protected Link nextLink; // next link on its getPath
+	protected double departTime;
+	protected double timeEntersLink; // time enters current link
+	protected double distance; // getDistance from downstream end
+	protected double mileage; // total getDistance traveled
+	protected double currentSpeed; // current speed in meter/sec
 
-	protected Link nextLink_; // next link on its path
-	protected float departTime_;
-	protected float timeEntersLink_; // time enters current link
-	protected float distance_; // distance from downstream end
-	protected float mileage_; // total distance traveled
-	protected float currentSpeed_; // current speed in meter/sec
-	protected static int[] lastId_ = new int[Constants.THREAD_NUM]; // id of the
-																	// last
-																	// vehicle
-																	// generated
 	public Vehicle() {
-		attrs_ = 0;
-		type_ = 0;
-		routeID_ = 0;
-		length_ = (float) Constants.DEFAULT_VEHICLE_LENGTH;
+		attrs = 0;
+		type = 0;
+		routeID = 0;
+		length =  Constants.DEFAULT_VEHICLE_LENGTH;
+		pathIndex = -1;
 	}
 
 	// Driver atributes
 
 	public void toggleAttr(int attr) {
-		attrs_ ^= attr;
+		attrs ^= attr;
 	}
 	public int attr(int mask) {
-		return (attrs_ & mask);
+		return (attrs & mask);
 	}
 	public void setAttr(int s) {
-		attrs_ |= s;
+		attrs |= s;
 	}
 	public void unsetAttr(int s) {
-		attrs_ &= ~s;
+		attrs &= ~s;
 	}
-
-	public float getLength() {
-		return length_;
+	public void setId(int id){
+		this.id = id;
 	}
-
-	public void initialize() {
-
-	} // called by init()
-
+	public void setType(int type){
+		this.type = type;
+	}
+	public int getId(){
+		return this.id;
+	}
+	public String getObjInfo(){
+		return this.objInfo;
+	}
+	public double getLength() {
+		return length;
+	}
+	public void setLength(double length){
+		this.length = length;
+	}
+	public void setDepartTime(double departTime){
+		this.departTime = departTime;
+	}
 	//wym
+	/*
 	public void initPath(Node oriNode, Node desNode) {
 		GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(RoadNetwork.getInstance(), oriNode, desNode);
-		path_ = new Path(gpath);
+		getPath = new Path(gpath);
 		//调试阶段暂时固定路径
 		fixPath();
 	}
-	
-	public int init(int id, int t, ODPair od, Path p) {
-		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		int c;
+	/*
+	public void init(int id, int t, ODPair od, Path p) {
+		this.id = id;
+		// TODO 处理id自增
+		/*
 		if (id > 0) { // id is specified
 			c = (id > 0) ? -id : id;
 			setCode(c);
 		}
 		else { // not specified, assign a serial number
-			c = (++lastId_[threadid]);
+			c = (++lastId[threadid]);
 			setCode(c);
 		}
+		this.type = t;
+		this.od = od;
 
-		type_ = t;
-		od_ = od;
+		info = Constants.INT_INF;
+		getPath = p;
+		pathIndex = -1;
+		getNextLink = null;
 
-		info_ = Constants.INT_INF;
-		path_ = p;
-		pathIndex_ = -1;
-		nextLink_ = null;
+		departTime = SimulationClock.getInstance().getCurrentTime();
+		timeEntersLink = departTime;
 
-		departTime_ = (float) SimulationClock.getInstance().getCurrentTime();
-		timeEntersLink_ = departTime_;
-
-		oriNode().nOriCounts_++;
-		desNode().nDesCounts_++;
+		oriNode().nOriCounts++;
+		desNode().nDesCounts++;
 
 		initialize(); // virtual function
 
-		return 1;
-	}
-    public int init(int id, int t, float len, float dis,float departtime){
-		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		int c;
-		if (id > 0) { // id is specified
-			c = (id > 0) ? -id : id;
-			setCode(c);
-		}
-		else { // not specified, assign a serial number
-			c = (++lastId_[threadid]);
-			setCode(c);
-		}
-        type_ = t;
-        od_ = VehicleTable.getInstance().getODPair();
-        setPath(VehicleTable.getInstance().getPath());
-        length_ = len;
-        distance_ = dis;
-        info_ = Constants.INT_INF;
+	}*/
+	/*
+    public void init(int id, int t, double len, double dis,double departtime){
+		this.id = id;
+        this.type = t;
+        // TODO 下移
+//        od = VehicleTable.getInstance().getODPair();
+//        setPath(VehicleTable.getInstance().getPath());
+        length = len;
+        getDistance = dis;
+        info = Constants.INT_INF;
         //初始化路径
-        nextLink_ = path_.getFirstLink();
+        getNextLink = getPath.getFirstLink();
 
-        departTime_	= departtime;
-        timeEntersLink_ = departTime_;
+        departTime = departtime;
+        timeEntersLink = departTime;
 
-        oriNode().nOriCounts_ ++;
-        desNode().nDesCounts_ ++;
+        oriNode().nOriCounts++;
+        desNode().nDesCounts++;
 
         initialize();				// virtual function
 
-        return 1;
     }
     public int initBus(int bid, ODPair od, Path p) {
 		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
@@ -156,22 +153,22 @@ public abstract class Vehicle extends CodedObject {
 			setCode(c);
 		}
 		else { // not specified, assign a serial number
-			c = (++lastId_[threadid]);
+			c = (++lastId[threadid]);
 			setCode(c);
 		}
-		type_ = 0x4;
-		od_ = od;
+		type = 0x4;
+		this.od = od;
 
-		info_ = 0;
-		path_ = p;
-		pathIndex_ = -1;
-		nextLink_ = null;
+		info = 0;
+		getPath = p;
+		pathIndex = -1;
+		getNextLink = null;
 
-		departTime_ = (float) SimulationClock.getInstance().getCurrentTime();
-		timeEntersLink_ = departTime_;
+		departTime = (float) SimulationClock.getInstance().getCurrentTime();
+		timeEntersLink = departTime;
 
-		oriNode().nOriCounts_++;
-		desNode().nDesCounts_++;
+		oriNode().nOriCounts++;
+		desNode().nDesCounts++;
 
 		initialize(); // virtual function
 
@@ -180,21 +177,21 @@ public abstract class Vehicle extends CodedObject {
 	// Dan - initialization of buses for bus rapid transit
 	/*
 	 * public int initRapidBus(int t, OD_Pair od, int rid, int bt, double hw){
-	 * code_ = (++ lastId_); type_ = t; od_ = od;
+	 * code_ = (++ lastId); type = t; od = od;
 	 *
-	 * info_ = DefinedConstant.INT_INF;
+	 * info = DefinedConstant.INT_INF;
 	 *
-	 * if (rid > 0 && theBusAssignmentTable != NULL) { if (!(path_ =
+	 * if (rid > 0 && theBusAssignmentTable != NULL) { if (!(getPath =
 	 * theBusRunTable->findPath(rid))) { // cerr <<
-	 * "Warning:: Unknown bus path <" // << rid << ">. "; return -1; } } else {
-	 * path_ = null; }
+	 * "Warning:: Unknown bus getPath <" // << rid << ">. "; return -1; } } else {
+	 * getPath = null; }
 	 *
-	 * pathIndex_ = -1; nextLink_ = null;
+	 * pathIndex = -1; getNextLink = null;
 	 *
-	 * departTime_ = (float) SimulationClock.getInstance().getCurrentTime();
-	 * timeEntersLink_ = departTime_;
+	 * departTime = (float) SimulationClock.getInstance().getCurrentTime();
+	 * timeEntersLink = departTime;
 	 *
-	 * oriNode().nOriCounts_ ++; desNode().nDesCounts_ ++;
+	 * oriNode().nOriCounts ++; desNode().nDesCounts ++;
 	 *
 	 * theBusAssignmentTable.nBusesParsed_ ++;
 	 * theBusAssignmentTable.addBRTAssignment(code_, bt, rid, hw);
@@ -220,20 +217,20 @@ public abstract class Vehicle extends CodedObject {
 	 *
 	 * OD_Pair odpair(o, d); PtrOD_Pair odptr(odpair); OdPairSetType::iterator i
 	 * = theOdPairs.find(odptr); if (i == theOdPairs.end()) { i =
-	 * theOdPairs.insert(i, new OD_Pair(odpair)); } od_ = (*i).p();
+	 * theOdPairs.insert(i, new OD_Pair(odpair)); } od = (*i).p();
 	 *
-	 * od_->oriNode()->type_ |= NODE_TYPE_ORI; od_->desNode()->type_ |=
+	 * od->oriNode()->type |= NODE_TYPE_ORI; od->desNode()->type |=
 	 * NODE_TYPE_DES;
 	 *
-	 * if (path_id > 0 && thePathTable != NULL) { if (!(path_ =
-	 * thePathTable->findPath(path_id))) { // cerr << "Warning:: Unknown path <"
-	 * // << path_id << ">. "; return -1; } } else { path_ = NULL; }
+	 * if (path_id > 0 && thePathTable != NULL) { if (!(getPath =
+	 * thePathTable->findPath(path_id))) { // cerr << "Warning:: Unknown getPath <"
+	 * // << path_id << ">. "; return -1; } } else { getPath = NULL; }
 	 *
 	 * theVehicleTable.nVehiclesParsed_ ++;
 	 *
-	 * // tomer - to allow vehicle table trips to be assigned with a path
+	 * // tomer - to allow vehicle table trips to be assigned with a getPath
 	 *
-	 * int error = init(id, type_id, od_, path_);
+	 * int error = init(id, type_id, od, getPath);
 	 *
 	 * PretripChoosePath();
 	 *
@@ -251,59 +248,52 @@ public abstract class Vehicle extends CodedObject {
 	 *
 	 * OD_Pair odpair(o, d); PtrOD_Pair odptr(odpair); OdPairSetType::iterator i
 	 * = theOdPairs.find(odptr); if (i == theOdPairs.end()) { i =
-	 * theOdPairs.insert(i, new OD_Pair(odpair)); } od_ = (*i).p();
+	 * theOdPairs.insert(i, new OD_Pair(odpair)); } od = (*i).p();
 	 *
-	 * od_->oriNode()->type_ |= DefinedConstant.NODE_TYPE_ORI;
-	 * od_->desNode()->type_ |= DefinedConstant.NODE_TYPE_DES;
+	 * od->oriNode()->type |= DefinedConstant.NODE_TYPE_ORI;
+	 * od->desNode()->type |= DefinedConstant.NODE_TYPE_DES;
 	 *
-	 * if (path_id > 0 && theBusAssignmentTable != NULL) { if (!(path_ =
+	 * if (path_id > 0 && theBusAssignmentTable != NULL) { if (!(getPath =
 	 * theBusRunTable->findPath(path_id))) { // cerr <<
-	 * "Warning:: Unknown bus path <" // << path_id << ">. "; return -1; } }
-	 * else { path_ = NULL; }
+	 * "Warning:: Unknown bus getPath <" // << path_id << ">. "; return -1; } }
+	 * else { getPath = NULL; }
 	 *
 	 * theBusAssignmentTable->nBusesParsed_ ++;
 	 *
-	 * // tomer - to allow vehicle table trips to be assigned with a path
+	 * // tomer - to allow vehicle table trips to be assigned with a getPath
 	 *
-	 * int error = initBus(bid, od_, path_);
+	 * int error = initBus(bid, od, getPath);
 	 *
 	 * PretripChoosePath();
 	 *
 	 * return (error); }
 	 */
 
-	@Override
-	public void print() {
 
-	}
-
-	public ODPair od() {
-		return od_;
-	}
 	public Node desNode() {
-		return od_.getDesNode();
+		return this.path.getDesNode();
 	}
 	public Node oriNode() {
-		return od_.getOriNode();
+		return this.path.getOriNode();
 	}
-	public Path path() {
-		return path_;
+	public Path getPath() {
+		return this.path;
 	}
 
 	public int isType(int flag) {
-		return type_ & flag;
+		return type & flag;
 	}
 	public int types() {
-		return type_;
+		return type;
 	}
 	public int getType() {
-		return type_ & Constants.VEHICLE_CLASS;
+		return type & Constants.VEHICLE_CLASS;
 	}
 	public int group() {
-		return type_ & Constants.VEHICLE_GROUP;
+		return type & Constants.VEHICLE_GROUP;
 	}
 	public int isGuided() {
-		return (type_ & Constants.VEHICLE_GUIDED) != 0 ? 1 : 0;
+		return (type & Constants.VEHICLE_GUIDED) != 0 ? 1 : 0;
 	}
 	public int infoType() {
 		return isGuided();
@@ -311,29 +301,32 @@ public abstract class Vehicle extends CodedObject {
 	
 	//wym
 	public void fixPath() {
-		type_ |= Constants.VEHICLE_FIXEDPATH;
+		type |= Constants.VEHICLE_FIXEDPATH;
 	}
 	
-	public float departTime() {
-		return departTime_;
+	public double departTime() {
+		return departTime;
 	}
 
-	public float currentSpeed() {
-		return currentSpeed_;
+	public double getCurrentSpeed() {
+		return currentSpeed;
 	}
-	public float distance() {
-		return distance_;
+	public double getDistance() {
+		return distance;
 	}
-	public float mileage() {
-		return mileage_;
+	public double mileage() {
+		return mileage;
+	}
+	public void addMileage(double s){
+		mileage += s;
 	}
 	/*
 	 * -------------------------------------------------------------------
-	 * Returns the distance from downstream node of current link.
+	 * Returns the getDistance from downstream node of current link.
 	 * -------------------------------------------------------------------
 	 */
-	public float distanceFromDownNode() {
-		return (float) (getSegment().getDistance() + distance_);
+	public double distanceFromDownNode() {
+		return (getSegment().getDistance() + distance);
 	}
 
 	// Current link the vehicle stays
@@ -347,90 +340,92 @@ public abstract class Vehicle extends CodedObject {
 	}
 
 	// Path
-	public Link nextLink() {
-		return nextLink_;
+	public Link getNextLink() {
+		return nextLink;
 	}
-	// CAUTION: i has double meaning, depending on whether path is
-	// defined.
+	// CAUTION: i has double meaning, depending on whether getPath is defined.
+	// path is not null
 	public void setPathIndex(int i) {
-		pathIndex_ = i;
-		if (path_ != null) { // has a path
-			// i is index in path
-			if (i >= 0 && i < path_.nLinks())
-				nextLink_ = path_.getLink(i);
+		pathIndex = i;
+		if (path != null) { // has a getPath
+			// i is index in getPath
+			if (i >= 0 && i < path.nLinks())
+				nextLink = path.getLink(i);
 			else
-				nextLink_ = null;
+				nextLink = null;
 		}
-		else { // no path
-				// i is link index
-			if (i >= 0 && i < RoadNetwork.getInstance().nLinks())
-				nextLink_ = RoadNetwork.getInstance().getLink(i);
-			else
-				nextLink_ = null;
+		else { // no Path
+			//TODO 重构检查
+			System.out.print("you are wrong！");
 		}
+	}
+	// path is null
+	public void setNextLink(Link tarLink){
+		nextLink = tarLink;
 	}
 	public void donePathIndex() {
-		pathIndex_ = -1;
-		nextLink_ = null;
+		pathIndex = -1;
+		nextLink = null;
 	}
 	public int enRoute() {
 		return 0;
 	} // check if enroute
-		// Return 1 if the link is in path, 0 if not, and -1 if unknown.
+		// Return 1 if the link is in getPath, 0 if not, and -1 if unknown.
 
 	public int isLinkInPath(Link plink, int depth /* = 0xFFFF */) {
-		if (path_ != null) {
-			int n = path_.nLinks();
-			if (pathIndex_ + depth < n)
-				n = pathIndex_ + depth;
+		if (path != null) {
+			int n = path.nLinks();
+			if (pathIndex + depth < n)
+				n = pathIndex + depth;
 
-			for (int i = pathIndex_; i < n; i++) {
-				if (path_.getLink(i) == plink) {
+			for (int i = pathIndex; i < n; i++) {
+				if (path.getLink(i) == plink) {
 					return 1;
 				}
 			}
 			return 0;
 		}
 		else {
-			if (nextLink_ == plink)
+			if (nextLink == plink)
 				return 1;
 			else
 				return -1;
 		}
 	}
 
-	// These functions are called only if the path is defined.
+	// These functions are called only if the getPath is defined.
 
 	public void setPath(Path p) {
-		path_ = p;
-		pathIndex_ = 0;
+		path = p;
+		pathIndex = -1;
 	}
 	public void setPath(Path p, int i) {
-		path_ = p;
+		path = p;
 		setPathIndex(i);
 	}
 	public void advancePathIndex() {
-		int i = pathIndex_ + 1;
-		Link pl = path_.getLink(i);
+		int i = pathIndex + 1;
+		Link pl = path.getLink(i);
 
-		if (getLink() == null || (RoadNetwork.getInstance().isNeighbor(getLink(), pl)) != 0) {
+		if (getLink() == null || (getLink().isNeighbor(pl)) != 0) {
+			//TODO 重构检查
 			setPathIndex(i);
 		}
-		else if (pl != nextLink_) {
+		else if (pl != nextLink) {
 			donePathIndex();
 		}
 	}
 	public void retrievePathIndex() {
-		int i = pathIndex_ - 1;
-		Link pl = path_.getLink(i);
-		if (getLink() == null || RoadNetwork.getInstance().isNeighbor(pl, getLink()) != 0) {
+		int i = pathIndex - 1;
+		Link pl = path.getLink(i);
+		if (getLink() == null || pl.isNeighbor(getLink()) != 0) {
 			setPathIndex(i);
 		}
 	}
 
 	public Link prevLinkOnPath() {
-		int i = pathIndex_ - 2;
-		return (path_.getLink(i));
+		int i = pathIndex - 2;
+		return (path.getLink(i));
 	}
 
 	// Route choice model
@@ -454,127 +449,84 @@ public abstract class Vehicle extends CodedObject {
 	 * return attr(ATTR_ACCESSED_INFO) ? theGuidedRoute : theUnGuidedRoute; } }
 	 * else { return theUnGuidedRoute; } }
 	 */
-	// Find the nextLink to travel
-	public void OnRouteChoosePath(Node node) {
-		if (path_ != null) { // path assigned
+	// Find the getNextLink to travel
+	public void onRouteChoosePath(Node node, RoadNetwork network) {
+		if (path != null) { // getPath assigned
 			if (isType(Constants.VEHICLE_FIXEDPATH) != 0 || // path is fixed
 					enRoute() == 0) { // no enroute
 				advancePathIndex();
 			}
 			else { // decide whether to switch
-					 node.routeSwitchingModel(this,null);
+				network.routeSwitchingModel(node,this);
 			}
 		}
 		else { // no path assigned
 				// generate route dynamically
-				 node.routeGenerationModel(this);
+			network.routeGenerationModel(node,this);
 		}
 	}
-	public void PretripChoosePath(ODCell od) {
+	public void PretripChoosePath(ODPair od,RoadNetwork network) {
 		if (od.splits() != null) {
-			// At origin and path and splits are specified
+			// At origin and getPath and splits are specified
 			// 通过splits_定义的cdf计算选择odcell路径集某一路径的概率
-			Path p = od.chooseRoute(this);
+			Path p = od.chooseRoute(this,network);
 			setPath(p, 0);
 		}
-		else if (od.nPaths() != 0) { // At origin and path specified
+		else if (od.nPaths() != 0) { // At origin and getPath specified
 			// 出行过程动态更新车辆路径
-			// 由于无最短路径计算，这里不更新路径，由pretrip路径决定直到车辆到达目的地
-			// pathtable决定的路径只有一条
-			// 改变了源程序的运行逻辑
-			 od.getOriNode().routeSwitchingModel(this, od);
+			network.routeSwitchingModel(od.getOriNode(),this);
 		}
-		else { // At origin and no path specified for the OD pair
-				 od.getOriNode().routeGenerationModel(this);
+		else { // At origin and no getPath specified for the OD pair
+			network.routeGenerationModel(od.getOriNode(),this);
 		}
 	}
 
 	// tomer - for the vehicles read from vehicle table file
 
-	public void PretripChoosePath() {
-		Path p = path_;
-		if (p != null) { // vehicle has a path specified in the vehicle table
+	public void PretripChoosePath(Node oriNode,RoadNetwork network) {
+		Path p = path;
+		if (p != null) { // vehicle has a getPath specified in the vehicle table
 							// file
-			// Dan: or a path specified in the bus assignment file
+			// Dan: or a getPath specified in the bus assignment file
 			setPath(p, 0);
 		}
-		else { // vehicle has no path specified
-				// od_.getOriNode().routeGenerationModel(this);
+		else { // vehicle has no getPath specified
+			network.routeGenerationModel(oriNode,this);
 		}
 	}
-	
+	/*
 	public Route routingInfo() {
 		//暂不区分guidance
 		return (Route) Route.getInstance();
-	}
+	}*/
 
 	// MOE
 
-	public float timeSinceDeparture() {
-		return (float) (SimulationClock.getInstance().getCurrentTime() - departTime_);
+	public double timeSinceDeparture(double currentTime) {
+		return currentTime - departTime;
 	}
-	public float timeEntersLink() {
-		return timeEntersLink_;
+	public double timeEntersLink() {
+		return timeEntersLink;
 	}
-	public void timeEntersLink(float arg) {
-		timeEntersLink_ = arg;
+	public void setTimeEntersLink(double arg) {
+		timeEntersLink = arg;
 	}
 
 	// Returns the time spent in this link
-	public float timeInLink() {
-		return (float) (SimulationClock.getInstance().getCurrentTime() - timeEntersLink_);
+	public double timeInLink(double currentTime) {
+		return currentTime - timeEntersLink;
 	}
-	public float speedInLink() {
+	public double speedInLink(double currentTime) {
 		double WORSE_THAN_WALKING = 1.38889;
-		float t = timeInLink();
-		float v;
+		double t = timeInLink(currentTime);
+		double v;
 		if (t < 0.1) {
-			v = currentSpeed_;
+			v = currentSpeed;
 		}
 		else {
-			v = (float) ((getLink().length() - distanceFromDownNode()) / t);
+			v = (getLink().length() - distanceFromDownNode()) / t;
 		}
-		// cout<<v<<endl;
-		return (float) Math.max(v, WORSE_THAN_WALKING);
-	}
-	public void writePathRecord() {
-
-	}
-	// Dump current data
-	public void dumpState() {
-
+		return  Math.max(v, WORSE_THAN_WALKING);
 	}
 
-	public static void resetLastId() {
-		HashMap<String, Integer> hm = RoadNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		lastId_[threadid] = 0;
-	}
-
-	public static void openDepartureRecords(String filename) {
-
-	}/*
-		 * public static void nextBlockOfDepartureRecords(){ if
-		 * (SimulationEngine.chosenOutput(Constants.OUTPUT_RECT_TEXT)!=0)
-		 * return;
-		 *
-		 * if (nVehicles_!=0) { // close previous block // osDepRecords_ << '}'
-		 * << endl; }
-		 *
-		 * // open a new block and write time tag
-		 *
-		 * double t = SimulationClock.getInstance().getCurrentTime();
-		 * osDepRecords_ << endl << Fix(t, 0.1) << endc << '{' << endl; }
-		 */
-	public void saveDepartureRecord() {
-
-	}
-	public static void closeDepartureRecords() {
-
-	}
-
-	private static int nVehicles_ = 0;
-	// private static ofstream osDepRecords_;
-
-	// private void setNextLink();
 }

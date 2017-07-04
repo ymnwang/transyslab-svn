@@ -28,12 +28,12 @@ public class MLPVehList {
 		pv.donePathIndex();
 		
 		//在此重设属性
-		pv.trailing_ = null;
-		pv.leading_ = tail_;
+		pv.trailing = null;
+		pv.leading = tail_;
 		
 		if (tail_ == null){// no vehicle in the list
 			tail_ = new MLPVehicle();
-			tail_.trailing_ = pv;			
+			tail_.trailing = pv;
 		}
 		else{// at least one in the list
 			head_ = pv;
@@ -52,8 +52,8 @@ public class MLPVehList {
 				head_ = tail_ = null;
 			}
 			else { // at least two vehicles in list
-				head_ = head_.trailing_;
-				head_.leading_ = null;
+				head_ = head_.trailing;
+				head_.leading = null;
 			}
 			nVehicles_--;
 		}

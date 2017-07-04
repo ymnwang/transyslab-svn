@@ -46,7 +46,7 @@ public class EMTTable {
 
 	public static void readETables(){
 		String filePath = MLPSetup.getEmitForm_fileName();
-		String[] header = {"laneID", "tLinkID", "time", "speed", "dis", "RVID"};
+		String[] header = {"laneID", "tLinkID", "time", "speed", "dis", "rvId"};
 		try {
 			List<CSVRecord> rows = CSVUtils.readCSV(filePath,header);
 			int theLNID = Integer.MIN_VALUE;

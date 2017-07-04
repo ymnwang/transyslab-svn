@@ -66,8 +66,8 @@ public class Constants {
 	public final static double V_ANGLE = 2 * Math.PI - U_ANGLE;
 	// The angle a link enters and leaves an intersection is defined by
 	// the angle of the line connecting end point and a point with a given
-	// distance (ANGLE_DISTANCE) along the arc. However, this point
-	// should also be wiithin a given relative distance (ANGLE_POSITION)
+	// getDistance (ANGLE_DISTANCE) along the arc. However, this point
+	// should also be wiithin a given relative getDistance (ANGLE_POSITION)
 	// of the length of the last/first segment.
 	public static final double ANGLE_DISTANCE = 10.0;
 	public static final double ANGLE_POSITION = 0.25;
@@ -176,10 +176,10 @@ public class Constants {
 	public static final int INFO_FLAG_DYNAMIC = 0x0001; // time variant
 	public static final int INFO_FLAG_UPDATE = 0x0006; // sum
 	public static final int INFO_FLAG_UPDATE_TREES = 0x0002; // calculate
-																// shortest path
+																// shortest getPath
 																// trees
 	public static final int INFO_FLAG_UPDATE_PATHS = 0x0004; // prespecified
-																// path only
+																// getPath only
 	public static final int INFO_FLAG_USE_EXISTING_TABLES = 0x0008;// do not
 																	// update
 																	// initial

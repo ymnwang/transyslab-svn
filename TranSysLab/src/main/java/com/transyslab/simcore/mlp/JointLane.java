@@ -28,7 +28,7 @@ public class JointLane {
 				if (!virtualCount) {
 					ListIterator<MLPVehicle> VehIterator = LN.vehsOnLn.listIterator();
 					while (VehIterator.hasNext()) {
-						if (VehIterator.next().VirtualType_ == 0) {
+						if (VehIterator.next().virtualType == 0) {
 							return false;
 						}
 					}

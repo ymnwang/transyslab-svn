@@ -10,6 +10,7 @@ import java.util.*;
  * @author YYL 2016-5-31
  */
 public class Intersection {
+	/*
 	protected Vector<CManuver> _manuvers;
 	protected Node _node;
 	// index of intersection in array
@@ -31,5 +32,5 @@ public class Intersection {
 		_node.setInterS(this);
 		Intersection q = _node.getInterS();
 		return 0;
-	}
+	}*/
 }

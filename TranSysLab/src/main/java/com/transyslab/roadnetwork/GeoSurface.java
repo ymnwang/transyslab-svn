@@ -3,11 +3,9 @@ package com.transyslab.roadnetwork;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math3.ml.clustering.DoublePoint;
-
 import com.jogamp.opengl.math.geom.AABBox;
 
-public class GeoSurface extends CodedObject{
+public class GeoSurface extends CodedObject {
 	protected List<GeoPoint> kerbPoints_;
 	protected int segmentId_;
 	protected int index_;

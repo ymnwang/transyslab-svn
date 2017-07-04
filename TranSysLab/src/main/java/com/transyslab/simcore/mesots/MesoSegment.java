@@ -24,30 +24,29 @@ import com.transyslab.roadnetwork.Segment;
  */
 public class MesoSegment extends Segment {
 
-	// friend MESO_Vehicle;
-	// friend MESO_TrafficCell;
-	private int nCells_; // num of TCs
+	protected int nCells; // num of TCs
 
-	private MesoTrafficCell firstCell_; // first downstream traffic cell
-	private MesoTrafficCell lastCell_; // last upstream traffic cell
+	protected MesoTrafficCell firstCell; // first downstream traffic cell
+	protected MesoTrafficCell lastCell; // last upstream traffic cell
+	protected MesoSdFn sdFunction;
+	private double capacity; // default capacity (vps)
+	private double emitTime; // time to move next vehicle
 
-	private double capacity_; // default capacity (vps)
-	private double emitTime_; // time to move next vehicle
+	private double density; // current density
+	private double speed; // current speed
 
-	private float density_; // current density
-	private float speed_; // current speed
-
-	private List<Float> densityList_;
-	private List<Float> speedList_;
-	private List<Integer> flowList_;
+	private List<Double> densityList;
+	private List<Double> speedList;
+	private List<Integer> flowList;
 
 	public MesoSegment() {
-		nCells_ = 0;
-		firstCell_ = null;
-		lastCell_ = null;
-		densityList_ = new ArrayList<Float>();
-		speedList_ = new ArrayList<Float>();
-		flowList_ = new ArrayList<Integer>();
+		nCells = 0;
+		firstCell = null;
+		lastCell = null;
+		densityList = new ArrayList<Double>();
+		speedList = new ArrayList<Double>();
+		flowList = new ArrayList<Integer>();
+		sdFunction = new MesoSdFnNonLinear();
 	}
 
 	@Override
@@ -60,7 +59,7 @@ public class MesoSegment extends Segment {
 
 	public int nVehicles() {
 		int num = 0;
-		MesoTrafficCell cell = firstCell_;
+		MesoTrafficCell cell = firstCell;
 		while (cell != null) {
 			num += cell.nVehicles();
 			cell = cell.trailing();
@@ -68,100 +67,116 @@ public class MesoSegment extends Segment {
 		return num;
 	}
 	public MesoTrafficCell getFirstCell() {
-		return firstCell_;
+		return firstCell;
 	}
 	public MesoTrafficCell getLastCell() {
-		return lastCell_;
+		return lastCell;
 	}
 	public MesoVehicle firstVehicle() {
-		if (firstCell_ != null)
-			return firstCell_.firstVehicle();
+		if (firstCell != null)
+			return firstCell.firstVehicle();
 		else
 			return null;
 	}
 	public MesoVehicle lastVehicle() {
-		if (lastCell_ != null)
-			return lastCell_.lastVehicle();
+		if (lastCell != null)
+			return lastCell.lastVehicle();
 		else
 			return null;
 	}
 
+
 	public MesoTrafficCell firstCell() {
-		return firstCell_;
+		return firstCell;
 	}
 	public MesoTrafficCell lastCell() {
-		return lastCell_;
+		return lastCell;
 	}
 
 	public void append(MesoTrafficCell cell) {
-		cell.segment_ = this;
+		cell.segment = this;
 
-		cell.leading_ = lastCell_;
-		cell.trailing_ = null;
+		cell.leading = lastCell;
+		cell.trailing = null;
 
-		if (lastCell_ != null) { // append at end
-			lastCell_.trailing_ = cell;
+		if (lastCell != null) { // append at end
+			lastCell.trailing = cell;
 		}
 		else { // queue is empty
-			firstCell_ = cell;
+			firstCell = cell;
 		}
-		lastCell_ = cell;
-		nCells_++;
+		lastCell = cell;
+		nCells++;
 	}
 	public void remove(MesoTrafficCell cell) {
-		if (cell.leading_ != null) { // not the first one
-			cell.leading_.trailing_ = cell.trailing_;
+		if (cell.leading != null) { // not the first one
+			cell.leading.trailing = cell.trailing;
 		}
 		else { // first one
-			firstCell_ = cell.trailing_;
+			firstCell = cell.trailing;
 		}
-		if (cell.trailing_ != null) { // not the last one
-			cell.trailing_.leading_ = cell.leading_;
+		if (cell.trailing != null) { // not the last one
+			cell.trailing.leading = cell.leading;
 		}
 		else { // last one
-			lastCell_ = cell.leading_;
+			lastCell = cell.leading;
 		}
-		nCells_--;
+		nCells--;
 	}
 
-	@Override
-	public float density() {
-		return density_ / MesoParameter.densityFactor();
+	public double density() {
+		return density / MesoParameter.densityFactor();
 	}
-	@Override
-	public float speed() {
-		return speed_ / MesoParameter.speedFactor();
+
+	public double speed() {
+		return speed / MesoParameter.speedFactor();
 	}
-	@Override
+
 	public int flow() {
 		return calcFlow();
 	}
+	@Override
+	public double calcCurrentTravelTime(){
+		double min_spd = 2.22f; // 5 mph
+		if (length < 50.0) {
 
+			// Speed density function will not work for very short segment
+
+			return (length / freeSpeed);
+		}
+
+
+		double spd = this.sdFunction.densityToSpeed(/*(float) getFreeSpeed(),*/ calcDensity(), nLanes());
+
+		if (spd < min_spd)
+			spd = min_spd;
+		return (length / spd);
+	}
 	/*
 	 * ------------------------------------------------------------------
 	 * Calculate the density of a segment, in vehicle/kilometer
 	 * ------------------------------------------------------------------
 	 */
 	@Override
-	public float calcDensity() {
-		density_ = (float) (1000.0 * nVehicles() / (length_ * nLanes()));
-		return (density_);// vehicle/km
+	public double calcDensity() {
+		density = (float) (1000.0 * nVehicles() / (length * nLanes()));
+		return (density);// vehicle/km
 	}
 	public void calcState() {
-		density_ = (float) (1000.0f * nVehicles() / (length_ * nLanes()));
-		densityList_.add(density_);
+		density = 1000.0f * nVehicles() / (length * nLanes());
+		densityList.add(density);
 		if (nVehicles() <= 0) {
-			speedList_.add(maxSpeed());
+			speedList.add(maxSpeed());
 		}
 		else {
-			float sum = 0.0f;
-			MesoTrafficCell cell = firstCell_;
+			double sum = 0.0;
+			MesoTrafficCell cell = firstCell;
 			MesoVehicle pv;
 			while (cell != null) {
 				pv = cell.firstVehicle();
 				while (pv != null) {
-					if (pv.currentSpeed() > Constants.SPEED_EPSILON) {
-						sum += 1.0f / pv.currentSpeed();
+					if (pv.getCurrentSpeed() > Constants.SPEED_EPSILON) {
+						sum += 1.0f / pv.getCurrentSpeed();
 					}
 					else {
 						sum += 1.0f / Constants.SPEED_EPSILON;
@@ -170,28 +185,28 @@ public class MesoSegment extends Segment {
 				}
 				cell = cell.trailing();
 			}
-			speed_ = nVehicles() / sum;
-			speedList_.add(speed_ * 3.6f);
+			speed = nVehicles() / sum;
+			speedList.add(speed * 3.6f);
 		}
-		float x = 3.6f * speed_ * density_;
-		flowList_.add(Math.round(x));// vehicle/hour
+		double x = 3.6f * speed * density;
+		flowList.add((int)Math.round(x));// vehicle/hour
 
-		// return (density_);//vehicle/km
+		// return (density);//vehicle/km
 	}
 
 	@Override
-	public float calcSpeed() {
+	public double calcSpeed() {
 		if (nVehicles() <= 0) {
-			return (speed_ = maxSpeed());
+			return (speed = maxSpeed());
 		}
 		float sum = 0.0f;
-		MesoTrafficCell cell = firstCell_;
+		MesoTrafficCell cell = firstCell;
 		MesoVehicle pv;
 		while (cell != null) {
 			pv = cell.firstVehicle();
 			while (pv != null) {
-				if (pv.currentSpeed() > Constants.SPEED_EPSILON) {
-					sum += 1.0f / pv.currentSpeed();
+				if (pv.getCurrentSpeed() > Constants.SPEED_EPSILON) {
+					sum += 1.0f / pv.getCurrentSpeed();
 				}
 				else {
 					sum += 1.0f / Constants.SPEED_EPSILON;
@@ -200,12 +215,12 @@ public class MesoSegment extends Segment {
 			}
 			cell = cell.trailing();
 		}
-		speed_ = nVehicles() / sum;
-		return (speed_ * 3.6f);// km/hour
+		speed = nVehicles() / sum;
+		return (speed * 3.6f);// km/hour
 	}
 	@Override
 	public int calcFlow() {
-		float x = 3.6f * speed_ * density_;
+		double x = 3.6f * speed * density;
 		return (int) (x + 0.5);// vehicle/hour
 	}
 
@@ -215,14 +230,7 @@ public class MesoSegment extends Segment {
 	 * MESO_Network.
 	 */
 	public void calcTrafficCellUpSpeed() {
-		// Calculate density and upSpeed for each traffic cell
 
-		// cout << " XXXX Segment" ;
-		MesoTrafficCell cell = firstCell_;
-		while (cell != null) {
-			cell.updateTailSpeed();
-			cell = cell.trailing();
-		}
 	}
 
 	/*
@@ -230,114 +238,50 @@ public class MesoSegment extends Segment {
 	 * called by a function with the same name in class MESO_Network.
 	 */
 	public void calcTrafficCellDnSpeeds() {
-		MesoTrafficCell cell = firstCell_;
-		while (cell != null) {
-			cell.updateHeadSpeeds();
-			cell = cell.trailing();
-		}
+
 	}
 
 	public int isJammed() {
-		if (lastCell_ == null) { // nobody in the segment
+		if (lastCell == null) { // nobody in the segment
 			return 0;
 		}
 		else {
-			return lastCell_.isJammed();
+			return lastCell.isJammed();
 		}
 	}
 
 	// Move vehicles based on their speeds
 
-	public void advanceVehicles() {
-		MesoTrafficCell cell = firstCell_;
-		while (cell != null) {
-			cell.advanceVehicles();
-			cell = cell.trailing_;
-		}
-	}
 
-	// Remove, merge and split traffic cells
-
-	public void formatTrafficCells() {
-		MesoTrafficCell cell;
-		MesoTrafficCell front;
-
-		// Remove the empty traffic cells
-
-		cell = firstCell_;
-		while ((front = cell) != null) {
-			cell = cell.trailing_;
-			if (front.nVehicles() <= 0 || front.firstVehicle() == null || front.lastVehicle() == null) { // no
-																											// vehicle
-																											// left
-
-				// use vehicle count should be enough but it seems that there
-				// is a bug somewhere that causes vehicle count to be 1 when
-				// actually there is no vehicle left.
-
-				remove(front);
-				MesoCellList.getInstance().recycle(front);
-			}
-		}
-	}
-
-	// Append a vehicle at the end of the segment
-
-	public void append(MesoVehicle vehicle) {
-		if (lastCell_ == null || !lastCell_.isReachable()) {
-			// isReachable T：cell尾车距segment末端的距离<车团分离阈值
-			// F: cell尾车距segment末端的距离>=车团分离阈值
-			// 若segment存在cell，新车与原lastcell距离大于分离阈值，则新生成lastcell
-			append(MesoCellList.getInstance().recycle());
-			lastCell_.initialize();
-		}
-
-		// Put the vehicle in the traffic cell
-
-		lastCell_.append(vehicle);
-	}
-	// Insert a vehicle into the segment based on its distance
-	// position
-	/*
-	 * public void insert(MESO_Vehicle vehicle) { if (lastCell_ == null) {
-	 * append(MESO_CellList.getInstance().recycle()); lastCell_.initialize(); }
-	 * lastCell_.insert(vehicle); }
-	 */
-
-	// Maximum speed for a given gap
-
-	public float maxSpeed(float gap) {
-		return MesoParameter.getInstance().maxSpeed(gap, nLanes_);
-	}
-	public float maxSpeed() {
-		return freeSpeed_;
+	public double maxSpeed() {
+		return freeSpeed;
 	}
 	public void updateFreeSpeed(){
-		freeSpeed_ = MesoNetwork.getInstance().getSdFn(sdIndex_).getFreeSpeed();
+		this.freeSpeed = this.sdFunction.freeSpeed;
 	}
-	public float defaultCapacity() {
-		float vph = MesoNetwork.getInstance().getSdFn(getSdIndex()).getCapacity();
-		return nLanes_ * vph;
+	public double defaultCapacity() {
+		double vph = this.sdFunction.getCapacity();
+		return nLanes * vph;
 	}
 
 	// Update number of vehicle allowed to move out.
 
-	public void resetEmitTime() { // once every update step
-		emitTime_ = SimulationClock.getInstance().getCurrentTime();
+	public void resetEmitTime(double currentTime) { // once every update step
+		emitTime = currentTime;
 		scheduleNextEmitTime();
 	}
 
 	public void scheduleNextEmitTime() {
-		if (capacity_ > 1.E-6) {
-			emitTime_ += 1.0 / capacity_;
+		if (capacity > 1.E-6) {
+			emitTime += 1.0 / capacity;
 		}
 		else {
-			emitTime_ = Constants.DBL_INF;
+			emitTime = Constants.DBL_INF;
 		}
 	}
 
-	public int isMoveAllowed() {
-		if (SimulationClock.getInstance().getCurrentTime() >= emitTime_)
+	public int isMoveAllowed(double currentTime) {
+		if (currentTime >= emitTime)
 			return 1;
 		else
 			return 0;
@@ -345,90 +289,59 @@ public class MesoSegment extends Segment {
 
 	// Add cap to current capacity
 
-	public void addCapacity(float cap_delta) {
-		setCapacity((float) (cap_delta + capacity_));
+	public void addCapacity(double cap_delta, double currentTime) {
+		setCapacity( (cap_delta + capacity),currentTime);
 	}
 
 	// Set current capacity to cap
 
-	public void setCapacity(float cap) {
-		float maxcap = defaultCapacity();
+	public void setCapacity(double cap,double currentTime) {
+		double maxcap = defaultCapacity();
 		if (cap < 0.0) {
-			capacity_ = 0.0;
+			capacity = 0.0;
 		}
 		else if (cap > maxcap) {
-			capacity_ = maxcap;
+			capacity = maxcap;
 		}
 		else {
-			capacity_ = cap;
+			capacity = cap;
 		}
-		resetEmitTime();
+		resetEmitTime(currentTime);
 	}
 
-	// Overload the base class function
-
-	@Override
-	public void calcStaticInfo() {
+	public void calcStaticInfo(double currentTime) {
 		// 重写部分开始
-		if ((getDnStream() == null)) {
-			localType_ |= 0x0001;
-			if (getLink().nDnLinks() < 1 || getLink().getDnNode().type(0x0001) > 0) {
-				localType_ |= 0x0020;
-			}
-		}
-		if (getUpSegment() == null) {
-			localType_ |= 0x0002;
-			if (getLink().nUpLinks() < 1 || getLink().getUpNode().type(0x0001) > 0) {
-				localType_ |= 0x0010;
-			}
-		}
-		MesoNetwork.getInstance().totalLinkLength_ += length_;
-		MesoNetwork.getInstance().totalLaneLength_ += length_ * nLanes_;
+		super.calcStaticInfo();
 
-		if (sdIndex_ < 0 || sdIndex_ >= MesoNetwork.getInstance().nSdFns()) {
-			// cerr << "Segment " << code_ << " has invalid sdIndex "
-			// << sdIndex_ << "." << endl;
-			sdIndex_ = 0;
-		}
-		// 重写部分结束
 		//此处赋值freeSpeed
-		freeSpeed_ = MesoNetwork.getInstance().getSdFn(sdIndex_).getFreeSpeed();
-		density_ = 0.0f;
-		speed_ = maxSpeed();
-
+		freeSpeed = this.sdFunction.getFreeSpeed();
+		density = 0.0f;
+		speed = maxSpeed();
 		// Set to the default maximum capacity
-		setCapacity(defaultCapacity());
+		setCapacity(defaultCapacity(),currentTime);
 	}
 
-	// remove all traffic cells
-	public void clean() {
 
-		while (firstCell_ != null) {
-			lastCell_ = firstCell_;
-			firstCell_ = firstCell_.trailing_;
-			MesoCellList.getInstance().recycle(lastCell_);
-		}
-		lastCell_ = null;
-		nCells_ = 0;
-	}
 	@Override
 	public void outputToOracle(PreparedStatement ps) throws SQLException {
-		int num = flowList_.size();
+		int num = flowList.size();
 		for (int i = 0; i < num; i++) {
-			Date date = LinkTimes.getInstance().toDate((i + 1));
+			// TODO date 未实现
+			Date date = null;
 			// simtaskid 写死，注意更改
 			ps.setInt(1, 5);
-			ps.setInt(2, getCode());
+			ps.setInt(2, getId());
 			ps.setDate(3, new java.sql.Date(date.getTime()));
 			ps.setTimestamp(3, new java.sql.Timestamp(date.getTime()));
 			ps.setInt(4, nLanes());
-			ps.setInt(5, flowList_.get(i));
-			ps.setFloat(6, speedList_.get(i));
-			ps.setFloat(7, densityList_.get(i));
+			ps.setInt(5, flowList.get(i));
+			ps.setDouble(6, speedList.get(i));
+			ps.setDouble(7, densityList.get(i));
 			ps.addBatch();
 		}
 		ps.executeBatch();
 	}
+	/*
 	@Override
 	public void outputVhcPosition() throws IOException {
 		StringBuilder sb = new StringBuilder();
@@ -436,22 +349,22 @@ public class MesoSegment extends Segment {
 				.round((SimulationClock.getInstance().getCurrentTime() - SimulationClock.getInstance().getStartTime())
 						/ SimulationClock.getInstance().getStepSize());
 		double s, l, vx, vy;
-		MesoTrafficCell cell = firstCell_;
+		MesoTrafficCell cell = firstCell;
 		while (cell != null) {
-			MesoVehicle vehicle = cell.firstVehicle_;
+			MesoVehicle vehicle = cell.firstVehicle;
 			while (vehicle != null) {
 				l = getLength();
-				s = l - vehicle.distance();
-				vx = startPnt_.getLocationX() + s * (endPnt_.getLocationX() - startPnt_.getLocationX()) / l;
-				vy = startPnt_.getLocationY() + s * (endPnt_.getLocationY() - startPnt_.getLocationY()) / l;
+				s = l - vehicle.getDistance();
+				vx = startPnt.getLocationX() + s * (endPnt.getLocationX() - startPnt.getLocationX()) / l;
+				vy = startPnt.getLocationY() + s * (endPnt.getLocationY() - startPnt.getLocationY()) / l;
 				sb.append(frameid).append(",");
-				sb.append(getCode()).append(",");
-				sb.append(vehicle.getCode()).append(",");
+				sb.append(getId()).append(",");
+				sb.append(vehicle.getId()).append(",");
 				sb.append(vx).append(",");
 				sb.append(vy).append("\n");
-				vehicle = vehicle.trailing_;
+				vehicle = vehicle.trailing;
 			}
-			cell = cell.trailing_;
+			cell = cell.trailing;
 		}
 		String filepath = "E:\\OutputPosition.txt";
 		FileOutputStream out = new FileOutputStream(filepath, true);
@@ -460,5 +373,5 @@ public class MesoSegment extends Segment {
 		bw.write(sb.toString());
 		bw.close();
 
-	}
+	}*/
 }

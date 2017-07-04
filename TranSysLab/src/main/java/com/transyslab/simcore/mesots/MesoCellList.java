@@ -3,42 +3,56 @@
  */
 package com.transyslab.simcore.mesots;
 
-import java.util.HashMap;
-
 /**
  * @author its312
  *
  */
 public class MesoCellList {
 
-	private MesoTrafficCell head_;
-	private MesoTrafficCell tail_;
-	private int nCells_; /* number of vehicles */
-	private int nPeakCells_; /* max number of vehicles */
+	private MesoTrafficCell head;
+	private MesoTrafficCell tail;
+	private MesoVehiclePool recycleVhcList;
+	private int nCells; /* number of vehicles */
+	private int nPeakCells; /* max number of vehicles */
+	private double simStepSize; // 初始化Cell全局变量
 
-	public MesoCellList() {
-		head_ = null;
-		tail_ = null;
-		nCells_ = 0;
-		nPeakCells_ = 0;
+	public MesoCellList(MesoVehiclePool recycleVhcList) {
+		nCells = 0;
+		nPeakCells = 0;
+		this.recycleVhcList = recycleVhcList;
 	}
-	public static MesoCellList getInstance() {
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return MesoNetworkPool.getInstance().getCellList(threadid);
-	}
+
 	public void recycle(MesoTrafficCell cell) /* put a vehicle into the list */
 	{
-		cell.clean();
-		cell.trailing_ = head_;
-		if (head_ != null) { // at least one in the list
-			head_.leading_ = cell;
+		//cell.clean();
+		while (cell.firstVehicle != null) {
+			cell.lastVehicle = cell.firstVehicle;
+			cell.firstVehicle = cell.firstVehicle.trailing();
+			//cell.lastVehicle.needRecycle = true;
+			this.recycleVhcList.recycle(cell.lastVehicle);
+		}
+		cell.lastVehicle = null;
+		cell.nVehicles = 0;
+
+		cell.segment = null;
+
+		if (cell.headSpeeds != null) {
+			cell.headSpeeds = null;
+		}
+		if (cell.headPositions != null) {
+			cell.headPositions = null;
+		}
+		cell.nHeads = 0;
+
+		cell.trailing = head;
+		if (head != null) { // at least one in the list
+			head.leading = cell;
 		}
 		else { // no cell in the list
-			tail_ = cell;
+			tail = cell;
 		}
-		head_ = cell;
-		nCells_++; // one cell deposited in this list
+		head = cell;
+		nCells++; // one cell deposited in this list
 		// theStatus.nCells(-1); // one cell become inactive
 	}
 
@@ -46,20 +60,20 @@ public class MesoCellList {
 	{
 		MesoTrafficCell cell;
 
-		if (head_ != null) { // get head from the list
-			cell = head_;
-			if (tail_ == head_) { // the only one cell in list
-				head_ = tail_ = null;
+		if (head != null) { // get head from the list
+			cell = head;
+			if (tail == head) { // the only one cell in list
+				head = tail = null;
 			}
 			else { // at least two cells in list
-				head_ = head_.trailing_;
-				head_.leading_ = null;
+				head = head.trailing;
+				head.leading = null;
 			}
-			nCells_--;
+			nCells--;
 		}
 		else { // list is empty
 			cell = new MesoTrafficCell(); // create a new cell
-			nPeakCells_++;
+			nPeakCells++;
 		}
 
 		// theStatus.nCells(1); // one cell become active
@@ -67,21 +81,19 @@ public class MesoCellList {
 	}
 
 	public MesoTrafficCell head() {
-		return head_;
+		return head;
 	}
 
 	public MesoTrafficCell tail() {
-		return tail_;
+		return tail;
 	}
 
 	public int nCells() {
-		return nCells_;
+		return nCells;
 	}
 
 	public int nPeakCells() {
-		return nPeakCells_;
+		return nPeakCells;
 	}
-
-	// 未处理extern MESO_CellList *theCellList; /* recyclable vehicles */
 
 }

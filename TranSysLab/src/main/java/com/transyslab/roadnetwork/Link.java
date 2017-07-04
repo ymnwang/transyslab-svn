@@ -3,13 +3,6 @@
  */
 package com.transyslab.roadnetwork;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import java.util.*;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -19,249 +12,186 @@ import org.jgrapht.graph.DefaultWeightedEdge;
  *
  * @author YYL 2016-5-31
  */
-public class Link extends DefaultWeightedEdge {
+public class Link extends DefaultWeightedEdge implements NetworkObject{
 
-	protected List<SurvStation> SurvList;
-	protected List<CtrlStation> CtrlList;
-	protected int index_;
-	protected Label label_;
-	protected int type_;
-	protected Node upNode_;
-	protected Node dnNode_;
-	protected int nSegments_;
-	protected int startSegmentIndex_;
+	protected int id;
+	protected String name;
+	protected String objInfo;
+	protected List<Segment> segments;
+	protected int index;
+	protected int type;
+	protected Node upNode;
+	protected Node dnNode;
+	protected int nSegments;
 	// RN_LinkTime属性
 
-	// protected static int infoPeriodLength_; // length of each period (second)
-	// protected static int infoTotalLength_; // total length
-	// protected static int infoPeriods_ = 1; // number of time periods
+	// protected static int infoPeriodLength; // length of each period (second)
+	// protected static int infoTotalLength; // total length
+	// protected static int infoPeriods = 1; // number of time periods
 	// THESE VARIABLES HELP TO REPRESENT TOPOLOGY AND SPEED UP SOME
 	// CALCULATION.
 
-	// rightDnIndex_ is the position of the right most downstream
+	// rightDnIndex is the position of the right most downstream
 	// link in the array dnLinks of dnNode
 
-	protected int rightDnIndex_;
+	protected int rightDnIndex;
 
-	// dnIndex_ is the position of this link in the array dnLinks of
+	// dnIndex is the position of this link in the array dnLinks of
 	// the upNode
 
-	protected int dnIndex_;
+	protected int dnIndex;
 
 	// Each bit of this variable represents a connection to dnLink
 
-	protected int dnLegal_; // 0=turn is prohibited
+	protected int dnLegal; // 0=turn is prohibited
 
-	// upIndex_ is the position of this link in the array upLinks of
+	// upIndex is the position of this link in the array upLinks of
 	// the dnNode
 
-	protected int upIndex_;
+	protected int upIndex;
 
-	protected int laneUseRules_;
+	protected int laneUseRules;
 
-	// Control and surveillance devices
+	protected double length; // length of the link
+	protected double travelTime; // latest travel time
+	protected double freeSpeed; // free flow speed
 
-	protected List ctrlStationList_;
-	protected List survStationList_;
-
-	protected double length_; // length of the link
-	protected double travelTime_; // latest travel time
-	protected double freeSpeed_; // free flow speed
-
-	protected int state_;
+	protected int state;
 
 	// Link travel time
 
-	// protected static int nPeriods_;
-	// protected static int nSecondsPerPeriod_;
+	// protected static int nPeriods;
+	// protected static int nSecondsPerPeriod;
 
 	// These functions are used to record the travel time vehicles
-	// spend in each link, aggregated by the time they enter the
-	// link.
+	// spend in each link, aggregated by the time they enter the link.
 
-	protected int[] nSamplesTravelTimeEnteringAt_;
-	protected float[] sumOfTravelTimeEnteringAt_;
-	// protected List<Integer> idList_ = new ArrayList<Integer>();
-	protected static int last = -1;
-	
+	protected int[] nSamplesTravelTimeEnteringAt;
+	protected double[] sumOfTravelTimeEnteringAt;
+
 	//wjw
-//	protected int predecessor_;// for storing path uesd in RN_LinkGraph
-//	protected float[] penalties_;
-	protected ArrayList<Path>pathSet_;
-	// 未处理
-	/*
-	 * public List ctrlList; public List survList; public List lastCtrl; public
-	 * List lastSurv; public List prevCtrl; public List nextCtrl;
-	 *
-	 * public List prevSurv; public List nextSurv;
-	 */
-	
-	
-	//*******************CodedObject移植
-	private int code_;
-	private String name_;
-
-	public void codedObject() {
-		code_ = 0;
-		name_ = "Not named";
-	}
-	public void codedObject(int i) {
-		code_ = i;
-	}
-	public void setCode(int i) {
-		code_ = i;
-	}
-	public int getCode() {
-		return code_;
-	}
-	// 对象名字，由子类NamedObject实现赋值
-	public String getName() {
-		return name_;
-	}
-	public void setName(String name) {
-		name_ = name;
-	}
-	public boolean needDeepCopy() {
-		return false;
-	}
-	// 对象复制
-	public void deepCopy(CodedObject i) {
-		code_ = i.getCode();
-	}
-	// 对象id排序
-	public int cmp(CodedObject i) {
-		if (code_ < i.getCode())
-			return (-1);
-		else if (code_ > i.getCode())
-			return (1);
-		else
-			return (0);
-	}
-	// 识别对象是否相同
-	public boolean eq(CodedObject i) {
-		return (code_ == i.getCode());
-	}
-	// 根据id寻找对象
-	public int cmp(int c) {
-		if (code_ < c)
-			return (-1);
-		else if (code_ > c)
-			return (1);
-		else
-			return (0);
-	}
-	// 输出对象id
-	public void print() {
-
-	}
-	//*******************CodedObject移植
+	protected ArrayList<Path> paths;
 
 	public Link() {
-		codedObject();
-		state_ = 0;
-		nSamplesTravelTimeEnteringAt_ = null;
-		sumOfTravelTimeEnteringAt_ = null;
-		pathSet_ =new ArrayList<>();
+		state = 0;
+		segments = new ArrayList<>();
+		paths =new ArrayList<>();
+	}
+	public int getId(){
+		return this.id;
+	}
+	public String getName(){
+		return this.name;
+	}
+	public String getObjInfo(){
+		return this.objInfo;
 	}
 	public void setType(int t) {
-		type_ = t;
+		type = t;
 	}
 	public int getIndex() {
-		return index_;
+		return index;
 	}
 	public void setState(int s) {
-		state_ |= s;
+		state |= s;
 	}
 	public void unsetState(int s) {
-		state_ &= ~s;
+		state &= ~s;
 	}
 	public int type() {
-		return type_;
+		return type;
 	}
 	public int linkType() {
-		return type_ & Constants.LINK_TYPE_MASK;
+		return type & Constants.LINK_TYPE_MASK;
 	}
 	public int isInTunnel() {
-		return type_ & Constants.IN_TUNNEL_MASK;
+		return type & Constants.IN_TUNNEL_MASK;
 	}
 	public Node getUpNode() {
-		return upNode_;
+		return upNode;
 	}
 	public Node getDnNode() {
-		return dnNode_;
-	}
-	public int getnSegments() {
-		return nSegments_;
-	}
-	public int getStartSegmentIndex() {
-		return startSegmentIndex_;
+		return dnNode;
 	}
 	public int nSegments() {
-		return nSegments_;
+		return segments.size();
 	}
-	public Segment getSegment(int i) {
-		return RoadNetwork.getInstance().getSegment(startSegmentIndex_ + i);
+	public Segment getSegment(int index) {
+		return segments.get(index);
 	}
 	public Segment getStartSegment() {
-		return RoadNetwork.getInstance().getSegment(startSegmentIndex_);
+		return segments.get(0);
 	}
 	public Segment getEndSegment() {
-		return RoadNetwork.getInstance().getSegment(startSegmentIndex_ + nSegments_ - 1);
+		return segments.get(segments.size()-1);
+	}
+	public List<Segment> getSegments(){
+		return this.segments;
+	}
+	public void addSegment(Segment seg){ this.segments.add(seg);}
+	public void init(int id, int type, int index,Node upNode, Node dnNode){
+		this.id = id;
+		this.type =type;
+		this.upNode = upNode;
+		this.dnNode = dnNode;
+		this.index = index;
+		if(upNode == null || dnNode == null)
+			System.out.print("Error in init link");
+		upNode.addDnLink(this);
+		dnNode.addUpLink(this);
 	}
 	// 新增方法，用于组织二维数组，方便输出
 	public int[] getSumOfFlow() {
-		return nSamplesTravelTimeEnteringAt_;
+		return nSamplesTravelTimeEnteringAt;
 	}
 	// 新增方法，用于组织二维数组，方便输出
-	public float[] getAvgTravelTime() {
-		int num = sumOfTravelTimeEnteringAt_.length;
-		float[] avgtraveltime = new float[num];
+
+	public double[] getAvgTravelTime(int infoPeriods) {
+		int num = sumOfTravelTimeEnteringAt.length;
+		double[] avgtraveltime = new double[num];
 		for (int i = 0; i < num; i++) {
-			avgtraveltime[i] = averageTravelTimeEnteringAt(i);
+			avgtraveltime[i] = averageTravelTimeEnteringAt(i,infoPeriods);
 		}
 		return avgtraveltime;
 	}
-	public float calcCurrentTravelTime() {
-		float tt = 0.0f;
+	public double calcCurrentTravelTime() {
+		double tt = 0.0;
 		for (int i = 0; i < nSegments(); i++) {
 			tt += getSegment(i).calcCurrentTravelTime();
 		}
 		return tt;
 	}
-	public float calcTravelTime() {
-		return (float) travelTime_;
-	}
 	public double travelTime() {
-		return travelTime_;
+		return travelTime;
 	}
 	public double length() {
-		return length_;
+		return length;
 	}
 	public double freeSpeed() {
-		return freeSpeed_;
+		return freeSpeed;
 	}
 	public int nUpLinks() {
-		return (upNode_.nUpLinks());
+		return (upNode.nUpLinks());
 	}
 	public int nDnLinks() {
-		return (dnNode_.nDnLinks());
+		return (dnNode.nDnLinks());
 	}
 	public Link upLink(int i) {
-		return (upNode_.getUpLink(i));
+		return (upNode.getUpLink(i));
 	}
 	public Link dnLink(int i) {
-		return (dnNode_.getDnLink(i));
+		return (dnNode.getDnLink(i));
 	}
 	// Generalized travel time used in RN_TravelTime and shortest
-	// path calculation. It takes into account the freeway biases.
-	public float generalizeTravelTime(double x) {
+	// getPath calculation. It takes into account the freeway biases.
+	public double generalizeTravelTime(double x, double freewayBias) {
 		if (linkType() != Constants.LINK_TYPE_FREEWAY) {
-			x /= Parameter.getInstance().freewayBias();
+			x /= freewayBias;
 		}
-		return (float) x;
+		return x;
 	}
-	public float getGenTravelTime() {
-		return generalizeTravelTime(travelTime_);
+	public double getGenTravelTime(double freewayBias) {
+		return generalizeTravelTime(travelTime,freewayBias);
 	}
 
 	public double inboundAngle() {
@@ -275,8 +205,8 @@ public class Link extends DefaultWeightedEdge {
 	}
 
 	public void calcIndicesAtNodes() {
-		dnIndex_ = upNode_.whichDnLink(this);
-		upIndex_ = dnNode_.whichUpLink(this);
+		dnIndex = upNode.whichDnLink(this);
+		upIndex = dnNode.whichUpLink(this);
 	}
 	public void calcStaticInfo() {
 		double alpha = inboundAngle() + Math.PI;
@@ -285,14 +215,13 @@ public class Link extends DefaultWeightedEdge {
 		int narcs = nDnLinks();
 
 		// TOPOLOGY
-
 		// We want angle in range [0, 2PI)
 
 		if (alpha >= 2 * Math.PI)
 			alpha -= 2 * Math.PI;
 
 		min_beta = Constants.DBL_INF;
-		rightDnIndex_ = 0xff;
+		rightDnIndex = 0xff;
 
 		for (i = 0; i < narcs; i++) {
 
@@ -300,10 +229,6 @@ public class Link extends DefaultWeightedEdge {
 
 			// Skip the U turn
 
-			// if (beta < 0.0 && -beta < v_angle) continue;
-			// else if (beta > 0.0 && beta > u_angle) continue;
-
-			// if (beta < 0.0) beta += TWO_PI; // angle is in range (0,2PI)
 			if (beta <= 0.0)
 				beta += 2 * Math.PI;
 
@@ -311,28 +236,28 @@ public class Link extends DefaultWeightedEdge {
 
 			if (beta < min_beta) {
 				min_beta = beta;
-				rightDnIndex_ = (char) i;
+				rightDnIndex = (char) i;
 			}
 		}
 
 		// LENGTH, FREE FLOW TRAVEL TIME AND SPEED
 
 		Segment ps = getEndSegment();
-		length_ = 0.0;
-		travelTime_ = 0.0;
+		length = 0.0;
+		travelTime = 0.0;
 		while (ps != null) {
-			ps.setDistance((float) length_);
-			length_ += ps.getLength();
-			travelTime_ += ps.getLength() / ps.getFreeSpeed();
+			ps.setDistance(length);
+			length += ps.getLength();
+			travelTime += ps.getLength() / ps.getFreeSpeed();
 			ps = ps.getUpSegment();
 		}
-		freeSpeed_ = length_ / travelTime_;
+		freeSpeed = length / travelTime;
 
 		// CONNECTIVITY
 
 		// Connectivity to dnLinks
 
-		dnLegal_ = 0; // set all bits to 0
+		dnLegal = 0; // set all bits to 0
 
 		Lane plane = getEndSegment().getRightLane();
 		while (plane != null) {
@@ -343,24 +268,24 @@ public class Link extends DefaultWeightedEdge {
 			for (i = 0; i < n; i++) {
 				includeTurn(plane.dnLane(i).getLink());
 			}
-			plane = plane.getLeft();
+			plane = plane.getLeftLane();
 		}
 
 		// LANE USE RULES
 
-		laneUseRules_ = Constants.VEHICLE_LANE_USE;
+		laneUseRules = Constants.VEHICLE_LANE_USE;
 		plane = getStartSegment().getRightLane();
-		while (laneUseRules_ != 0 && plane != null) {
-			laneUseRules_ &= (plane.rules() & Constants.VEHICLE_LANE_USE);
-			plane = plane.getLeft();
+		while (laneUseRules != 0 && plane != null) {
+			laneUseRules &= (plane.rules() & Constants.VEHICLE_LANE_USE);
+			plane = plane.getLeftLane();
 		}
 	}
 	public int signalIndex(Link link) {
 		int i;
-		if (rightDnIndex_ != 0xFF && // defined
+		if (rightDnIndex != 0xFF && // defined
 				link != null) {
 			int n = nDnLinks();
-			i = (link.getDnIndex() - rightDnIndex_ + n) % n;
+			i = (link.getDnIndex() - rightDnIndex + n) % n;
 		}
 		else {
 			i = 0;
@@ -368,129 +293,32 @@ public class Link extends DefaultWeightedEdge {
 		return i;
 	}
 	public int getDnLegal() {
-		return dnLegal_;
+		return dnLegal;
 	}
 	public int getDnIndex() {
-		return dnIndex_;
+		return dnIndex;
 	}
 	public int getRightDnIndex() {
-		return rightDnIndex_;
+		return rightDnIndex;
 	}
 	public int getUpIndex() {
-		return upIndex_;
+		return upIndex;
 	}
 	public void includeTurn(Link link) {
-		dnLegal_ |= (1 << link.getDnIndex());
+		dnLegal |= (1 << link.getDnIndex());
 	}
 	public void excludeTurn(Link link) {
-		dnLegal_ &= ~(1 << link.getDnIndex());
+		dnLegal &= ~(1 << link.getDnIndex());
 	}
 	public int isMovementAllowed(Link other) {
-		return (dnLegal_ & (1 << other.getDnIndex()));
+		return (dnLegal & (1 << other.getDnIndex()));
 	}
 	public int laneUseRules() {
-		return laneUseRules_;
-	}
-	/*
-	 * public void assignCtrlListInSegments(){ // Find the first control device
-	 * or event in a segment by looking // the distance of the devices in that
-	 * segment.
-	 *
-	 * RN_Segment ps; List ctrl = ctrlList(); while (ctrl) { ps =
-	 * (ctrl).segment(); if (ps.ctrlList_ == null) { ps.ctrlList_ = ctrl; } else
-	 * if (ctrl.distance() > ((ps.ctrlList_).distance()) { ps.ctrlList_ = ctrl;
-	 * } ctrl = ctrl.next(); }
-	 *
-	 * // If no devices in a segment, the pointer should point to the // first
-	 * device in the downstream segment of the link.
-	 *
-	 * ps = getEndSegment(); ctrl = ps.ctrlList_; while (ps = ps.upstream()) {
-	 * if (ps.ctrlList_ == null) { ps.ctrlList_ = ctrl; } else { ctrl =
-	 * ps.ctrlList_; } } } public void assignSurvListInSegments(){ // Find the
-	 * first surveillance device in a segment by looking the // distance of the
-	 * devives in that segment.
-	 *
-	 * RN_Segment ps; SurvList surv = survList(); while (surv) { ps =
-	 * surv.segment(); if (ps.survList() == null) { ps.survList_ = surv; } else
-	 * if (surv.distance() > ((ps.survList_)).distance()) { ps.survList_ = surv;
-	 * } surv = surv.next(); }
-	 *
-	 * // If no devices in a segment, the pointer should point to the // first
-	 * device in the downstream segment of the link
-	 *
-	 * ps = getEndSegment(); surv = ps.survList_; while (ps = ps.upstream()) {
-	 * if (ps.survList_ == null) { ps.survList_ = surv; } else { surv =
-	 * ps.survList_; } } }
-	 *
-	 * public List getCtrlStationList() { return ctrlStationList_; } public List
-	 * getSurvStationList() { return survStationList_; }
-	 */
-	// This function is called by RN_Parser. It resturns -1 if a fatal
-	// error occurs, 1 if warning errors, and 0 if no error.
-	// notSolved
-
-	public int init(int c, int t, int up, int dn/* , int l */) {
-
-		/*
-		 * if (ToolKit::debug()) { cout << indent << "<" << c << endc << t <<
-		 * endc << up << endc << dn << endc << l << ">" << endl; }
-		 */
-
-		setCode(c);
-
-		type_ = t;
-
-		// Find the nodes coded as "up" and "dn"
-
-		upNode_ = RoadNetwork.getInstance().findNode(up);
-		dnNode_ = RoadNetwork.getInstance().findNode(dn);
-
-		if (upNode_ == null) {
-			// cerr << "Error:: Unknown UpNode <" << up << ">. ";
-			return (-1);
-		}
-		else if (dnNode_ == null) {
-			// cerr << "Error:: Unknown DnNode <" << dn << ">. ";
-			return (-1);
-		}
-
-		upNode_.addDnLink(this);
-		dnNode_.addUpLink(this);
-
-		// Find pointer to the street name
-		/*
-		 * if (l > 0 && (label_ = theNetwork->findLabel(l)) == NULL) { // cerr
-		 * << "Warning:: Unknown label <" << l << ">. "; return -1; } else {
-		 * label_ = null; }
-		 */
-
-		index_ = RoadNetwork.getInstance().nLinks();
-		nSegments_ = 0;
-		startSegmentIndex_ = RoadNetwork.getInstance().nSegments();
-		RoadNetwork.getInstance().addLink(this);
-		RoadNetwork.getInstance().addEdge(upNode_, dnNode_, this);
-		RoadNetwork.getInstance().setEdgeWeight(this, Double.POSITIVE_INFINITY);
-
-		return 0;
+		return laneUseRules;
 	}
 
-	public void printSensors() {
 
-	}
-	public void printSignals() {
 
-	}
-	public void printTollPlazas() {
-
-	}
-
-	public void printBusStops() {
-		// margaret
-	}
-
-	public void printNotConnectedDnLinks() {
-
-	}
 	public int countNotConnectedDnLinks() {
 		Link dnl;
 		int cnt = 0;
@@ -516,8 +344,8 @@ public class Link extends DefaultWeightedEdge {
 
 		// For inbound links at the upstream node
 
-		for (i = 0, n = upNode_.nUpLinks(); i < n; i++) {
-			link = upNode_.getUpLink(i);
+		for (i = 0, n = upNode.nUpLinks(); i < n; i++) {
+			link = upNode.getUpLink(i);
 			beta = link.inboundAngle();
 			beta += ((beta < Math.PI) ? (Math.PI) : (-Math.PI));
 			beta = alpha - beta;
@@ -533,8 +361,8 @@ public class Link extends DefaultWeightedEdge {
 
 		// For outbound links at the upstream node
 
-		for (i = 0, n = upNode_.nDnLinks(); i < n; i++) {
-			link = upNode_.getDnLink(i);
+		for (i = 0, n = upNode.nDnLinks(); i < n; i++) {
+			link = upNode.getDnLink(i);
 			if (link == this)
 				continue;
 			beta = alpha - link.outboundAngle();
@@ -570,8 +398,8 @@ public class Link extends DefaultWeightedEdge {
 
 		// For outbound links at the downstream node
 
-		for (i = 0, n = dnNode_.nDnLinks(); i < n; i++) {
-			link = dnNode_.getDnLink(i);
+		for (i = 0, n = dnNode.nDnLinks(); i < n; i++) {
+			link = dnNode.getDnLink(i);
 			beta = link.outboundAngle() - alpha;
 			if (beta < 0.0)
 				beta += 2 * Math.PI;
@@ -585,8 +413,8 @@ public class Link extends DefaultWeightedEdge {
 
 		// For inbound links at the downstream node
 
-		for (i = 0, n = dnNode_.nUpLinks(); i < n; i++) {
-			link = dnNode_.getUpLink(i);
+		for (i = 0, n = dnNode.nUpLinks(); i < n; i++) {
+			link = dnNode.getUpLink(i);
 			if (link == this)
 				continue;
 			beta = link.inboundAngle();
@@ -610,7 +438,7 @@ public class Link extends DefaultWeightedEdge {
 	}
 
 	public int isMarked() {
-		return state_ & Constants.STATE_MARKED;
+		return state & Constants.STATE_MARKED;
 	}
 
 	public void unmarkLanes() {
@@ -619,7 +447,7 @@ public class Link extends DefaultWeightedEdge {
 			Lane pl = ps.getRightLane();
 			while (pl != null) {
 				pl.unsetState(Constants.STATE_MARKED);
-				pl = pl.getLeft();
+				pl = pl.getLeftLane();
 			}
 			ps = ps.getDnSegment();
 		}
@@ -636,124 +464,63 @@ public class Link extends DefaultWeightedEdge {
 			dnLink(i).unmarkLanes();
 		}
 	}
-	/*
-	 * //待处理 public void calcPathCommonalityFactors(){ int i, j; Map<int, int,
-	 * less<int> > lid_type; Set<int, less<int> > nid_type;
-	 *
-	 * // Destination nodes completed so far
-	 *
-	 * nid_type nids; nid_type::iterator ni;
-	 *
-	 * RN_PathPointer pp; RN_Path p; RN_Link pl; RN_Node pn;
-	 *
-	 * for (int di = 0; di < nPathPointers(); di ++) { pp = pathPointer(di); pn
-	 * = pp.desNode(); ni = nids.find(pn.get_code()); if (ni != nids.end())
-	 * continue; // already processed
-	 *
-	 * nids.insert(pn.get_code()); // register the node being processed
-	 *
-	 * // Number of paths that connected to the same destination and // share a
-	 * given link
-	 *
-	 * lid_type lids; lid_type::iterator li; // cout <<
-	 * " I am in the Outer Loop \n" ;
-	 *
-	 * // Count the number of paths that share each link
-	 *
-	 * for (i = 0; i < nPathPointers(); i ++) {
-	 *
-	 * // cout << " number of Paths " << nPathPointers() << "\n"; pp =
-	 * pathPointer(i); if (pp->desNode() != pn) continue; // path not connected
-	 * to pn
-	 *
-	 * p = pp->path(); // for (j = pp->position() + 1; j < p->nLinks(); j ++) {
-	 * for (j = pp->position(); j < p->nLinks(); j ++) { // cout << "Position "
-	 * << pp->position() << " j " << j << " Number of Links " << p->nLinks() <<
-	 * "\n"; pl = p->link(j); li = lids.find(pl->code()); if (li == lids.end())
-	 * { // first time lids[pl->code()] = 1; } else { // count the use of the
-	 * link pl lids[pl->code()] += 1; } // cout << " lids for " << pl->code() <<
-	 * "is " << lids[pl->code()] << "\n"; } }
-	 *
-	 * // Calculate commonality factors for paths connected to node pn
-	 *
-	 * for (i = 0; i < nPathPointers(); i ++) { pp = pathPointer(i); if
-	 * (pp->desNode() != pn) continue; // path not connected to pn
-	 *
-	 * p = pp->path();
-	 *
-	 * float cf = 0.0; float total_length = 0.0; // for (j = pp->position() + 1;
-	 * j < p->nLinks(); j ++) { for (j = pp->position(); j < p->nLinks(); j ++)
-	 * { pl = p->link(j); total_length += pl->length(); cf += lids[pl->code()] *
-	 * pl->length(); // cout << " Inside the first cf loop " << cf << "\n"; } if
-	 * (cf > FLT_MIN) { cf = log(cf / total_length); } pp->cf(cf); // cout <<
-	 * " cf " << cf << "\n"; }
-	 *
-	 * } } public void printPathCommonalityFactors(){
-	 *
-	 * }
-	 */
 
 	public int isCorrect(Vehicle pv) {
 		// 未处理，int转boolean
-		if (laneUseRules_ == 0 || (laneUseRules_ & (pv.types() & Constants.VEHICLE_LANE_USE)) != 0)
+		if (laneUseRules == 0 || (laneUseRules & (pv.types() & Constants.VEHICLE_LANE_USE)) != 0)
 			return 1;
 		else
 			return 0;
 	}
-	/*
-	 * public static int infoPeriods(){ return theGuidedRoute.infoPeriods(); }
-	 * public static int infoPeriodLength(){ return
-	 * theGuidedRoute.infoPeriodLength(); }
-	 */
-	public void resetStatistics(int col, int ncols) {
+
+	public void resetStatistics(int col, int ncols, int infoPeriods) {
 		int num = col + ncols;
-		num = Math.min(LinkTimes.getInstance().infoPeriods(), num);
+		num = Math.min(infoPeriods, num);
 		for (int i = col; i < num; i++) {
-			nSamplesTravelTimeEnteringAt_[i] = 0;
-			sumOfTravelTimeEnteringAt_[i] = 0;
+			nSamplesTravelTimeEnteringAt[i] = 0;
+			sumOfTravelTimeEnteringAt[i] = 0;
 		}
 	}
 	// 新增代码，复位统计Link流量和旅行时间的数组，用于参数校准，仿真重启
-	public void resetStatistics() {
-		int num = LinkTimes.getInstance().infoPeriods();
+	public void resetStatistics(int infoPeriods) {
+		int num = infoPeriods;
 		for (int i = 0; i < num; i++) {
-			nSamplesTravelTimeEnteringAt_[i] = 0;
-			sumOfTravelTimeEnteringAt_[i] = 0;
+			nSamplesTravelTimeEnteringAt[i] = 0;
+			sumOfTravelTimeEnteringAt[i] = 0;
 		}
 	}
 	// Link travel time
 
-	public void initializeStatistics() {
-		int n = LinkTimes.getInstance().infoPeriods();
-		nSamplesTravelTimeEnteringAt_ = new int[n];
-		sumOfTravelTimeEnteringAt_ = new float[n];
-		resetStatistics(0, n);
+	public void initializeStatistics(int infoPeriods) {
+		int n = infoPeriods;
+		nSamplesTravelTimeEnteringAt = new int[n];
+		sumOfTravelTimeEnteringAt = new double[n];
+		resetStatistics(0, n, infoPeriods);
 	}
 
 	// called when a vehicle leaves the link
 
-	public void recordTravelTime(Vehicle pv) {
+	public void recordTravelTime(Vehicle pv,LinkTimes linkTimes) {
 		// Tavel time spent in current segment
-
-		float tt = pv.timeInLink();
+		double tt = pv.timeInLink(linkTimes.simClock.getCurrentTime());
 
 		// These are for calculating average travel time for the vehicle
 		// who ENTER this segment during the reporting time interval.
 
 		// Calculate the ID of the entry time period.
 
-		int i = LinkTimes.getInstance().whichPeriod(pv.timeEntersLink());
+		int i = linkTimes.whichPeriod(pv.timeEntersLink());
 
 		// Time spent in this link
 		// idList_.add(pv.get_code());
-		sumOfTravelTimeEnteringAt_[i] += tt;
-		nSamplesTravelTimeEnteringAt_[i]++;
+		sumOfTravelTimeEnteringAt[i] += tt;
+		nSamplesTravelTimeEnteringAt[i]++;
 	}
 
 	// called for each vehicle in the network, include these in
 	// the pretrip queues, at the end of the simulation
 
-	public void recordExpectedTravelTime(Vehicle pv) {
+	public void recordExpectedTravelTime(Vehicle pv,LinkTimes linkTimes) {
 		// Tavel time spent in current link
 
 		double pos;
@@ -762,133 +529,107 @@ public class Link extends DefaultWeightedEdge {
 			pos = pv.distanceFromDownNode();
 		}
 		else {
-			pos = length_;
+			pos = length;
 		}
 
 		// Calculate the ID of the entry time period.
 
-		int i = LinkTimes.getInstance().whichPeriod(pv.timeEntersLink());
+		int i = linkTimes.whichPeriod(pv.timeEntersLink());
 
-		float ht = LinkTimes.getInstance().linkTime(this, pv.timeEntersLink());
-		float tt = pv.timeInLink();
+		double ht = linkTimes.linkTime(this, pv.timeEntersLink());
+		double tt = pv.timeInLink(linkTimes.simClock.getCurrentTime());
 
 		// Section added Joseph Scariza 11/6/01
-		if (pos < 0.25 * length_) {
-			tt += tt * pos / (length_ - pos);
+		if (pos < 0.25 * length) {
+			tt += tt * pos / (length - pos);
 		}
 		// Accumulate vehicle's time in this link
 
-		sumOfTravelTimeEnteringAt_[i] += tt;
-		nSamplesTravelTimeEnteringAt_[i]++;
+		sumOfTravelTimeEnteringAt[i] += tt;
+		nSamplesTravelTimeEnteringAt[i]++;
 
 	}
 
 	// These are valid only after all the vehicles entered the
 	// link in interval i have left the link.
 
-	public float averageTravelTimeEnteringAt(double enter) {
-		int i = LinkTimes.getInstance().whichPeriod(enter);
-		return averageTravelTimeEnteringAt(i);
+	public double averageTravelTimeEnteringAt(double enter, LinkTimes linkTimes) {
+		int i = linkTimes.whichPeriod(enter);
+		return averageTravelTimeEnteringAt(i,linkTimes.infoPeriods);
 	}
-	public float averageTravelTimeEnteringAt(int i) {
-		int num = nSamplesTravelTimeEnteringAt_[i];
+	public double averageTravelTimeEnteringAt(int i, int infoPeriods) {
+		int num = nSamplesTravelTimeEnteringAt[i];
 		if (num > 0) {
-			return sumOfTravelTimeEnteringAt_[i] / num;// 这玩意儿坑人！：/*/0.3047;*/
+			return sumOfTravelTimeEnteringAt[i] / num;// 这玩意儿坑人！：/*/0.3047;*/
 		}
 		else { // no sample
 			int p = i - 1, n = i + 1;
-			int m = LinkTimes.getInstance().infoPeriods();
+			int m = infoPeriods;
 
 			// Find the first no empty previous time intervals
-			while (p >= 0 && nSamplesTravelTimeEnteringAt_[p] == 0)
+			while (p >= 0 && nSamplesTravelTimeEnteringAt[p] == 0)
 				p--;
 
 			// Find the first no empty next time intervals
-			while (n < m && nSamplesTravelTimeEnteringAt_[n] == 0)
+			while (n < m && nSamplesTravelTimeEnteringAt[n] == 0)
 				n++;
 
-			float tt = 0;
+			double tt = 0;
 			num = 0;
 			if (p >= 0) { // use a previous interval
-				tt += sumOfTravelTimeEnteringAt_[p];
-				num += nSamplesTravelTimeEnteringAt_[p];
+				tt += sumOfTravelTimeEnteringAt[p];
+				num += nSamplesTravelTimeEnteringAt[p];
 			}
 			if (n < m) { // use a next interval
-				tt += sumOfTravelTimeEnteringAt_[n];
-				num += nSamplesTravelTimeEnteringAt_[n];
+				tt += sumOfTravelTimeEnteringAt[n];
+				num += nSamplesTravelTimeEnteringAt[n];
 			}
 
 			if (num > 0) {
 				return tt / num;
 			}
-			else { // cout<<"fs"<<freeSpeed_<<endl; // use free flow travel time
-				return (float) (length_ / freeSpeed_);// 同理坑人0.3047 ;
+			else {  // use free flow travel time
+				return  (length / freeSpeed);// 同理坑人0.3047 ;
 			}
 		}
 	}
-
-	public void printTravelTimes() {
+	//
+	public int isNeighbor(Link link) {
+		if (this.getDnNode().whichDnLink(link) < 0)
+			return 0;
+		return 1;
 
 	}
-	public void printReloadableTravelTimes() {
-
-	}
-	public void printFlowPlusTravelTimes(int runtimes) throws IOException {
-		String opstr = aryToString(sumOfTravelTimeEnteringAt_, nSamplesTravelTimeEnteringAt_);
-		String s = String.valueOf(runtimes);
-		String filepath = "E:\\MesoOutput" + s + ".txt";
-		FileOutputStream out = new FileOutputStream(filepath, true);
-		OutputStreamWriter osw = new OutputStreamWriter(out, "utf-8");
-		BufferedWriter bw = new BufferedWriter(osw);
-		bw.write(opstr);
-		bw.close();
-	}
-
-	private String aryToString(float[] ary1, int[] ary2) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("LinkCode:").append(getCode());
-		sb.append(",Length:").append(length());
-		sb.append('\r');
-		sb.append('\n');
-		for (int i = 0; i < ary1.length; i++) {
-			double t = averageTravelTimeEnteringAt(i);
-			sb.append(t).append(",");
-			if (i != ary1.length - 1) {
-				sb.append(ary2[i]).append('\t');
-			}
-			else {
-				sb.append(ary2[i]).append('\r');
-				sb.append('\n');
-			}
-		}
-		return sb.toString();
-	}
+	/*
 	public void outputToOracle(PreparedStatement ps) throws SQLException {
 		// String sql = "insert into MESO_OUTPUT_TEST (LinkID, CTime, Flow,
 		// TravelTime) values (?, ?, ?, ?)";
 		// Connection connection = JdbcUtils.getConnection();
 		// ps = con.prepareStatement(sql);
-		int num = nSamplesTravelTimeEnteringAt_.length;
+		int num = nSamplesTravelTimeEnteringAt.length;
 		for (int i = 0; i < num; i++) {
-			Date date = LinkTimes.getInstance().toDate((i + 1));
-			ps.setInt(1, getCode());
+			// TODO 待改
+			Date date;// = LinkTimes.getInstance().toDate((i + 1));
+			ps.setInt(1, this.id);
 			ps.setDate(2, new java.sql.Date(date.getTime()));
 			ps.setTimestamp(2, new java.sql.Timestamp(date.getTime()));
-			ps.setInt(3, nSamplesTravelTimeEnteringAt_[i]);
-			ps.setFloat(4, averageTravelTimeEnteringAt(i));
+			ps.setInt(3, nSamplesTravelTimeEnteringAt[i]);
+			ps.setDouble(4, averageTravelTimeEnteringAt(i));
 			ps.addBatch();
 		}
 		ps.executeBatch();
+	}*/
+	public int nPaths() {
+		return paths.size();
 	}
-	public int nPaths() { return pathSet_.size(); }
 	public Path pathPointer(int i)
 	{
 		if (i < 0) {
 			  return null;
-			} else if (i >= pathSet_.size()) {
+			} else if (i >= paths.size()) {
 			  return null;
 			} else {
-			  return pathSet_.get(i);
+			  return paths.get(i);
 			}
 	}
 

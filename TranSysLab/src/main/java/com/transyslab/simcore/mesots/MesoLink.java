@@ -4,31 +4,30 @@
 package com.transyslab.simcore.mesots;
 
 import com.transyslab.roadnetwork.Link;
-import com.transyslab.roadnetwork.Segment;
 
 /**
  * @author its312
  *
  */
 public class MesoLink extends Link {
-	// friend class MESO_Network
-	protected MesoVehicle queueHead_ = new MesoVehicle(); // first vehicle in
+
+	protected MesoVehicle queueHead = new MesoVehicle(); // first vehicle in
 															// the queue
-	protected MesoVehicle queueTail_ = new MesoVehicle(); // last vehicle in the
+	protected MesoVehicle queueTail = new MesoVehicle(); // last vehicle in the
 															// queue
 	protected int queueLength_; // number of vehicle in the queue
 
 	public MesoLink() {
-		queueHead_ = null;
-		queueTail_ = null;
+		queueHead = null;
+		queueTail = null;
 		queueLength_ = 0;
 	}
 
 	public MesoVehicle queueHead() {
-		return queueHead_;
+		return queueHead;
 	}
 	public MesoVehicle queueTail() {
-		return queueTail_;
+		return queueTail;
 	}
 	public int queueLength() {
 		return queueLength_;
@@ -64,27 +63,27 @@ public class MesoLink extends Link {
 			pv.leading().trailing(pv.trailing());
 		}
 		else { /* first vehicle in the queue */
-			queueHead_ = pv.trailing();
+			queueHead = pv.trailing();
 		}
 		if (pv.trailing() != null) {
 			pv.trailing().leading(pv.leading());
 		}
 		else { /* last vehicle in the queue */
-			queueTail_ = pv.leading();
+			queueTail = pv.leading();
 		}
 		queueLength_--;
 		// theStatus.nInQueue(-1);
 	}
 
 	public void queue(MesoVehicle vehicle) {
-		if (queueTail_ != null) { /* current queue is not empty */
-			queueTail_.trailing(vehicle);
-			vehicle.leading(queueTail_);
-			queueTail_ = vehicle;
+		if (queueTail != null) { /* current queue is not empty */
+			queueTail.trailing(vehicle);
+			vehicle.leading(queueTail);
+			queueTail = vehicle;
 		}
 		else { /* current queue is empty */
 			vehicle.leading(null);
-			queueHead_ = queueTail_ = vehicle;
+			queueHead = queueTail = vehicle;
 		}
 		vehicle.trailing(null);
 		queueLength_++;
@@ -92,14 +91,14 @@ public class MesoLink extends Link {
 	}
 
 	public void prequeue(MesoVehicle vehicle) {
-		if (queueHead_ != null) { /* current queue is not empty */
-			queueHead_.leading(vehicle);
-			vehicle.trailing(queueHead_);
-			queueHead_ = vehicle;
+		if (queueHead != null) { /* current queue is not empty */
+			queueHead.leading(vehicle);
+			vehicle.trailing(queueHead);
+			queueHead = vehicle;
 		}
 		else { /* current queue is empty */
 			vehicle.trailing(null);
-			queueHead_ = queueTail_ = vehicle;
+			queueHead = queueTail = vehicle;
 		}
 		vehicle.leading(null);
 		queueLength_++;
@@ -111,21 +110,8 @@ public class MesoLink extends Link {
 	 * Move vehicles based on current cell speeds. This function is called by
 	 * MESO_Node::advanceVehicles() in random permuted order.
 	 */
-	public void advanceVehicles() {
-		MesoSegment ps = (MesoSegment) getEndSegment();
-		while (ps != null) {
-			ps.advanceVehicles();
-			ps.formatTrafficCells();
-			ps = ps.getUpSegment();
-		}
-	}
-	/*
-	 * Add a vehicle at the upstream end of the link.
-	 */
-	public void append(MesoVehicle vehicle) {
-		MesoSegment ps = (MesoSegment) getStartSegment();
-		ps.append(vehicle);
-	}
+
+
 
 	public void checkConnectivity() {
 	}
@@ -134,35 +120,14 @@ public class MesoLink extends Link {
 		return ((MesoSegment) getStartSegment()).isJammed();
 	}
 
-	public void clean() {
-		// Remove vehicles in pretrip queue
-
-		while (queueHead_ != null) {
-			queueTail_ = queueHead_;
-			queueHead_ = queueHead_.trailing_;
-			MesoVehicleList.getInstance().recycle(queueTail_);
-		}
-		queueTail_ = null;
-		queueLength_ = 0;
-
-		// Remove vehicles in each segment
-
-		Segment ps = getStartSegment();
-		while (ps != null) {
-			((MesoSegment) ps).clean();
-			ps = ps.getDnSegment();
-		}
-	}
-
-	@Override
-	public float calcTravelTime() // virtual
+	public double calcTravelTime(double currentTime) // virtual
 	{
 		MesoSegment ps = (MesoSegment) getStartSegment();
 		MesoTrafficCell pc = new MesoTrafficCell();
 		MesoVehicle pv = new MesoVehicle();
 		double sum = 0.0;
 		int cnt = 0;
-		float tt = (float) travelTime();
+		double tt =  travelTime();
 
 		// Vehicles already on the link
 
@@ -171,8 +136,8 @@ public class MesoLink extends Link {
 			while (pc != null) {
 				pv = pc.firstVehicle();
 				while (pv != null) {
-					float pos = pv.distanceFromDownNode();
-					sum += pv.timeInLink() + pos / length() * tt;
+					double pos = pv.distanceFromDownNode();
+					sum += pv.timeInLink(currentTime) + pos / length() * tt;
 					cnt++;
 					pv = pv.trailing();
 				}
@@ -183,15 +148,15 @@ public class MesoLink extends Link {
 
 		// Vehicles in pretrip queue
 
-		pv = queueHead_;
+		pv = queueHead;
 		while (pv != null) {
-			sum += pv.timeInLink() + tt * 1.25;
+			sum += pv.timeInLink(currentTime) + tt * 1.25;
 			cnt++;
 			pv = pv.trailing();
 		}
 
 		if (cnt != 0) {
-			return (float) (sum / cnt);
+			return (sum / cnt);
 		}
 		else {
 			return tt;

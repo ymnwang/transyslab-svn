@@ -16,7 +16,7 @@ public class MLPSegment extends Segment{
 		startDSP = 0;
 		endDSP = 0;
 		lanes = new ArrayList<>();
-		//laneIdxs_ = new int[nLanes_];//不能在此实例化laneIdxsx此时nLanes_的值未被计算
+		//laneIdxs_ = new int[nLanes];//不能在此实例化laneIdxsx此时nLanes_的值未被计算
 	}
 	
 	@Override
@@ -35,57 +35,57 @@ public class MLPSegment extends Segment{
 	@Override
 	public void calcStaticInfo() {
 		if ((getDnSegment() == null)) {
-			localType_ |= 0x0001;
+			localType |= 0x0001;
 			if (getLink().nDnLinks() < 1 || getLink().getDnNode().type(0x0001) > 0) {
-				localType_ |= 0x0020;
+				localType |= 0x0020;
 			}
 		}
 		if (getUpSegment() == null) {
-			localType_ |= 0x0002;
+			localType |= 0x0002;
 			if (getLink().nUpLinks() < 1 || getLink().getUpNode().type(0x0001) > 0) {
-				localType_ |= 0x0010;
+				localType |= 0x0010;
 			}
 		}
-		RoadNetwork.getInstance().totalLinkLength_ += length_;
-		RoadNetwork.getInstance().totalLaneLength_ += length_ * nLanes_;
+		RoadNetwork.getInstance().totalLinkLength += length;
+		RoadNetwork.getInstance().totalLaneLength += length * nLanes;
 
-		if (sdIndex_ < 0 || sdIndex_ >= RoadNetwork.getInstance().nSdFns()) {
+		if (sdIndex < 0 || sdIndex >= RoadNetwork.getInstance().nSdFns()) {
 			// cerr << "Segment " << code_ << " has invalid sdIndex "
-			// << sdIndex_ << "." << endl;
-			sdIndex_ = 0;
+			// << sdIndex << "." << endl;
+			sdIndex = 0;
 		}
 		
 		//延迟实例化,因为需要nLanes_被解释（计算）之后laneIdxs才能被正确地初始化
 		if (laneIdxs_==null) 
-			laneIdxs_ = new int[nLanes_];
-		for(int i= 0;i<nLanes_;i++){
-			laneIdxs_[i] = leftLaneIndex_ + i;
+			laneIdxs_ = new int[nLanes];
+		for(int i = 0; i< nLanes; i++){
+			laneIdxs_[i] = leftLaneIndex + i;
 		}
 		
 	}
 	
 	public boolean isEndSeg() {
-		return link_.getEndSegment().getCode() == this.getCode();
+		return link.getEndSegment().getCode() == this.getCode();
 	}
 
 	public boolean isStartSeg() {
-		return link_.getStartSegment().getCode() == this.getCode();
+		return link.getStartSegment().getCode() == this.getCode();
 	}
 	/*public void calcState() {
-		density_ = (float) (1000.0f * nVehicles() / (length_ * nLanes()));
+		density_ = (float) (1000.0f * nVehicles() / (length * nLanes()));
 		densityList_.add(density_);
 		if (nVehicles() <= 0) {
-			speedList_.add(maxSpeed());
+			speedList.add(maxSpeed());
 		}
 		else {
 			float sum = 0.0f;
-			MesoTrafficCell cell = firstCell_;
+			MesoTrafficCell cell = firstCell;
 			MesoVehicle pv;
 			while (cell != null) {
 				pv = cell.firstVehicle();
 				while (pv != null) {
-					if (pv.currentSpeed() > Constants.SPEED_EPSILON) {
-						sum += 1.0f / pv.currentSpeed();
+					if (pv.getCurrentSpeed() > Constants.SPEED_EPSILON) {
+						sum += 1.0f / pv.getCurrentSpeed();
 					}
 					else {
 						sum += 1.0f / Constants.SPEED_EPSILON;
@@ -95,10 +95,10 @@ public class MLPSegment extends Segment{
 				cell = cell.trailing();
 			}
 			speed_ = nVehicles() / sum;
-			speedList_.add(speed_ * 3.6f);
+			speedList.add(speed_ * 3.6f);
 		}
 		float x = 3.6f * speed_ * density_;
-		flowList_.add(Math.round(x));// vehicle/hour
+		flowList.add(Math.round(x));// vehicle/hour
 
 		// return (density_);//vehicle/km
 	}*/
@@ -109,27 +109,27 @@ public class MLPSegment extends Segment{
 			dealSuccessive(dnSeg);
 			return;
 		}
-		int ndnLinks = link_.nDnLinks();
+		int ndnLinks = link.nDnLinks();
 		if (ndnLinks > 0) {
 			for (int i = 0; i < ndnLinks; i++) {
-				MLPSegment startSeg = (MLPSegment) link_.dnLink(i).getStartSegment();
+				MLPSegment startSeg = (MLPSegment) link.dnLink(i).getStartSegment();
 				dealSuccessive(startSeg);
 			}
 		}
 	}
 	private void dealSuccessive(MLPSegment dnSeg) {
-		if (nLanes_ == dnSeg.nLanes()) {
-			for (int i = 0; i < nLanes_; i++) {
+		if (nLanes == dnSeg.nLanes()) {
+			for (int i = 0; i < nLanes; i++) {
 				getLane(i).successiveDnLanes.add(dnSeg.getLane(i));
 				dnSeg.getLane(i).successiveUpLanes.add(getLane(i));
 			}
 		}
 		else {
-			int m = Math.min(nLanes_, dnSeg.nLanes());
+			int m = Math.min(nLanes, dnSeg.nLanes());
 			double sumLF = 0.0, sumLFSquared = 0.0, sumRT = 0.0, sumRTSquared = 0.0;
 			for (int i = 0; i < m; i++) {
 				double tmpLF = getLane(i).getEndPnt().distanceSquared(dnSeg.getLane(i).getStartPnt());
-				double tmpRT = getLane(nLanes_-1-i).getEndPnt().distanceSquared(dnSeg.getLane(dnSeg.nLanes()-1-i).getStartPnt());
+				double tmpRT = getLane(nLanes -1-i).getEndPnt().distanceSquared(dnSeg.getLane(dnSeg.nLanes()-1-i).getStartPnt());
 				sumLFSquared += tmpLF;
 				sumLF += Math.sqrt(tmpLF);
 				sumRTSquared += tmpRT;
@@ -145,8 +145,8 @@ public class MLPSegment extends Segment{
 			}
 			else {
 				for (int i = 0; i < m; i++) {
-					getLane(nLanes_-1-i).successiveDnLanes.add(dnSeg.getLane(dnSeg.nLanes()-1-i));
-					dnSeg.getLane(dnSeg.nLanes()-1-i).successiveUpLanes.add(getLane(nLanes_-1-i));
+					getLane(nLanes -1-i).successiveDnLanes.add(dnSeg.getLane(dnSeg.nLanes()-1-i));
+					dnSeg.getLane(dnSeg.nLanes()-1-i).successiveUpLanes.add(getLane(nLanes -1-i));
 				}
 			}
 		}
@@ -157,7 +157,7 @@ public class MLPSegment extends Segment{
 		return (MLPLane) super.getLane(i);
 	}
 	public void organizeLanes(){
-		for (int i = 0; i < nLanes_; i++) {
+		for (int i = 0; i < nLanes; i++) {
 			lanes.add(getLane(i));
 		}
 	}

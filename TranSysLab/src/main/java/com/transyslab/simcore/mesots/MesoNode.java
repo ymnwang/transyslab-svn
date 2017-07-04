@@ -18,7 +18,8 @@ public class MesoNode extends Node {
 	}
 	protected static int[][] supply_ = new int[3][]; // for each movement
 	private static int[][] demand_ = new int[3][]; // for each movement
-	public void calcStaticInfo() // virtual
+	/*
+	public void calcStaticInfo()
 	{
 		superCalcStaticInfo();
 
@@ -56,8 +57,8 @@ public class MesoNode extends Node {
 			while (cell != null) {
 				vehicle = cell.firstVehicle();
 				while (vehicle != null) {
-					link = vehicle.nextLink();
-					float pos = vehicle.distance() - vehicle.currentSpeed() * dt;
+					link = vehicle.getNextLink();
+					float pos = vehicle.getDistance() - vehicle.getCurrentSpeed() * dt;
 					if (link != null && pos <= 0.0) {
 						j = link.getDnIndex();
 						demand_[threadid][i * m + j]++;
@@ -102,5 +103,5 @@ public class MesoNode extends Node {
 				}
 			}
 		}
-	}
+	}*/
 }

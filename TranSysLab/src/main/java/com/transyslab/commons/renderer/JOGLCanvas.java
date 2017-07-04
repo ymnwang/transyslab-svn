@@ -5,24 +5,12 @@ import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.glu.GLU;
-import com.jogamp.opengl.glu.GLUquadric;
-import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
-import com.transyslab.roadnetwork.Boundary;
-import com.transyslab.roadnetwork.CodedObject;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.Lane;
-import com.transyslab.roadnetwork.GeoPoint;
-import com.transyslab.roadnetwork.RoadNetwork;
-import com.transyslab.roadnetwork.Segment;
-import com.transyslab.roadnetwork.Vehicle;
-import com.transyslab.roadnetwork.GeoSurface;
-import com.transyslab.roadnetwork.VehicleData;
-import com.transyslab.roadnetwork.VehicleDataPool;
+import com.transyslab.roadnetwork.*;
 import com.transyslab.simcore.mlp.MLPNetwork;
 
 
@@ -54,9 +42,9 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	private boolean isMidBtnDragged, isRightBtnDragged;
 	private boolean isPicking;
 	private boolean isFirstRender;
-	private List<CodedObject> pickedObjects;
+	private List<NetworkObject> pickedObjects;
 	// 临时记录已选择的对象
-	private CodedObject preObject;
+	private NetworkObject preObject;
 	private AnimationFrame curFrame; 
 	//
 	public boolean isPause;
@@ -199,7 +187,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				//车道选择
 				/*
 				for(int i=0;i<drawableNetwork_.nLanes();i++){
-					GeoSurface laneSf = drawableNetwork_.getLane(i).getLaneSurface();
+					GeoSurface laneSf = drawableNetwork_.getLane(i).getSurface();
 					if(GeoUtil.isIntersect(raycast,laneSf)){
 						//被选中对象用黄色渲染
 						laneSf.setSelected(true);
@@ -279,7 +267,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		}*/
 		if(camHeight<200){
 			for(int i=0;i<drawableNetwork_.nLanes();i++){
-				GeoSurface lanesf = drawableNetwork_.getLane(i).getLaneSurface();
+				GeoSurface lanesf = drawableNetwork_.getLane(i).getSurface();
 //				ShapeUtil.drawPoint(gl, drawableNetwork_.getLane(i).getStartPnt().getLocationX(), drawableNetwork_.getLane(i).getStartPnt().getLocationY(),0.5, 10, Constants.COLOR_RED);
 //				ShapeUtil.drawPoint(gl, drawableNetwork_.getLane(i).getEndPnt().getLocationX(), drawableNetwork_.getLane(i).getEndPnt().getLocationY(),0.5, 10, Constants.COLOR_BLUE);
 				

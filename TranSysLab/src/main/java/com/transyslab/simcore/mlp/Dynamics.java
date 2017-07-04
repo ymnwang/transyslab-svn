@@ -23,8 +23,8 @@ public class Dynamics {
 		}
 	}
 	public double cfFun(MLPVehicle theVeh){
-		double gap = theVeh.leading_.Displacement() - theVeh.leading_.getLength() - theVeh.Displacement(); 
-		double vlead = (double) theVeh.leading_.currentSpeed();
+		double gap = theVeh.leading.Displacement() - theVeh.leading.getLength() - theVeh.Displacement();
+		double vlead = (double) theVeh.leading.getCurrentSpeed();
 		double upperGap = MLPParameter.getInstance().CF_FAR;
 		if(gap < MLPParameter.getInstance().CF_NEAR) {
 			return vlead;
@@ -42,19 +42,19 @@ public class Dynamics {
 		}
 	}
 	public double updateHeadSpd(MLPVehicle headVeh){
-		MLPLane nextLane = headVeh.lane_.connectedDnLane;
-		if (headVeh.distance() < MLPParameter.SEG_NEAR && 
+		MLPLane nextLane = headVeh.lane.connectedDnLane;
+		if (headVeh.getDistance() < MLPParameter.SEG_NEAR &&
 				nextLane != null && (!nextLane.enterAllowed || !nextLane.checkVolum(headVeh))) {
 			//过于接近seg末端 且 下游seg容量已满， 需停车等待
 			return 0.0;
 		}
 		
-		if (headVeh.leading_ != null) {
+		if (headVeh.leading != null) {
 			return cfFun(headVeh);
 		}
-		else if (((MLPSegment)headVeh.link_.getEndSegment()).endDSP - headVeh.Displacement() > 
+		else if (((MLPSegment)headVeh.link.getEndSegment()).endDSP - headVeh.Displacement() >
 						MLPParameter.getInstance().CELL_RSP_UPPER ||
-				headVeh.segment_.isTheEnd() != 0) {
+				headVeh.segment.isTheEnd() != 0) {
 			//距离终点较远 或 处于endSegment(无限制)
 			return sdPara[0];
 		}

@@ -107,7 +107,7 @@ public class PSO {
 		gbest_fitness_ = 1e6f;
 		dims_ = dim;
 
-		// int index = -1;
+		// int indexInLinks = -1;
 		pars_ = new Particle[pcount_];
 		plower_ = pl;
 		pupper_ = pu;

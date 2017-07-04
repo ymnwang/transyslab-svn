@@ -2,8 +2,6 @@ package com.transyslab.commons.tools;
 
 import com.transyslab.simcore.mlp.MLPNetwork;
 
-import java.util.Comparator;
-
 public class Inflow {
 	public double time;
 	public double speed; // unit m/s
@@ -20,7 +18,7 @@ public class Inflow {
 		time = row[0];
 		speed = row[1];
 		int laneID = (int) row[2];
-		laneIdx = MLPNetwork.getInstance().findLane(laneID).index();
+		laneIdx = MLPNetwork.getInstance().findLane(laneID).getIndex();
 		tLinkID = (int) row[3];
 		if ( row[4] < 0.0)
 			dis = MLPNetwork.getInstance().mlpLane(laneIdx).getLength();
@@ -42,7 +40,7 @@ public class Inflow {
 	public Inflow(int LNID, int TLnkID, double t, double v, double d){
 		time = t;
 		speed = v;
-		laneIdx = MLPNetwork.getInstance().findLane(LNID).index();
+		laneIdx = MLPNetwork.getInstance().findLane(LNID).getIndex();
 		tLinkID = TLnkID;
 		if ( d < 0.0)
 			dis = MLPNetwork.getInstance().mlpLane(laneIdx).getLength();

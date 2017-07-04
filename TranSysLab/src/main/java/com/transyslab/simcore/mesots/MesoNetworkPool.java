@@ -6,12 +6,10 @@ package com.transyslab.simcore.mesots;
 import java.util.HashMap;
 import java.util.Vector;
 
-import com.transyslab.commons.tools.Random;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.LinkTimes;
 import com.transyslab.roadnetwork.PathTable;
 import com.transyslab.roadnetwork.RoadNetworkPool;
-import com.transyslab.roadnetwork.VehicleTable;
 
 /**
  * @author yali
@@ -20,7 +18,7 @@ import com.transyslab.roadnetwork.VehicleTable;
 public class MesoNetworkPool extends RoadNetworkPool {
 
 	private MesoNetwork[] networkArray_;
-	private MesoVehicleList[] vhcListArray_;
+	private MesoVehiclePool[] vhcListArray_;
 	private MesoCellList[] cellListArray_;
 	private MesoParameter[] parameterArray_;
 	private SimulationClock[] simClockArray_;
@@ -48,14 +46,14 @@ public class MesoNetworkPool extends RoadNetworkPool {
 		threadNum_ = n;
 		threadIndex_ = new int[threadNum_];
 		networkArray_ = new MesoNetwork[threadNum_];
-		vhcListArray_ = new MesoVehicleList[threadNum_];
+		vhcListArray_ = new MesoVehiclePool[threadNum_];
 		cellListArray_ = new MesoCellList[threadNum_];
 		parameterArray_ = new MesoParameter[threadNum_];
 		simClockArray_ = new SimulationClock[threadNum_];
 		odTableArray_ = new MesoODTable[threadNum_];
 		pathTableArray_ = new PathTable[threadNum_];
 		linkTimesArray_ = new LinkTimes[threadNum_];
-		randomArray_ = new Vector<Vector<Random>>();
+		randomArray_ = new Vector<Vector<MesoRandom>>();
 		vhcTableArray_ = new MesoVehicleTable[threadNum_];
 		// 实例化数组内的对象
 		initArrays();
@@ -69,13 +67,13 @@ public class MesoNetworkPool extends RoadNetworkPool {
 			pathTableArray_[i] = new PathTable();
 			linkTimesArray_[i] = new LinkTimes();
 			odTableArray_[i] = new MesoODTable();
-			vhcListArray_[i] = new MesoVehicleList();
+			vhcListArray_[i] = new MesoVehiclePool();
 			cellListArray_[i] = new MesoCellList();
 			parameterArray_[i] = new MesoParameter();
 			simClockArray_[i] = new SimulationClock();
 			vhcTableArray_[i] = new MesoVehicleTable();
-			randomArray_.add(new Vector<Random>());
-			Random.create(3, randomArray_.get(i));
+			randomArray_.add(new Vector<MesoRandom>());
+			MesoRandom.create(3, randomArray_.get(i));
 		}
 	}
 
@@ -83,7 +81,7 @@ public class MesoNetworkPool extends RoadNetworkPool {
 	public MesoNetwork getNetwork(int i) {
 		return networkArray_[i];
 	}
-	public MesoVehicleList getVhcList(int i) {
+	public MesoVehiclePool getVhcList(int i) {
 		return vhcListArray_[i];
 	}
 	public MesoCellList getCellList(int i) {

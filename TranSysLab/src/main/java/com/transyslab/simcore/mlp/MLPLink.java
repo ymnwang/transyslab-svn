@@ -18,7 +18,7 @@ public class MLPLink extends Link {
 	public Dynamics dynaFun;
 	public List<Double> tripTime;
 //	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
-//	public double capacity_;//unit: veh/s/lane
+//	public double capacity;//unit: veh/s/lane
 //	private double releaseTime_;
 	
 	
@@ -28,7 +28,7 @@ public class MLPLink extends Link {
 		platoon = new ArrayList<>();
 		dynaFun = new Dynamics();
 		tripTime = new ArrayList<>();
-//		capacity_ = MLPParameter.getInstance().capacity;
+//		capacity = MLPParameter.getInstance().capacity;
 	}
 	
 	public void checkConnectivity(){
@@ -103,8 +103,8 @@ public class MLPLink extends Link {
 	}
 	
 	public void scheduleNextEmitTime() {
-		if (capacity_ > 1.E-6) {
-			releaseTime_ += 1.0 / capacity_;
+		if (capacity > 1.E-6) {
+			releaseTime_ += 1.0 / capacity;
 		}
 		else {
 			releaseTime_ = Constants.DBL_INF;
@@ -131,7 +131,7 @@ public class MLPLink extends Link {
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
 //				platoonhead = theveh.Displacement();		
-				platoonhead = ((MLPSegment) getSegment(nSegments_-1)).endDSP;
+				platoonhead = ((MLPSegment) getSegment(nSegments -1)).endDSP;
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
@@ -160,12 +160,12 @@ public class MLPLink extends Link {
 		Collections.shuffle(platoon,r);
 		for (MLPVehicle veh: platoon){
 			//虚拟车及冷却中的车不能换道
-			if (veh.VirtualType_== 0 && veh.buffer_== 0) {
+			if (veh.virtualType == 0 && veh.buffer == 0) {
 				//根据acceptance及道路规则，获取可换道车道信息，计算概率并排序
 				double [] pr = new double [] {0.0, 0.0};
 				int [] turning = new int [] {0,1};
 				for (int i = 0; i<2; i++){//i=0右转；i=1左转；
-					MLPLane tarLane = veh.lane_.getAdjacent(i);
+					MLPLane tarLane = veh.lane.getAdjacent(i);
 					if (tarLane != null && //换道检查
 							tarLane.checkLCAllowen((i+1)%2) &&
 							//tarLane.RtCutinAllowed &&
@@ -184,7 +184,7 @@ public class MLPLink extends Link {
 				}
 				//按先后顺序做蒙特卡洛，操作成功的进行换道，不成功换道的MLC车进行停车标识计算
 				if (r.nextDouble()<pr[0]){
-					if (veh.lane_.getAdjacent(turning[0]).diEqualsZero(veh)) {
+					if (veh.lane.getAdjacent(turning[0]).diEqualsZero(veh)) {
 						veh.stopFlag = false;
 					}
 //					tmpWriter.write(pr[0] + "\r\n");
@@ -192,7 +192,7 @@ public class MLPLink extends Link {
 				}
 				else{
 					if (r.nextDouble()<pr[1]){
-						if (veh.lane_.getAdjacent(turning[1]).diEqualsZero(veh)) {
+						if (veh.lane.getAdjacent(turning[1]).diEqualsZero(veh)) {
 							veh.stopFlag = false;
 						}
 //						tmpWriter.write(pr[1] + "\r\n");
@@ -200,7 +200,7 @@ public class MLPLink extends Link {
 					}					
 				}
 			}
-			if ((!veh.lane_.diEqualsZero(veh))){
+			if ((!veh.lane.diEqualsZero(veh))){
 				if (veh.calMLC()>0.99)
 					veh.stopFlag = true;
 //				if (veh.calMLC()>0.7)
@@ -210,16 +210,16 @@ public class MLPLink extends Link {
 	}
 	
 	public void LCOperate(MLPVehicle veh, int turn) {
-		MLPLane thisLane = veh.lane_;
+		MLPLane thisLane = veh.lane;
 		MLPLane tarLane = thisLane.getAdjacent(turn);
 		//虚拟车(生产->初始化*2->加buff->替换)
 		MLPVehicle newVeh = MLPNetwork.getInstance().veh_pool.generate();
-		newVeh.initInfo(veh.getCode(),veh.link_,veh.segment_,veh.lane_,veh.RVID);
-		newVeh.init(MLPNetwork.getInstance().getNewVehID(), MLPParameter.VEHICLE_LENGTH, veh.distance(), veh.currentSpeed());
-		newVeh.buffer_ = MLPParameter.getInstance().getLCBuff();
+		newVeh.initInfo(veh.getCode(),veh.link,veh.segment,veh.lane,veh.rvId);
+		newVeh.init(MLPNetwork.getInstance().getNewVehID(), MLPParameter.VEHICLE_LENGTH, veh.getDistance(), veh.getCurrentSpeed());
+		newVeh.buffer = MLPParameter.getInstance().getLCBuff();
 		thisLane.substitudeVeh(veh, newVeh);
 		//换道车(加buff->insert)
-		veh.buffer_ = MLPParameter.getInstance().getLCBuff();
+		veh.buffer = MLPParameter.getInstance().getLCBuff();
 		tarLane.insertVeh(veh);
 	}
 	
@@ -236,7 +236,7 @@ public class MLPLink extends Link {
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
 //				platoonhead = theveh.Displacement();
-				platoonhead = ((MLPSegment) getSegment(nSegments_-1)).endDSP;
+				platoonhead = ((MLPSegment) getSegment(nSegments -1)).endDSP;
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();

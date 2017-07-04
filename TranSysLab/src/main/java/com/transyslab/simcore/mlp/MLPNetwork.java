@@ -1,7 +1,6 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.*;
-import java.util.concurrent.BlockingDeque;
 
 import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.renderer.FrameQueue;
@@ -22,7 +21,7 @@ public class MLPNetwork extends RoadNetwork {
 	public MLPVehPool veh_pool;
 	public List<MLPVehicle> veh_list;
 	public List<MLPLoop> loops;
-//	public Random sysRand;//已移动至父类
+//	public MesoRandom sysRand;//已移动至父类
 	private TXTUtils writer = new TXTUtils("src/main/resources/output/EMTR.csv");
 
 	public MLPNetwork() {
@@ -30,7 +29,7 @@ public class MLPNetwork extends RoadNetwork {
 		veh_pool = new MLPVehPool();
 		veh_list = new ArrayList<MLPVehicle>();
 		loops = new ArrayList<MLPLoop>();
-//		sysRand = new Random();
+//		sysRand = new MesoRandom();
 	}
 
 	public static MLPNetwork getInstance() {
@@ -80,44 +79,17 @@ public class MLPNetwork extends RoadNetwork {
 			loop.createSurface();
 		}
 	}
-	public void setsdIndex() {
-		MLPSegment ps;
-		for (int i = 0; i < nLinks(); i++) {
-			if (MLPNetwork.getInstance().getLink(i).getCode() == 64) {
-				ps = (MLPSegment) getLink(i).getEndSegment();
-				while (ps != null) {
-					ps.setSdIndex(0);
-					ps = ps.getUpSegment();
-				}
-			}
-			else if (MLPNetwork.getInstance().getLink(i).getCode() == 60) {
-				ps = (MLPSegment) getLink(i).getEndSegment();
-				while (ps != null) {
-					ps.setSdIndex(0);
-					ps = ps.getUpSegment();
-				}
-			}
-			else if (MLPNetwork.getInstance().getLink(i).getCode() == 116) {
-				ps = (MLPSegment) getLink(i).getEndSegment();
-				while (ps != null) {
-					ps.setSdIndex(1);
-					ps = ps.getUpSegment();
-				}
-			}
-
-		}
-	}
 
 	public void organize() {
 		//补充车道编号的信息
-		for (Lane l: lanes_){
+		for (Lane l: lanes){
 			((MLPLane) l).calLnPos();
 		}
-		for (Lane l: lanes_){
+		for (Lane l: lanes){
 			((MLPLane) l).checkConectedLane();
 		}
 		
-		for (Segment seg: segments_){
+		for (Segment seg: segments){
 			Segment tmpseg = seg;
 			while (tmpseg.getUpSegment() != null) {
 				tmpseg = tmpseg.getUpSegment();
@@ -130,11 +102,11 @@ public class MLPNetwork extends RoadNetwork {
 			getSegment(i).organizeLanes();
 		}
 
-		for (Segment seg: segments_) {
+		for (Segment seg: segments) {
 			((MLPSegment) seg).setSucessiveLanes();
 		}
 
-		for (Link l: links_){
+		for (Link l: links){
 			//预留
 			((MLPLink) l).checkConnectivity();
 			//将jointLane信息装入Link中
@@ -206,7 +178,7 @@ public class MLPNetwork extends RoadNetwork {
 	public void platoonRecognize() {
 		for (MLPVehicle mlpv : veh_list){
 			mlpv.calState();
-			if (mlpv.CFState_ && mlpv.speedLevel_==mlpv.leading_.speedLevel_) {
+			if (mlpv.cfState && mlpv.speedLevel ==mlpv.leading.speedLevel) {
 				mlpv.resemblance = true;
 			}
 			else {
@@ -217,8 +189,8 @@ public class MLPNetwork extends RoadNetwork {
 		/*List<MLPVehicle> vl = findResemblance();
 		while (vl.size()>0){
 			for (MLPVehicle v: vl){
-				v.platoonCode = v.leading_.platoonCode;
-				v.resemblance = v.leading_.resemblance;
+				v.platoonCode = v.leading.platoonCode;
+				v.resemblance = v.leading.resemblance;
 			}
 			vl = findResemblance();
 		}*/
@@ -354,7 +326,7 @@ public class MLPNetwork extends RoadNetwork {
 				//从对象池获取vehicledata对象
 				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
 				//记录车辆信息
-				vd.init(v,false,Math.min(1,v.VirtualType_),String.valueOf(v.nextLink()==null ? "NA" : v.lane_.successiveDnLanes.get(0).getLink().getCode()==v.nextLink().getCode()));
+				vd.init(v,false,Math.min(1,v.virtualType),String.valueOf(v.getNextLink()==null ? "NA" : v.lane.successiveDnLanes.get(0).getLink().getCode()==v.getNextLink().getCode()));
 				//将vehicledata插入frame
 				try {
 					FrameQueue.getInstance().offer(vd, veh_list.size());

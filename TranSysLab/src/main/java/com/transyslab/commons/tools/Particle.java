@@ -18,7 +18,7 @@ public class Particle {
 	protected float[] pbestToLearn_;// 粒子需要学习的最好位置
 	protected int flag_;// pbest保持不变的代数，即已有几代没找到更好位置
 	protected int[] iToLearn_; // 粒子每一维需要学习的其它粒子的索引
-	// protected static Random rnd_;
+	// protected static MesoRandom rnd_;
 	protected boolean feasible_;
 	protected double pbest_fitness_;// 历史最优解
 	protected float pc_;
@@ -148,7 +148,7 @@ public class Particle {
 			}
 		}
 	}
-	public void evaMRE(int[][] simflow, float[][] simavgtime, int[][] realflow, float[][] realavgtime, float w) {
+	public void evaMRE(int[][] simflow, double[][] simavgtime, int[][] realflow, double[][] realavgtime, double w) {
 		// 列为不同时间，行为不同link
 		int col = simflow[0].length;
 		int row = simflow.length;

@@ -8,7 +8,6 @@ import java.io.IOException;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.TXTUtils;
-import com.transyslab.commons.tools.DE;
 import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
@@ -21,7 +20,7 @@ public class MLPEngine extends SimulationEngine{
     public long runningseed;
     public boolean outputSignal;
     public boolean needEmpData;
-    //protected int runTimes_; // 仿真运行次数
+    //protected int runTimes; // 仿真运行次数
 	protected double updateTime_;
 	protected double LCDTime_;
 	protected boolean firstEntry; // simulationLoop中第一次循环的标记
@@ -174,7 +173,7 @@ public class MLPEngine extends SimulationEngine{
 			}				
 			if (trackOn) {
 				trackWriter = new TXTUtils("src/main/resources/output/track" + threadName + "_" + mod + ".csv");
-				trackWriter.write("TIME,RVID,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
+				trackWriter.write("TIME,rvId,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
 			}				
 			if (infoOn)
 				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + "_" + mod + ".txt");
@@ -261,23 +260,23 @@ public class MLPEngine extends SimulationEngine{
 				int FV;
 				for (MLPVehicle v : mlp_network.veh_list) {
 					LV = 0; FV = 0;
-					if (v.leading_!=null)
-						LV = v.leading_.getCode();
-					if (v.trailing_ != null)
-						FV = v.trailing_.getCode();
+					if (v.leading !=null)
+						LV = v.leading.getCode();
+					if (v.trailing != null)
+						FV = v.trailing.getCode();
 					String str = time + "," +
-							          v.RVID + "," + 
+							          v.rvId + "," +
 							          v.getCode() + "," +
-							          v.VirtualType_ + "," +
-							          v.buffer_ + "," +
-							          v.lane_.getLnPosNum() + "," +
-							          v.segment_.getCode() + "," +
-							          v.link_.getCode() + "," +
+							          v.virtualType + "," +
+							          v.buffer + "," +
+							          v.lane.getLnPosNum() + "," +
+							          v.segment.getCode() + "," +
+							          v.link.getCode() + "," +
 							          v.Displacement() + "," +
-							          v.currentSpeed() + "," + 
+							          v.getCurrentSpeed() + "," +
 							          LV + "," + 
 							          FV + "\r\n";
-					if (true) {//v.VirtualType_==0
+					if (true) {//v.virtualType==0
 						trackWriter.writeNFlush(str);
 					}
 				}
@@ -425,8 +424,8 @@ public class MLPEngine extends SimulationEngine{
 					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
 						for (MLPLane LN : JL.lanesCompose) {
 							for (MLPVehicle Veh : LN.vehsOnLn) {
-								if (Veh.VirtualType_ == 0) {
-									sum += (Veh.Displacement() - Veh.DSPEntrance)  /  (now - Veh.TimeEntrance);
+								if (Veh.virtualType == 0) {
+									sum += (Veh.Displacement() - Veh.dspEntrance)  /  (now - Veh.TimeEntrance);
 									count += 1;
 								}
 							}
@@ -600,8 +599,8 @@ public class MLPEngine extends SimulationEngine{
 					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
 						for (MLPLane LN : JL.lanesCompose) {
 							for (MLPVehicle Veh : LN.vehsOnLn) {
-								if (Veh.VirtualType_ == 0) {
-									sum += (Veh.Displacement() - Veh.DSPEntrance)  /  (now - Veh.TimeEntrance);
+								if (Veh.virtualType == 0) {
+									sum += (Veh.Displacement() - Veh.dspEntrance)  /  (now - Veh.TimeEntrance);
 									count += 1;
 								}
 							}
@@ -686,8 +685,8 @@ public class MLPEngine extends SimulationEngine{
 					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
 						for (MLPLane LN : JL.lanesCompose) {
 							for (MLPVehicle Veh : LN.vehsOnLn) {
-								if (Veh.VirtualType_ == 0) {
-									sum += (Veh.Displacement() - Veh.DSPEntrance)  /  (now - Veh.TimeEntrance);
+								if (Veh.virtualType == 0) {
+									sum += (Veh.Displacement() - Veh.dspEntrance)  /  (now - Veh.TimeEntrance);
 									count += 1;
 								}
 							}

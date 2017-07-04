@@ -1,19 +1,12 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.HashMap;
 import java.util.Vector;
 
-import com.transyslab.commons.tools.Random;
+import com.transyslab.simcore.mesots.MesoRandom;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.LinkTimes;
 import com.transyslab.roadnetwork.PathTable;
 import com.transyslab.roadnetwork.RoadNetworkPool;
-import com.transyslab.roadnetwork.VehicleTable;
-import com.transyslab.simcore.mlp.MLPNetwork;
-import com.transyslab.simcore.mlp.MLPNetworkPool;
-import com.transyslab.simcore.mlp.MLPODTable;
-import com.transyslab.simcore.mlp.MLPParameter;
-import com.transyslab.simcore.mlp.MLPVehList;
 
 public class MLPNetworkPool extends RoadNetworkPool{
 	private MLPNetwork[] networkArray_;
@@ -45,7 +38,7 @@ public class MLPNetworkPool extends RoadNetworkPool{
 		odTableArray_ = new MLPODTable[threadNum_];
 		pathTableArray_ = new PathTable[threadNum_];
 		linkTimesArray_ = new LinkTimes[threadNum_];
-		randomArray_ = new Vector<Vector<Random>>();
+		randomArray_ = new Vector<Vector<MesoRandom>>();
 		// 实例化数组内的对象
 		initArrays();
 	}
@@ -61,8 +54,8 @@ public class MLPNetworkPool extends RoadNetworkPool{
 			vhcListArray_[i] = new MLPVehList();
 			parameterArray_[i] = new MLPParameter();
 			simClockArray_[i] = new SimulationClock();
-			randomArray_.add(new Vector<Random>());
-			Random.create(3, randomArray_.get(i));
+			randomArray_.add(new Vector<MesoRandom>());
+			MesoRandom.create(3, randomArray_.get(i));
 		}
 	}
 

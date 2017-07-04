@@ -2,7 +2,7 @@
  *
  */
 package com.transyslab.simcore.mesots;
-import com.transyslab.roadnetwork.CodedObject;
+import com.transyslab.roadnetwork.NetworkObject;
 
 /**
  * @author its312
@@ -45,7 +45,7 @@ public class MesoIncident extends CodedObject {
 	public void setNeedResume(boolean b) {
 		needResume_ = b;
 	}
-	public int comp(CodedObject inc) {
+	public int comp(NetworkObject inc) {
 		MesoIncident other = (MesoIncident) inc;
 		final double epsilon = 1.0e-5;
 		if (stime_ < other.stime_ - epsilon)
