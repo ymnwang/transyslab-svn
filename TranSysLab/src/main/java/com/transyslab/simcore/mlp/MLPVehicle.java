@@ -26,13 +26,21 @@ public class MLPVehicle extends Vehicle{
 //	static public TXTUtils fout = new TXTUtils("src/main/resources/output/test.csv");
 //	protected double TimeExit;
 	//private boolean active_;
+
+	//wym !!parameter在回收过程中不需要重置
+	protected MLPParameter mlpParameter;
 	
 	
-	public MLPVehicle(){
+	public MLPVehicle(MLPParameter theParameter){
 		trailing = null;
 		leading = null;
 		platoonCode = 0;
 		stopFlag = false;
+		mlpParameter = theParameter;
+	}
+
+	public MLPNetwork getMLPNetwork() {
+		return (MLPNetwork) link.getNetwork();
 	}
 	
 	@Override
@@ -51,11 +59,11 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void resetPlatoonCode(){
-		platoonCode = getCode();
+		platoonCode = getId();
 	}
 	
 	public void calState() {
-		if (leading != null && distance - leading.distance <=MLPParameter.getInstance().CELL_RSP_LOWER) {
+		if (leading != null && distance - leading.distance <= mlpParameter.CELL_RSP_LOWER) {
 			cfState = true;
 		}
 		else {
@@ -100,10 +108,10 @@ public class MLPVehicle extends Vehicle{
 			}			
 			if (frontVeh != null) 
 				frontCheck = (frontVeh.Displacement() - frontVeh.getLength() - Displacement() >=
-										MLPParameter.getInstance().minGap(currentSpeed));//getCurrentSpeed
+										mlpParameter.minGap(currentSpeed));//getCurrentSpeed
 			if (backVeh!=null) 
 				backCheck = (Displacement() - length - backVeh.Displacement() >=
-										MLPParameter.getInstance().minGap(backVeh.currentSpeed));//backVeh.getCurrentSpeed
+										mlpParameter.minGap(backVeh.currentSpeed));//backVeh.getCurrentSpeed
 			return (frontCheck && backCheck);
 		}
 	}
@@ -153,7 +161,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	protected double calMLC(){
-		double buff = MLPParameter.getInstance().getSegLenBuff();
+		double buff = mlpParameter.getSegLenBuff();
 		double len = segment.getLength();
 		if (len<=buff) {
 			return 1.0;
@@ -179,7 +187,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public double calLCProbability(int turning, double fDSP, double tDSP, double PlatoonCount){
-		double [] gamma = MLPParameter.getInstance().getLCPara();
+		double [] gamma = mlpParameter.getLCPara();
 		double lambda1 = MLPParameter.LC_Lambda1;
 		double lambda2 = MLPParameter.LC_Lambda2;
 		double h = calH(turning);
@@ -207,7 +215,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void init(int id, double len, double dis, double speed){
-		 setCode(id);
+		 setId(id);
 		 type = 1;
 		 length = len;
 	     distance = dis;
@@ -259,7 +267,7 @@ public class MLPVehicle extends Vehicle{
 			}*/
 			if (lane.connectedDnLane == null) {//has no successive lane
 				if (virtualType == 0){
-					System.err.println("Vehicle No. " + getCode() +" has no successive lane to go");
+					System.err.println("Vehicle No. " + getId() +" has no successive lane to go");
 					holdAtDnEnd();
 				}
 				else
@@ -278,7 +286,7 @@ public class MLPVehicle extends Vehicle{
 	protected void holdAtDnEnd() {
 		newDis = 0.0;
 		if (currentSpeed >0.0)
-			newSpeed = (distance -newDis)/SimulationClock.getInstance().getStepSize();
+			newSpeed = (distance -newDis) / getMLPNetwork().getSimClock().getStepSize();
 	}
 	
 	public void setNewState(double spd) {
@@ -289,13 +297,13 @@ public class MLPVehicle extends Vehicle{
 		}
 		if (leading != null) {
 			double gap = leading.Displacement() - leading.getLength() - Displacement();
-			double maxSpd = MLPParameter.getInstance().maxSpeed(gap);
+			double maxSpd = ((MLPParameter) getMLPNetwork().getSimParameter()).maxSpeed(gap);
 			newSpeed = Math.min(spd,maxSpd);
 		}
 		else {
 			newSpeed = spd;
 		}
-		newDis = getDistance() - newSpeed*SimulationClock.getInstance().getStepSize();
+		newDis = getDistance() - newSpeed * getMLPNetwork().getSimClock().getStepSize();
 	}
 	
 	public void clearMLPProperties() {
@@ -314,7 +322,7 @@ public class MLPVehicle extends Vehicle{
 		stopFlag = false;
 		newSpeed = 0.0;
 		newDis = 0.0;
-		setCode(0);
+		setId(0);
 		length = 0.0f;
 		distance = 0.0f;
 		currentSpeed = 0.0f;

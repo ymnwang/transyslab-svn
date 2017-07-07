@@ -18,6 +18,8 @@ public class ODPair implements NetworkObject{
 	protected List<Path> paths;
 	protected double[] splits; // probabilities to choose each getPath
 	protected static int nSplits; // num of splits parsed so far for current odpair
+	protected Boolean isSelected;
+
 	public ODPair() {
 		paths = new ArrayList<>();
 	}
@@ -66,6 +68,12 @@ public class ODPair implements NetworkObject{
 	public String getObjInfo(){
 		return this.name;
 	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
+	}
 	public Node getOriNode() {
 		return oriNode;
 	}
@@ -74,6 +82,9 @@ public class ODPair implements NetworkObject{
 	}
 	public Path getPath(int i){
 		return paths.get(i);
+	}
+	public List<Path> getPaths() {
+		return paths;
 	}
 	public void addPath(Path p){
 		paths.add(p);
@@ -98,5 +109,13 @@ public class ODPair implements NetworkObject{
 		int i;
 		for (n = n - 1, i = 0; i < n && r > splits[i]; i++);
 		return paths.get(i);
+	}
+	public List<Path> verifyPath(Vehicle veh) {
+		//todo 检查path可行性
+		return paths;
+	}
+	public Path assignRoute(Vehicle veh) {
+		//TODO 路径选择行为：可以考虑放在Vehicle类中
+		return verifyPath(veh).get(0);
 	}
 }

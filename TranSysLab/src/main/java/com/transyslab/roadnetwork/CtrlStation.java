@@ -2,6 +2,8 @@
  *
  */
 package com.transyslab.roadnetwork;
+
+
 import java.util.*;
 
 /**
@@ -13,7 +15,7 @@ import java.util.*;
  *
  * @author YYL 2016-6-5
  */
-public class CtrlStation extends CodedObject {
+public class CtrlStation {
 	protected static float maxVisibility_;
 	protected int type_; // signal type
 	protected Segment segment_; // pointer to segment
@@ -21,10 +23,19 @@ public class CtrlStation extends CodedObject {
 	protected float visibility_; // length of detection zone
 	protected float position_; // position in % from segment end
 	protected Vector<Signal> signals_; // array of pointers to signals
+	protected String objInfo;
+	protected int id;
 
 	public CtrlStation() {
 
-	}/*
+	}
+	public int getId(){
+		return this.id;
+	}
+	public String getObjInfo(){
+		return this.objInfo;
+	}
+	/*
 		 * public int type() { return (CTRL_SIGNAL_TYPE & type); } public int
 		 * isLinkWide() { return (CTRL_LINKWIDE & type); }
 		 *

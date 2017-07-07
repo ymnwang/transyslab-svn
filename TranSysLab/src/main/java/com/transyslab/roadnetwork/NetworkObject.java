@@ -6,4 +6,6 @@ package com.transyslab.roadnetwork;
 public interface NetworkObject {
 	int getId();
 	String getObjInfo();
+	boolean isSelected();
+	void setSelected(boolean flag);
 }

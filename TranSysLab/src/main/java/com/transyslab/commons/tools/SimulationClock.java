@@ -3,8 +3,6 @@ package com.transyslab.commons.tools;
 import java.util.HashMap;
 import java.util.TimeZone;
 
-import com.transyslab.roadnetwork.RoadNetworkPool;
-import com.transyslab.simcore.mlp.MLPEngThread;
 
 public class SimulationClock {
 
@@ -25,9 +23,9 @@ public class SimulationClock {
 	}
 
 
-	public void init() {
+	/*public void init() {
 		init(startTime, stopTime, stepSize);
-	}
+	}*/
 
 	public int init(double start, double stop, double step)// 1.0
 	{

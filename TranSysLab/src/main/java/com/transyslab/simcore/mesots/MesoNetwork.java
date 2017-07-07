@@ -10,6 +10,7 @@ import java.util.ListIterator;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.*;
+import org.netlib.lapack.SSYCON;
 
 
 /**
@@ -34,7 +35,6 @@ public class MesoNetwork extends RoadNetwork {
 		sdFns = new ArrayList<>();
 		recycleVhcList = new MesoVehiclePool();
 		recycleCellList = new MesoCellList(recycleVhcList);
-		odTable = new MesoODTable();
 		stepCounter = 0;
 		vhcCounter = 0;
 	}
@@ -79,7 +79,7 @@ public class MesoNetwork extends RoadNetwork {
 
 	public void createLink(int id, int type, int upNodeId, int dnNodeId){
 		MesoLink newLink = new MesoLink();
-		newLink.init(id,type,nLinks(),findNode(upNodeId),findNode(dnNodeId));
+		newLink.init(id,type,nLinks(),findNode(upNodeId),findNode(dnNodeId),this);
 		links.add(newLink);
 		this.addEdge(newLink.getUpNode(),newLink.getDnNode(),newLink);
 		this.setEdgeWeight(newLink,Double.POSITIVE_INFINITY);
@@ -98,13 +98,16 @@ public class MesoNetwork extends RoadNetwork {
 	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY){
 		MesoLane newLane = new MesoLane();
 		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
+		// TODO 暂无车道坐标
+		/*
 		worldSpace.recordExtremePoints(newLane.getStartPnt());
-		worldSpace.recordExtremePoints(newLane.getEndPnt());
+		worldSpace.recordExtremePoints(newLane.getEndPnt());*/
 		lanes.add(newLane);
 	}
 
-	public void createSensor(int id, int type,int segId, double pos, double zone, double interval ){
+	public void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval ){
 		SurvStation newSurvStt = new SurvStation();
+		MesoSegment mesoSegment = (MesoSegment) findSegment(segId);
 		newSurvStt.init(id,type, nSensors(),findSegment(segId),pos,zone,interval);
 		sensors.add(newSurvStt);
 	}
@@ -116,49 +119,45 @@ public class MesoNetwork extends RoadNetwork {
 		this.vhcCounter++;
 		return newVehicle;
 	}
-	public void createODCell(int ori, int des, double rate, double var, float r){
-
+	public MesoODCell createODCell(int ori, int des, double rate, double var, double r){
+		double emitHeadway;
+		double emitNextTime;
 		MesoNode o = (MesoNode)findNode(ori);
 		MesoNode d = (MesoNode)findNode(des);
-		MesoODCell tmpODCell = new MesoODCell(o,d);
+		// TODO 处理异常的OD对
 		if (o == null) {
 		}
 		else if (d == null) {
 		}
 		else if (d.getDestIndex() == -1) {
-			// cerr << "Error:: Node <" << des
-			// << "> is not a destination node in this network.";
+
 		}
-		// theODPairs 是od对的list，这里不将od对存进list
-		// 原来把odpair存进list是为了查询是否已存在od对，存在则不用新生成，不存在则要生成，减少内存占用
-
-		int oType = tmpODCell.getOriNode().getType()| Constants.NODE_TYPE_ORI;
-		int dType = tmpODCell.getDesNode().getType()| Constants.NODE_TYPE_DES;
-		tmpODCell.getOriNode().setType(oType);
-		tmpODCell.getDesNode().setType(dType);
-
+		MesoODCell newODCell = new MesoODCell(o,d);
 		// Departure rate, assume a normal distribution
-
+		// OD流量倍率
 		rate *= odTable.scale();
+		// 方差足够大，按正态分布扰动OD流量
 		if (var > 1.0E-4) {
 			var *= odTable.scale();
 			rate = mesoRandom[MesoRandom.Departure].nrandom(rate, var);
 		}
-		tmpODCell.randomness = r;
-
+		// OD流量足够大
 		if (rate >= Constants.RATE_EPSILON) {
-			tmpODCell.headway = 3600.0 / rate;
-			tmpODCell.nextTime = simClock.getCurrentTime()
-					- Math.log(mesoRandom[MesoRandom.Departure].urandom()) * tmpODCell.headway;
+			emitHeadway = 3600.0 / rate;
+			emitNextTime = simClock.getCurrentTime()
+					- Math.log(mesoRandom[MesoRandom.Departure].urandom()) * emitHeadway;
 
 		}
 		else {
-			tmpODCell.headway = Constants.DBL_INF;
-			tmpODCell.nextTime = Constants.DBL_INF;
+			emitHeadway = Constants.DBL_INF;
+			emitNextTime = Constants.DBL_INF;
 		}
-		tmpODCell.type = odTable.getType();
-		odTable.insert(tmpODCell);
 
+		newODCell.init(odTable.getCells().size(), odTable.getType() ,emitHeadway,emitNextTime,r);
+		// ODCell初始化同时分配路径
+		newODCell.addPath(createPathFromGraph(o,d));
+		odTable.insert(newODCell);
+		return newODCell;
 	}
 	public void resetRandSeeds(){
 		for(int i=0;i<mesoRandom.length;i++){
@@ -168,12 +167,21 @@ public class MesoNetwork extends RoadNetwork {
 
 	public void calcStaticInfo() {
 		super.calcStaticInfo();
+		// 初始化子路段通行能力
+		for(int i=0;i<nSegments();i++){
+			((MesoSegment)segments.get(i)).calcStaticInfo(simClock.getCurrentTime());
+		}
 		organize();
 	}
 	// 检测器工作
 	public void detMesure(){
 		for(Sensor sensor: sensors){
 			sensor.aggregate(simClock.getCurrentTime());
+		}
+	}
+	public void setDetStartTime(double startTime){
+		for(Sensor sensor:sensors){
+			((SurvStation)sensor).setSDetTime(startTime);
 		}
 	}
 	public void updateSegFreeSpeed(){
@@ -193,9 +201,7 @@ public class MesoNetwork extends RoadNetwork {
 		//更新capacity
 		tmpSegment.setCapacity(tmpSegment.defaultCapacity(),simClock.getCurrentTime());
 	}
-	public void updateParaSdfns(double cap, double minspeed, double maxspeed, double maxdensity,double a, double b){
 
-	}
 	public void organize() {
 		for (Link link:links) {
 			((MesoLink) link).checkConnectivity();
@@ -422,6 +428,7 @@ public class MesoNetwork extends RoadNetwork {
 						tmpVehicle = itrVehicle.trailing;
 						if (itrVehicle.isProcessed(stepCounter) == 0) {
 							itrVehicle.move(this);
+
 						}
 						// 回收驶出路网的车辆
 						if(itrVehicle.needRecycle == true){

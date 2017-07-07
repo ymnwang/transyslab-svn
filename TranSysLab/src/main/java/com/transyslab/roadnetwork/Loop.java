@@ -32,7 +32,8 @@ public class Loop implements Sensor{
 	protected List<Double> speedList; // measure speed in specific time interval
 	protected List<Integer> flowList; // measure flow in specific time interval
 	protected GeoSurface surface;
-	protected double startDetTime;
+	protected double detTime;
+	protected boolean isSelected;
 	
 	public Loop() {
 		indexInLoops = -1;
@@ -47,6 +48,12 @@ public class Loop implements Sensor{
 	}
 	public String getObjInfo(){
 		return this.objInfo;
+	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
 	}
 	public GeoSurface getSurface(){
 		return surface;
@@ -148,16 +155,18 @@ public class Loop implements Sensor{
 	}
 
 	@Override
-	public void aggregate() {
-		flowList.add(recordedCount);
-		if (recordedCount != 0)
-			meanSpeed = (recordedCount) / recordedSpeed;
-		else
-			meanSpeed = 0.0f;
-		speedList.add(meanSpeed);
-		recordedCount = 0;
-		recordedSpeed = 0.0f;
-		
+	public void aggregate(double curTime) {
+		if(detTime<=curTime){
+			flowList.add(recordedCount);
+			if (recordedCount != 0)
+				meanSpeed = (recordedCount) / recordedSpeed;
+			else
+				meanSpeed = 0.0f;
+			speedList.add(meanSpeed);
+			recordedCount = 0;
+			recordedSpeed = 0.0f;
+			detTime += interval;
+		}
 	}
 
 
@@ -168,13 +177,12 @@ public class Loop implements Sensor{
 		double lenScale = zoneLength/ lane.getLength();
 		GeoPoint endPnt = new GeoPoint(startPnt, lane.getEndPnt(),(1-lenScale));
 		surface = GeoUtil.lineToRectangle(startPnt, endPnt, lane.getWidth(),true);
-		surface.createAabBox();
 	}
 	public void clean(){
 		recordedCount = 0;
 		recordedSpeed = 0;
 		int nInterval = flowList.size();
-		startDetTime = startDetTime - nInterval*interval;
+		detTime = detTime - nInterval*interval;
 		flowList.clear();
 		speedList.clear();
 	}

@@ -9,13 +9,13 @@ import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
-import com.transyslab.simcore.mlp.MLPEngine;
 
 /**
  * @author yali
  *
  */
 public class Producer implements Callable<SimulationEngine> {
+	/*
 	private int id_;
 	private String name_;
 	private SimulationEngine engine_;
@@ -47,16 +47,16 @@ public class Producer implements Callable<SimulationEngine> {
 	}
 	public Producer(SimulationEngine eg) {
 		engine_ = eg;
-	}
+	}*/
 	@Override
 	public SimulationEngine call() {
-
+/*
 		if(AppSetup.modelType == 1){
 			// =0:非snapshot启动，按OD流量随机发车；
 	        // =1:非snapshot启动，按过车记录定时发车;
 			// =2:snapshot启动，按OD流量随机发车；
 	        // =3:snapshot启动，按过车记录定时发车；
-			engine_ = new MesoEngine(Constants.SIM_MODE);
+			//engine_ = new MesoEngine(Constants.SIM_MODE);
 
 //			engine.initSPSA(spsa_);
 //			 engine_.initPSO(pso_);
@@ -64,10 +64,12 @@ public class Producer implements Callable<SimulationEngine> {
 			engine_.loadFiles();
 		}
 		// 加载MLP模型
+		/*
 		else if(AppSetup.modelType == 2){
 			engine_ = new MLPEngine();
 			engine_.loadFiles();
 		}
-		return engine_;
+		return engine_;*/
+		return null;
 	}
 }

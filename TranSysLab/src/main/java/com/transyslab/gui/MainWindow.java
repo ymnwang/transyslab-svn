@@ -7,10 +7,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.sql.SQLException;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
 
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
@@ -18,11 +15,13 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.transyslab.simcore.mesots.MesoEngine;
+import com.transyslab.simcore.mesots.MesoNetwork;
+import com.transyslab.simcore.mlp.MLPEngine;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.ArrayListHandler;
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
 
 import com.jogamp.opengl.util.FPSAnimator;
@@ -32,15 +31,10 @@ import com.transyslab.commons.renderer.JOGLCanvas;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.renderer.OrbitCamera;
 import com.transyslab.commons.tools.DataVisualization;
-import com.transyslab.commons.tools.Producer;
 import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.RoadNetwork;
-import com.transyslab.roadnetwork.RoadNetworkPool;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
-import com.transyslab.simcore.mesots.MesoNetworkPool;
-import com.transyslab.simcore.mlp.MLPNetworkPool;
 
 import info.monitorenter.gui.chart.traces.Trace2DSimple;
 
@@ -451,21 +445,25 @@ public class MainWindow extends JFrame{
 				}
 				//第一次播放
 				else if(!canvas_.isRendering){
-				
+					FrameQueue.getInstance().initFrameQueue();
+					Worker worker = new Worker(engines[0]);
+					Thread thread = new Thread(worker);
+					thread.start();
+				/*
 					Worker[] workerList = new Worker[Constants.THREAD_NUM];
 					Thread[] threadList = new Thread[Constants.THREAD_NUM];
 
-					FrameQueue.getInstance().initFrameQueue();
+
 
 					for (int i = 0; i < Constants.THREAD_NUM; i++) {
 						workerList[i] = new Worker(engines[i]);
 						threadList[i] = new Thread(workerList[i]);
 					}
 
-					RoadNetworkPool.getInstance().organizeHM(threadList);
+//					RoadNetworkPool.getInstance().organizeHM(threadList);
 					for (int i = 0; i < Constants.THREAD_NUM; i++) {
 						threadList[i].start();
-					}
+					}*/
 					canvas_.isRendering = true;
 				}
 				
@@ -548,6 +546,20 @@ public class MainWindow extends JFrame{
 		return txtCase;
 	}
 	public void initSimEngines(){
+		engines = new SimulationEngine[1];
+		switch (AppSetup.modelType) {
+			case 1:
+				engines[0] = new MesoEngine(0,"E:\\test\\");
+				break;
+			case 2:
+				engines[0] = new MLPEngine("./master");
+				break;
+				default:
+					break;
+		}
+		engines[0].loadFiles();
+
+		/*
 		RoadNetworkPool infoarrays;
 		//选择仿真模型
 		if(AppSetup.modelType == 1)
@@ -582,10 +594,10 @@ public class MainWindow extends JFrame{
 				e1.printStackTrace();
 			}
 			tempi++;
-		}
+		}*/
 		// Network is ready for simulation
 		canvas_.setFirstRender(true);
-		canvas_.setDrawableNetwork(RoadNetworkPool.getInstance().getNetwork(0));
+		canvas_.setDrawableNetwork(((MesoEngine)engines[0]).getNetwork());
 		canvas_.requestFocusInWindow();
 	}
 }

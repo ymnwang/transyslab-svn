@@ -16,15 +16,11 @@ public class MesoODTable {
 	protected int type; // vehicle type
 	protected double scale; // scaling factor
 	protected List<MesoODCell> cells; // list of OD cells
-	protected MesoNetwork theNetwork;
 
 	public String name; // file name
 
 	public MesoODTable() {
 		this.nextTime = 0;
-	}
-	public void setNetwork(MesoNetwork network){
-		this.theNetwork = network;
 	}
 	// Open trip table file and create a OD Parser
 	// public void open(const char *fn = 0);
@@ -88,7 +84,7 @@ public class MesoODTable {
 	// time. When vehicles are created, the corresponding OD cell is
 	// dropped down in the list based on the departure time for next
 	// vehicle.
-	public void emitVehicles(double currentTime) {
+	public void emitVehicles(double currentTime, MesoNetwork theNetwork) {
 		MesoODCell i;
 		MesoODCell c;
 
@@ -99,7 +95,7 @@ public class MesoODTable {
 		while ((i = cells.get(0)) != null && (c = i) != null
 				&& c.nextTime() <= currentTime) {
 			cells.remove(i);
-			c.emitVehicles(this.theNetwork,currentTime);
+			c.emitVehicles(theNetwork,currentTime);
 			//
 			cells.add(i);
 			sortODCell();

@@ -22,7 +22,8 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 	protected int type;
 	protected Node upNode;
 	protected Node dnNode;
-	protected int nSegments;
+	protected Boolean isSelected;
+	protected RoadNetwork network;
 	// RN_LinkTime属性
 
 	// protected static int infoPeriodLength; // length of each period (second)
@@ -86,6 +87,12 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 	public String getObjInfo(){
 		return this.objInfo;
 	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
+	}
 	public void setType(int t) {
 		type = t;
 	}
@@ -129,7 +136,7 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 		return this.segments;
 	}
 	public void addSegment(Segment seg){ this.segments.add(seg);}
-	public void init(int id, int type, int index,Node upNode, Node dnNode){
+	public void init(int id, int type, int index,Node upNode, Node dnNode, RoadNetwork roadNetwork){
 		this.id = id;
 		this.type =type;
 		this.upNode = upNode;
@@ -139,6 +146,7 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 			System.out.print("Error in init link");
 		upNode.addDnLink(this);
 		dnNode.addUpLink(this);
+		network = roadNetwork;
 	}
 	// 新增方法，用于组织二维数组，方便输出
 	public int[] getSumOfFlow() {
@@ -631,6 +639,10 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 			} else {
 			  return paths.get(i);
 			}
+	}
+
+	public RoadNetwork getNetwork() {
+		return network;
 	}
 
 }

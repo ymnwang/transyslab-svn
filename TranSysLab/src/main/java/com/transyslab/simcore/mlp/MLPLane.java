@@ -32,7 +32,6 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	protected List<MLPLane> successiveUpLanes;
 	
 	public MLPLane(){
-		capacity_ = MLPParameter.getInstance().capacity;
 		lnPosNum_ = 0;
 		vehsOnLn = new LinkedList<MLPVehicle>();
 		lateralCutInAllowed = 0;
@@ -42,16 +41,22 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		successiveDnLanes = new ArrayList<>();
 		successiveUpLanes = new ArrayList<>();
 	}
-	
+
+	@Override
+	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg) {
+		super.init(id, r, index, beginx, beginy, endx, endy, seg);
+		capacity_ = ((MLPParameter) getNetwork().getSimParameter()).capacity;
+	}
+
 	public boolean checkPass() {
-		if (releaseTime_<=SimulationClock.getInstance().getCurrentTime()) 
+		if (releaseTime_ <= getNetwork().getSimClock().getCurrentTime())
 			return true;
 		else 
 			return false;
 	}
 	
 	public void resetReleaseTime() {
-		releaseTime_ = SimulationClock.getInstance().getCurrentTime();
+		releaseTime_ = getNetwork().getSimClock().getCurrentTime();
 		scheduleNextEmitTime();
 	}
 	
@@ -69,7 +74,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	}
 	
 	public void calLnPos() {
-		lnPosNum_ = getCode()%10;
+		lnPosNum_ = getId()%10;
 	}
 	
 	public int getLnPosNum(){
@@ -85,7 +90,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		MLPVehicle tail_ = getTail();
 		if (tail_ != null &&
 			getLength() - tail_.getDistance() <
-			(mlpv.getLength() +MLPParameter.getInstance().minGap(mlpv.getCurrentSpeed()))) {
+			(mlpv.getLength() + ((MLPParameter) getNetwork().getSimParameter()).minGap(mlpv.getCurrentSpeed()))) {
 			return false;
 		}
 		else
@@ -96,7 +101,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		MLPVehicle tail_ = getTail();
 		if (tail_ != null &&
 			getLength() - tail_.getDistance() <
-			(vehLen +  MLPParameter.getInstance().minGap(vehSpeed))) {
+			(vehLen +  ((MLPParameter) getNetwork().getSimParameter()).minGap(vehSpeed))) {
 			return false;
 		}
 		else
@@ -138,7 +143,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 			mlpveh.trailing.updateLeadNTrail();
 		if (recycleNeeded)
 			//处理network.veh_list recycle; 
-			MLPNetwork.getInstance().veh_pool.recycle(mlpveh);
+			((MLPNetwork) getNetwork()).recycleVeh(mlpveh);
 		else {
 			//若不需要回收，则完成processing Veh的跟车更新及挂载注册
 			mlpveh.leading = (MLPVehicle) null;
@@ -260,7 +265,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 			return (MLPLane) seg.getLane(lnPosNum_ - 1);
 		}
 		else{
-			return (MLPLane) null;
+			return null;
 		}
 	}
 	
@@ -288,7 +293,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 
 	protected MLPLane successiveDnLaneInLink(MLPLink arg) {
 		for (MLPLane ln : successiveDnLanes) {
-			if (ln.getLink().getCode() == arg.getCode())
+			if (ln.getLink().getId() == arg.getId())
 				return ln;
 		}
 		return null;
@@ -313,21 +318,21 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 					return 0;
 				}
 				//check neighbor lane
-				MLPLane tmpLN = (MLPLane) getLeft();
+				MLPLane tmpLN = (MLPLane) getLeftLane();
 				int count1 = 1;
 				while(tmpLN != null && !tmpLN.connect2DnLanes(nextValidLanes)) {
-					tmpLN = (MLPLane) tmpLN.getLeft();
+					tmpLN = (MLPLane) tmpLN.getLeftLane();
 					count1 += 1;
 				}
-				if (index - count1 < segment.getLeftLaneIndex())
+				if (index - count1 < segment.getLeftLane().getIndex())
 					count1 = Integer.MAX_VALUE;
-				tmpLN = (MLPLane) getRight();
+				tmpLN = (MLPLane) getRightLane();
 				int count2 = 1;
 				while(tmpLN != null && !tmpLN.connect2DnLanes(nextValidLanes)) {
-					tmpLN = (MLPLane) tmpLN.getRight();
+					tmpLN = (MLPLane) tmpLN.getRightLane();
 					count2 += 1;
 				}
-				if (index + count2 > segment.getLeftLaneIndex() + segment.nLanes() - 1)
+				if (index + count2 > segment.getLeftLane().getIndex() + segment.nLanes() - 1)
 					count2 = Integer.MAX_VALUE;
 				return Math.min(count1, count2);
 			}
@@ -361,7 +366,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 			count1 += 1;
 			tmp = (MLPLane) tmp.getLeftLane();
 		}
-		if (index - count1 < segment.getLeftLaneIndex())
+		if (index - count1 < segment.getLeftLane().getIndex())
 			count1 = Integer.MAX_VALUE;
 		tmp = (MLPLane) getRightLane();
 		int count2 = 1;
@@ -372,7 +377,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 			count2 += 1;
 			tmp = (MLPLane) tmp.getRightLane();
 		}
-		if (index + count2 > segment.getLeftLaneIndex() + segment.nLanes() - 1)
+		if (index + count2 > segment.getLeftLane().getIndex() + segment.nLanes() - 1)
 			count2 = Integer.MAX_VALUE;
 		return Math.min(count1, count2);
 	}
@@ -403,7 +408,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		MLPLane tmp = null;
 		for (int i = 0; i < successiveDnLanes.size(); i++) {
 			tmp = successiveDnLanes.get(i);
-			if (tmp.segment.getCode() == o1.segment.getCode()) {
+			if (tmp.segment.getId() == o1.segment.getId()) {
 				break;
 			}
 		}

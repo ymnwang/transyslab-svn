@@ -11,7 +11,7 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.*;
-import com.transyslab.simcore.mlp.MLPNetwork;
+import sun.nio.ch.Net;
 
 
 import static com.jogamp.opengl.GL.*; // GL constants
@@ -57,13 +57,13 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	public JOGLCanvas() {
 		this.addGLEventListener(this);
 		preWinCoods = new java.awt.Point();
-		pickedObjects = new ArrayList<CodedObject>();
+		pickedObjects = new ArrayList<NetworkObject>();
 
 	}
 	public JOGLCanvas(int width, int height) {
 		this.addGLEventListener(this);
 		preWinCoods = new java.awt.Point();
-		pickedObjects = new ArrayList<CodedObject>();
+		pickedObjects = new ArrayList<NetworkObject>();
 		// 设置画布大小
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
 //		this.setPreferredSize(new Dimension(width, height));
@@ -228,10 +228,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
 		float camHeight =  cam_.getEyeLocation()[2];
 		Segment tmpsegment;
+		/*
 		for (Boundary tmpboundary:boundarys) {
 			ShapeUtil.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
 					Constants.COLOR_WHITE);
-		}
+		}*/
 		for(int i=0;i<drawableNetwork_.nSegments();i++){
 			tmpsegment = drawableNetwork_.getSegment(i);
 			ShapeUtil.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 2,
@@ -265,6 +266,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			JOGLDrawShapes.drawPoint(gl, tmplane.getEndPnt().getLocationX(), tmplane.getEndPnt().getLocationY(), 5, Constants.COLOR_GREEN);
 			
 		}*/
+		/*
 		if(camHeight<200){
 			for(int i=0;i<drawableNetwork_.nLanes();i++){
 				GeoSurface lanesf = drawableNetwork_.getLane(i).getSurface();
@@ -273,12 +275,12 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				
 				ShapeUtil.drawPolygon(gl, lanesf.getKerbList(),Constants.COLOR_GREY, lanesf.isSelected());
 			}
-		}
-		
+		}*/
+		/*
 		for(int i=0;i<((MLPNetwork)drawableNetwork_).loops.size();i++){
 			GeoSurface loopsf = ((MLPNetwork)drawableNetwork_).loops.get(i).getSurface();
 			ShapeUtil.drawPolygon(gl, loopsf.getKerbList(),Constants.COLOR_GREEN, loopsf.isSelected());
-		}
+		}*/
 		//暂停时不更新数组索引
 		curFrame =FrameQueue.getInstance().poll(isPause);
 		//暂停时保留VehicleData
@@ -379,8 +381,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	}
 	
 	private void deselect(){
-		for(CodedObject co:pickedObjects){
-			co.setSelected(false);
+		for(NetworkObject no:pickedObjects){
+			no.setSelected(false);
 		}
 	}
 	@Override

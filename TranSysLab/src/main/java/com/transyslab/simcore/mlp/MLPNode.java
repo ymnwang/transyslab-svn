@@ -17,11 +17,14 @@ public class MLPNode extends Node{
 		MLPLane lane_ = veh.lane;
 		MLPLink link_ = veh.link;
 		if (lane_.checkPass()) {//lane.checkPass()
+			//TODO 获取currentTime待优化
+			double currentTime = veh.link.getNetwork().getSimClock().getCurrentTime();
 			//passed output capacity checking
 			if (veh.getNextLink() == null) {
 				lane_.scheduleNextEmitTime();//passed upstream lane
 				//arrived destination no constrain
-				link_.tripTime.add((double) veh.timeInLink());//record linkTravelTime
+				//record linkTravelTime
+				link_.tripTime.add(veh.timeInLink(currentTime));
 				lane_.removeVeh(veh, true);
 				return 1;
 			}
@@ -52,13 +55,12 @@ public class MLPNode extends Node{
 					}
 					if (canpass && !checkPlaceTaken(veh, nextLane)) {//pass to this very nexlane
 						lane_.scheduleNextEmitTime();//passed upstream lane
-						link_.tripTime.add((double) veh.timeInLink());//record linkTravelTime
-						double now = SimulationClock.getInstance().getCurrentTime();
-						veh.setTimeEntersLink(now);
+						link_.tripTime.add(veh.timeInLink(currentTime));//record linkTravelTime
+						veh.setTimeEntersLink(currentTime);
 						lane_.removeVeh(veh, false);
-						veh.time2Dispatch = now;
+						veh.time2Dispatch = currentTime;
 						statVeh(veh, nextLane);
-						veh.onRouteChoosePath(veh.link.getDnNode());
+						veh.onRouteChoosePath(veh.link.getDnNode(),veh.link.getNetwork());
 						return 0;
 					}
 //					else
@@ -89,10 +91,14 @@ public class MLPNode extends Node{
 			crSpeed = vehCheck.getCurrentSpeed();
 			followerLen = vehPass.getLength();
 		}
-		return dis_headway - followerLen < MLPParameter.getInstance().minGap(crSpeed);
+		//TODO parameter获取方式待优化
+		MLPParameter mlpParameter = (MLPParameter) vehPass.link.getNetwork().getSimParameter();
+		return dis_headway - followerLen < mlpParameter.minGap(crSpeed);
 	}
 	private boolean reachFirst(MLPVehicle vehPass, MLPVehicle vehCheck) {
-		double dis_headway = vehCheck.getDistance() - vehPass.newDis - vehCheck.getCurrentSpeed()*SimulationClock.getInstance().getStepSize();
+		//TODO clock获取方式待优化
+		SimulationClock simClock = vehPass.link.getNetwork().getSimClock();
+		double dis_headway = vehCheck.getDistance() - vehPass.newDis - vehCheck.getCurrentSpeed()*simClock.getStepSize();
 		return dis_headway >= 0;
 		//加入了checkPlaceTaken机制，可以不判断边界
 //		if (dis_headway != 0) {
@@ -112,12 +118,18 @@ public class MLPNode extends Node{
 		veh.newDis += nextLane.getLength();
 		if (veh.newDis < 0.0) {//每次最多经过一个link
 			veh.newDis = 0.0;
-			veh.newSpeed = (veh.getDistance() + nextLane.getLength()) / SimulationClock.getInstance().getStepSize();
+			//TODO clock获取方式待优化
+			SimulationClock simClock = veh.link.getNetwork().getSimClock();
+			veh.newSpeed = (veh.getDistance() + nextLane.getLength()) / simClock.getStepSize();
 		}
 		statedVehs.add(veh);
 	}
 	protected void dispatchStatedVeh() {
-		double now = SimulationClock.getInstance().getCurrentTime();
+		//TODO clock获取方式待优化
+		if (statedVehs.size() <= 0)
+			return;
+		SimulationClock simClock = getDnLink(0).getNetwork().getSimClock();
+		double now = simClock.getCurrentTime();
 		for (int i = 0; i < statedVehs.size(); i++) {
 			MLPVehicle tmpveh = statedVehs.get(i);
 			if (now >= tmpveh.time2Dispatch) {
@@ -133,7 +145,9 @@ public class MLPNode extends Node{
 			MLPVehicle v = statedVehs.get(i);
 			if (v.lane.getId() == nextLane.getId()){
 				double gap = veh.newDis + nextLane.getLength() - v.newDis - v.getLength();
-				ans |= ( gap < MLPParameter.getInstance().minGap(veh.newSpeed) );
+				//TODO parameter获取方式待优化
+				MLPParameter mlpParameter = (MLPParameter) veh.link.getNetwork().getSimParameter();
+				ans |= ( gap < mlpParameter.minGap(veh.newSpeed) );
 			}
 		}
 		return ans;

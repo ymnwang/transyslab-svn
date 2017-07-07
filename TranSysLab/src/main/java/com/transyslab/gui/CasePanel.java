@@ -4,13 +4,8 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
@@ -18,28 +13,20 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import com.transyslab.commons.io.FileUtils;
-import com.transyslab.commons.tools.Producer;
-import com.transyslab.commons.tools.Worker;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.RoadNetworkPool;
 import com.transyslab.simcore.AppSetup;
-import com.transyslab.simcore.SimulationEngine;
-import com.transyslab.simcore.mesots.MesoNetworkPool;
-import com.transyslab.simcore.mlp.MLPNetworkPool;
+
 
 public class CasePanel extends JPanel{
 	/*

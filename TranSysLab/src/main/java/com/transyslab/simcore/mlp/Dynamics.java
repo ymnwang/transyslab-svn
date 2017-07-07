@@ -1,12 +1,18 @@
 package com.transyslab.simcore.mlp;
 
 public class Dynamics {
+	protected MLPLink link;
+	protected MLPParameter mlpParameter;
 	public double [] sdPara;//[0]VMax; [1]VMin; [2]KJam; [3]Alpha; [4]Beta;
 	//public double [] cfPara;//[0]Critical Gap; [1]dUpper;
-	public Dynamics(){
-		sdPara = MLPParameter.getInstance().getSDPara();
+	public Dynamics(MLPLink theLink){
+		link = theLink;
+		mlpParameter = (MLPParameter) theLink.getNetwork().getSimParameter();
+		sdPara = ((MLPParameter) theLink.getNetwork().getSimParameter()).getSDPara();
 	}
-	public Dynamics(double [] SDParas) {
+	public Dynamics(MLPLink theLink, double [] SDParas) {
+		link = theLink;
+		mlpParameter = (MLPParameter) theLink.getNetwork().getSimParameter();
 		sdPara = SDParas;
 	}
 	public double sdFun(double k) {
@@ -25,14 +31,14 @@ public class Dynamics {
 	public double cfFun(MLPVehicle theVeh){
 		double gap = theVeh.leading.Displacement() - theVeh.leading.getLength() - theVeh.Displacement();
 		double vlead = (double) theVeh.leading.getCurrentSpeed();
-		double upperGap = MLPParameter.getInstance().CF_FAR;
-		if(gap < MLPParameter.getInstance().CF_NEAR) {
+		double upperGap = mlpParameter.CF_FAR;
+		if(gap < mlpParameter.CF_NEAR) {
 			return vlead;
 		}
 		else if (gap<upperGap) {
 			double r = gap/upperGap;
 			//return r * sdPara[0] + (1.0-r) * vlead;
-			double ans = r * MLPParameter.getInstance().maxSpeed(gap) + (1.0-r) * vlead;
+			double ans = r * mlpParameter.maxSpeed(gap) + (1.0-r) * vlead;
 //			if (Double.isNaN(ans))
 //				System.out.println("BUG CF函数输出异常");
 			return ans;
@@ -53,7 +59,7 @@ public class Dynamics {
 			return cfFun(headVeh);
 		}
 		else if (((MLPSegment)headVeh.link.getEndSegment()).endDSP - headVeh.Displacement() >
-						MLPParameter.getInstance().CELL_RSP_UPPER ||
+						mlpParameter.CELL_RSP_UPPER ||
 				headVeh.segment.isTheEnd() != 0) {
 			//距离终点较远 或 处于endSegment(无限制)
 			return sdPara[0];

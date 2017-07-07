@@ -4,20 +4,11 @@
 package com.transyslab.simcore.mesots;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import com.transyslab.commons.io.XmlParser;
-import com.transyslab.simcore.AppSetup;
-import org.apache.commons.csv.CSVRecord;
 
-import com.transyslab.commons.renderer.FrameQueue;
-import com.transyslab.commons.tools.DE;
-import com.transyslab.commons.tools.PSO;
-import com.transyslab.commons.tools.SPSA;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.VehicleData;
-import com.transyslab.roadnetwork.VehicleDataPool;
 import com.transyslab.simcore.SimulationEngine;
 
 /**
@@ -25,7 +16,7 @@ import com.transyslab.simcore.SimulationEngine;
  *
  */
 public class MesoEngine extends SimulationEngine {
-
+	protected String rootDir;
 	protected int runTimes; // 仿真运行次数
 	protected double frequency; // 1/step size
 	protected double updateTime;
@@ -48,7 +39,8 @@ public class MesoEngine extends SimulationEngine {
 	private MesoODTable theODTable;
 	private MesoVehicleTable theVhcTable;
 		
-	public MesoEngine(int mode) {
+	public MesoEngine(int mode,String rootDir) {
+		this.rootDir = rootDir;
 		//定义仿真运行模式
 		this.runMode = mode;
 		theNetwork = new MesoNetwork();
@@ -56,7 +48,6 @@ public class MesoEngine extends SimulationEngine {
 		if(this.runMode ==0|| this.runMode ==2){
 			theODTable = new MesoODTable();
 			theNetwork.setOdTable(theODTable);
-			theODTable.setNetwork(theNetwork);
 		}
 		vhcTableIndex = 0;
 		runTimes = 1;
@@ -68,7 +59,7 @@ public class MesoEngine extends SimulationEngine {
 
 	public void init() {
 		// 通过parameter 赋值,结束时间往后推300s
-		theNetwork.getSimClock().init(0*3600,7500, 0.2);
+		theNetwork.getSimClock().init(0*3600,3600, 0.2);
 		theNetwork.getSimParameter().setSimStepSize(0.2f);
 		double now = theNetwork.getSimClock().getCurrentTime();
 		updateTime = now;
@@ -80,6 +71,7 @@ public class MesoEngine extends SimulationEngine {
 	public void resetBeforeSimLoop() {
 		firstEntry = 1;
 		theNetwork.getSimClock().init(0*3600,2*3600, 0.2);
+		theNetwork.setDetStartTime(0*3600);
 		double now = theNetwork.getSimClock().getCurrentTime();
 		updateTime = now;
 		
@@ -111,16 +103,18 @@ public class MesoEngine extends SimulationEngine {
 		
 		loadSimulationFiles();
 	}
-
+	public MesoNetwork getNetwork(){
+		return this.theNetwork;
+	}
 
 	// 多次运行
 	public void run(int mode) {
 		if(mode==0){
 			//TODO 重构待改
-			theNetwork.updateParaSdfns(0.5,0.0, 19.76, 158.75,2.04,5.35);
-			theNetwork.getSimParameter().setRspLower(30.87f);//parameter[4]);
-			theNetwork.getSimParameter().setRspUpper(91.58f);//parameter[5]);
-			theNetwork.getSimParameter().updateCSG();
+			//theNetwork.updateParaSdfns(0.5,0.0, 19.76, 158.75,2.04,5.35);
+			//theNetwork.getSimParameter().setRspLower(30.87f);//parameter[4]);
+			//theNetwork.getSimParameter().setRspUpper(91.58f);//parameter[5]);
+			//theNetwork.getSimParameter().updateCSG();
 			while (simulationLoop() >= 0) {
 
 			}
@@ -270,13 +264,13 @@ public class MesoEngine extends SimulationEngine {
 		// 初始化SimulationClock,此处赋开始时间，结束时间
 		init();
 		// 读取所有xml输入文件
-		XmlParser.parseNetwork(theNetwork, "");
+		XmlParser.parseNetwork(theNetwork, rootDir + "networkA.xml");
 		// 读入路网数据后组织路网不同要素的关系
 		theNetwork.calcStaticInfo();
 		// 计算路网要素几何信息，用于绘图
 		// MesoNetwork.getInstance().calcGeometircData();
 		// 先解析路径表再解析OD表，OD表要用到路径表信息
-		XmlParser.parsePathTable(theNetwork,"");
+		//XmlParser.parsePathTable(theNetwork,"");
 		// 初始化记录旅行时间的对象，新增代码
 		theNetwork.getLinkTimes().initTravelTimes(theNetwork);
 		// 根据旅行时间的输出时间间隔初始化记录数组
@@ -284,7 +278,7 @@ public class MesoEngine extends SimulationEngine {
 		// 更新不同路段的速密函数
 		// MESO_Network.getInstance().setsdIndex();
 
-		XmlParser.parseSensors(theNetwork,"");
+		XmlParser.parseSensors(theNetwork,rootDir + "sensor.xml");
 		
 		if(runMode == 2|| runMode ==3){//从SnapShot启动仿真
  
@@ -306,8 +300,6 @@ public class MesoEngine extends SimulationEngine {
 			e.printStackTrace();
 		}*/
 
-		// 空函数
-		start();
 		parseODID = 1;
 		return 0;
 	}
@@ -329,13 +321,14 @@ public class MesoEngine extends SimulationEngine {
 
 		if (firstEntry != 0) {
 			firstEntry = 0;
-
+			// 设置检测器开始工作的时间 TODO 增加设置开始检测时间的参数
+			theNetwork.setDetStartTime(0*3600);
 			// This block is called only once just before the simulation gets
 			// started.
 			theNetwork.resetSegmentEmitTime();
 			// 加载事件
-			MesoIncident ic = new MesoIncident();
-			ic.init(1, 33000, 39900, 18, -1.0f);
+			//MesoIncident ic = new MesoIncident();
+			//ic.init(1, 33000, 39900, 18, -1.0f);
 			if(runMode ==2|| runMode ==3){
 				//初始化路网已有车辆的所有信息
 				initSnapshotData();
@@ -351,7 +344,7 @@ public class MesoEngine extends SimulationEngine {
 			if (theODTable.getNextTime() <= now) {
 				// MESO_ODTable.theODTable.read();
 				// 读对应时段的OD信息
-				XmlParser.parseODXml("",parseODID,theNetwork);
+				XmlParser.parseODXml(rootDir + "demandA.xml",parseODID,theNetwork);
 				theODTable.sortODCell();
 				parseODID++;
 
@@ -359,7 +352,7 @@ public class MesoEngine extends SimulationEngine {
 
 			// Create vehicles based on trip tables
 
-			theODTable.emitVehicles(now);
+			theODTable.emitVehicles(now,theNetwork);
 		}
 		else if(runMode == 1|| runMode ==3){
 			//按过车记录定时发车
@@ -410,18 +403,18 @@ public class MesoEngine extends SimulationEngine {
 		theNetwork.stepCounter++;
 
 		//当前帧在网车辆的位置信息存储到framequeue
-		
-		if(theNetwork.vhcCounter!=0 && runMode ==1)
-			theNetwork.recordVehicleData();
+		// TODO runMode未包含是否可视化
+		if(theNetwork.vhcCounter!=0 && runMode ==0)
+			//theNetwork.recordVehicleData();
 		
 		
 		// 输出步长内所有车辆的位置信息
 		/*
 		  try { MesoNetwork.getInstance().outputVhcPosition(); 
-		  } catch(IOException e) { 
-			  // TODO 自动生成的 catch 块 
+		  } catch(IOException e) {
 			  e.printStackTrace(); }*/
-		 
+		 // 检测器
+		theNetwork.detMesure();
 		// Advance the clock
 		theNetwork.getSimClock().advance(theNetwork.getSimClock().getStepSize());
 		if (now > theNetwork.getSimClock().getStopTime() + epsilon) {
@@ -437,24 +430,15 @@ public class MesoEngine extends SimulationEngine {
 			  try {
 				MESO_Network.getInstance().outputSectionRecord();
 			} catch (IOException e) {
-				// TODO 自动生成的 catch 块
+
 				e.printStackTrace();
 			}*/
-
+			// TODO test ODCell emitvhc
+			System.out.print(MesoODCell.emitCounter);
 			return (state_ = Constants.STATE_DONE);//  simulation is done
 		}
 		else
 			return state_ = Constants.STATE_OK;
-	}
-	@Override
-	public void start() {
-		// TODO 自动生成的方法存根
-		
-	}
-	@Override
-	public double calFitness(double[] paras) {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 }

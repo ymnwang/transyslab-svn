@@ -77,7 +77,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 	public abstract void createLane(int id, int rule, double beginX, double beginY, double endX, double endY);
 
-	public abstract void createSensor(int id, int type,int segId, double pos, double zone, double interval );
+	public abstract void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval );
 
 //	public abstract void createVehicle(int id, int type, double length, double dis, double speed);
 
@@ -86,7 +86,6 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		//ODPair newODPair = findODPair(oriId,desId);
 		Path newPath = new Path();
 		newPath.id = id;
-
 		if ((newPath.oriNode = findNode(oriId)) == null) {
 			// cerr << "Error:: Unknown origin node <" << ori << ">. ";
 		}
@@ -98,16 +97,29 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return newPath;
 	}
 	// ODPair初始化后调用
-	public void createPathFromGraph(Node oriNode, Node desNode){
+	public Path createPathFromGraph(Node oriNode, Node desNode){
 		GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
-		ODPair tmpODPair = findODPair(oriNode,desNode);
-		tmpODPair.paths.add(new Path(gpath));
+		return new Path(gpath);
+		//ODPair tmpODPair = findODPair(oriNode,desNode);
+		//tmpODPair.paths.add(new Path(gpath));
 	}
+	// TODO ODTable 维护，可删
 	public void createODPair(Node oriNode, Node desNode){
 		ODPair newodPair = new ODPair(oriNode,desNode);
 		this.odPairs.add(newodPair);
 	}
+	public void createSurface(){
 
+	}
+	public void createBoundary(int id, double beginx, double beginy, double endx, double endy){
+		Boundary newBoundary = new Boundary();
+		newBoundary.init(id,nBoundaries(),beginx,beginy,endx,endy);
+		//TODO 暂无Boundary 坐标
+		/*
+		this.worldSpace.recordExtremePoints(newBoundary.getStartPnt());
+		this.worldSpace.recordExtremePoints(newBoundary.getEndPnt());*/
+		this.boundaries.add(newBoundary);
+	}
 	public WorldSpace getWorldSpace() {
 		return this.worldSpace;
 	}
@@ -135,6 +147,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return this.lanes.get(i);
 	}
 	public Path getPath(int i){ return this.paths.get(i);}
+	public Sensor getSensor(int i){return this.sensors.get(i);}
 	public int nLinks(){return links.size();}
 	public int nNodes(){
 		return nodes.size();
@@ -149,7 +162,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return sensors.size();
 	}
 	public int nPaths(){return paths.size();}
-
+	public int nBoundaries(){
+		return boundaries.size();
+	}
 	public Node findNode(int id) {
 		ListIterator<Node> i = nodes.listIterator();
 		while (i.hasNext()) {
@@ -573,9 +588,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 			routeGenerationModel(pn,pv);
 		}
 	}
-	public void orgNeighborObjs(){
 
-	}
 
 	// Before we use the parsed network, this function must called to
 	// calculate some static information, sort objects, etc.
@@ -587,26 +600,42 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public void calcStaticInfo() {
 		// Create the world space
 		worldSpace.createWorldSpace();
-		this.orgNeighborObjs();
-		for(Lane itrLanes:lanes){
-			int leftLaneInSeg = itrLanes.segment.getLeftLane().index;
-			if (itrLanes.index != leftLaneInSeg + itrLanes.segment.nLanes() - 1)
-				itrLanes.rightLane =  this.getLane(itrLanes.index + 1);
-			if (itrLanes.index != leftLaneInSeg)
-				itrLanes.leftLane = this.getLane(itrLanes.index - 1);
+		// Lane必须从左到右解析，Segment必须从上游至下游解析
+		for(Lane itrLane:lanes){
+			int leftLaneInSeg = itrLane.segment.getLeftLane().index;
+			// 非最右车道
+			if (itrLane.index != leftLaneInSeg + itrLane.segment.nLanes() - 1)
+				itrLane.rightLane =  this.getLane(itrLane.index + 1);
+			// 非最左车道
+			if (itrLane.index != leftLaneInSeg)
+				itrLane.leftLane = this.getLane(itrLane.index - 1);
 		}
-		for (Segment itrSegments:segments) {
-			itrSegments.snapCoordinates();
+		// 组织前后路段关系
+		for (Segment itrSegment:segments) {
+			int upSegmentInLink = itrSegment.link.getStartSegment().index;
+			// 非最下游子路段
+			if (itrSegment.index != upSegmentInLink + itrSegment.link.nSegments() - 1)
+				itrSegment.dnSegment = this.getSegment(itrSegment.index + 1);
+			// 非最上游子路段
+			if (itrSegment.index != upSegmentInLink)
+				itrSegment.upSegment = this.getSegment(itrSegment.index - 1);
+			itrSegment.snapCoordinates();
+		}
+
+		for (Segment itrSegment:segments) {
+
 			// Generate arc info such as angles and length from the two
 			// endpoints and bulge. This function also convert the
 			// coordinates from database format to world space format
-			itrSegments.calcArcInfo(worldSpace);
+			itrSegment.calcArcInfo(worldSpace);
+
 		}
 
 		// Boundary 位置平移
+		/*
 		for (Boundary itrBoundary:boundaries) {
 			itrBoundary.translateInWorldSpace(worldSpace);
-		}
+		}*/
 
 		// Sort outgoing and incoming arcs at each node.
 		// Make sure RN_Link::comp() is based on angle.
@@ -668,6 +697,14 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (int i = 0; i < links.size(); i++) {
 			getLink(i).resetStatistics(linkTimes.infoPeriods);
 		}
+	}
+
+	//wym
+	public Random getSysRand() {
+		return sysRand;
+	}
+	public Parameter getSimParameter() {
+		return simParameter;
 	}
 
 }

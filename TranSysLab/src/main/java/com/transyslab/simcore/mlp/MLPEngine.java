@@ -1,14 +1,18 @@
 package com.transyslab.simcore.mlp;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 
-import com.transyslab.commons.tools.Inflow;
+import com.transyslab.commons.io.XmlParser;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.csv.CSVRecord;
 import java.io.IOException;
 
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.TXTUtils;
-import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
@@ -17,10 +21,8 @@ import com.transyslab.simcore.SimulationEngine;
 public class MLPEngine extends SimulationEngine{
 
     public boolean seedFixed;
-    public long runningseed;
-    public boolean outputSignal;
+    public long runningSeed;
     public boolean needEmpData;
-    //protected int runTimes; // 仿真运行次数
 	protected double updateTime_;
 	protected double LCDTime_;
 	protected boolean firstEntry; // simulationLoop中第一次循环的标记
@@ -33,9 +35,19 @@ public class MLPEngine extends SimulationEngine{
 	protected boolean infoOn;
 	protected String msg;
 	private Object empData;
-	private int mod;
+	private int mod;//总计运行次数，在输出结束仿真信号时自增
 	private boolean displayOn;
-	//public double fitnessVal;
+
+	//引用路网结构
+	private MLPNetwork mlpNetwork;
+
+	//引擎运行输入文件配置
+	private HashMap<String,String> runProperties;
+	//引擎运行时间设置信息
+	double timeStart;
+	double timeEnd;
+	double timeStep;
+
 	
 	public MLPEngine() {
 		super();
@@ -46,111 +58,100 @@ public class MLPEngine extends SimulationEngine{
 		infoOn = false;
 		msg = "";
 		seedFixed = false;
+		runningSeed = 0l;
 		needEmpData = false;
 		mod = 0;
 		displayOn = false;
 //		fitnessVal = Double.POSITIVE_INFINITY;
+
+		mlpNetwork = new MLPNetwork();
+
+		runProperties = new HashMap<>();
+
+		timeStart = 0.0;
+		timeEnd = 0.0;
+		timeStep = 0.0;
+	}
+
+	public MLPEngine(String masterFileDir) {
+		//super()
+		master_ = null;
+		state_ = Constants.STATE_NOT_STARTED;
+		mode_ = 0;
+		breakPoints_ = null;
+		nextBreakPoint_ = 0;
+
+		//MLPEngine() blocked fields are initialized in parseProperties
+		firstEntry = true;
+//		needRndETable = false;
+//		loopRecOn = false;
+//		trackOn = false;
+//		infoOn = false;
+		msg = "";
+//		seedFixed = false;
+//		runningSeed = 0l;
+//		needEmpData = false;
+		mod = 0;
+//		displayOn = false;
+		mlpNetwork = new MLPNetwork();
+		runProperties = new HashMap<>();
+
+		parseProperties(masterFileDir);
+
+//		timeStart = 0.0;
+//		timeEnd = 0.0;
+//		timeStep = 0.0;
+	}
+
+	public void parseProperties(String fileDir) {
+		File testFile = new File(fileDir);
+		Configurations configs = new Configurations();
+		Configuration config = null;
+		try {
+			config = configs.properties(testFile);
+		} catch (ConfigurationException e) {
+			e.printStackTrace();
+		}
+
+		//input files
+		runProperties.put("roadNetworkDir", config.getString("roadNetworkDir"));
+		runProperties.put("emitFileDir", config.getString("emitFileDir"));
+		runProperties.put("odFileDir", config.getString("odFileDir"));
+		runProperties.put("sensorDir", config.getString("sensorDir"));
+		runProperties.put("empDataDir", config.getString("empDataDir"));
+
+		//time setting
+		timeStart = Double.parseDouble(config.getString("timeStart"));
+		timeEnd = Double.parseDouble(config.getString("timeEnd"));
+		timeStep = Double.parseDouble(config.getString("timeStep"));
+
+		//the value will be false if config.getString() returns null
+		needRndETable = Boolean.parseBoolean(config.getString("needRndETable"));
+		loopRecOn = Boolean.parseBoolean(config.getString("loopRecOn"));
+		trackOn = Boolean.parseBoolean(config.getString("trackOn"));
+		infoOn = Boolean.parseBoolean(config.getString("infoOn"));
+		seedFixed = Boolean.parseBoolean(config.getString("seedFixed"));
+		runningSeed = seedFixed ? Long.parseLong(config.getString("runningSeed")) : 0l;
+		needEmpData = Boolean.parseBoolean(config.getString("needEmpData"));
+		displayOn = Boolean.parseBoolean(config.getString("displayOn"));
 	}
 
 	@Override
-    public void run(int mode) {//0: with display default 1: no display silent 2: no display run with logs 3: with display for testing
-        switch (mode) {
-            case 0:
-                //Engine参数与状态的初始化
-                resetEngine(0, 6900, 0.2);
-                //优化参数设置
-                double[] param = new double[]{15.993167, 0.15445936, 1.5821557, 6.34795, 33.02263, 93.043655};
-                setOptParas(param);
-                displayOn = false;
-                int idata = 0;
-                double calStep = 30;
-                //15分钟用于仿真预热
-                double caltime = calStep+900;
-                int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
-                double []  simSpeed = new double [sampleSize];
-                MLPNetwork mlp_network = MLPNetwork.getInstance();
-                while (simulationLoop()>=0){
-                    double now = SimulationClock.getInstance().getCurrentTime();
-                    if (now>=caltime) {
-                        List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
-                        trTlist.clear();
-                        //线圈检测地点速度
-                        /*if(MainWindow.getInstance().needRTPlot){
-                            MainWindow.getInstance().getTrace2D().addPoint(idata, mlp_network.loopStatistic("det3")*3.6);
-                        }*/
-        				//线圈检测地点速度
- //       				simSpeed[idata] = mlp_network.loopStatistic("det3")*3.6;
-
-                        caltime += calStep;
-                        idata++;
-                    }
-                }
-                /* 
-                // 连接python测试
-				try {
-					CSVUtils.writeCSV("R:\\SimResults.csv", null, simSpeed);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-//                ADFullerTest test = new ADFullerTest(simSpeed);
-//                System.out.println(test.isNeedsDiff());*/
-                break;
-            case 1:
-                //Engine参数与状态的初始化
-                resetEngine(0, 6900, 0.2);
-                //优化参数设置
-                setOptParas(null);
-                while (simulationLoop() >= 0) ;
-                break;
-            case 2:
-                trackOn = true;
-                needRndETable = true;
-                seedFixed = true;
-                runningseed = 1490183749797l;
-                resetEngine(0, 6900, 0.2);
-                setOptParas(null);
-                while (simulationLoop() >= 0) ;
-                break;
-            case 3:
-                needRndETable = true;//测试
-                seedFixed = true;//测试
-                runningseed = 1490183749797l;//测试
-                displayOn = true;
-                MLPParameter.getInstance().setLCDStepSize(0.0);
-                //Engine参数与状态的初始化
-                resetEngine(0, 3600*24, 0.2);
-                //优化参数设置
-                setOptParas2(new double [] {16.87, 0.137, 0.2519, 1.8502, 1.3314, 33.3333});
-                while (simulationLoop() >= 0) ;
-                break;
-			case 4: //testing density calculation
-				needRndETable = false;//测试
-				seedFixed = true;//测试
-				runningseed = 1490183749797l;//测试
-				displayOn = true;
-				resetEngine(0, 6900, 0.2);
-				MLPNetwork network = MLPNetwork.getInstance();
-				simulationLoop();//firstTime
-
-				int i = 0;
-				while (i < 3600*5){
-					network.recordVehicleData();
-					i++;
-				}
-				break;
-            default:
-			break;
-		}
+    public void run(int mode) {
+		//TODO: for display mode
+		timeStart = 0.0;
+		timeEnd = 6900.0;
+		timeStep = 0.2;
+		resetEngine();
+		while (simulationLoop() >= 0) ;
 	}
 
 	@Override
 	public int simulationLoop() {
 		final double epsilon = 1.0E-3;
-		// 实例化路网对象，一个线程对应一个实例
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
 
-		double now = SimulationClock.getInstance().getCurrentTime();
-		double startTime = SimulationClock.getInstance().getStartTime();
+		double now = mlpNetwork.getSimClock().getCurrentTime();
+		double startTime = mlpNetwork.getSimClock().getStartTime();
 		String time = String.format("%.1f", now - startTime);
 
 		if (firstEntry) {
@@ -158,12 +159,12 @@ public class MLPEngine extends SimulationEngine{
 			// started.
 			firstEntry = false;
 			//Network状态重设并准备发车表
-			if (!seedFixed) 
-				runningseed = System.currentTimeMillis();
-			MLPNetwork.getInstance().resetNetwork(needRndETable, runningseed);
+			if (!seedFixed)
+				runningSeed = System.currentTimeMillis();
+			mlpNetwork.resetNetwork(needRndETable, runProperties.get("odFileDir"), runProperties.get("emitFileDir"), runningSeed);
 			
 			//reset update time
-			mlp_network.resetReleaseTime();
+			mlpNetwork.resetReleaseTime();
 			
 			//establish writers
 			String threadName = Thread.currentThread().getName();
@@ -180,8 +181,8 @@ public class MLPEngine extends SimulationEngine{
 			//信息统计：发车数
 			if (infoOn) {
 				int total = 0;
-				for (int i = 0; i < mlp_network.nLinks(); i++) {
-					List<Inflow> IFList = mlp_network.mlpLink(i).emtTable.getInflow();
+				for (int i = 0; i < mlpNetwork.nLinks(); i++) {
+					List<Inflow> IFList = mlpNetwork.mlpLink(i).getInflow();
 					int tmp = IFList.size();
 					total += tmp;
 					for (int j = 0; j < tmp; j++)
@@ -192,101 +193,99 @@ public class MLPEngine extends SimulationEngine{
 		}
 		
 		if (now>= updateTime_){
-			mlp_network.resetReleaseTime();
+			mlpNetwork.resetReleaseTime();
 			if (loopRecOn) 
 				loopRecWriter.flushBuffer();
 			if (trackOn)
 				trackWriter.flushBuffer();
 			if (infoOn)
 				infoWriter.flushBuffer();
-			updateTime_ = now + MLPParameter.getInstance().updateStepSize_;
+			updateTime_ = now + ((MLPParameter) mlpNetwork.getSimParameter()).updateStepSize_;
 		}
 		
 		//读入发车表
-		mlp_network.loadEmtTable();
+		mlpNetwork.loadEmtTable();
 		
 		//路网存在车辆的情况下才进行计算
-		if (mlp_network.veh_list.size()>0) {
+		if (mlpNetwork.veh_list.size()>0) {
 			//车队识别
-			mlp_network.platoonRecognize();			
+			mlpNetwork.platoonRecognize();
 			//若进入换道决策时刻，进行换道计算与车队重新识别
 			if (now >= LCDTime_) {
-				for (int i = 0; i < mlp_network.nLinks(); i++){
-					mlp_network.mlpLink(i).lanechange();
+				for (int i = 0; i < mlpNetwork.nLinks(); i++){
+					mlpNetwork.mlpLink(i).lanechange();
 				}
-				mlp_network.platoonRecognize();
-				LCDTime_ = now + MLPParameter.getInstance().LCDStepSize_;
+				mlpNetwork.platoonRecognize();
+				LCDTime_ = now + ((MLPParameter) mlpNetwork.getSimParameter()).LCDStepSize_;
 			}
 			//运动计算、节点服务(暂缺)、写入发车表（暂缺）
 			//车辆速度计算
-			for (int i = 0; i < mlp_network.nLinks(); i++){
-				mlp_network.mlpLink(i).move();
+			for (int i = 0; i < mlpNetwork.nLinks(); i++){
+				mlpNetwork.mlpLink(i).move();
 			}
 			//车辆状态更新(同时更新)
-			for (int k = 0; k<mlp_network.veh_list.size(); k++) {
-				MLPVehicle theVeh = mlp_network.veh_list.get(k);
+			for (int k = 0; k<mlpNetwork.veh_list.size(); k++) {
+				MLPVehicle theVeh = mlpNetwork.veh_list.get(k);
 				if (theVeh.updateMove()==1) 
 					k -=1;
 			}
 			//线圈检测
-			for (int j = 0; j < mlp_network.loops.size(); j++){
-				msg = mlp_network.loops.get(j).detect(time);				
+			for (int j = 0; j < mlpNetwork.loops.size(); j++){
+				msg = mlpNetwork.loops.get(j).detect(now);
 				if (loopRecOn) {//按需输出记录
 					loopRecWriter.write(msg);
 				}
 			}
 			//车辆推进
-			for (MLPVehicle vehicle : mlp_network.veh_list) {
+			for (MLPVehicle vehicle : mlpNetwork.veh_list) {
 				vehicle.advance();
 			}
 			//加载transpose车辆
-			for (int i = 0; i < mlp_network.nNodes(); i++) {
-				mlp_network.getNode(i).dispatchStatedVeh();
+			for (int i = 0; i < mlpNetwork.nNodes(); i++) {
+				mlpNetwork.getNode(i).dispatchStatedVeh();
 			}
 
 		}
 		
 		//可视化渲染
-		SimulationClock clock = SimulationClock.getInstance();
+		SimulationClock clock = mlpNetwork.getSimClock();
 		int tmp = (int) Math.floor(clock.getCurrentTime()*clock.getStepSize());
         if (displayOn && (tmp%10)==0) { // && (tmp%10)==0
-            mlp_network.recordVehicleData();
+            mlpNetwork.recordVehicleData();
 		}
 		
 		//输出轨迹
 		if (trackOn) {
-			if (!mlp_network.veh_list.isEmpty() ) {//&& now - 2*Math.floor(now/2) < 0.001
+			if (!mlpNetwork.veh_list.isEmpty() ) {//&& now - 2*Math.floor(now/2) < 0.001
 				int LV;
 				int FV;
-				for (MLPVehicle v : mlp_network.veh_list) {
+				for (MLPVehicle v : mlpNetwork.veh_list) {
 					LV = 0; FV = 0;
 					if (v.leading !=null)
-						LV = v.leading.getCode();
+						LV = v.leading.getId();
 					if (v.trailing != null)
-						FV = v.trailing.getCode();
+						FV = v.trailing.getId();
 					String str = time + "," +
 							          v.rvId + "," +
-							          v.getCode() + "," +
+							          v.getId() + "," +
 							          v.virtualType + "," +
 							          v.buffer + "," +
 							          v.lane.getLnPosNum() + "," +
-							          v.segment.getCode() + "," +
-							          v.link.getCode() + "," +
+							          v.segment.getId() + "," +
+							          v.link.getId() + "," +
 							          v.Displacement() + "," +
 							          v.getCurrentSpeed() + "," +
 							          LV + "," + 
 							          FV + "\r\n";
-					if (true) {//v.virtualType==0
-						trackWriter.writeNFlush(str);
-					}
+					trackWriter.writeNFlush(str);
 				}
 			}
 		}
-		
-		SimulationClock.getInstance().advance(SimulationClock.getInstance().getStepSize());
-		if (now > SimulationClock.getInstance().getStopTime() + epsilon) {			
+
+		clock.advance(clock.getStepSize());
+		if (now > clock.getStopTime() + epsilon) {
 			if (infoOn)
-				infoWriter.writeNFlush("共产生真实车与虚拟车：" + (mlp_network.getNewVehID()-1)+"\r\n");			
+				infoWriter.writeNFlush("共产生真实车与虚拟车：" + (mlpNetwork.getNewVehID()-1)+"\r\n");
 			if (loopRecOn) 
 				loopRecWriter.closeWriter();
 			if (trackOn)
@@ -312,27 +311,20 @@ public class MLPEngine extends SimulationEngine{
 		//读入实测数据用于计算fitness
 		if(needEmpData) {
 			//TODO DE优化临时修改
+			//TODO empData格式需要重新设计
 			try {
 				// 单列表格
-				List<CSVRecord> results = CSVUtils.readCSV("R:\\DetSpeed2.csv", null);
+				List<CSVRecord> results = CSVUtils.readCSV(runProperties.get("empDataDir"), null);//Dir fix to "R:\\DetSpeed2.csv"
 				double[] tmpEmpData = new double[results.size()]; 
 				for(int i=0;i<tmpEmpData.length;i++){
 					tmpEmpData[i] = Double.parseDouble(results.get(i).get(0));
 				}
 				empData = tmpEmpData;
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			//readFromLoop(MLPSetup.getLoopData_fileName());
 		}
-		//其他初始化过程。目前为空
-		start();
-	}
-
-	@Override
-	public void start() {
-		
 	}
 	
 	public int loadSimulationFiles(){
@@ -341,473 +333,67 @@ public class MLPEngine extends SimulationEngine{
 		//parse xml into parameter & network
 
 		// 读取路网xml
-		MLPSetup.ParseNetwork();
+		XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkDir"));
 		// 读入路网数据后组织路网不同要素的关系
-		MLPNetwork.getInstance().calcStaticInfo();
-//		// 读取检测器
-		MLPSetup.ParseSensorTables();
-		MLPNetwork.getInstance().createLoopSurface();
+		mlpNetwork.calcStaticInfo();
+		//生成面 与仿真计算无关
+		if (displayOn)
+			mlpNetwork.createLoopSurface();
+		XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorDir"));
 		return 0;
 	}
 	
-	public void resetEngine(double timeStart, double timeEnd, double timeStep) {//时间相关的参数
+	public void resetEngine() {//重置引擎时钟 时间相关的参数
+		SimulationClock clock = mlpNetwork.getSimClock();
 		firstEntry = true;
-		SimulationClock.getInstance().init(timeStart, timeEnd, timeStep);		
-		double now = SimulationClock.getInstance().getCurrentTime();
+		clock.init(timeStart, timeEnd, timeStep);
+		getSimParameter().setSimStepSize(timeStep);
+		double now = clock.getCurrentTime();
 		updateTime_ = now;
 		LCDTime_ = now;
 	}
 
 	public void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam]
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		mlp_network.setOverallCapacity(ob_paras[0]);//路段单车道每秒通行能力
+		mlpNetwork.setOverallCapacity(ob_paras[0]);//路段单车道每秒通行能力
 		int mask = 0;
 		mask |= 1<<(1-1);//Vmax
 		mask |= 1<<(3-1);//Kjam
-		mlp_network.setOverallSDParas(new double[] {ob_paras[1], ob_paras[2]}, mask);
+		mlpNetwork.setOverallSDParas(new double[] {ob_paras[1], ob_paras[2]}, mask);
 		//根据Kjam 保持 leff 与 CF_near 的一致性
-		MLPParameter allParas = MLPParameter.getInstance();
+		MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
 		allParas.limitingParam_[0] = (float) (1.0/ob_paras[2] - allParas.VEHICLE_LENGTH);
 		allParas.CF_NEAR = allParas.limitingParam_[0];//锁定与kjam吻合
 	}
 
 	public void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.(是否要考虑dlower dupper)
 		if (optparas != null) {
-			MLPParameter allParas = MLPParameter.getInstance();
+			MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
 			allParas.limitingParam_[1] = (float) optparas[0];//ts
 			allParas.CF_FAR = (float) optparas[1];//xc
-			MLPNetwork mlp_network = MLPNetwork.getInstance();
 			int mask = 0;
 			mask |= 1<<(4-1);
 			mask |= 1<<(5-1);
-			mlp_network.setOverallSDParas(new double[] {optparas[2], optparas[3]}, mask);//alpha, beta
+			mlpNetwork.setOverallSDParas(new double[] {optparas[2], optparas[3]}, mask);//alpha, beta
 			allParas.setLCPara(new double[] {optparas[4], optparas[5]});//gamma1 gamma2
 		}		
 	}
-	
-	public double calFitness(double [] paras) {
-		//初始化引擎的固定参数（时间）
-		resetEngine(0, 6900, 0.2);
-		//设置优化参数
-		setOptParas(paras);
-		//设置fitness fun的变量
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		double calStep = 300;
-		double caltime = calStep;
-		int sampleSize = (int) (SimulationClock.getInstance().getDuration() / calStep);
-		double []  simTrT = new double [sampleSize];
-		double []  simSpeed = new double [sampleSize];
-		double []  simLinkFlow = new double [sampleSize];
-		int idx = 0;
-		//运行仿真，定时进行输出统计
-		while(simulationLoop()>=0) {
-			double now = SimulationClock.getInstance().getCurrentTime();
-			if (now>=caltime) {
-				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;				
-				//SimTrT计算
-				/*double avg_trTime = 0.0;				
-				if (trTlist.size()>0) {
-					for (Double trt : trTlist) {
-						avg_trTime += trt;
-					}
-					avg_trTime = avg_trTime / trTlist.size();
-					simLinkFlow[idx] = trTlist.size();	
-				}
-				simTrT[idx] = avg_trTime;*/
-				trTlist.clear();
 
-				//瞬时平均运行速度
-				/*double avg_ExpSpeed = 0.0;
-				if (!mlp_network.mlpLink(0).hasNoVeh(false)) {
-					int count = 0;
-					double sum = 0.0;
-					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
-						for (MLPLane LN : JL.lanesCompose) {
-							for (MLPVehicle Veh : LN.vehsOnLn) {
-								if (Veh.virtualType == 0) {
-									sum += (Veh.Displacement() - Veh.dspEntrance)  /  (now - Veh.TimeEntrance);
-									count += 1;
-								}
-							}
-						}
-					}
-					avg_ExpSpeed = sum / count;
-				}
-				simSpeed[idx] = avg_ExpSpeed;*/
-				
-				//线圈检测地点速度
-				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime);
-						
-				caltime += calStep;
-				idx += 1;
-			}
-		}
-		double[][] realLoopDetect =(double[][]) empData;
-		double [] realSpeed = new double [realLoopDetect.length];
-		for (int k = 0; k < realLoopDetect.length; k++) {
-			realSpeed[k] = realLoopDetect[k][0];
-		}
-		double[] tmpSim = new double[simSpeed.length-4];
-		double[] tmpReal = new double[simSpeed.length-4];
-		System.arraycopy(simSpeed, 4, tmpSim, 0, simSpeed.length-4);
-		System.arraycopy(realSpeed, 4, tmpReal, 0, simSpeed.length-4);
-		double fitnessVal = FitnessFunction.evaRNSE(tmpSim, tmpReal);
-		return fitnessVal;
-	}
-	public double[] calFitness3(double [] paras) {
-		//初始化引擎的固定参数（时间）
-		resetEngine(0, 6900, 0.2);
-		double[] paras1 = new double[3];
-		double[] paras2 = new double[6];
-		seedFixed = true;
-		runningseed = (long) paras[0];
-		for(int i =1;i<paras.length;i++){
-			if(i<4)
-				paras1[i-1] = paras[i];
-			else
-				paras2[i-4] = paras[i];
-		}
-		setObservedParas(paras1);
-		//设置优化参数
-		setOptParas(paras2);
-		//设置fitness fun的变量
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		double calStep = 30;
-		double caltime = calStep+900;
-		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
-		double []  simTrT = new double [sampleSize];
-		double []  simSpeed = new double [sampleSize];
-		double []  simLinkFlow = new double [sampleSize];
-		int idx = 0;
-		//运行仿真，定时进行输出统计
-		while(simulationLoop()>=0) {
-			double now = SimulationClock.getInstance().getCurrentTime();
-			if (now>=caltime) {
-				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;				
-				trTlist.clear();
-				//线圈检测地点速度
-				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
-						
-				caltime += calStep;
-				idx += 1;
-			}
-		}
-		double[] realLoopDetect =(double[])empData;
-
-		double fitnessVal = FitnessFunction.evaKSDistance(simSpeed, realLoopDetect);
-		double[] results = new double[simSpeed.length+1];
-		results[0] = fitnessVal;
-		System.arraycopy(simSpeed, 0, results, 1, simSpeed.length);
-		return results;
-	}
-	public double[] calFitness4(double [] paras) {		
-		//初始化引擎的固定参数（时间）
-		resetEngine(0, 6900, 0.2);
-		double[] paras1 = new double[3];
-		double[] paras2 = new double[6];
-		seedFixed = true;
-		runningseed = (long) paras[0];
-		
-		for(int i =1;i<paras.length;i++){
-			if(i<4)
-				paras1[i-1] = paras[i];
-			else
-				paras2[i-4] = paras[i];
-		}
-		setObservedParas(paras1);
-		//设置优化参数
-		setOptParas(paras2);
-		//设置fitness fun的变量
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		double calStep = 300;
-		double caltime = calStep+900;
-		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
-		double []  simTrT = new double [sampleSize];
-		double []  simSpeed = new double [sampleSize];
-		double []  simLinkFlow = new double [sampleSize];
-		int idx = 0;
-		//运行仿真，定时进行输出统计
-		while(simulationLoop()>=0) {
-			double now = SimulationClock.getInstance().getCurrentTime();
-			if (now>=caltime) {
-				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;				
-				trTlist.clear();
-				//线圈检测地点速度
-				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
-						
-				caltime += calStep;
-				idx += 1;
-			}
-		}
-		double[] realLoopDetect =(double[])empData;
-
-		double fitnessVal = FitnessFunction.evaRNSE(simSpeed, realLoopDetect);
-		double[] results = new double[simSpeed.length+1];
-		results[0] = fitnessVal;
-		System.arraycopy(simSpeed, 0, results, 1, simSpeed.length);
-		return results;
-	}
-	// 5.17实验 xc,kstar,gama1,gama2
-	public double[] calFitness2(double [] paras) {
-
-		//初始化引擎的固定参数（时间）
-		resetEngine(0, 6900, 0.2);
-		seedFixed = false;
-		double[] paras1 = new double[]{0.5122,20.37,0.1928};
-		// xc,kstar,gama1,gama2
-		//double[] paras2 = new double[4];
-		/*
-		for(int i =0;i<paras.length;i++){
-			paras2[i] = paras[i];
-		}*/
-		MLPParameter mlp_paras = MLPParameter.getInstance();
-		//QM,VF,Kj,输出ts,alpha,beta
-		double[] results = mlp_paras.genSolution(paras1, paras[0], paras[1]);
-		//设置优化参数
-		setObservedParas(paras1);
-		double[] orgParas2 = new double[6];
-		orgParas2[0] = results[0];
-		orgParas2[1] = paras[0];
-		orgParas2[4] = paras[2];
-		orgParas2[5] = paras[3];
-		orgParas2[2] = results[1];
-		orgParas2[3] = results[2];
-		//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2
-		setOptParas(orgParas2);
-		
-		//设置fitness fun的变量
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		double calStep = 300;
-		double caltime = calStep+900;
-		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
-		double []  simTrT = new double [sampleSize];
-		double []  simSpeed = new double [sampleSize];
-		double []  simLinkFlow = new double [sampleSize];
-		int idx = 0;
-		//运行仿真，定时进行输出统计
-		while(simulationLoop()>=0) {
-			double now = SimulationClock.getInstance().getCurrentTime();
-			if (now>=caltime) {
-				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
-				trTlist.clear();
-
-				//瞬时平均运行速度
-				/*double avg_ExpSpeed = 0.0;
-				if (!mlp_network.mlpLink(0).hasNoVeh(false)) {
-					int count = 0;
-					double sum = 0.0;
-					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
-						for (MLPLane LN : JL.lanesCompose) {
-							for (MLPVehicle Veh : LN.vehsOnLn) {
-								if (Veh.virtualType == 0) {
-									sum += (Veh.Displacement() - Veh.dspEntrance)  /  (now - Veh.TimeEntrance);
-									count += 1;
-								}
-							}
-						}
-					}
-					avg_ExpSpeed = sum / count;
-				}
-				simSpeed[idx] = avg_ExpSpeed;*/
-
-				//线圈检测地点速度
-				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
-
-				caltime += calStep;
-				idx += 1;
-			}
-
-		}
-		/*
-		double[][] realLoopDetect =(double[][]) empData;
-		double [] realSpeed = new double [realLoopDetect.length];
-		for (int k = 0; k < realLoopDetect.length; k++) {
-			realSpeed[k] = realLoopDetect[k][0];
-		}
-		double[] tmpSim = new double[simSpeed.length-4];
-		double[] tmpReal = new double[simSpeed.length-4];
-		System.arraycopy(simSpeed, 4, tmpSim, 0, simSpeed.length-4);
-		System.arraycopy(realSpeed, 4, tmpReal, 0, simSpeed.length-4);*/
-		double[] realLoopDetect =(double[])empData;
-		double fitnessVal = FitnessFunction.evaRNSE(simSpeed, realLoopDetect);
-		double[] rewards = new double[]{fitnessVal,results[1],results[2]};
-		return rewards;
-	}
-	public double calFitness6(double [] paras) {
-
-		//初始化引擎的固定参数（时间）
-		resetEngine(0, 6900, 0.2);
-		seedFixed = false;
-		double[] paras1 = new double[]{0.5122,20.37,0.1928};;
-		// xc,alpha,beta,gama1,gama2
-		/*double[] paras2 = new double[5];
-		for(int i =0;i<paras.length;i++){
-			if(i<3)
-				paras1[i] = paras[i];
-			else
-				paras2[i-3] = paras[i];
-		}*/
-		MLPParameter mlp_paras = MLPParameter.getInstance();
-		double ts = mlp_paras.genSolution2(paras1, paras[0]);
-		//设置优化参数
-		setObservedParas(paras1);
-		double[] orgParas2 = new double[6];
-		orgParas2[0] = ts;
-		orgParas2[1] = paras[0];
-		orgParas2[4] = paras[3];
-		orgParas2[5] = paras[4];
-		orgParas2[2] = paras[1];
-		orgParas2[3] = paras[2];
-		//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2
-		setOptParas(orgParas2);
-		
-		//设置fitness fun的变量
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		double calStep = 300;
-		double caltime = calStep+900;
-		int sampleSize = (int) ((SimulationClock.getInstance().getDuration()-900) / calStep);
-		double []  simTrT = new double [sampleSize];
-		double []  simSpeed = new double [sampleSize];
-		double []  simLinkFlow = new double [sampleSize];
-		int idx = 0;
-		//运行仿真，定时进行输出统计
-		while(simulationLoop()>=0) {
-			double now = SimulationClock.getInstance().getCurrentTime();
-			if (now>=caltime) {
-				List<Double> trTlist = mlp_network.mlpLink(0).tripTime;
-				trTlist.clear();
-
-				//瞬时平均运行速度
-				/*double avg_ExpSpeed = 0.0;
-				if (!mlp_network.mlpLink(0).hasNoVeh(false)) {
-					int count = 0;
-					double sum = 0.0;
-					for (JointLane JL : mlp_network.mlpLink(0).jointLanes) {
-						for (MLPLane LN : JL.lanesCompose) {
-							for (MLPVehicle Veh : LN.vehsOnLn) {
-								if (Veh.virtualType == 0) {
-									sum += (Veh.Displacement() - Veh.dspEntrance)  /  (now - Veh.TimeEntrance);
-									count += 1;
-								}
-							}
-						}
-					}
-					avg_ExpSpeed = sum / count;
-				}
-				simSpeed[idx] = avg_ExpSpeed;*/
-
-				//线圈检测地点速度
-				simSpeed[idx] = mlp_network.sectionMeanSpd("det2", caltime-calStep, caltime)*3.6;
-
-				caltime += calStep;
-				idx += 1;
-			}
-
-		}
-		/*
-		double[][] realLoopDetect =(double[][]) empData;
-		double [] realSpeed = new double [realLoopDetect.length];
-		for (int k = 0; k < realLoopDetect.length; k++) {
-			realSpeed[k] = realLoopDetect[k][0];
-		}
-		double[] tmpSim = new double[simSpeed.length-4];
-		double[] tmpReal = new double[simSpeed.length-4];
-		System.arraycopy(simSpeed, 4, tmpSim, 0, simSpeed.length-4);
-		System.arraycopy(realSpeed, 4, tmpReal, 0, simSpeed.length-4);*/
-		double[] realLoopDetect =(double[])empData;
-		double fitnessVal = FitnessFunction.evaRNSE(simSpeed, realLoopDetect);
-		return fitnessVal;
+	public MLPParameter getSimParameter() {
+		return (MLPParameter) mlpNetwork.getSimParameter();
 	}
 
-
-	public void setOptParas2(double [] optparas) {
-		if (optparas != null) {
-			MLPNetwork mlp_network = MLPNetwork.getInstance();
-			mlp_network.setOverallCapacity(0.51);//锁定，与观测值一致
-			mlp_network.setOverallSDParas(new double [] {optparas[0],0.0,optparas[1],optparas[2],optparas[3]});
-
-			MLPParameter allParas = MLPParameter.getInstance();
-			allParas.limitingParam_[0] = (float) (1.0/optparas[1] - allParas.VEHICLE_LENGTH);//锁定leff
-			allParas.CF_NEAR = allParas.limitingParam_[0];//锁定与kjam吻合
-			allParas.setLCPara(new double[] {20.0, 20.0});//暂时锁定排查节点原因
-
-			allParas.limitingParam_[1] = (float) optparas[4];
-			allParas.CF_FAR = (float) optparas[5];
-		}
+	public SimulationClock getSimClock() {
+		return mlpNetwork.getSimClock();
 	}
 
-	public double validate(double [] paras) {
-		//初始化引擎的固定参数（时间）
-		resetEngine(0, 3600*24, 0.2);
-		//设置优化参数
-		setOptParas2(paras);
-		//增加换道考虑
-		MLPParameter.getInstance().setLCDStepSize(0.0);
-		//设置fitness fun的变量
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		double calStep = 300;
-		double caltime = calStep;
-		int sampleSize = (int) (SimulationClock.getInstance().getDuration() / calStep);
-		double []  simTrT = new double [sampleSize];
-		double []  simSpeed = new double [sampleSize];
-		double []  simLinkFlow = new double [sampleSize];
-		int idx = 0;
-		//运行仿真，定时进行输出统计
-		while(simulationLoop()>=0);
-		double ans = 0.0;
-		for (int i = 0; i < mlp_network.nNodes(); i++){
-			ans += mlp_network.getNode(i).stopCount;
-		}
-		TXTUtils loopWriter = new TXTUtils("src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv");
-		loopWriter.write("DETNAME,LANEID,TIME,SPEED\r\n");
-		for (int i = 0; i < mlp_network.loops.size(); i++) {
-			MLPLoop loop = mlp_network.loops.get(i);
-			if (loop.detName.equals("det2")) {
-				for (int j = 0; j < loop.records.size(); j++) {
-					double [] row = loop.records.get(j);
-					loopWriter.write(loop.detName + "," + loop.lane.getCode() + "," + row[0] + "," + row[1] + "\r\n");
-				}
-				loopWriter.flushBuffer();
-			}
-		}
-		loopWriter.closeWriter();
-		return ans;
+	//TODO: 待删除 将统计功能集成到Network下，EngThread不需要访问mlpNetwork对象
+	public MLPNetwork getMlpNetwork() {
+		return mlpNetwork;
 	}
 
-	public void readFromLoop(String filePath) {
-		double [][] ans = null;
-		String [] loopheader = {"FromTime","ToTime","ArcID","Speed","Flow","Density"};
-		try {
-			List<CSVRecord> Rows = CSVUtils.readCSV(filePath, loopheader);
-			ans = new double [Rows.size() - 1] [2];
-			for (int i = 1; i < Rows.size(); i++) {
-				CSVRecord r = Rows.get(i);
-				ans[i-1][0] = Double.parseDouble(r.get(3));
-				ans[i-1][1] = Double.parseDouble(r.get(4));
-			}
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-		empData = ans;
+	//TODO: 待删除 将统计功能集成到Network下
+	public double[] getEmpData() {
+		return (double[]) empData;
 	}
-	
-	public double MAPE(double[] sim, double[] real) {
-		if (sim.length<=0 || sim.length != real.length) {
-			return Double.POSITIVE_INFINITY;
-		}		
-		double sum = 0.0;
-		int count = 0;
-		for (int i = 1; i < sim.length; i++) {//1 for warmup
-			double del = Math.abs(sim[i] - real[i]);
-			if (Math.abs(real[i])>0.0001) {
-				sum += del / real[i];
-				count += 1;
-			}
-		}		
-		if (count > 0) 
-			return (sum / count);
-		else 
-			return 0.0;
-	}
-	
+
 }

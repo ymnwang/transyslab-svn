@@ -261,7 +261,7 @@ public class MesoSegment extends Segment {
 	}
 	public double defaultCapacity() {
 		double vph = this.sdFunction.getCapacity();
-		return nLanes * vph;
+		return nLanes() * vph;
 	}
 
 	// Update number of vehicle allowed to move out.
@@ -310,8 +310,6 @@ public class MesoSegment extends Segment {
 	}
 
 	public void calcStaticInfo(double currentTime) {
-		// 重写部分开始
-		super.calcStaticInfo();
 
 		//此处赋值freeSpeed
 		freeSpeed = this.sdFunction.getFreeSpeed();

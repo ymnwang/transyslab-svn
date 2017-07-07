@@ -1,12 +1,10 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.HashMap;
 import com.transyslab.roadnetwork.Parameter;
 import com.transyslab.simcore.mlp.Functions.FunsCombination1;
 import com.transyslab.simcore.mlp.Functions.FunsCombination2;
 import com.transyslab.simcore.mlp.Functions.TSFun;
-import com.transyslab.commons.tools.DE;
-import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.commons.tools.optimizer.DE;
 
 public class MLPParameter extends Parameter {		
 	private double SegLenBuff_;//强制换道边界（segment实线长度）meter
@@ -37,18 +35,7 @@ public class MLPParameter extends Parameter {
 	public FunsCombination1 funsCombination3;
 	public TSFun tsFun;
 	private DE de;
-
-	public static MLPParameter getInstance() {
-		HashMap<String, Integer> hm = MLPNetworkPool.getInstance().getHashMap();
-		if (hm != null) {			
-			int threadid = hm.get(Thread.currentThread().getName()).intValue();
-			return MLPNetworkPool.getInstance().getParameter(threadid);
-		}
-		else {
-			MLPEngThread theThread = (MLPEngThread) Thread.currentThread();
-			return (MLPParameter) theThread.parameter;
-		}		
-	}
+	private double simStepSize;
 
 	public MLPParameter() {
 		SegLenBuff_ = 10.0;
@@ -77,6 +64,7 @@ public class MLPParameter extends Parameter {
 		funsCombination3 = new FunsCombination1();
 		tsFun = new TSFun();
 		de = new DE();
+		simStepSize = 0.0;
 	}
 	public double getUpdateStepSize() {
 		return updateStepSize_;
@@ -98,7 +86,7 @@ public class MLPParameter extends Parameter {
 	
 	//This returns a maximum speed for a give gap, in specific MLPlane, provide for MLP model
 	public double maxSpeed(double gap) {
-		double dt = SimulationClock.getInstance().getStepSize() + headwaySpeedSlope();
+		double dt = simStepSize + headwaySpeedSlope();
 		double dx = gap - minHeadwayGap();
 		return Math.max(0.0, Math.min(PHYSICAL_SPD_LIM, dx/dt));
 	}
@@ -129,14 +117,14 @@ public class MLPParameter extends Parameter {
 	
 	public void setLCBuffTime(double val){
 		LCBuffTime_ = val;
-		LCBuff_ = (int) Math.floor(LCBuffTime_ / SimulationClock.getInstance().getStepSize());
+		LCBuff_ = (int) Math.floor(LCBuffTime_ / simStepSize);
 	}
 	public double getLCBuffTime() {
 		return LCBuffTime_;
 	}
 	public int getLCBuff() {
 		if (LCBuff_ == 0) 
-			LCBuff_ = (int) Math.floor(LCBuffTime_ / SimulationClock.getInstance().getStepSize());
+			LCBuff_ = (int) Math.floor(LCBuffTime_ / simStepSize);
 		return LCBuff_;
 	}
 	
@@ -170,15 +158,15 @@ public class MLPParameter extends Parameter {
 
 	public double[] genSolution(double[] obsParas, double xc, double kstar){//QM,VF,Kj
 		double[] XC = new double[]{xc};
-		//detaT,VP
-		double detaT = SimulationClock.getInstance().getStepSize();
-		tsFun.setParas(obsParas,detaT ,PHYSICAL_SPD_LIM);
+		//deltaT,VP
+		double deltaT = simStepSize;
+		tsFun.setParas(obsParas,deltaT ,PHYSICAL_SPD_LIM);
 		double tsValue = tsFun.cal(XC);
 		// 当k = k1
 		double k1 = obsParas[0]/PHYSICAL_SPD_LIM;
 		funsCombination1.setParas(k1, obsParas[0], obsParas[1], obsParas[2], kstar);
 		funsCombination2.setParas(obsParas[1], obsParas[2], obsParas[0], kstar);
-		double k2 = (1-obsParas[0]*(tsValue+detaT))*obsParas[2]; 
+		double k2 = (1-obsParas[0]*(tsValue+deltaT))*obsParas[2];
 		// 当k = k2
 		funsCombination3.setParas(k2, obsParas[0], obsParas[1], obsParas[2], kstar);
 		double[] results ;
@@ -200,9 +188,9 @@ public class MLPParameter extends Parameter {
 	}
 	public double genSolution2(double[] obsParas, double xc){//QM,VF,Kj
 		double[] XC = new double[]{xc};
-		//detaT,VP
-		double detaT = SimulationClock.getInstance().getStepSize();
-		tsFun.setParas(obsParas,detaT ,PHYSICAL_SPD_LIM);
+		//deltaT,VP
+		double deltaT = simStepSize;
+		tsFun.setParas(obsParas,deltaT ,PHYSICAL_SPD_LIM);
 		double tsValue = tsFun.cal(XC);
 		return tsValue;
 	}
@@ -218,7 +206,7 @@ public class MLPParameter extends Parameter {
 		double gamma1 = paras[7];
 		double gamma2 = paras[8];
 		
-		double delta_t = SimulationClock.getInstance().getStepSize();
+		double delta_t = simStepSize;
 		double leff = 1/Kj;
 		double Vp = PHYSICAL_SPD_LIM;
 		boolean check1 = false;
@@ -236,5 +224,9 @@ public class MLPParameter extends Parameter {
 		//double root = solve((1/x-leff)/(delta_t+ts)==Vf*(1-(x/Kj)^alpha)^beta);//非线性方程，要造轮子才能解；暂时不考虑这个条件
 		check2 =  Qb/(Kj-1/xb)>Qm_star/(Kj-Km_star) ? Qm==Qm_star : true; //Qm==root*(1/root-leff)/(delta_t+ts);
 		return check1 && check2;
+	}
+
+	public void setSimStepSize(double arg) {
+		simStepSize = arg;
 	}
 }

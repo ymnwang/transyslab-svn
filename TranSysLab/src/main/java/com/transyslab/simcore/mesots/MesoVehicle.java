@@ -231,7 +231,7 @@ public class MesoVehicle extends Vehicle {
 	public void enterPretripQueue(double simStep) {
 
 		// 所有车的路径已初始化
-		if (nextLink == null) { // No getPath
+		if (nextLink == null) { // No path
 			//MesoVehiclePool.getInstance().recycle(this);
 			needRecycle = true;
 			return;
@@ -299,10 +299,10 @@ public class MesoVehicle extends Vehicle {
 		}
 
 		// 节段是否有检测器
-		if (getSegment().getSurvList() != null) {
-			ListIterator<SurvStation> i = getSegment().getSurvList().listIterator();
+		if (getSegment().getSensors() != null) {
+			ListIterator<Sensor> i = getSegment().getSensors().listIterator();
 			while (i.hasNext()) {
-				SurvStation tmp = i.next();
+				Sensor tmp = i.next();
 				// 车辆是否经过检测断面
 				// 两个检测器之间距离需超过8米
 				if (distance <= tmp.getPosition() && tmp.getPosition() - distance < 8 && sensorIDFlag != tmp.getId()) {

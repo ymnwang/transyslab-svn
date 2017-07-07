@@ -10,7 +10,7 @@ import com.transyslab.commons.tools.SimulationClock;
  *
  * @author YYL 2016-6-3
  */
-public abstract class Vehicle implements NetworkObject {
+public abstract class Vehicle{
 
 	protected int id;
 	protected String objInfo;

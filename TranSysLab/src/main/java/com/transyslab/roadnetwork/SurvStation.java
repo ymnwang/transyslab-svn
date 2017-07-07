@@ -31,6 +31,7 @@ public class SurvStation implements Sensor{
 	protected List<Integer> flowList; // measure flow in specific time interval
 	// protected List<Integer> vhcidList_ = new ArrayList<Integer>();
 	protected GeoSurface surface;
+	protected Boolean isSelected;
 
 	public SurvStation() {
 		index = -1;
@@ -42,6 +43,12 @@ public class SurvStation implements Sensor{
 	}
 	public int getId(){
 		return this.id;
+	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
 	}
 	public int type() {
 		return type;
@@ -104,17 +111,17 @@ public class SurvStation implements Sensor{
 		// (YYL)
 		sensors = new ArrayList<Sensor>();
 
-		if (segment.getSurvList() == null)
-			segment.survStations = new ArrayList<SurvStation>();
+		if (segment.sensors == null)
+			segment.sensors = new ArrayList<Sensor>();
 		this.index = index;
-		segment.addSurvStation(this);
+		segment.addSensor(this);
 	}
 	public void initDectTime(double startTime,double interval){
 		this.detTime = startTime;
 		this.interval = interval;
 	}
 	public void setSDetTime(double startTime){
-		this.detTime = startTime;
+		this.detTime = startTime+this.interval;
 	}
 	/*
 	public void outputToOracle(PreparedStatement ps) throws SQLException {
@@ -209,7 +216,7 @@ public class SurvStation implements Sensor{
 		GeoPoint startPnt = new GeoPoint(segment.getStartPnt(), segment.getEndPnt(), position);
 		double lenScale = zoneLength / segment.getLength();
 		GeoPoint endPnt = new GeoPoint(startPnt, segment.getEndPnt(),lenScale);
-		double width = segment.nLanes * segment.getLeftLane().getWidth();
+		double width = segment.nLanes() * segment.getLeftLane().getWidth();
 		surface = GeoUtil.lineToRectangle(startPnt, endPnt, width,true);
 	}
 	public void clean(){

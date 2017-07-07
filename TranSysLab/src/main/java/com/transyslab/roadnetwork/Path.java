@@ -26,7 +26,7 @@ public class Path implements NetworkObject {
 	// read from getPath table and not changed during the simulation.
 
 	protected float pathTravelTime;
-
+	protected boolean isSelected;
 
 	private float cf;				// commonality factor
 	
@@ -38,6 +38,12 @@ public class Path implements NetworkObject {
 	}
 	public String getObjInfo(){
 		return this.objInfo;
+	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
 	}
 	public Node getOriNode() {
 		return oriNode;
