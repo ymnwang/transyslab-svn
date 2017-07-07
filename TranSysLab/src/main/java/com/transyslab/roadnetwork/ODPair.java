@@ -18,6 +18,8 @@ public class ODPair implements NetworkObject{
 	protected List<Path> paths;
 	protected double[] splits; // probabilities to choose each getPath
 	protected static int nSplits; // num of splits parsed so far for current odpair
+	protected Boolean isSelected;
+
 	public ODPair() {
 		paths = new ArrayList<>();
 	}
@@ -65,6 +67,12 @@ public class ODPair implements NetworkObject{
 	}
 	public String getObjInfo(){
 		return this.name;
+	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
 	}
 	public Node getOriNode() {
 		return oriNode;

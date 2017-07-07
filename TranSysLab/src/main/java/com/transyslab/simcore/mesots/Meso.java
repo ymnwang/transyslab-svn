@@ -27,6 +27,11 @@ public class Meso {
 
 
 	public static void main(String[] args) {
+		MesoEngine engine = new MesoEngine(0,"E:\\test\\");
+		engine.loadFiles();
+		engine.run(0);
+	}
+		/*
 		long begintime = System.currentTimeMillis();
 		long[] endtime = new long[20];
 		MesoNetworkPool infoarrays = MesoNetworkPool.getInstance();
@@ -102,6 +107,6 @@ public class Meso {
 
 		System.out.print("done");
 
-	}
+	}*/
 
 }

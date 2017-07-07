@@ -22,7 +22,7 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 	protected int type;
 	protected Node upNode;
 	protected Node dnNode;
-	protected int nSegments;
+	protected Boolean isSelected;
 	// RN_LinkTime Ù–‘
 
 	// protected static int infoPeriodLength; // length of each period (second)
@@ -85,6 +85,12 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 	}
 	public String getObjInfo(){
 		return this.objInfo;
+	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
 	}
 	public void setType(int t) {
 		type = t;

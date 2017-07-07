@@ -8,7 +8,7 @@ package com.transyslab.roadnetwork;
  *
  * @author YYL 2016-6-2
  */
-public class Label implements NetworkObject {
+public class Label {
 	protected int id;
 	protected String name;
 	protected static int sorted;

@@ -139,8 +139,7 @@ public class XmlParser {
 
 			}
 			//创建Boundary对象，用于绘制车道分隔线，与仿真模型无关
-			Boundary tempbdy = new Boundary();
-			tempbdy.init(tmpId, beginX, beginY, endX, endY);
+			network.createBoundary(tmpId, beginX, beginY, endX, endY);
 		}
 		//解析Surface
 		/*if(node.getName() == "Surface"){
@@ -279,7 +278,7 @@ public class XmlParser {
 					int m = time.getMinute();
 					int sec = time.getSecond();
 					// 往后读5分钟，故+300秒
-					ODtime = h * 3600 + m * 60 + sec + 300;
+					ODtime = h * 3600 + m * 60 + sec + 3600;
 					// 最后一个时间间隔
 					if (ODtime == 68700)
 						ODtime = Constants.INT_INF;
@@ -322,8 +321,8 @@ public class XmlParser {
 					}
 
 				}
-				MesoODCell tempcell = new MesoODCell((MesoNode) network.findNode(oid),(MesoNode)network.findNode(did));
-				tempcell.init(oid, did, flow, c1, c2);
+				MesoODCell tempcell = ((MesoNetwork)network).createODCell(oid, did, flow, c1, c2);
+
 				// 更新odtable时会重新生成odcell，则每个odcell都需要建立新的path
 				// TODO 不同模式来决定路径从图还是文件生成
 				if (network.nPaths()!=0) {
@@ -428,6 +427,7 @@ public class XmlParser {
 			// TODO 待设计
 			MesoVehicle tmp = new MesoVehicle();// = MesoVehiclePool.getInstance().recycle();
 			tmp.init(vhcid, type, length,distance,departtime);
+			// TODO tmp.initialize()
 			vhclist.add(tmp);
 		}
 	}

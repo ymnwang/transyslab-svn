@@ -56,9 +56,6 @@ public abstract class SimulationEngine {
 		 * return 0; } }
 		 */
 
-	public boolean isWaiting() {
-		return SimulationClock.getInstance().isWaiting();
-	}
 
 	
 

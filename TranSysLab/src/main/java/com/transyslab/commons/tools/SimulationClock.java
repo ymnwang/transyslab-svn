@@ -3,8 +3,6 @@ package com.transyslab.commons.tools;
 import java.util.HashMap;
 import java.util.TimeZone;
 
-import com.transyslab.roadnetwork.RoadNetworkPool;
-import com.transyslab.simcore.mlp.MLPEngThread;
 
 public class SimulationClock {
 

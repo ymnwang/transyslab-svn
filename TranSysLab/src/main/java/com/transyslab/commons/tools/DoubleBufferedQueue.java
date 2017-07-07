@@ -67,8 +67,8 @@ public class DoubleBufferedQueue<E> {
      *  
      *Notice:This function can only be invoked after readLock_ is  
          * grabbed,or may cause dead lock 
-     * @param timeout 
-     * @param isInfinite: whether need to wait forever until some other 
+     * @param
+     * @param : whether need to wait forever until some other
      * thread awake_ it 
      * @return 
      * @throws InterruptedException 

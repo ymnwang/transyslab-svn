@@ -20,14 +20,18 @@ public class MesoODCell extends ODPair{
 
 	protected int busTypeBRT; // Dan: bus type for bus rapid transit assignment
 	protected int runIDBRT; // Dan: assigned bus run id for bus rapid transit
-
+	public static int emitCounter;
 
 	public MesoODCell(MesoNode o, MesoNode d) {
 		nextTime = 0;
 		oriNode = o;
 		desNode = d;
+		emitCounter = 0;
 	}
 
+	public void setId(int id){
+		this.id = id;
+	}
 	public double rate() {
 		return 3600.0 / headway;
 	}
@@ -45,11 +49,18 @@ public class MesoODCell extends ODPair{
 		return runIDBRT;
 	}
 
-
 	// This function is called by OD_Parser. Return 0 if sucess or -1 if fail
-	public void init(int ori, int des, double rate, double var, float r) {
+	public void init(int id, int type, double headway, double nextTime,double r) {
+		this.id = id;
+		// theODPairs 是od对的list，这里不将od对存进list
+		// 原来把odpair存进list是为了查询是否已存在od对，存在则不用新生成，不存在则要生成，减少内存占用
+		int oType = this.getOriNode().getType()| Constants.NODE_TYPE_ORI;
+		int dType = this.getDesNode().getType()| Constants.NODE_TYPE_DES;
+		this.getOriNode().setType(oType);
+		this.getDesNode().setType(dType);
+		this.randomness = r;
+		this.type = type;
 
-		// return 1;
 	}
 	// Calculate the inter departure time for the next vehicle
 	public double randomizedHeadway(MesoRandom rand) {
@@ -118,29 +129,36 @@ public class MesoODCell extends ODPair{
 		while ((pv = emitVehicle()) != null) {
 			pv.enterPretripQueue();
 		}*/
-		MesoVehicle vehicle = network.createVehicle();
+		while(nextTime <= currentTime){
+			MesoVehicle vehicle = network.createVehicle();
+			// TODO DEBUG
+			emitCounter ++ ;
+			// double test = network.mesoRandom[MesoRandom.Departure].seed;
+			if(this.id == 0)
+				System.out.print(nextTime+",");
+			if ((type() & Constants.VEHICLE_BUS_RAPID) != 0) {
+				// pv.initRapidBus(type, odPair, runIDBRT_, busTypeBRT_,
+				// headway_);
+			}
+			else
+			{
+				vehicle.setType(this.type);
+				// TODO 待设计：车辆类型
+				vehicle.initialize(network.getSimParameter(),network.mesoRandom[MesoRandom.Departure]);
+				// yyl 使用默认最短路径
+				vehicle.setPath(this.getPath(0));
+				// 对v.nextLink赋值
+				vehicle.setPathIndex(0);
+				// yyl 固定路径
+				vehicle.fixPath();
+				vehicle.setDepartTime(currentTime);
+				vehicle.setTimeEntersLink(currentTime);
 
-		if ((type() & Constants.VEHICLE_BUS_RAPID) != 0) {
-			// pv.initRapidBus(type, odPair, runIDBRT_, busTypeBRT_,
-			// headway_);
-		}
-		else
-		{
-			vehicle.setType(this.type);
-			// yyl 使用默认最短路径
-			vehicle.setPath(this.getPath(0));
-			// yyl 固定路径
-			vehicle.fixPath();
-			vehicle.setDepartTime(currentTime);
-			vehicle.setTimeEntersLink(currentTime);
 			/*
 			vehicle.init(0, type, odPair, null);
 			//wym
 			vehicle.initPath(odPair.getOriNode(), odPair.getDesNode());*/
-		}
-
-
-		while(nextTime <= currentTime){
+			}
 			// Find the first link to travel. Variable 'oriNode', 'desNode' and
 			// 'type' must have valid values before the route choice model is
 			// called.
@@ -148,7 +166,8 @@ public class MesoODCell extends ODPair{
 				vehicle.PretripChoosePath(oriNode,network);
 			}
 			else {
-				vehicle.PretripChoosePath(this,network);
+				// TODO 固定路径，暂无动态更新
+				//vehicle.PretripChoosePath(this,network);
 			}
 			vehicle.enterPretripQueue(network.getSimClock().getStepSize());
 			nextTime += randomizedHeadway(network.mesoRandom[MesoRandom.Departure]);

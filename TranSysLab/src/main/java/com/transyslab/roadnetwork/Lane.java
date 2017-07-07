@@ -33,7 +33,7 @@ public class Lane implements NetworkObject {
 	protected int cmarker;// connection marker
 	protected Lane leftLane;
 	protected Lane rightLane;
-
+	protected Boolean isSelected;
 	public Lane() {
 		segment = null;
 		type = 0;
@@ -49,6 +49,12 @@ public class Lane implements NetworkObject {
 		return name;
 	}
 	public String getObjInfo(){return this.objInfo;}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
+	}
 	public int state() {
 		return (state & 0xFFFF);
 	}
@@ -303,10 +309,12 @@ public class Lane implements NetworkObject {
 			rulesExclude(Constants.LANE_CHANGE_RIGHT);
 		setLaneType();
 		//起终点坐标平移
+		// TODO 无车道坐标信息
+		/*
 		startPnt = worldSpace.worldSpacePoint(startPnt);
 		endPnt = worldSpace.worldSpacePoint(endPnt);
 		//生成车道面
-		createLaneSurface();
+		createLaneSurface();*/
 	}
 	/*
 	 * --------------------------------------------------------------------
@@ -333,7 +341,7 @@ public class Lane implements NetworkObject {
 	 * --------------------------------------------------------------------
 	 */
 	public List survList() {
-		return (segment.getSurvList());
+		return (segment.getSensors());
 	}
 	/*
 	 * --------------------------------------------------------------------

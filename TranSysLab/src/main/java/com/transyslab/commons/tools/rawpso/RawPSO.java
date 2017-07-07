@@ -6,7 +6,6 @@ import java.util.Random;
 
 import com.transyslab.commons.tools.SchedulerThread;
 import com.transyslab.commons.tools.TaskCenter;
-import com.transyslab.simcore.mlp.MLPEngThread;
 
 public class RawPSO extends SchedulerThread{
 	int dim;	
@@ -119,6 +118,7 @@ public class RawPSO extends SchedulerThread{
 		}
 		dismissAllWorkingThreads();//stop engœﬂ≥Ã°£
 	}
+	/*
 	public static void main(String[] args) {
 		int pop = 50;
 		double[] low = new double[] {15, 0.0, 0.120, 3.0, 1.0};
@@ -136,5 +136,5 @@ public class RawPSO extends SchedulerThread{
 			mlp_eng_thread.setMode(3);
 			mlp_eng_thread.start();
 		}
-	}
+	}*/
 }

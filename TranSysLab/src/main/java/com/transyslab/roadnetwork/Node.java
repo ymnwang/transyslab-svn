@@ -34,6 +34,7 @@ public class Node implements NetworkObject {
 
 	protected String objInfo;
 
+	protected boolean isSelected;
 
 	public Node() {
 		this.interS = null;
@@ -70,6 +71,12 @@ public class Node implements NetworkObject {
 		return this.name;
 	}
 	public String getObjInfo(){return this.objInfo;}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
+	}
 	public Intersection getInterS() {
 		return interS;
 	}

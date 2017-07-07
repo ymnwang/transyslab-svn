@@ -1,28 +1,7 @@
 package com.transyslab.simcore;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-
-import org.apache.commons.csv.CSVRecord;
-
-import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.tools.Producer;
-import com.transyslab.commons.tools.Worker;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.RoadNetworkPool;
-import com.transyslab.simcore.mesots.MesoNetworkPool;
-import com.transyslab.simcore.mlp.MLPNetworkPool;
-
 public class ConnPyMain {
-
+	/*
 	public static void main(String[] args) throws UnknownHostException, IOException {
 		//MLPÄ£ÐÍ
 		AppSetup.modelType = 2;
@@ -121,6 +100,6 @@ public class ConnPyMain {
             client.close();
         }
  
-	}
+	}*/
 
 }

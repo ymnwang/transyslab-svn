@@ -28,14 +28,14 @@ public class Segment implements NetworkObject {
 
 	protected Link link; // pointer to link
 	protected double grade; // grade of the segment
-	protected int nLanes; // number of upLanes
+
 //	protected int leftLaneIndex; // index to the left lane
 	protected int speedLimit; // default speed limit
 	protected double freeSpeed; // free flow speed
 	protected double distance; // getDistance from dn node
 
 	protected List<CtrlStation> ctrlStations; // first (upstream) control station
-	protected List<SurvStation> survStations; // first (upstream) sensor station
+	protected List<Sensor> sensors; // first (upstream) sensor station
 
 
 	protected int state;
@@ -49,10 +49,9 @@ public class Segment implements NetworkObject {
 	protected double endAngle;
 
 	protected double length;
-
+	protected Boolean isSelected;
 	public Segment() {
 		distance = 0.0;
-		nLanes = 0;
 		localType = 0;
 		state = 0;
 		lanes = new ArrayList<>();
@@ -66,7 +65,12 @@ public class Segment implements NetworkObject {
 	public String getObjInfo(){
 		return this.objInfo;
 	}
-
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
+	}
 	public int state() {
 		return (state & 0xFFFF);
 	}
@@ -162,11 +166,11 @@ public class Segment implements NetworkObject {
 	public List<CtrlStation> getCtrlList() {
 		return ctrlStations;
 	}
-	public List<SurvStation> getSurvList() {
-		return survStations;
+	public List<Sensor> getSensors() {
+		return sensors;
 	}
-	public void addSurvStation(SurvStation survStation){
-		survStations.add(survStation);
+	public void addSensor(Sensor e){
+		sensors.add(e);
 	}
 	public void addLane(Lane lane){
 		this.lanes.add(lane);
