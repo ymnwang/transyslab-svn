@@ -8,40 +8,38 @@ package com.transyslab.roadnetwork;
  *
  * @author YYL 2016-6-2
  */
-public class Label extends CodedObject {
-	protected static int sorted_;
-	protected int length_;
+public class Label {
+	protected int id;
+	protected String name;
+	protected static int sorted;
+	protected int length;
 
 	public Label() {
-		length_ = 0;
+		length = 0;
 	}
-
+	public int getId(){
+		return this.id;
+	}
+	public String getName(){
+		return this.name;
+	}
 	public int getLength() {
-		return length_;
+		return length;
 	}
 	public static int sorted() {
-		return sorted_;
+		return sorted;
 	}
-	public int init(int c, String n) {
-		if (c == 0) {
+	public int init(int id, String name) {
+		if (id == 0) {
 			// cerr << "Error:: Label code <0> is not allowed. ";
 			return -1;
 		}
-		setName(n);
-		setCode(c);
-		length_ = getName() != null ? getName().length() : 0;
+		this.id = id;
+		this.name = name;
+		length = getName() != null ? getName().length() : 0;
 
-		RoadNetwork.getInstance().addLabel(this);
-
-		/*
-		 * if (ToolKit::debug()) { cout << indent << "<" << c << endc << n <<
-		 * ">" << endl; }
-		 */
 
 		return 0;
 	}
-	@Override
-	public void print() {
 
-	}
 }

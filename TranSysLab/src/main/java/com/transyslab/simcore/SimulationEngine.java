@@ -56,9 +56,6 @@ public abstract class SimulationEngine {
 		 * return 0; } }
 		 */
 
-	public boolean isWaiting() {
-		return SimulationClock.getInstance().isWaiting();
-	}
 
 	
 
@@ -70,10 +67,8 @@ public abstract class SimulationEngine {
 	public void run(int mode) {
 		while (simulationLoop() >= 0);
 	}
-	public abstract void start();
 	public abstract int simulationLoop();
 	public abstract void loadFiles();
-	public abstract double calFitness(double [] paras);
 	// One step of the simulation. This function needs to be
 	// overloaded in derived class to do the real things. The dummy
 	// function just prints the current time in the console window.

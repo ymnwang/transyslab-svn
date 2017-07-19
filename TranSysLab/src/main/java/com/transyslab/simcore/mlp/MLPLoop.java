@@ -5,11 +5,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Loop;
 
 public class MLPLoop extends Loop{
 	String detName;
-	MLPLane lane;
 	MLPSegment segment;
 	MLPLink link;
 	double displacement;
@@ -21,42 +21,31 @@ public class MLPLoop extends Loop{
 //		detectedSpds = new LinkedList<>();
 		records = new LinkedList<>();
 	}
-	public MLPLoop(MLPLane LN, MLPSegment Seg, MLPLink LNK, String name, double dsp){
-		lane_ = LN;
+	public MLPLoop(MLPLane LN, MLPSegment Seg, MLPLink LNK, String name, double dsp, double present){
+		this.lane = LN;
 		lane = LN;
 		segment = Seg;
 		link = LNK;
 		displacement = dsp;
+		position = present;
 		detName = name;
 		distance = Seg.endDSP - dsp;
 //		detectedSpds = new LinkedList<>();
 		records = new LinkedList<>();
 	}
-	public static void init(String name, int segID, double present) {
-		MLPNetwork mlp_network = MLPNetwork.getInstance();
-		MLPSegment seg = (MLPSegment) mlp_network.findSegment(segID);
-		MLPLink lnk = (MLPLink) seg.getLink();
-		double dsp = seg.startDSP + seg.getLength()*present;
-		for (int i = 0; i < seg.nLanes(); i++) {
-			MLPLane ln = (MLPLane) seg.getLane(i);
-			MLPLoop loop = new MLPLoop(ln, seg, lnk, name, dsp);
-			loop.position_ = (float) present;
-			mlp_network.loops.add(loop);
-		}
-	}
-	public String detect(String time){//当处于seg边界上存在漏洞
+	public String detect(double timeNow){//当处于seg边界上存在漏洞
 		String str = "";
-		double now = SimulationClock.getInstance().getCurrentTime();
-		for (MLPVehicle veh : lane.vehsOnLn) {
-			if (veh.VirtualType_ == 0 && veh.distance()>distance && veh.newDis<=distance) {
+		String timeStr = String.format("%.1f", timeNow);
+		for (MLPVehicle veh : ((MLPLane) lane).vehsOnLn) {
+			if (veh.virtualType == 0 && veh.getDistance()>distance && veh.newDis<=distance) {
 //				detectedSpds.add(veh.newSpeed);
-				records.add(new double[] {now, veh.newSpeed});
-				str += time + "," +
-						   veh.getCode() + "," +  
-						   veh.VirtualType_ + "," + 
+				records.add(new double[] {timeNow, veh.newSpeed});
+				str += timeStr + "," +
+						   veh.getId() + "," +
+						   veh.virtualType + "," +
 						   veh.newSpeed + "," + 
-						   lane.getLnPosNum() + "," +
-						   link.getCode() + "," +
+						   ((MLPLane) lane).getLnPosNum() + "," +
+						   link.getId() + "," +
 						   displacement + "\r\n";
 			}
 		}
@@ -78,7 +67,7 @@ public class MLPLoop extends Loop{
 	public double calPeriodAvgSpd(double ftime, double ttime){
 		double sum = 0.0, count = 0.0;
 		for (double[] line : records) {
-			if (line[0]>ftime && line[1]<=ttime) {
+			if (line[0]>ftime && line[0]<=ttime) {
 				count += 1;
 				sum += line[1];
 			}
@@ -92,7 +81,7 @@ public class MLPLoop extends Loop{
 		double sum = 0.0, count = 0.0;
 		List<Double> ans = new ArrayList<>();
 		for (double[] line : records) {
-			if (line[0]>ftime && line[1]<=ttime) {
+			if (line[0]>ftime && line[0]<=ttime) {
 				ans.add(line[1]);
 			}
 		}
@@ -101,7 +90,7 @@ public class MLPLoop extends Loop{
 	public double countPeriodFlow(double ftime, double ttime){
 		double sum = 0.0;
 		for (double[] line : records) {
-			if (line[0]>ftime && line[1]<=ttime) {
+			if (line[0]>ftime && line[0]<=ttime) {
 				sum += 1.0;
 			}
 		}

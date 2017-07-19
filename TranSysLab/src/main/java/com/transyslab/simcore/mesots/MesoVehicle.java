@@ -3,17 +3,10 @@
  */
 package com.transyslab.simcore.mesots;
 
-import java.util.HashMap;
 import java.util.ListIterator;
-import java.util.function.IntPredicate;
 
-import com.transyslab.commons.tools.Random;
 import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.Link;
-import com.transyslab.roadnetwork.Segment;
-import com.transyslab.roadnetwork.SurvStation;
-import com.transyslab.roadnetwork.Vehicle;
+import com.transyslab.roadnetwork.*;
 
 /**
  * @author its312
@@ -21,51 +14,38 @@ import com.transyslab.roadnetwork.Vehicle;
  */
 public class MesoVehicle extends Vehicle {
 
-	protected final int FLAG_PROCESSED = 0x10000000;
-	protected MesoTrafficCell trafficCell_; // pointer to current traffic cell
-	protected MesoVehicle leading_; // downstream vehicle
-	protected MesoVehicle trailing_; // upstream vehicle
-	protected int SensorIDFlag_;
-	protected int flags_; // indicator for internal use
-	// protected boolean countFlags_;
 
+	protected final int FLAG_PROCESSED = 0x10000000;
+	protected MesoTrafficCell trafficCell; // pointer to current traffic cell
+	protected MesoVehicle leading; // downstream vehicle
+	protected MesoVehicle trailing; // upstream vehicle
+	protected int sensorIDFlag;
+	protected int flags; // indicator for internal use
+	protected boolean needRecycle;
 	// These variables are use to cache the calculation for speeding
 	// up
 
-	protected float spaceInSegment_; // update each time it enter a new segment
+	protected double spaceInSegment; // update each time it enter a new segment
 
-	protected static int[] stepCounter_ = new int[Constants.THREAD_NUM]; // iteration counter
-	protected static int[] vhcCounter_ = new int[Constants.THREAD_NUM];  	//在网车辆数统计
 	public MesoVehicle() {
-		trafficCell_ = null;
-		leading_ = null;
-		trailing_ = null;
+
 	}
 
 	public void toggleFlag(int flag) {
-		flags_ ^= flag;
+		flags ^= flag;
 	}
 	public int flag(int mask) {// 0xffffffff
-		return (flags_ & mask);
+		return (flags & mask);
 	}
 	public void setFlag(int s) {
-		flags_ |= s;
+		flags |= s;
 	}
 	public void unsetFlag(int s) {
-		flags_ &= ~s;
+		flags &= ~s;
 	}
-	public static int nVehicles(){
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return vhcCounter_[threadid];
-	}
-	public static void setVehicleCounter(int vhcnum){
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		vhcCounter_[threadid] = vhcnum;
-	}
+
 	public MesoLink getNextMesoLink() {
-		return (MesoLink) nextLink_;
+		return (MesoLink) nextLink;
 	}
 
 	public MesoLink mesoLink() {
@@ -79,112 +59,112 @@ public class MesoVehicle extends Vehicle {
 	@Override
 	public Link getLink() 
 	{
-		return trafficCell_ != null ? trafficCell_.link() : (Link) null;
+		return trafficCell != null ? trafficCell.link() : null;
 	}
 	@Override
 	public Segment getSegment() 
 	{
-		return trafficCell_ != null ? trafficCell_.segment() : (Segment) null;
+		return trafficCell != null ? trafficCell.segment() :  null;
 	}
 
 	public MesoTrafficCell trafficCell() {
-		return trafficCell_;
+		return trafficCell;
 	}
 
 	public void leading(MesoVehicle pv) {
-		leading_ = pv;
+		leading = pv;
 	}
 	public void trailing(MesoVehicle pv) {
-		trailing_ = pv;
+		trailing = pv;
 	}
 	public MesoVehicle leading() {
-		return leading_;
+		return leading;
 	}
 	public MesoVehicle trailing() {
-		return trailing_;
+		return trailing;
 	}
-	public float dnPos() {
-		return distance_;
+	public double dnPos() {
+		return distance;
 	}
-	public float upPos() {
-		return distance_ + spaceInSegment_;
+	public double upPos() {
+		return distance + spaceInSegment;
 	}
-	public float spaceInSegment() {
-		return spaceInSegment_;
+	public double spaceInSegment() {
+		return spaceInSegment;
 	}
 	public void calcSpaceInSegment() {
-		spaceInSegment_ = length_ / getSegment().nLanes();
+		spaceInSegment = length / getSegment().nLanes();
 	}
 
-	public MesoVehicle leadingVehicleInStream() {
-		float dndis = distanceFromDownNode();
+	public MesoVehicle leadingVehicleInStream(double channelizeDistance) {
+		double dndis = distanceFromDownNode();
 
-		if (dndis > MesoParameter.getInstance().channelizeDistance()) {
-			return leading_;
+		if (dndis > channelizeDistance) {
+			return leading;
 		}
 
-		MesoVehicle front = leading_;
+		MesoVehicle front = leading;
 
 		// Find the first vehicle in the same traffic stream that goes
 		// to the same direction as this vehicle
 
-		while (front != null && front.nextLink_ != nextLink_) {
-			front = front.leading_;
+		while (front != null && front.nextLink != nextLink) {
+			front = front.leading;
 		}
 
 		return front;
 	}
 
-	public float gapDistance(MesoVehicle front) {
+	public double gapDistance(MesoVehicle front) {
 		if (front == null)
 			return Constants.FLT_INF;
 
-		MesoSegment ps = front.trafficCell_.segment();
-		if (trafficCell_.segment() == ps) { // same segment
-			return distance_ - front.upPos();
+		MesoSegment ps = front.trafficCell.segment();
+		if (trafficCell.segment() == ps) { // same segment
+			return distance - front.upPos();
 		}
 		else { // different segment
-			float gap = (float) (distance_ + (ps.getLength() - front.upPos()));
+			double gap =  distance + (ps.getLength() - front.upPos());
 			return gap;
 		}
 	}
-
-	public void updateSpeed() // interpolate speed
+	// minSpeed, minHeadWayGap in MesoParameter
+	public void updateSpeed(double minSpeed, double minHeadWayGap) // interpolate speed
 	{
 		int i;
 
-		if (trafficCell_.nHeads_ > 1 && nextLink_ != null && getSegment().isHead() != 0) {
-			i = nextLink_.getDnIndex();
+		if (trafficCell.nHeads > 1 && nextLink != null && getSegment().isHead() != 0) {
+			i = nextLink.getDnIndex();
 		}
 		else {
 			i = 0;
 		}
 
-		float headspd = trafficCell_.headSpeed(i);
-		float headpos = trafficCell_.headPosition(i);
+		double headspd = trafficCell.headSpeed(i);
+		double headpos = trafficCell.headPosition(i);
 
-		if (distance_ <= headpos) {
-			currentSpeed_ = headspd;
+		if (distance <= headpos) {
+			currentSpeed = headspd;
 		}
-		else if (distance_ >= trafficCell_.tailPosition()) {
-			currentSpeed_ = trafficCell_.tailSpeed();
+		else if (distance >= trafficCell.tailPosition()) {
+			currentSpeed = trafficCell.tailSpeed();
 		}
 		else {
-			float dx = trafficCell_.tailPosition() - headpos;
+			double dx = trafficCell.tailPosition() - headpos;
 			if (dx < 0.1) {
-				currentSpeed_ = headspd;
+				currentSpeed = headspd;
 			}
 			else {
-				float dv = (trafficCell_.tailSpeed() - headspd) / dx;
-				currentSpeed_ = headspd + dv * (distance_ - headpos);
+				double dv = (trafficCell.tailSpeed() - headspd) / dx;
+				currentSpeed = headspd + dv * (distance - headpos);
 			}
 		}
 
 		// This avoid large gaps in queue stream
 
-		if (currentSpeed_ < MesoParameter.getInstance().minSpeed()
-				&& gapDistance(leading_) > MesoParameter.getInstance().minHeadwayGap()) {
-			currentSpeed_ = MesoParameter.getInstance().minSpeed();
+		if (currentSpeed < minSpeed
+				&& gapDistance(leading) > minHeadWayGap) {
+			currentSpeed = minSpeed;
 		}
 	}
 	/*
@@ -193,108 +173,91 @@ public class MesoVehicle extends Vehicle {
 	 * ori, des, type_id, path_id); if (error < 0) return 1; // show a warning
 	 * msg enterPretripQueue(); return 0; }
 	 */
+	// 用于读发车表
+	public void init(int id, int t, double len, double dis,double departtime){
+		this.id = id;
+		this.type = t;
+		// TODO 下移
+//        od = VehicleTable.getInstance().getODPair();
+//        setPath(VehicleTable.getInstance().getPath());
+		length = len;
+		distance = dis;
+		info = Constants.INT_INF;
+		//初始化路径
+		nextLink = path.getFirstLink();
 
-	@Override
-	public void initialize() // virtual, called by init()
+		departTime = departtime;
+		timeEntersLink = departTime;
+
+	}
+	public void initialize(MesoParameter params, MesoRandom random) // called by init()
 	{
-		flags_ = 0;
-		SensorIDFlag_ = -100000;
-		int prefix = type_ & (~Constants.VEHICLE_CLASS); // prefix, e.g., HOV
-		int vehicle_class = (type_ & Constants.VEHICLE_CLASS);
-
-		Random theRandomizer = Random.getInstance().get(Random.Departure);
+		flags = 0;
+		sensorIDFlag = -100000;
+		int prefix = type & (~Constants.VEHICLE_CLASS); // prefix, e.g., HOV
+		int vehicle_class = (type & Constants.VEHICLE_CLASS);
 
 		if (vehicle_class == 0) {
-			vehicle_class = theRandomizer.drandom(MesoParameter.getInstance().nVehicleClasses(),
-					MesoParameter.getInstance().vehicleClassCDF());
+			vehicle_class = random.drandom(params.nVehicleClasses(),
+					params.vehicleClassCDF());
 		}
-		type_ = vehicle_class;
+		type = vehicle_class;
 
 		// Attach some extra bits to "type" based on given probabilities if
 		// the prefix is not specified
 
 		if (prefix != 0) {
-			type_ |= prefix;
+			type |= prefix;
 		}
 		else {
-			if (theRandomizer.brandom(MesoParameter.getInstance().etcRate()) != 0) {
+			if (random.brandom(params.etcRate()) != 0) {
 
 				// This implementation treats all ETC vehicles as AVI
 
-				type_ |= (Constants.VEHICLE_ETC | Constants.VEHICLE_PROBE);
+				type |= (Constants.VEHICLE_ETC | Constants.VEHICLE_PROBE);
 			}
 
-			if (theRandomizer.brandom(MesoParameter.getInstance().guidedRate()) != 0) {
-				type_ |= Constants.VEHICLE_GUIDED;
+			if (random.brandom(params.guidedRate()) != 0) {
+				type |= Constants.VEHICLE_GUIDED;
 			}
 
-			if (theRandomizer.brandom(MesoParameter.getInstance().hovRate()) != 0) {
-				type_ |= Constants.VEHICLE_HOV;
+			if (random.brandom(params.hovRate()) != 0) {
+				type |= Constants.VEHICLE_HOV;
 			}
 		}
-		mileage_ = 0.0f;
+		mileage = 0.0f;
 	}
 
-	public void enterPretripQueue() {
-		// int error_quota = 100;
+	public void enterPretripQueue(double simStep) {
 
-		if (nextLink_ == null) { // No path
-			/*
-			 * if (!theStatus.nErrors()) { //未处理 theStatus.osLogFile() <<
-			 * LOG_FILE_HEADER_MSG << endl; } if (error_quota > 0) {
-			 * theStatus.osLogFile() //未处理 << code_ << "\t" //未处理 <<
-			 * theSimulationClock.currentTime() << "\t" //未处理 <<
-			 * oriNode().code() << "-" << desNode().code() << "\t" //未处理 <<
-			 * endl; } else if (error_quota == 0) { theStatus.osLogFile() //未处理
-			 * << endl << PATH_ERROR_MSG //未处理 << endl; }
-			 */
-			// error_quota --;
-			// theStatus.nErrors(+1);
-			MesoVehicleList.getInstance().recycle(this);
+		// 所有车的路径已初始化
+		if (nextLink == null) { // No path
+			//MesoVehiclePool.getInstance().recycle(this);
+			needRecycle = true;
 			return;
 		}
 		getNextMesoLink().queue(this);
-		trafficCell_ = null;
-		float spd = ((MesoSegment) nextLink_.getStartSegment()).maxSpeed();
-		distance_ = (float) (-spd * SimulationClock.getInstance().getStepSize());
+		trafficCell = null;
+		double spd = ((MesoSegment) nextLink.getStartSegment()).maxSpeed();
+		distance = -spd * simStep;
 	}
 
-	public int enterNetwork() {
-		if (getNextMesoLink().isJammed() != 0)
-			return 0;
 
-		// Delete this vehicle from the link queue.
-
-		getNextMesoLink().dequeue(this);
-
-		getNextMesoLink().append(this);
-		OnRouteChoosePath(nextLink_.getDnNode());
-		updateSpeed();
-
-		//统计在网车辆数
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		//进入路网车辆，计数+1
-		vhcCounter_[threadid]++;
-		
-		return 1;
-	}
-	public void appendTo(MesoTrafficCell cell) {
+	public void appendTo(MesoTrafficCell cell, int stepCounter, double minHeadWayGap) {
 		MesoSegment ps = cell.segment();
-		trafficCell_ = cell;
+		trafficCell = cell;
 		calcSpaceInSegment();
-		distance_ += ps.getLength();
-		currentSpeed_ = cell.tailSpeed();
+		distance += ps.getLength();
+		currentSpeed = cell.tailSpeed();
 
 		// Make sure not crash into front vehicle
 
-		if (leading_ != null) { // no overtaking
-			float pos = leading_.upPos() + MesoParameter.getInstance().minHeadwayGap() / ps.nLanes();
-			distance_ = Math.max(distance_, pos);
+		if (leading != null) { // no overtaking
+			double pos = leading.upPos() + minHeadWayGap / ps.nLanes();
+			distance = Math.max(distance, pos);
 		}
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		if ((stepCounter_[threadid] & 0x1) != 0) {
+
+		if ((stepCounter & 0x1) != 0) {
 			setFlag(FLAG_PROCESSED);
 		}
 		//奇数步长：flag =  FLAG_PROCESSED异或FLAG_PROCESSED = 0
@@ -304,71 +267,56 @@ public class MesoVehicle extends Vehicle {
     public void appendSnapshotTo(MesoTrafficCell cell)
     {
     	  MesoSegment ps = cell.segment();
-    	  trafficCell_ = cell;
+    	  trafficCell = cell;
     	  calcSpaceInSegment();
     }
-	public void move() // update position
+	public void move(MesoNetwork network) // update position
 	{
-
-		// There is a strange bug that I have not figured out after a week
-		// of effort. This is a dirty fix and it works only on sgi.
-		// 溢出,finite()返回1表示数值正常，返回0代表溢出（无穷大）
-		/*
-		 * if (!finite(distance_) || !finite(currentSpeed_)) {
-		 * theStatus.osLogFile() //未处理 << "Vehicle " << code_ << " (" //未处理 <<
-		 * oriNode().code() << "-" //未处理 << desNode().code() << ") removed at "
-		 * //未处理 << theSimulationClock.currentTime() << " from " //未处理 <<
-		 * link().code() << ":" << segment().code() << endl;
-		 *
-		 * theStatus.nErrors(+1); theStatus.nNoPath(+1); theStatus.nActive(-1);
-		 * trafficCell_.remove(this);
-		 * MESO_VehicleList.getInstance().recycle(this); return; }
-		 */
-
+		double stepSize =  network.getSimClock().getStepSize();
 		// Prevent to be processed twice if it moved into a new link
 
 		markAsProcessed();
 
 		// Leading vehicle in the same traffic stream
 
-		MesoVehicle front = leadingVehicleInStream();
+		MesoVehicle front = leadingVehicleInStream(network.getSimParameter().channelizeDistance);
 
-		float frequency = (float) (1.0 / SimulationClock.getInstance().getStepSize());
-		float oldpos = distance_;
+		double frequency =  1.0 / stepSize;
+		double oldpos = distance;
 		int gone = 0;
 
 		// Calculate the current speed
 
-		updateSpeed();
+		updateSpeed(network.getSimParameter().minSpeed(),network.getSimParameter().minHeadwayGap());
 
 		// Position at the end of this interval
 
-		distance_ -= currentSpeed_ * SimulationClock.getInstance().getStepSize();
+		distance -= currentSpeed * stepSize;
 
 		if (front != null) { // no overtaking
-			float pos = front.upPos() + MesoParameter.getInstance().minHeadwayGap() / getSegment().nLanes();
-			distance_ = Math.max(distance_, pos);
+			double pos = front.upPos() + network.getSimParameter().minHeadwayGap() / getSegment().nLanes();
+			distance = Math.max(distance, pos);
 		}
 
 		// 节段是否有检测器
-		if (getSegment().getSurvList() != null) {
-			ListIterator<SurvStation> i = getSegment().getSurvList().listIterator();
+		if (getSegment().getSensors() != null) {
+			ListIterator<Sensor> i = getSegment().getSensors().listIterator();
 			while (i.hasNext()) {
-				SurvStation tmp = i.next();
+				Sensor tmp = i.next();
 				// 车辆是否经过检测断面
 				// 两个检测器之间距离需超过8米
-				if (distance_ <= tmp.getPosition() && tmp.getPosition() - distance_ < 8 && SensorIDFlag_ != tmp.getCode()) {
-					SensorIDFlag_ = tmp.getCode();
-					tmp.measure(currentSpeed_);
+				if (distance <= tmp.getPosition() && tmp.getPosition() - distance < 8 && sensorIDFlag != tmp.getId()) {
+					sensorIDFlag = tmp.getId();
+					tmp.measure(currentSpeed);
 				}
 
 			}
 		}
 
-		if (distance_ < 0.0) { // cross segment
+		if (distance < 0.0) { // cross segment
 
-			if ((gone = transpose()) == 0) { // can not moved out
-				distance_ = 0.0f; // the maximum it can move
+			if ((gone = transpose(network)) == 0) { // can not moved out
+				distance = 0.0f; // the maximum it can move
 			}
 		}
 
@@ -376,30 +324,89 @@ public class MesoVehicle extends Vehicle {
 			return;
 		}
 		else if (gone == 0) { // still in the same segment
-			if (distance_ >= oldpos) { // not moved
-				currentSpeed_ = 0.0f;
+			if (distance >= oldpos) { // not moved
+				currentSpeed = 0.0f;
 				return; // no need to enter advance()
 			}
 			else {
-				currentSpeed_ = (oldpos - distance_) * frequency;
+				currentSpeed = (oldpos - distance) * frequency;
 			}
 		}
 		else { // moved into a downstream segment
-			currentSpeed_ = (float) ((oldpos + getSegment().getLength() - distance_) * frequency);
+			currentSpeed = (oldpos + getSegment().getLength() - distance) * frequency;
 		}
-
 		advance(); // sort position in list
 	}
-	public int transpose() // returns 1 if it success
+
+
+	// Advance the vehicle to a position in the vehicle list that
+	// corresponding to its current value of "getDistance". This function
+	// is invoked when a vehicle is moved (including moved into a
+	// downstream segment), so that the vehicles in macro vehicle list is
+	// always sorted by their position.
+	public void advance() // update position in list
 	{
-		int error_quota = 100;
+		// (0) Check if this vehicle should be advanced in the list
+
+		if (leading == null || distance >= leading.distance) {
+
+			// no need to advance this vehicle in the list
+
+			return;
+		}
+
+		// (1) Find the vehicle's position in the list
+
+		MesoVehicle front = leading;
+
+		while (front != null && distance < front.distance) {
+			front = front.leading;
+		}
+
+		// (2) Take this vehicle out from the list
+
+		leading.trailing = trailing;
+
+		if (trailing != null) {
+			trailing.leading = leading;
+		}
+		else { // last vehicle in the segment
+			trafficCell.lastVehicle = leading;
+		}
+
+		// (3) Insert this vehicle after the front
+
+		// (3.1) Pointers with the leading vehicle
+
+		leading = front;
+
+		if (leading != null) {
+			trailing = leading.trailing;
+			leading.trailing = this;
+		}
+		else {
+			trailing = trafficCell.firstVehicle;
+			trafficCell.firstVehicle = this;
+		}
+
+		// (3.2) Pointers with the trailing vehicle
+
+		if (trailing != null) {
+			trailing.leading = this;
+		}
+		else { // this vehicle becomes the last one
+			trafficCell.lastVehicle = this;
+		}
+	}
+	public int transpose(MesoNetwork network) // returns 1 if it success
+	{
 
 		MesoSegment ps = mesoSegment();
 
-		if (ps.isMoveAllowed() == 0)
+		if (ps.isMoveAllowed(network.getSimClock().getCurrentTime()) == 0)
 			return 0;
 
-		mileage_ += ps.getLength(); // record mileage
+		mileage += ps.getLength(); // record mileage
 
 		int done = 0;
 		MesoSegment ds = (MesoSegment) getSegment().getDnSegment();
@@ -407,60 +414,48 @@ public class MesoVehicle extends Vehicle {
 		if (ds != null) {
 
 			if (ds.isJammed() == 0) {
-				trafficCell_.remove(this);
-				ds.append(this);
+				trafficCell.remove(this);
+				//ds.append(this);
+				network.appendVhc2Sgmt(ds,this);
+				// 重构旧
+				//this.append2Sgmt = ds;
+				//this.needAppend2Sgmt = true;
 				done = 1;
 			}
 
 		}
-		else if (nextLink_ != null) { // cross link
-			
+		else if (nextLink != null) { // cross link
+
 			if (getNextMesoLink().isJammed() == 0) {
 
-				/*
-				 * if (theEngine.chosenOutput(OUTPUT_VEHICLE_PATH_RECORDS)) {
-				 * writePathRecord(theFileManager.osPathRecord()); }
-				 *//*
-					 * if(code_ == 108){ System.out.println(done); }
-					 */
-				mesoLink().recordTravelTime(this);
+				mesoLink().recordTravelTime(this,network.getLinkTimes());
 
 				// Estimate the time this vehicle enter the link
 
-				float dt;
-				if (currentSpeed_ > 1.0) {
-					dt = distance_ / currentSpeed_;
+				double dt;
+				if (currentSpeed > 1.0) {
+					dt = distance / currentSpeed;
 				}
 				else {
-					dt = (float) (0.5 * SimulationClock.getInstance().getStepSize());
+					dt = 0.5 * network.getSimClock().getStepSize();
 				}
-				timeEntersLink_ = (float) (SimulationClock.getInstance().getCurrentTime() - dt);
+				timeEntersLink =  network.getSimClock().getCurrentTime() - dt;
 
-				trafficCell_.remove(this);
+				trafficCell.remove(this);
 
-				if (MesoNetwork.getInstance().isNeighbor(getLink(), nextLink_) != 0) {
-					getNextMesoLink().append(this);
-					OnRouteChoosePath(nextLink_.getDnNode());
+				if (getLink().isNeighbor(nextLink) != 0) {
+					//getNextMesoLink().append(this);
+					network.appendVhc2Sgmt((MesoSegment) getNextMesoLink().getStartSegment(),this);
+					//重构旧
+					//this.append2Sgmt = (MesoSegment) getNextMesoLink().getStartSegment();
+					//this.needAppend2Sgmt = true;
+					// 更新nextLink
+					onRouteChoosePath(this.nextLink.getDnNode(),network);
 					done = 1;
 				}
 				else {
-					/*
-					 * if (!theStatus.nErrors()) { //未处理 theStatus.osLogFile()
-					 * << LOG_FILE_HEADER_MSG << endl; }
-					 *
-					 * if (error_quota > 0) { theStatus.osLogFile() //未处理 <<
-					 * code_ << "\t" //未处理 << theSimulationClock.currentTime()
-					 * << "\t" //未处理 << oriNode().code() << "-" <<
-					 * desNode().code() << "\t" //未处理 << segment().code(); }
-					 * else if (error_quota == 0) { theStatus.osLogFile() <<
-					 * endl << PATH_ERROR_MSG << endl;
-					 */
 
-					error_quota--;
-
-					// theStatus.nErrors(1);
-					// theStatus.nNoPath(1);
-					mesoLink().recordTravelTime(this);
+					mesoLink().recordTravelTime(this,network.getLinkTimes());
 					removeFromNetwork();
 					done = -1;
 				}
@@ -468,8 +463,7 @@ public class MesoVehicle extends Vehicle {
 
 		}
 		else { // arrive destination
-
-			mesoLink().recordTravelTime(this);
+			mesoLink().recordTravelTime(this,network.getLinkTimes());
 			removeFromNetwork();
 			done = -1;
 		}
@@ -485,70 +479,6 @@ public class MesoVehicle extends Vehicle {
 		return done;
 	}
 
-	// Advance the vehicle to a position in the vehicle list that
-	// corresponding to its current value of "distance_". This function
-	// is invoked when a vehicle is moved (including moved into a
-	// downstream segment), so that the vehicles in macro vehicle list is
-	// always sorted by their position.
-	public void advance() // update position in list
-	{
-		// (0) Check if this vehicle should be advanced in the list
-
-		if (leading_ == null || distance_ >= leading_.distance_) {
-
-			// no need to advance this vehicle in the list
-
-			return;
-		}
-
-		// (1) Find the vehicle's position in the list
-
-		MesoVehicle front = leading_;
-
-		while (front != null && distance_ < front.distance_) {
-			front = front.leading_;
-		}
-
-		// (2) Take this vehicle out from the list
-
-		leading_.trailing_ = trailing_;
-
-		if (trailing_ != null) {
-			trailing_.leading_ = leading_;
-		}
-		else { // last vehicle in the segment
-			trafficCell_.lastVehicle_ = leading_;
-		}
-
-		// (3) Insert this vehicle after the front
-
-		// (3.1) Pointers with the leading vehicle
-
-		leading_ = front;
-
-		if (leading_ != null) {
-			trailing_ = leading_.trailing_;
-			leading_.trailing_ = this;
-		}
-		else {
-			trailing_ = trafficCell_.firstVehicle_;
-			trafficCell_.firstVehicle_ = this;
-		}
-
-		// (3.2) Pointers with the trailing vehicle
-
-		if (trailing_ != null) {
-			trailing_.leading_ = this;
-		}
-		else { // this vehicle becomes the last one
-			trafficCell_.lastVehicle_ = this;
-		}
-	}
-
-	public float expectedPosition() {
-		return 0;
-	}
-
 	@Override
 	public int enRoute() { // virtual
 		return attr(Constants.ATTR_ACCESSED_INFO);
@@ -556,18 +486,13 @@ public class MesoVehicle extends Vehicle {
 
 	// Call route choice model
 
-	public void changeRoute() {
-		// 未处理 if (!(isSpFlag(INFO_FLAG_VMS_BASED))) {
-		// These bit is usuallly set when it view a ENROUTE_VMS. Here we
-		// bypass the requirement for location based information access if
-		// the system is not VMS/Beacon based.
-		// 未处理 setAttr(ATTR_ACCESSED_INFO);
-		// }
+	public void changeRoute(MesoNetwork network) {
+
 		if (getLink() != null) { // alreay in the network
-			OnRouteChoosePath(getLink().getDnNode());
+			onRouteChoosePath(getLink().getDnNode(),network);
 		}
 		else { // in spillback queue
-			OnRouteChoosePath(nextLink_.getUpNode());
+			onRouteChoosePath(nextLink.getUpNode(),network);
 		}
 	}
 
@@ -575,57 +500,28 @@ public class MesoVehicle extends Vehicle {
 
 	public void removeFromNetwork() {
 
-		trafficCell_.remove(this);
-		MesoVehicleList.getInstance().recycle(this);
-		//统计在网车辆数
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		//离开路网车辆，计数-1
-		vhcCounter_[threadid]--;
+		trafficCell.remove(this);
+		needRecycle = true;
 
 	}
-	/*
-	 * public void report() { MESO_Parameter p = theParameter;
-	 *
-	 * int heading = 1; float t = theSimulationClock.currentTime() -
-	 * departTime_; ostream os = theFileManager.osVehicle(); if (heading) { if
-	 * (!theEngine.skipComment()) { //未处理 os <<
-	 * "# ID/Type/Ori/DepDes/ArrDes/DepTime/"; //未处理 os <<
-	 * "ArrTime/Mileage/Speed" << endl; } heading = 0; }
-	 *
-	 * int actual_des_node = link().getDnNode().code();
-	 *
-	 * //未处理 os << code_ << endc //未处理 << type_ << endc //未处理 <<
-	 * oriNode().code() << endc //未处理 << desNode().code() << endc //未处理 <<
-	 * actual_des_node << endc //未处理 << Fix(departTime_, (float)1.0) << endc
-	 * //未处理 << Fix(theSimulationClock.currentTime(), 1.0) << endc //未处理 <<
-	 * Fix(mileage_ / p.lengthFactor(), (float)1.0) << endc //未处理 <<
-	 * Fix((mileage_ / t) / p.speedFactor(), (float)0.1) << endl; }
-	 */
+
 
 	// These are used to prevent to process a vehicle twice in a
 	// single iteration
 
 	public void markAsProcessed() {
-		flags_ ^= FLAG_PROCESSED;
+		flags ^= FLAG_PROCESSED;
 	}
-	public int isProcessed() {
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		if ((stepCounter_[threadid] & 0x1) != 0) { // odd step
-			if ((flags_ & FLAG_PROCESSED) == 0)
+	public int isProcessed(int stepCounter) {
+		if ((stepCounter & 0x1) != 0) { // odd step
+			if ((flags & FLAG_PROCESSED) == 0)
 				return 1;
 			else
 				return 0;
 		}
 		else { // even step
-			return (flags_ & FLAG_PROCESSED);
+			return (flags & FLAG_PROCESSED);
 		}
-	}
-	public static void increaseCounter() {
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		stepCounter_[threadid]++;
 	}
 
 }

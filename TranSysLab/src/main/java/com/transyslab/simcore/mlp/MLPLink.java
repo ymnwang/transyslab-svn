@@ -1,34 +1,35 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Random;
+import java.util.*;
 
-import com.transyslab.commons.tools.Inflow;
-import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.commons.tools.EMTTable;
+import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Link;
+import com.transyslab.roadnetwork.Node;
+import com.transyslab.roadnetwork.RoadNetwork;
 
-public class MLPLink extends Link {	
-	public EMTTable emtTable;
+public class MLPLink extends Link {
+	protected LinkedList<Inflow> inflowList;
 	public List<JointLane> jointLanes;
 	protected List<MLPVehicle> platoon;//正在处理的车队
 	public Dynamics dynaFun;
 	public List<Double> tripTime;
 //	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
-//	public double capacity_;//unit: veh/s/lane
+//	public double capacity;//unit: veh/s/lane
 //	private double releaseTime_;
 	
 	
 	public MLPLink(){
-		emtTable = new EMTTable();
+		inflowList = new LinkedList<>();
 		jointLanes = new ArrayList<JointLane>();
 		platoon = new ArrayList<>();
-		dynaFun = new Dynamics();
 		tripTime = new ArrayList<>();
-//		capacity_ = MLPParameter.getInstance().capacity;
+//		capacity = MLPParameter.getInstance().capacity;
+	}
+
+	@Override
+	public void init(int id, int type, int index, Node upNode, Node dnNode, RoadNetwork roadNetwork) {
+		super.init(id, type, index, upNode, dnNode, roadNetwork);
+		dynaFun = new Dynamics(this);
 	}
 	
 	public void checkConnectivity(){
@@ -36,16 +37,13 @@ public class MLPLink extends Link {
 	}
 	
 	public boolean checkFirstEmtTableRec() {
-		if (emtTable.getInflow().isEmpty()) {
+		if (inflowList.isEmpty()) {
 			return false;
 		}
-		Inflow rec1 = emtTable.getInflow().getFirst();
-		if (rec1.time<=SimulationClock.getInstance().getCurrentTime() &&
-				MLPNetwork.getInstance().mlpLane(rec1.laneIdx).checkVolum(MLPParameter.VEHICLE_LENGTH
-																			,0.0))//rec1.speed
-			return true;
-		else 
-			return false;
+		Inflow rec1 = inflowList.getFirst();
+		return (rec1.time<=network.getSimClock().getCurrentTime() &&
+				((MLPNetwork) network).mlpLane(rec1.laneIdx).checkVolum(MLPParameter.VEHICLE_LENGTH
+						,0.0));//rec1.speed
 	}
 	
 	public JointLane findJointLane(MLPLane ln) {
@@ -81,7 +79,7 @@ public class MLPLink extends Link {
 		int JLNUM = 1;
 		while (theSeg != null){
 			for (int i = 0; i<theSeg.nLanes(); i++){
-				MLPLane ln = (MLPLane) theSeg.getLane(i);
+				MLPLane ln = theSeg.getLane(i);
 				JointLane tmpJLn = findJointLane(ln);
 				if (tmpJLn == null) {
 					JointLane newJLn = new JointLane(JLNUM);
@@ -103,8 +101,8 @@ public class MLPLink extends Link {
 	}
 	
 	public void scheduleNextEmitTime() {
-		if (capacity_ > 1.E-6) {
-			releaseTime_ += 1.0 / capacity_;
+		if (capacity > 1.E-6) {
+			releaseTime_ += 1.0 / capacity;
 		}
 		else {
 			releaseTime_ = Constants.DBL_INF;
@@ -122,7 +120,7 @@ public class MLPLink extends Link {
 		double platoonhead;
 		double platoontail;
 		MLPVehicle theveh;//处理中的车辆
-		Random r = MLPNetwork.getInstance().sysRand;
+		Random r = network.getSysRand();
 		Collections.shuffle(jointLanes,r);//任意车道位置排序
 		for (JointLane JLn: jointLanes){
 			//遍历所有车辆，组成车队以后通过deal来处理
@@ -131,7 +129,7 @@ public class MLPLink extends Link {
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
 //				platoonhead = theveh.Displacement();		
-				platoonhead = ((MLPSegment) getSegment(nSegments_-1)).endDSP;
+				platoonhead = ((MLPSegment) getEndSegment()).endDSP;//getSegment(nSegments -1))
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
@@ -156,16 +154,16 @@ public class MLPLink extends Link {
 	}
 	
 	public void dealLC(double headDsp, double tailDsp) {
-		Random r = MLPNetwork.getInstance().sysRand;
+		Random r = network.getSysRand();
 		Collections.shuffle(platoon,r);
 		for (MLPVehicle veh: platoon){
 			//虚拟车及冷却中的车不能换道
-			if (veh.VirtualType_== 0 && veh.buffer_== 0) {
+			if (veh.virtualType == 0 && veh.buffer == 0) {
 				//根据acceptance及道路规则，获取可换道车道信息，计算概率并排序
 				double [] pr = new double [] {0.0, 0.0};
 				int [] turning = new int [] {0,1};
 				for (int i = 0; i<2; i++){//i=0右转；i=1左转；
-					MLPLane tarLane = veh.lane_.getAdjacent(i);
+					MLPLane tarLane = veh.lane.getAdjacent(i);
 					if (tarLane != null && //换道检查
 							tarLane.checkLCAllowen((i+1)%2) &&
 							//tarLane.RtCutinAllowed &&
@@ -184,7 +182,7 @@ public class MLPLink extends Link {
 				}
 				//按先后顺序做蒙特卡洛，操作成功的进行换道，不成功换道的MLC车进行停车标识计算
 				if (r.nextDouble()<pr[0]){
-					if (veh.lane_.getAdjacent(turning[0]).diEqualsZero(veh)) {
+					if (veh.lane.getAdjacent(turning[0]).diEqualsZero(veh)) {
 						veh.stopFlag = false;
 					}
 //					tmpWriter.write(pr[0] + "\r\n");
@@ -192,7 +190,7 @@ public class MLPLink extends Link {
 				}
 				else{
 					if (r.nextDouble()<pr[1]){
-						if (veh.lane_.getAdjacent(turning[1]).diEqualsZero(veh)) {
+						if (veh.lane.getAdjacent(turning[1]).diEqualsZero(veh)) {
 							veh.stopFlag = false;
 						}
 //						tmpWriter.write(pr[1] + "\r\n");
@@ -200,7 +198,7 @@ public class MLPLink extends Link {
 					}					
 				}
 			}
-			if ((!veh.lane_.diEqualsZero(veh))){
+			if ((!veh.lane.diEqualsZero(veh))){
 				if (veh.calMLC()>0.99)
 					veh.stopFlag = true;
 //				if (veh.calMLC()>0.7)
@@ -210,16 +208,17 @@ public class MLPLink extends Link {
 	}
 	
 	public void LCOperate(MLPVehicle veh, int turn) {
-		MLPLane thisLane = veh.lane_;
+		MLPLane thisLane = veh.lane;
 		MLPLane tarLane = thisLane.getAdjacent(turn);
 		//虚拟车(生产->初始化*2->加buff->替换)
-		MLPVehicle newVeh = MLPNetwork.getInstance().veh_pool.generate();
-		newVeh.initInfo(veh.getCode(),veh.link_,veh.segment_,veh.lane_,veh.RVID);
-		newVeh.init(MLPNetwork.getInstance().getNewVehID(), MLPParameter.VEHICLE_LENGTH, veh.distance(), veh.currentSpeed());
-		newVeh.buffer_ = MLPParameter.getInstance().getLCBuff();
+		MLPVehicle newVeh = ((MLPNetwork) network).generateVeh();
+		newVeh.initInfo(veh.getId(),veh.link,veh.segment,veh.lane,veh.rvId);
+		newVeh.init(((MLPNetwork) network).getNewVehID(), MLPParameter.VEHICLE_LENGTH, veh.getDistance(), veh.getCurrentSpeed());
+		MLPParameter mlpParameter = (MLPParameter) network.getSimParameter();
+		newVeh.buffer = mlpParameter.getLCBuff();
 		thisLane.substitudeVeh(veh, newVeh);
 		//换道车(加buff->insert)
-		veh.buffer_ = MLPParameter.getInstance().getLCBuff();
+		veh.buffer = mlpParameter.getLCBuff();
 		tarLane.insertVeh(veh);
 	}
 	
@@ -227,7 +226,7 @@ public class MLPLink extends Link {
 		double platoonhead;
 		double platoontail;
 		MLPVehicle theveh;//处理中的车辆
-		Random r = MLPNetwork.getInstance().sysRand;
+		Random r = network.getSysRand();
 		Collections.shuffle(jointLanes,r);//任意车道位置排序
 		for (JointLane JLn: jointLanes){
 			//遍历所有车辆，组成车队以后通过deal来处理
@@ -236,7 +235,7 @@ public class MLPLink extends Link {
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
 //				platoonhead = theveh.Displacement();
-				platoonhead = ((MLPSegment) getSegment(nSegments_-1)).endDSP;
+				platoonhead = ((MLPSegment) getEndSegment()).endDSP;//((MLPSegment) getSegment(nSegments -1))
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
@@ -281,6 +280,45 @@ public class MLPLink extends Link {
 			veh.setNewState(headspeed);
 		}
 	}
-	
-	
+
+	protected void generateInflow(int demand, double[] speed, double[] time, List<Lane> lanes, int tlnkID){
+		Random r = getNetwork().getSysRand();
+		double mean = speed[0];
+		double sd = speed[1];
+		double vlim = speed[2];
+		double startTime = time[0];
+		double endTime = time[1];
+		int laneCount = lanes.size();
+		double simStep = getNetwork().getSimClock().getStepSize();
+		int stepCount = (int) Math.floor((endTime-startTime)/simStep);
+		double expect =(double) demand/stepCount;
+//		NormalDistribution nd = new NormalDistribution(mean, sd);
+		Lane bornLane = lanes.get(r.nextInt(laneCount));
+		for (int i = 1; i<=stepCount; i++){
+			if (r.nextDouble()<=expect){
+				Inflow theinflow = new Inflow(startTime+i*simStep,
+						Math.min(vlim, Math.max(0.01,r.nextGaussian()*sd+mean)),
+						bornLane.getIndex(),
+						tlnkID,
+						bornLane.getLength());
+				inflowList.offer(theinflow);
+			}
+		}
+	}
+
+	protected void appendInflowFromCSV(int laneId, int tLinkID, double time, double speed, double dis, int realVID){
+		//将小于0的dis置为路段起点
+		double dis2 = dis < 0.0 ? getNetwork().findLane(laneId).getLength() : dis;
+		int laneIdx = getNetwork().findLane(laneId).getIndex();
+		Inflow theinflow = new Inflow(time, speed, laneIdx, tLinkID, dis2, realVID);
+		inflowList.offer(theinflow);
+	}
+
+	protected LinkedList<Inflow> getInflow() {
+		return inflowList;
+	}
+
+	protected void clearInflow() {
+		inflowList.clear();
+	}
 }

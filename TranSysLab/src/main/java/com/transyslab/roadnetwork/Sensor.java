@@ -1,15 +1,15 @@
 package com.transyslab.roadnetwork;
 
-public interface Sensor {
+public interface Sensor extends NetworkObject{
 	
-	public void measure(float speed);
+	void measure(double speed);
 	
-	public void aggregate();
+	void aggregate(double curTime);
 	
-	public void record();
+	void createSurface();
 	
-	public void createSurface();
-	
-	public float getPosition();
+	double getPosition();
+
+	void clean();
 	 
 }

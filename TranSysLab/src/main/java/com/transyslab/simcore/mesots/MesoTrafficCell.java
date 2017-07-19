@@ -5,7 +5,6 @@ package com.transyslab.simcore.mesots;
 
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.SdFn;
 
 /**
  * @author its312
@@ -13,95 +12,71 @@ import com.transyslab.roadnetwork.SdFn;
  */
 public class MesoTrafficCell {
 
-	protected MesoSegment segment_; // container
+	protected MesoSegment segment; // container
 
 	// Data members calculated in update phase
 
-	protected float tailSpeed_; // upstream speed
-	protected float tailPosition_; // upstream position
+	protected double tailSpeed; // upstream speed
+	protected double tailPosition; // upstream position
 
-	protected int nHeads_; // number of heads
-	protected float[] headSpeeds_; // downstream speeds
-	protected float[] headPositions_; // downstream positions
+	protected int nHeads; // number of heads
+	protected double[] headSpeeds; // downstream speeds
+	protected double[] headPositions; // downstream positions
 
 	// Data members dynamically changed in advance phase
 
-	protected int nVehicles_; // number of vehicles
+	protected int nVehicles; // number of vehicles
 
-	protected MesoVehicle firstVehicle_; // first vehicle (dn) in this TC
-	protected MesoVehicle lastVehicle_; // last vehicle (up) in this TC
+	protected MesoVehicle firstVehicle; // first vehicle (dn) in this TC
+	protected MesoVehicle lastVehicle; // last vehicle (up) in this TC
 
 	// Bookkeeping data members. May change in both update and
 	// advance phases
 
-	protected MesoTrafficCell trailing_; // upstream traffic cell
-	protected MesoTrafficCell leading_; // downstream traffic cell
+	protected MesoTrafficCell trailing; // upstream traffic cell
+	protected MesoTrafficCell leading; // downstream traffic cell
 
-	protected double queueTime_; // time was a queue
+	protected double queueTime; // time was a queue
+
+//	protected double simStepSize; // 全局变量
+
 
 	public MesoTrafficCell() {
-		trailing_ = null;
-		leading_ = null;
-		firstVehicle_ = null;
-		lastVehicle_ = null;
-		nVehicles_ = 0;
-		headSpeeds_ = null;
-		headPositions_ = null;
-		nHeads_ = 0;
-		segment_ = null;
+		nVehicles = 0;
+		nHeads = 0;
 	}
 
-	public void clean() {
-		while (firstVehicle_ != null) {
-			lastVehicle_ = firstVehicle_;
-			firstVehicle_ = firstVehicle_.trailing();
-			MesoVehicleList.getInstance().recycle(lastVehicle_);
-		}
-		lastVehicle_ = null;
-		nVehicles_ = 0;
 
-		segment_ = null;
-
-		if (headSpeeds_ != null) {
-			// delete [] headSpeeds_;
-			headSpeeds_ = null;
-		}
-		if (headPositions_ != null) {
-			// 未处理 delete [] headPositions_;
-			headPositions_ = null;
-		}
-		nHeads_ = 0;
-	}
 
 	public MesoTrafficCell trailing() {
-		return trailing_;
+		return trailing;
 	}
 	public MesoTrafficCell leading() {
-		return leading_;
+		return leading;
 	}
+	// 创建对象后调用
+	public void initialize(double simStepSize) {
+		queueTime = -Constants.FLT_INF;
 
-	public void initialize() {
-		queueTime_ = -Constants.FLT_INF;
+		firstVehicle = lastVehicle = null;
+		nVehicles = 0;
 
-		firstVehicle_ = lastVehicle_ = null;
-		nVehicles_ = 0;
+		nHeads = link().nDnLinks();
 
-		nHeads_ = link().nDnLinks();
-
-		if (segment_.isHead() == 0 || // not in the last segment in the link
-				nHeads_ == 0) { // dead end or boundary link
-			nHeads_ = 1;
+		if (segment.isHead() == 0 || // not in the last segment in the link
+				nHeads == 0) { // dead end or boundary link
+			nHeads = 1;
 		}
 
-		headSpeeds_ = new float[nHeads_];
-		headPositions_ = new float[nHeads_];
+		headSpeeds = new double[nHeads];
+		headPositions = new double[nHeads];
 
-		tailSpeed_ = segment_.maxSpeed();
+		tailSpeed = segment.maxSpeed();
 
-		tailPosition_ = (float) (segment_.getLength() - tailSpeed_ * SimulationClock.getInstance().getStepSize());
-		for (int i = 0; i < nHeads_; i++) {
-			headSpeeds_[i] = tailSpeed_;
-			headPositions_[i] = tailPosition_;
+		tailPosition =  segment.getLength() - tailSpeed * simStepSize;
+		for (int i = 0; i < nHeads; i++) {
+			headSpeeds[i] = tailSpeed;
+			headPositions[i] = tailPosition;
 		}
 	}
 
@@ -110,82 +85,61 @@ public class MesoTrafficCell {
 	}
 
 	public MesoVehicle firstVehicle() {
-		return firstVehicle_;
+		return firstVehicle;
 	}
 	public MesoVehicle lastVehicle() {
-		return lastVehicle_;
+		return lastVehicle;
 	}
 	public int nVehicles() {
-		return nVehicles_;
+		return nVehicles;
 	}
 
-	// Insert a vehicle into the cell based on its distance position
+	// Insert a vehicle into the cell based on its getDistance position
 	/*
 	 * public void insert(MESO_Vehicle pv) { // Find the front vehicle
 	 *
-	 * MESO_Vehicle front = lastVehicle_; while (front!=null && front.distance()
-	 * > pv.distance()) { front = front.leading_; }
+	 * MESO_Vehicle front = lastVehicle; while (front!=null && front.getDistance()
+	 * > pv.getDistance()) { front = front.leading; }
 	 *
 	 * // Insert after the front vehicle
 	 *
-	 * if (front!=null) { // pv is NOT the first in cell pv.trailing_ =
-	 * front.trailing_; front.trailing_ = pv; } else { // pv is the first in
-	 * cell pv.trailing_ = firstVehicle_; firstVehicle_ = pv; } if
-	 * (pv.trailing_!=null) { pv.trailing_.leading_ = pv; } else { lastVehicle_
+	 * if (front!=null) { // pv is NOT the first in cell pv.trailing =
+	 * front.trailing; front.trailing = pv; } else { // pv is the first in
+	 * cell pv.trailing = firstVehicle; firstVehicle = pv; } if
+	 * (pv.trailing!=null) { pv.trailing.leading = pv; } else { lastVehicle
 	 * = pv; }
 	 *
-	 * pv.trafficCell_ = this; pv.calcSpaceInSegment();
+	 * pv.trafficCell = this; pv.calcSpaceInSegment();
 	 *
-	 * nVehicles_ ++; }
+	 * nVehicles ++; }
 	 */
 
-	// Append a vehicle at the end of the cell
 
-	public void append(MesoVehicle vehicle) {
-		vehicle.leading_ = lastVehicle_;
-		vehicle.trailing_ = null;
-
-		if (lastVehicle_ != null) { // append at end
-			lastVehicle_.trailing_ = vehicle;
-		}
-		else { // queue is empty
-			firstVehicle_ = vehicle;
-		}
-		lastVehicle_ = vehicle;
-		nVehicles_++;
-
-		vehicle.appendTo(this);
-
-		if (nVehicles_ <= 1) { // first vehicle
-			updateTailSpeed();
-			updateHeadSpeeds();
-		}
-	}
-	 public void appendSnapshot(MesoVehicle vehicle){
-		vehicle.leading_ = lastVehicle_;
-		vehicle.trailing_ = null;
+	 public void appendSnapshot(MesoVehicle vehicle,SimulationClock clock, MesoParameter parameter){
+		vehicle.leading = lastVehicle;
+		vehicle.trailing = null;
 		
-		if (lastVehicle_!=null) {		// append at end
-		      lastVehicle_.trailing_ = vehicle;
+		if (lastVehicle !=null) {		// append at end
+		      lastVehicle.trailing = vehicle;
 		} else {			// queue is empty
-		      firstVehicle_ = vehicle;
+		      firstVehicle = vehicle;
 		}
-		lastVehicle_ = vehicle;
-		nVehicles_ ++;
+		lastVehicle = vehicle;
+		nVehicles++;
 		
 		vehicle.appendSnapshotTo(this);
 		
-		if (nVehicles_ <= 1) {		// first vehicle
-			updateTailSpeed();
-			updateHeadSpeeds();
+		if (nVehicles <= 1) {		// first vehicle
+			updateTailSpeed(clock,parameter);
+			updateHeadSpeeds(clock,parameter);
 		}
 	}
 	// Split the traffic cell into two cells at the first gap
 	// smaller than the given threshold
 	/*
-	 * public void split() { MESO_Vehicle front = firstVehicle_; MESO_Vehicle pv
-	 * = null; while (front!=null && (pv = front.trailing_)!=null &&
-	 * pv.distance() <= front.upPos() +
+	 * public void split() { MESO_Vehicle front = firstVehicle; MESO_Vehicle pv
+	 * = null; while (front!=null && (pv = front.trailing)!=null &&
+	 * pv.getDistance() <= front.upPos() +
 	 * MESO_Parameter.getInstance().cellSplitGap()) { front = pv; } if
 	 * (pv==null) return; // not need to split
 	 *
@@ -198,128 +152,121 @@ public class MesoTrafficCell {
 	 * // We do not call initialize() as usual, but we copy the variable // from
 	 * this to the new cell
 	 *
-	 * cell.leading_ = this; cell.trailing_ = trailing_; if (trailing_!=null) {
-	 * // this is not the last in segment trailing_.leading_ = cell; } else { //
-	 * this is the last in segment segment_.lastCell_ = cell; } trailing_ =
-	 * cell; segment_.nCells_ ++;
+	 * cell.leading = this; cell.trailing = trailing; if (trailing!=null) {
+	 * // this is not the last in segment trailing.leading = cell; } else { //
+	 * this is the last in segment segment.lastCell = cell; } trailing =
+	 * cell; segment.nCells ++;
 	 *
 	 * // Copy variables from this cell to the new cell that follows
 	 *
-	 * cell.segment_ = segment_; cell.tailSpeed_ = tailSpeed_;
-	 * cell.tailPosition_ = tailPosition_; cell.nHeads_ = nHeads_;
-	 * cell.headSpeeds_ = new float [nHeads_]; cell.headPositions_ = new float
-	 * [nHeads_]; for (int i = 0; i < nHeads_; i ++) { cell.headSpeeds_[i] =
-	 * headSpeeds_[i]; cell.headPositions_[i] = headPositions_[i]; }
+	 * cell.segment = segment; cell.tailSpeed = tailSpeed;
+	 * cell.tailPosition = tailPosition; cell.nHeads = nHeads;
+	 * cell.headSpeeds = new float [nHeads]; cell.headPositions = new float
+	 * [nHeads]; for (int i = 0; i < nHeads; i ++) { cell.headSpeeds[i] =
+	 * headSpeeds[i]; cell.headPositions[i] = headPositions[i]; }
 	 *
 	 * // Cut the vehicle list into two
 	 *
-	 * pv.leading_ = null; // first in the new cell front.trailing_ = null; //
-	 * last in this cell cell.firstVehicle_ = pv; // first in the new cell
-	 * cell.lastVehicle_ = lastVehicle_; // last in the new cell lastVehicle_ =
+	 * pv.leading = null; // first in the new cell front.trailing = null; //
+	 * last in this cell cell.firstVehicle = pv; // first in the new cell
+	 * cell.lastVehicle = lastVehicle; // last in the new cell lastVehicle =
 	 * front; // last in this cell
 	 *
 	 * // Change container for the vehicles in the new cell
 	 *
-	 * cell.nVehicles_ = 0; while (pv!=null) { pv.trafficCell_ = cell; pv =
-	 * pv.trailing_; cell.nVehicles_ ++; }
+	 * cell.nVehicles = 0; while (pv!=null) { pv.trafficCell = cell; pv =
+	 * pv.trailing; cell.nVehicles ++; }
 	 *
-	 * // Update vehicle counter and length_
+	 * // Update vehicle counter and length
 	 *
-	 * nVehicles_ -= cell.nVehicles_; }
+	 * nVehicles -= cell.nVehicles; }
 	 */
 
 	public void remove(MesoVehicle vehicle) {
-		if (vehicle.leading_ != null) { // not the first one
-			vehicle.leading_.trailing_ = vehicle.trailing_;
+		if (vehicle.leading != null) { // not the first one
+			vehicle.leading.trailing = vehicle.trailing;
 		}
 		else { // first one
-			firstVehicle_ = vehicle.trailing_;
+			firstVehicle = vehicle.trailing;
 		}
-		if (vehicle.trailing_ != null) { // not the last one
-			vehicle.trailing_.leading_ = vehicle.leading_;
+		if (vehicle.trailing != null) { // not the last one
+			vehicle.trailing.leading = vehicle.leading;
 		}
 		else { // last one
-			lastVehicle_ = vehicle.leading_;
+			lastVehicle = vehicle.leading;
 		}
-		nVehicles_--;
+		nVehicles--;
 	}
 
 	// Append the following cell to the end of this cell, the
 	// following cell becomes empty but is NOT removed.
 	/*
 	 * public void append(MESO_TrafficCell cell) { MESO_Vehicle vehicle =
-	 * cell.firstVehicle_;
+	 * cell.firstVehicle;
 	 *
 	 * if (vehicle==null) { return; }
 	 *
 	 * // Change container for the vehicles in cell
 	 *
-	 * while (vehicle!=null) { vehicle.trafficCell_ = this; vehicle =
-	 * vehicle.trailing_; }
+	 * while (vehicle!=null) { vehicle.trafficCell = this; vehicle =
+	 * vehicle.trailing; }
 	 *
 	 * // Connect the two cells
 	 *
-	 * if (lastVehicle_!=null) { // this cell is not empty
-	 * lastVehicle_.trailing_ = cell.firstVehicle_; } else { // this cell is
-	 * empty firstVehicle_ = cell.firstVehicle_; } cell.firstVehicle_.leading_ =
-	 * lastVehicle_; lastVehicle_ = cell.lastVehicle_;
+	 * if (lastVehicle!=null) { // this cell is not empty
+	 * lastVehicle.trailing = cell.firstVehicle; } else { // this cell is
+	 * empty firstVehicle = cell.firstVehicle; } cell.firstVehicle.leading =
+	 * lastVehicle; lastVehicle = cell.lastVehicle;
 	 *
 	 * // Update vehicle counter
 	 *
-	 * nVehicles_ += cell.nVehicles_;
+	 * nVehicles += cell.nVehicles;
 	 *
 	 * // Update the pointers and vehicle counts in cell
 	 *
-	 * cell.nVehicles_ = 0; cell.firstVehicle_ = cell.lastVehicle_ = null; }
+	 * cell.nVehicles = 0; cell.firstVehicle = cell.lastVehicle = null; }
 	 */
 
 	public MesoLink link() {
-		return ((segment_ != null) ? (MesoLink) segment_.getLink() : (MesoLink) null);
+		return ((segment != null) ? (MesoLink) segment.getLink() : (MesoLink) null);
 	}
 	public MesoSegment segment() {
-		return segment_;
-	}
-
-	// This function decide which speed-density function will be
-	// used for this traffic cell
-
-	public int sdIndex() {
-		return segment_.getSdIndex();
+		return segment;
 	}
 
 	// These are the dn position of the first and up position of the
 	// last vehicles in the cell at the moment this function is
 	// called.
 
-	public float dnDistance() {
-		if (firstVehicle_ != null) {
-			return firstVehicle_.distance();
+	public double dnDistance(double simStepSize) {
+		if (firstVehicle != null) {
+			return firstVehicle.getDistance();
 		}
 		else {
-			return maxReachablePosition();
+			return maxReachablePosition(simStepSize);
 		}
 	}
-	public float upDistance() {
-		if (lastVehicle_ != null) {
-			return lastVehicle_.upPos();
+	public double upDistance(double simStepSize) {
+		if (lastVehicle != null) {
+			return lastVehicle.upPos();
 		}
 		else {
-			return maxReachablePosition();
+			return maxReachablePosition(simStepSize);
 		}
 	}
-	public float maxReachablePosition() {
-		float dx = (float) (segment_.maxSpeed() * SimulationClock.getInstance().getStepSize());
-		dx = (float) (segment_.getLength() - dx);
-		if (leading_ != null) {
-			float pos = leading_.upDistance();
+	public double maxReachablePosition(double simStepSize) {
+		double dx = segment.maxSpeed() * simStepSize;
+		dx = segment.getLength() - dx;
+		if (leading != null) {
+			double pos = leading.upDistance(simStepSize);
 			dx = (dx > pos) ? dx : pos;
 		}
 		return (dx > 0.0f ? dx : 0.0f);
 	}
 
-	public float length() {
-		if (firstVehicle_ != null) {
-			return upDistance() - firstVehicle_.distance();
+	public double length(double simStepSize) {
+		if (firstVehicle != null) {
+			return upDistance(simStepSize) - firstVehicle.getDistance();
 		}
 		else {
 			return 0.0f;
@@ -330,49 +277,49 @@ public class MesoTrafficCell {
 	// the last vehicles in the cell when this traffic cell is
 	// updated. These values are changed at the update phase.
 
-	public float tailPosition() {
-		return tailPosition_;
+	public double tailPosition() {
+		return tailPosition;
 	}
 
-	public float tailSpeed() {
-		return tailSpeed_;
+	public double tailSpeed() {
+		return tailSpeed;
 	}
 
-	public float headPosition(int i) {
-		return (i < nHeads_) ? headPositions_[i] : headPositions_[0];
+	public double headPosition(int i) {
+		return (i < nHeads) ? headPositions[i] : headPositions[0];
 	}
 
-	public float headSpeed(int i) {
-		return (i < nHeads_) ? headSpeeds_[i] : headSpeeds_[0];
+	public double headSpeed(int i) {
+		return (i < nHeads) ? headSpeeds[i] : headSpeeds[0];
 	}
 	/*
-	 * public float headSpeed() // average of the headSpeeds { if (nHeads_ < 2)
-	 * { // single head return headSpeeds_[0]; } else { // multiple heads float
-	 * sum = 0.0f; for (int i = 0; i < nHeads_; i ++) { sum += headSpeeds_[i]; }
-	 * return sum / (float)nHeads_; } }
+	 * public float headSpeed() // average of the headSpeeds { if (nHeads < 2)
+	 * { // single head return headSpeeds[0]; } else { // multiple heads float
+	 * sum = 0.0f; for (int i = 0; i < nHeads; i ++) { sum += headSpeeds[i]; }
+	 * return sum / (float)nHeads; } }
 	 *
 	 * public float speed() // average speed of the heads and tail { return 0.5f
-	 * * (tailSpeed_ + headSpeed()); }
+	 * * (tailSpeed + headSpeed()); }
 	 */
 
 	// Set the speed of each head vehicle to the same speed and record the
 	// reference position
-	public void setHeadSpeeds(float spd, float pos) {
-		for (int i = 0; i < nHeads_; i++) {
-			headPositions_[i] = pos;
-			if (headSpeeds_[i] > 0.1) { // This stream was moving
-				float maxspd = MesoParameter.getInstance().queueReleasingSpeed(timeSinceDispatching(),
-						segment_.maxSpeed());
+	public void setHeadSpeeds(double spd, double pos, double currentTime, MesoParameter parameter) {
+		for (int i = 0; i < nHeads; i++) {
+			headPositions[i] = pos;
+			if (headSpeeds[i] > 0.1) { // This stream was moving
+				double maxspd = parameter.queueReleasingSpeed(timeSinceDispatching(currentTime),
+						segment.maxSpeed());
 				if (spd > maxspd) {
-					headSpeeds_[i] = maxspd;
+					headSpeeds[i] = maxspd;
 				}
 				else {
-					headSpeeds_[i] = spd;
+					headSpeeds[i] = spd;
 				}
 			}
 			else { // stopped
-				headSpeeds_[i] = spd;
-				queueTime_ = SimulationClock.getInstance().getCurrentTime();
+				headSpeeds[i] = spd;
+				queueTime = currentTime;
 			}
 		}
 	}
@@ -380,10 +327,10 @@ public class MesoTrafficCell {
 	// These two are based on current state and referenced to the
 	// last vehicle in the cell
 
-	public float calcDensity() {
-		float len = length() * segment_.nLanes();
-		if (len > MesoParameter.getInstance().rspLower()) {
-			return 1000.0f * nVehicles_ / len;
+	public double calcDensity(double simStepSize, double rspLower) {
+		double len = length(simStepSize) * segment.nLanes();
+		if (len >rspLower) {
+			return 1000.0f * nVehicles / len;
 		}
 		else {
 			return 0.0f;
@@ -391,117 +338,119 @@ public class MesoTrafficCell {
 	}
 
 	// Calculate the speed of the last vehicle
-	public float calcSpeed() {
-		// cout << " First Calc Speed " ;
-		float len = length();
-		if (len > MesoParameter.getInstance().cellSplitGap()) {
-			return calcSpeed((float) (1000.0 * nVehicles_ / (len * segment_.nLanes())));
+	public double calcSpeed(double simStepSize,MesoParameter params) {
+		double len = length(simStepSize);
+		if (len > params.cellSplitGap) {
+			return calcSpeed(1000.0 * nVehicles / (len * segment.nLanes()));
 		}
-		else if (len < MesoParameter.getInstance().rspLower()) {
+		else if (len < params.rspLower) {
 			// for very short cell consider the leading cell also
-			if (leading_ != null) {
-				len += distance(leading_) + leading_.length();
-				int num = nVehicles_ + leading_.nVehicles();
-				return calcSpeed((float) (1000.0 * num / (len * segment_.nLanes())));
+			if (leading != null) {
+				len += distance(leading,simStepSize) + leading.length(simStepSize);
+				int num = nVehicles + leading.nVehicles();
+				return calcSpeed((float) (1000.0 * num / (len * segment.nLanes())));
 			}
 			else {
-				return segment_.maxSpeed();
+				return segment.maxSpeed();
 			}
 		}
 		else {
 			// speed-density function will not work for short cells
-			return segment_.maxSpeed(len * segment_.nLanes() / nVehicles_);
+			return params.maxSpeed(len * segment.nLanes() / nVehicles, segment.nLanes());
 		}
 	}
 
 	// This is the current speed of last vehicle in the cell
-	public float upSpeed() {
-		if (lastVehicle_ != null) {
-			return lastVehicle_.currentSpeed();
+	public double upSpeed() {
+		if (lastVehicle != null) {
+			return lastVehicle.getCurrentSpeed();
 		}
 		else {
-			return segment_.maxSpeed();
+			return segment.maxSpeed();
 		}
 	}
 
 	// Speed for a given density
 
-	public float calcSpeed(float density) {
-		SdFn sdf = MesoNetwork.getInstance().getSdFn(sdIndex());
-		return sdf.densityToSpeed(density, segment_.nLanes());
+	public double calcSpeed(double density) {
+		MesoSdFn sdf = segment.sdFunction;
+		return sdf.densityToSpeed(density, segment.nLanes());
 	}
 
 	// These calculations are based on states at the beginning of
 	// current update interval
 
-	public void updateTailSpeed() {
-		tailPosition_ = upDistance();
-		tailSpeed_ = calcSpeed();
+	public void updateTailSpeed(SimulationClock simClock,MesoParameter parameter) {
+		double simStep = simClock.getStepSize();
+		tailPosition = upDistance(simStep);
+		tailSpeed = calcSpeed(simStep,parameter);
 	}
 
 	// Calculates the downstream speeds based on the space from and speed
 	// of the downstream traffic cells in ealier. This function is called
 	// at least once in every update phase and when cells are created or
 	// combined
-	public void updateHeadSpeeds() {
+	public void updateHeadSpeeds(SimulationClock simClock,MesoParameter parameter) {
 		int i;
-
+		double curTime = simClock.getCurrentTime();
+		double simStep = simClock.getStepSize();
+		double rspUpper = parameter.rspUpper;
 		// downstream position of the cell
 
-		float dnx = dnDistance();
+		double dnx = dnDistance(simStep);
 
-		if (segment_.isMoveAllowed() == 0 && dnx < 1.0) {
+		if (segment.isMoveAllowed(curTime) == 0 && dnx < 1.0) {
 
 			// The output capacity is a constraint
 
-			setHeadSpeeds(0.0f, dnx);
+			setHeadSpeeds(0.0f, dnx, curTime,parameter);
 			return;
 		}
 
-		if (leading_ != null) {
+		if (leading != null) {
 
 			// There is a cell ahead, speed is determined based on the
 			// reaction to that cell.
 
-			setHeadSpeeds(calcHeadSpeed(leading_), dnx);
+			setHeadSpeeds(calcHeadSpeed(leading,simStep,parameter), dnx, curTime,parameter);
 			return;
 
 		}
-		else if (dnx > MesoParameter.getInstance().rspUpper()) {
+		else if (dnx > parameter.rspUpper()) {
 
-			// Since no cell ahead and distance is greater than a threshold,
+			// Since no cell ahead and getDistance is greater than a threshold,
 			// it use free flow speed.
 
-			setHeadSpeeds(segment_.maxSpeed(), dnx);
+			setHeadSpeeds(segment.maxSpeed(), dnx, curTime, parameter);
 			return;
 
 		}
-		else if (segment_.isHead() == 0) {
+		else if (segment.isHead() == 0) {
 
 			// Not the last segment in the link, speed is based on
 			// downstrean condition
 
-			setHeadSpeeds(calcHeadSpeed(segment_.getDnStream().lastCell()), dnx);
+			setHeadSpeeds(calcHeadSpeed(segment.getDnStream().lastCell(),simStep,parameter), dnx,  curTime, parameter);
 			return;
 
 		}
-		else if (nHeads_ > 1) {
+		else if (nHeads > 1) {
 
 			// At the end of the last segment in the link and there is no
 			// cell ahead. Need to check where the vehicles in this cell
 			// want to go and the condition in the downstream links.
 
-			for (i = 0; i < nHeads_; i++) {
-				calcHeadSpeed(i, dnx);
+			for (i = 0; i < nHeads; i++) {
+				calcHeadSpeed(i, dnx, simClock, parameter);
 			}
 			return;
 
 		}
-		else if (segment_.isTheEnd() != 0) {
+		else if (segment.isTheEnd() != 0) {
 
 			// Boundary link, no constrains
 
-			setHeadSpeeds(segment_.maxSpeed(), dnx);
+			setHeadSpeeds(segment.maxSpeed(), dnx, curTime,parameter);
 			return;
 
 		}
@@ -511,27 +460,27 @@ public class MesoTrafficCell {
 			// one outgoing link.
 
 			MesoSegment ps = (MesoSegment) link().dnLink(0).getStartSegment();
-			setHeadSpeeds(calcHeadSpeed(ps.lastCell()), dnx);
+			setHeadSpeeds(calcHeadSpeed(ps.lastCell(),simStep,parameter), dnx, curTime,parameter);
 
 			return;
 		}
 	}
 
 	// Calculate head speed for the ith traffic stream.
-	public void calcHeadSpeed(int ith, float dnx) {
+	public void calcHeadSpeed(int ith, double dnx, SimulationClock simClock,MesoParameter parameter) {
 		// Capacity based speed
 
-		float maxspeed = MesoParameter.getInstance().queueReleasingSpeed(timeSinceDispatching(), segment_.maxSpeed());
+		double maxspeed = parameter.queueReleasingSpeed(timeSinceDispatching(simClock.getCurrentTime()), segment.maxSpeed());
 
 		MesoLink dnlink = (MesoLink) link().dnLink(ith);
 
 		// Find the first vehicle heading to the ith downstream link and
 		// number of vehicles ahead (in the same cell)
 
-		MesoVehicle vehicle = firstVehicle_;
+		MesoVehicle vehicle = firstVehicle;
 		int n = 0;
-		while (vehicle != null && vehicle.nextLink() != dnlink) {
-			vehicle = vehicle.trailing_;
+		while (vehicle != null && vehicle.getNextLink() != dnlink) {
+			vehicle = vehicle.trailing;
 			n++;
 		}
 
@@ -539,18 +488,18 @@ public class MesoTrafficCell {
 		MesoTrafficCell cell = dnseg.lastCell();
 
 		if (vehicle != null) {
-			headPositions_[ith] = dnx = vehicle.distance();
+			headPositions[ith] = dnx = vehicle.getDistance();
 		}
 		else {
-			headPositions_[ith] = dnx;
+			headPositions[ith] = dnx;
 		}
 
 		// Speed in response to the downstream traffic cell
 
-		float spd_by_rsp;
+		double spd_by_rsp;
 		if (cell != null) {
-			float gap = (float) (dnx + dnseg.getLength() - cell.upDistance());
-			spd_by_rsp = calcFollowingCellSpeed(gap, cell.tailSpeed());
+			double gap = (dnx + dnseg.getLength() - cell.upDistance(simClock.getStepSize()));
+			spd_by_rsp = calcFollowingCellSpeed(gap, cell.tailSpeed(),parameter);
 		}
 		else {
 			spd_by_rsp = maxspeed;
@@ -558,92 +507,81 @@ public class MesoTrafficCell {
 
 		// Density-based speed
 
-		float spd_by_den;
-		int nlanes = segment_.nLanes();
+		double spd_by_den;
+		int nlanes = segment.nLanes();
 		if (vehicle == null || dnx < 10.0 * nlanes) {
 			spd_by_den = spd_by_rsp;
 		}
 		else if (n > nlanes) {
-			float k = 1000.0f * n / (dnx * nlanes);
+			double k = 1000.0f * n / (dnx * nlanes);
 			spd_by_den = calcSpeed(k);
-			if (nlanes > 1 && spd_by_den < MesoParameter.getInstance().minSpeed()) {
+			if (nlanes > 1 && spd_by_den < parameter.minSpeed()) {
 				int num = link().dnLink(ith).getStartSegment().nLanes();
-				spd_by_den = MesoParameter.getInstance().minSpeed() * num;
+				spd_by_den = parameter.minSpeed() * num;
 			}
 		}
 		else {
 			spd_by_den = maxspeed;
 		}
 
-		float spd = Math.min(spd_by_rsp, spd_by_den);
+		double spd = Math.min(spd_by_rsp, spd_by_den);
 
 		if (spd < maxspeed) {
-			headSpeeds_[ith] = spd;
+			headSpeeds[ith] = spd;
 		}
 		else {
-			headSpeeds_[ith] = maxspeed;
+			headSpeeds[ith] = maxspeed;
 		}
 
-		if (headSpeeds_[ith] < 0.1) {
-			queueTime_ = SimulationClock.getInstance().getCurrentTime();
+		if (headSpeeds[ith] < 0.1) {
+			queueTime = simClock.getCurrentTime();
 		}
 	}
 
 	// Calculate the speed based on the relationship with the given
 	// downstream traffic cell
-	public float calcHeadSpeed(MesoTrafficCell cell) {
-		float rspspd;
+	public double calcHeadSpeed(MesoTrafficCell cell,double simStepSize, MesoParameter params ) {
+		double rspspd;
 		if (cell != null) {
-			rspspd = calcFollowingCellSpeed(distance(cell), cell.tailSpeed());
+			rspspd = calcFollowingCellSpeed(distance(cell,simStepSize), cell.tailSpeed(),params);
 		}
 		else {
-			rspspd = segment_.maxSpeed();
+			rspspd = segment.maxSpeed();
 		}
 		return rspspd;
 	}
 
-	// Calculate the speed based on the headway distance from the leading
+	// Calculate the speed based on the headway getDistance from the leading
 	// cell
-	public float calcFollowingCellSpeed(float x, float v) {
-		float maxgap = MesoParameter.getInstance().rspUpper();
+	public double calcFollowingCellSpeed(double x, double v, MesoParameter params) {
+		double maxgap = params.rspUpper;
 		if (x >= maxgap) {
-			return segment_.maxSpeed();
+			return segment.maxSpeed();
 		}
 		else if (x <= 0.1) {
 			return v;
 		}
 		else {
-			float r = x / maxgap;
-			return r * segment_.maxSpeed(x) + (1.0f - r) * v;
+			double r = x / maxgap;
+			return r * params.maxSpeed(x,segment.nLanes()) + (1.0f - r) * v;
 		}
 	}
 
-	public void advanceVehicles() {
-		MesoVehicle vehicle = firstVehicle_;
-		MesoVehicle next;
-		while (vehicle != null) {
-			next = vehicle.trailing_;
-			if (vehicle.isProcessed() == 0) {
-				vehicle.move();
-			}
-			vehicle = next;
-		}
-	}
 
-	public float distance(MesoTrafficCell cell) {
+	public double distance(MesoTrafficCell cell,double simStepSize) {
 		// skip the empty cells
 
-		while (cell != null && cell.lastVehicle_ == null) {
-			cell = cell.leading_;
+		while (cell != null && cell.lastVehicle == null) {
+			cell = cell.leading;
 		}
 
-		float dis = (float) ((firstVehicle_ != null) ? dnDistance() : segment_.getLength());
+		double dis = (firstVehicle != null) ? dnDistance(simStepSize) : segment.getLength();
 		if (cell != null) {
 			if (cell.segment() == segment()) { // same segment
-				dis -= cell.upDistance();
+				dis -= cell.upDistance(simStepSize);
 			}
 			else { // different segment
-				dis += cell.segment().getLength() - cell.upDistance();
+				dis += cell.segment().getLength() - cell.upDistance(simStepSize);
 			}
 		}
 		else { // no cell ahead
@@ -653,19 +591,19 @@ public class MesoTrafficCell {
 	}
 
 	public int isJammed() {
-		if (lastVehicle_ != null && lastVehicle_.upPos() >= segment_.getLength()) {
+		if (lastVehicle != null && lastVehicle.upPos() >= segment.getLength()) {
 			return 1;
 		}
 		else {
 			return 0;
 		}
 	}
-	public boolean isReachable() {
-		return (segment_.getLength() - upDistance()) < MesoParameter.getInstance().cellSplitGap();
+	public boolean isReachable(double simStepSize, double cellSplitGap) {
+		return (segment.getLength() - upDistance(simStepSize)) < cellSplitGap;
 	}
 
-	public float timeSinceDispatching() {
-		return (float) (SimulationClock.getInstance().getCurrentTime() - queueTime_);
+	public double timeSinceDispatching(double currentTime) {
+		return  (currentTime - queueTime);
 	}
 
 }

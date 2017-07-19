@@ -3,25 +3,14 @@
  */
 package com.transyslab.simcore.mesots;
 
-import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.apache.commons.csv.CSVRecord;
-
-import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.renderer.AnimationFrame;
 import com.transyslab.commons.renderer.FrameQueue;
-import com.transyslab.commons.tools.Random;
-import com.transyslab.roadnetwork.Lane;
-import com.transyslab.roadnetwork.Link;
-import com.transyslab.roadnetwork.Node;
-import com.transyslab.roadnetwork.RoadNetwork;
-import com.transyslab.roadnetwork.SdFnNonLinear;
-import com.transyslab.roadnetwork.Segment;
-import com.transyslab.roadnetwork.VehicleData;
-import com.transyslab.roadnetwork.VehicleDataPool;
+import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.roadnetwork.*;
+import org.netlib.lapack.SSYCON;
 
 
 /**
@@ -31,17 +20,42 @@ import com.transyslab.roadnetwork.VehicleDataPool;
 public class MesoNetwork extends RoadNetwork {
 	protected int[] permuteLink;
 	protected int nPermutedLinks;
-	private MesoSegment tmpsegment;
+	protected List<MesoSdFn> sdFns;
+	protected MesoODTable odTable;
+	protected MesoVehiclePool recycleVhcList;
+	protected MesoCellList recycleCellList;
+	protected MesoVehicleTable vhcTable;// 外部读入的发车表
+	protected MesoRandom[] mesoRandom;
+
+	protected int stepCounter;  // 车辆move()迭代计数器
+	protected int vhcCounter;  	// 在网车辆计数器
 
 	public MesoNetwork() {
+		simParameter = new MesoParameter();
+		sdFns = new ArrayList<>();
+		recycleVhcList = new MesoVehiclePool();
+		recycleCellList = new MesoCellList(recycleVhcList);
+		stepCounter = 0;
+		vhcCounter = 0;
 	}
-
-	public static MesoNetwork getInstance() {
-		HashMap<String, Integer> hm = MesoNetworkPool.getInstance().getHashMap();
-		int threadid = hm.get(Thread.currentThread().getName()).intValue();
-		return MesoNetworkPool.getInstance().getNetwork(threadid);
+	public MesoODTable getODTable(){
+		return odTable;
 	}
-
+	public void setOdTable(MesoODTable odTable){
+		this.odTable = odTable;
+	}
+	public void setVhcTable(MesoVehicleTable vhcTable){
+		this.vhcTable = vhcTable;
+	}
+	public void setMesoRandoms(MesoRandom[] randoms){
+		this.mesoRandom = randoms;
+	}
+	public LinkTimes getLinkTimes(){
+		return this.linkTimes;
+	}
+	public MesoParameter getSimParameter(){
+		return (MesoParameter) simParameter;
+	}
 	public MesoNode mesoNode(int i) {
 		return (MesoNode) getNode(i);
 	}
@@ -51,74 +65,161 @@ public class MesoNetwork extends RoadNetwork {
 	public MesoSegment mesoSegment(int i) {
 		return (MesoSegment) getSegment(i);
 	}
+	public MesoVehicle createVehicle(){
+		MesoVehicle newVehicle = this.recycleVhcList.recycle();
+		this.vhcCounter++;
+		return newVehicle;
+	}
+	public void createNode(int id, int type, String name){
+		MesoNode newNode = new MesoNode();
+		newNode.init(id, type, nNodes() ,name);
+		this.nodes.add(newNode);
+		this.addVertex(newNode);
+	}
+
+	public void createLink(int id, int type, int upNodeId, int dnNodeId){
+		MesoLink newLink = new MesoLink();
+		newLink.init(id,type,nLinks(),findNode(upNodeId),findNode(dnNodeId),this);
+		links.add(newLink);
+		this.addEdge(newLink.getUpNode(),newLink.getDnNode(),newLink);
+		this.setEdgeWeight(newLink,Double.POSITIVE_INFINITY);
+	}
+
+	public void createSegment(int id, int speedLimit, double freeSpeed, double grd, double beginX,
+							  double beginY, double b,double endX, double endY){
+		MesoSegment newSegment = new MesoSegment();
+		newSegment.init(id,speedLimit,nSegments(),freeSpeed,grd,links.get(nLinks()-1));
+		newSegment.initArc(beginX,beginY,b,endX,endY);
+		worldSpace.recordExtremePoints(newSegment.getStartPnt());
+		worldSpace.recordExtremePoints(newSegment.getEndPnt());
+		segments.add(newSegment);
+	}
+
+	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY){
+		MesoLane newLane = new MesoLane();
+		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
+		// TODO 暂无车道坐标
+		/*
+		worldSpace.recordExtremePoints(newLane.getStartPnt());
+		worldSpace.recordExtremePoints(newLane.getEndPnt());*/
+		lanes.add(newLane);
+	}
+
+	public void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval ){
+		SurvStation newSurvStt = new SurvStation();
+		MesoSegment mesoSegment = (MesoSegment) findSegment(segId);
+		newSurvStt.init(id,type, nSensors(),findSegment(segId),pos,zone,interval);
+		sensors.add(newSurvStt);
+	}
+	public MesoVehicle createVehicle(int id, int type, double length, double dis, double speed){
+		MesoVehicle newVehicle = this.recycleVhcList.recycle();
+		newVehicle.setPath(vhcTable.getPath());
+		newVehicle.init(id,type,length,dis,speed);
+		newVehicle.initialize(getSimParameter(),mesoRandom[MesoRandom.Departure]);
+		this.vhcCounter++;
+		return newVehicle;
+	}
+	public MesoODCell createODCell(int ori, int des, double rate, double var, double r){
+		double emitHeadway;
+		double emitNextTime;
+		MesoNode o = (MesoNode)findNode(ori);
+		MesoNode d = (MesoNode)findNode(des);
+		// TODO 处理异常的OD对
+		if (o == null) {
+		}
+		else if (d == null) {
+		}
+		else if (d.getDestIndex() == -1) {
+
+		}
+		MesoODCell newODCell = new MesoODCell(o,d);
+		// Departure rate, assume a normal distribution
+		// OD流量倍率
+		rate *= odTable.scale();
+		// 方差足够大，按正态分布扰动OD流量
+		if (var > 1.0E-4) {
+			var *= odTable.scale();
+			rate = mesoRandom[MesoRandom.Departure].nrandom(rate, var);
+		}
+		// OD流量足够大
+		if (rate >= Constants.RATE_EPSILON) {
+			emitHeadway = 3600.0 / rate;
+			emitNextTime = simClock.getCurrentTime()
+					- Math.log(mesoRandom[MesoRandom.Departure].urandom()) * emitHeadway;
+
+		}
+		else {
+			emitHeadway = Constants.DBL_INF;
+			emitNextTime = Constants.DBL_INF;
+		}
+
+		newODCell.init(odTable.getCells().size(), odTable.getType() ,emitHeadway,emitNextTime,r);
+		// ODCell初始化同时分配路径
+		newODCell.addPath(createPathFromGraph(o,d));
+		odTable.insert(newODCell);
+		return newODCell;
+	}
+	public void resetRandSeeds(){
+		for(int i=0;i<mesoRandom.length;i++){
+			mesoRandom[i].resetSeed();
+		}
+	}
 
 	public void calcStaticInfo() {
-		superCalcStaticInfo();
+		super.calcStaticInfo();
+		// 初始化子路段通行能力
+		for(int i=0;i<nSegments();i++){
+			((MesoSegment)segments.get(i)).calcStaticInfo(simClock.getCurrentTime());
+		}
 		organize();
+	}
+	// 检测器工作
+	public void detMesure(){
+		for(Sensor sensor: sensors){
+			sensor.aggregate(simClock.getCurrentTime());
+		}
+	}
+	public void setDetStartTime(double startTime){
+		for(Sensor sensor:sensors){
+			((SurvStation)sensor).setSDetTime(startTime);
+		}
 	}
 	public void updateSegFreeSpeed(){
 		MesoSegment mesosegment;
-		for(int i=0;i<nSegments();i++){
-			mesosegment = (MesoSegment) segments_.get(i);
+		for(Segment segment:segments){
+			mesosegment = (MesoSegment) segment;
 			mesosegment.updateFreeSpeed();
 		}
 		
 	}
-	public void setsdIndex() {
-		MesoSegment ps;
-		for (int i = 0; i < nLinks(); i++) {
-			if (MesoNetwork.getInstance().getLink(i).getCode() == 64) {
-				ps = (MesoSegment) getLink(i).getEndSegment();
-				while (ps != null) {
-					ps.setSdIndex(0);
-					ps = ps.getUpSegment();
-				}
-			}
-			else if (MesoNetwork.getInstance().getLink(i).getCode() == 60) {
-				ps = (MesoSegment) getLink(i).getEndSegment();
-				while (ps != null) {
-					ps.setSdIndex(0);
-					ps = ps.getUpSegment();
-				}
-			}
-			else if (MesoNetwork.getInstance().getLink(i).getCode() == 116) {
-				ps = (MesoSegment) getLink(i).getEndSegment();
-				while (ps != null) {
-					ps.setSdIndex(1);
-					ps = ps.getUpSegment();
-				}
-			}
 
-		}
-	}
-	//更新速密函数参数
-	public void updateParaSdfns(float cap, float minspeed, float maxspeed, float maxdensity,float a, float b){
-		((SdFnNonLinear) sdFns_.get(0)).updateParameters(cap, minspeed, maxspeed, maxdensity,a,b);
+	//更新速密函数参数 capacity, minspeed, freespeed, kjam, alpha, beta
+	public void updateParaSdfn(int segmentId,double[] params){
+		MesoSegment tmpSegment = (MesoSegment)findSegment(segmentId);
+		//更新参数
+		tmpSegment.sdFunction.updateParams(params);
 		//更新capacity
-		MesoSegment tmpmesosegment;
-		for(Segment tmpsegment: segments_){
-			tmpmesosegment = (MesoSegment) tmpsegment;
-			tmpmesosegment.setCapacity(tmpmesosegment.defaultCapacity());
-		}
+		tmpSegment.setCapacity(tmpSegment.defaultCapacity(),simClock.getCurrentTime());
 	}
+
 	public void organize() {
-		for (int i = 0; i < nLinks(); i++) {
-			((MesoLink) getLink(i)).checkConnectivity();
+		for (Link link:links) {
+			((MesoLink) link).checkConnectivity();
 		}
 	}
 
 	public void calcSegmentData() {
 		MesoSegment ps = new MesoSegment();
-		for (int i = 0; i < nSegments(); i++) {
-			ps = mesoSegment(i);
+		for (Segment segment:segments) {
+			ps = (MesoSegment) segment;
 			ps.calcDensity();
 			ps.calcSpeed();
 		}
 	}
 	public void calcSegmentInfo() {
 		MesoSegment ps;
-		for (int i = 0; i < nSegments(); i++) {
-			ps = mesoSegment(i);
+		for (Segment segment:segments) {
+			ps = (MesoSegment) segment;
 			ps.calcState();
 		}
 	}
@@ -129,21 +230,64 @@ public class MesoNetwork extends RoadNetwork {
 	 */
 	public void enterVehiclesIntoNetwork() {
 		MesoVehicle pv;
-
-		for (int i = 0; i < nLinks(); i++) {
+		for (Link link:links) {
 			/*
 			 * Find the first vehicle in the queue and enter it into the network
 			 * if space is available. If the link is full, there is no need for
 			 * checking other vehicles in the queue, skip to the next link.
 			 */
 
-			while ((pv = ((MesoLink) getLink(i)).queueHead()) != null && (pv.enterNetwork() != 0)) {
+			while ((pv = ((MesoLink) link).queueHead()) != null) {
+				// pv.enterNetwork()
+				if (pv.getNextMesoLink().isJammed() != 0)
+					break;
+				// Delete this vehicle from the link queue.
+				pv.getNextMesoLink().dequeue(pv);
+				// getNextMesoLink().append(pv);
+				// Add a vehicle at the upstream end of the link.
+				MesoSegment ps = (MesoSegment) pv.getNextMesoLink().getStartSegment();
+				appendVhc2Sgmt(ps, pv);
+				pv.onRouteChoosePath(pv.getNextMesoLink().getDnNode(),this);
+				pv.updateSpeed(getSimParameter().minSpeed(),getSimParameter().minHeadwayGap());
+				vhcCounter ++ ;
 				/* push static vehicle attributes on message buffer */
-				;
 			}
 		}
 	}
+	public void appendVhc2Sgmt(MesoSegment ps, MesoVehicle pv){
+		// ps.append(vehicle);
+		// Append a vehicle at the end of the segment
+		if (ps.lastCell == null ||
+			!ps.lastCell.isReachable(simClock.getStepSize(),getSimParameter().cellSplitGap)) {
+			// isReachable T：cell尾车距segment末端的距离<车团分离阈值
+			// F: cell尾车距segment末端的距离>=车团分离阈值
+			// 若segment存在cell，新车与原lastcell距离大于分离阈值，则新生成lastcell
+			ps.append(recycleCellList.recycle());
+			ps.lastCell.initialize(simClock.getStepSize());
+		}
+		MesoTrafficCell lastCellInSgmt = ps.lastCell;
+		// Put the vehicle in the traffic cell
+		// Append a vehicle at the end of the cell
 
+		pv.leading = lastCellInSgmt.lastVehicle;
+		pv.trailing = null;
+
+		if (lastCellInSgmt.lastVehicle != null) { // append at end
+			lastCellInSgmt.lastVehicle.trailing = pv;
+		}
+		else { // queue is empty
+			lastCellInSgmt.firstVehicle = pv;
+		}
+		lastCellInSgmt.lastVehicle = pv;
+		lastCellInSgmt.nVehicles++;
+
+		pv.appendTo(lastCellInSgmt,stepCounter,getSimParameter().minHeadwayGap() );
+
+		if (lastCellInSgmt.nVehicles <= 1) { // first vehicle
+			lastCellInSgmt.updateTailSpeed(simClock,(MesoParameter)simParameter);
+			lastCellInSgmt.updateHeadSpeeds(simClock,(MesoParameter)simParameter);
+		}
+	}
 	/*
 	 * ------------------------------------------------------------------- Add
 	 * number of vehicles allowed to move out during this time step to the
@@ -151,8 +295,10 @@ public class MesoNetwork extends RoadNetwork {
 	 * -------------------------------------------------------------------
 	 */
 	public void resetSegmentEmitTime() {
-		for (int i = 0; i < nSegments(); i++) {
-			mesoSegment(i).resetEmitTime();
+		MesoSegment ps;
+		for (Segment segment:segments) {
+			ps = (MesoSegment) segment;
+			ps.resetEmitTime(simClock.getCurrentTime());
 		}
 	}
 
@@ -163,13 +309,13 @@ public class MesoNetwork extends RoadNetwork {
 
 		// Vehicles already in the network
 
-		for (i = 0; i < nSegments(); i++) {
-			cell = mesoSegment(i).firstCell();
+		for (Segment segment:segments) {
+			cell = ((MesoSegment) segment).firstCell();
 			while (cell != null) {
 				pv = cell.firstVehicle();
 				while (pv != null) {
 					if (pv.isGuided() != 0) {
-						pv.changeRoute();
+						pv.changeRoute(this);
 					}
 					pv = pv.trailing();
 				}
@@ -179,11 +325,11 @@ public class MesoNetwork extends RoadNetwork {
 
 		// Vehicles waiting for entering the network
 
-		for (i = 0; i < nLinks(); i++) {
-			pv = mesoLink(i).queueHead();
+		for (Link link:links) {
+			pv = ((MesoLink)link).queueHead();
 			while (pv != null) {
 				if (pv.isGuided() != 0) {
-					pv.changeRoute();
+					pv.changeRoute(this);
 				}
 				pv = pv.trailing();
 			}
@@ -191,12 +337,12 @@ public class MesoNetwork extends RoadNetwork {
 	}
 
 	// Calculate capacity of the nodes
-
+	/*
 	public void updateNodeCapacities() {
-		for (int i = 0; i < nNodes(); i++) {
-			mesoNode(i).calcCapacities();
+		for (Node node:nodes) {
+			((MesoNode)node).calcCapacities();
 		}
-	}
+	}*/
 
 	// Update phase
 	/*
@@ -208,10 +354,15 @@ public class MesoNetwork extends RoadNetwork {
 	 */
 	public void calcTrafficCellUpSpeed() {
 		MesoSegment ps;
-		for (int i = 0; i < nLinks(); i++) {
-			ps = (MesoSegment) getLink(i).getEndSegment();
+		for (Link link:links) {
+			ps = (MesoSegment) link.getEndSegment();
 			while (ps != null) {
-				ps.calcTrafficCellUpSpeed();
+				// Calculate density and upSpeed for each traffic cell
+				MesoTrafficCell cell = ps.firstCell;
+				while (cell != null) {
+					cell.updateTailSpeed(simClock,getSimParameter());
+					cell = cell.trailing();
+				}
 				ps = ps.getUpSegment();
 			}
 		}
@@ -226,10 +377,14 @@ public class MesoNetwork extends RoadNetwork {
 	 */
 	public void calcTrafficCellDnSpeeds() {
 		MesoSegment ps;
-		for (int i = 0; i < nLinks(); i++) {
-			ps = (MesoSegment) getLink(i).getEndSegment();
+		for (Link link:links) {
+			ps = (MesoSegment) link.getEndSegment();
 			while (ps != null) { // downstream first
-				ps.calcTrafficCellDnSpeeds();
+				MesoTrafficCell cell = ps.firstCell;
+				while (cell != null) {
+					cell.updateHeadSpeeds(simClock,getSimParameter());
+					cell = cell.trailing();
+				}
 				ps = ps.getUpSegment();
 			}
 		}
@@ -242,11 +397,11 @@ public class MesoNetwork extends RoadNetwork {
 		nPermutedLinks = 0;
 		int i;
 
-		if (nPermutedLinks != nLinks()) { // this piece is executed only once
+		if (nPermutedLinks != links.size()) { // this piece is executed only once
 			if (permuteLink != null) {
 				// 未处理 delete [] permuteLink;
 			}
-			nPermutedLinks = nLinks();
+			nPermutedLinks = links.size();
 			permuteLink = new int[nPermutedLinks];
 			for (i = 0; i < nPermutedLinks; i++) {
 				permuteLink[i] = i;
@@ -255,45 +410,114 @@ public class MesoNetwork extends RoadNetwork {
 
 		// Randomize the link order
 
-		Random.getInstance().get(Random.Misc).permute(nLinks(), permuteLink);
-		for (i = 0; i < nLinks(); i++) {
-			MesoLink p = mesoLink(permuteLink[i]);
-			p.advanceVehicles();
+		mesoRandom[MesoRandom.Misc].permute(links.size(), permuteLink);
+
+		for (i = 0; i < links.size(); i++) {
+			MesoLink itrLink = mesoLink(permuteLink[i]);
+			MesoSegment itrSegment = (MesoSegment) itrLink.getEndSegment();
+			MesoTrafficCell itrCell;
+			MesoVehicle itrVehicle,tmpVehicle;
+			while (itrSegment != null) {
+				// ps.advanceVehicles();
+				itrCell = itrSegment.firstCell;
+				while (itrCell != null) {
+					//cell.advanceVehicles();
+					itrVehicle = itrCell.firstVehicle;
+					while (itrVehicle != null) {
+						// 保存更新位置前vehicle的后车引用
+						tmpVehicle = itrVehicle.trailing;
+						if (itrVehicle.isProcessed(stepCounter) == 0) {
+							itrVehicle.move(this);
+
+						}
+						// 回收驶出路网的车辆
+						if(itrVehicle.needRecycle == true){
+							this.recycleVhcList.recycle(itrVehicle);
+							vhcCounter --;
+						}
+						itrVehicle = tmpVehicle;
+					}
+					itrCell = itrCell.trailing;
+				}
+				formatTrafficCells(itrSegment);
+				itrSegment = itrSegment.getUpSegment();
+			}
+
 		}
 	}
 
 	// Remove, merge, and split cells
 
-	public void formatTrafficCells() {
-		for (int i = 0; i < nSegments(); i++) {
-			mesoSegment(i).formatTrafficCells();
+	public void formatTrafficCells(MesoSegment mesoSegment) {
+		// Remove, merge and split traffic cells
+		MesoTrafficCell cell;
+		MesoTrafficCell front;
+
+		// Remove the empty traffic cells
+		cell = mesoSegment.firstCell;
+		while ((front = cell) != null) {
+			cell = cell.trailing;
+			if (front.nVehicles() <= 0 || front.firstVehicle() == null || front.lastVehicle() == null) { // no
+				// vehicle
+				// left
+
+				// use vehicle count should be enough but it seems that there
+				// is a bug somewhere that causes vehicle count to be 1 when
+				// actually there is no vehicle left.
+
+				mesoSegment.remove(front);
+				this.recycleCellList.recycle(front);
+			}
 		}
+
 	}
 
 	// Remove all vehicles in the network, including those in
 	// pretrip queues
 
 	public void clean() {
-		int i;
 
 		// Release current cells
+		MesoLink itrLink;
+		MesoSegment itrSegment;
+		for (Link link:links) {
+			//((MesoLink)link).clean();
+			// Remove vehicles in pretrip queue
+			itrLink = (MesoLink)link;
+			while (itrLink.queueHead != null) {
+				itrLink.queueTail = itrLink.queueHead;
+				itrLink.queueHead = itrLink.queueHead.trailing;
+				this.recycleVhcList.recycle(itrLink.queueTail);
+			}
+			itrLink.queueTail = null;
+			itrLink.queueLength_ = 0;
 
-		for (i = 0; i < nLinks(); i++) {
-			mesoLink(i).clean();
+			// Remove vehicles in each segment
+
+			itrSegment = (MesoSegment) itrLink.getStartSegment();
+			while (itrSegment != null) {
+			//	((MesoSegment) ps).clean();
+				// remove all traffic cells
+				while (itrSegment.firstCell != null) {
+					itrSegment.lastCell = itrSegment.firstCell;
+					itrSegment.firstCell = itrSegment.firstCell.trailing;
+					this.recycleCellList.recycle(itrSegment.lastCell);
+				}
+				itrSegment.lastCell = null;
+				itrSegment.nCells = 0;
+				itrSegment = (MesoSegment)itrSegment.getDnSegment();
+			}
 		}
+
 
 		// Restore capacities
-
-		for (i = 0; i < nSegments(); i++) {
-			MesoSegment ps = mesoSegment(i);
-			float test = ps.defaultCapacity();
-			ps.setCapacity(ps.defaultCapacity());
+		for (Segment segment:segments) {
+			itrSegment = ((MesoSegment)segment);
+			itrSegment.setCapacity(itrSegment.defaultCapacity(),simClock.getCurrentTime());
 		}
 		//清除检测数据
-		for(i=0;i<nSurvStation();i++){
-			survStations_.get(i).getflowList().clear();
-			survStations_.get(i).getSpeedList().clear();
-//			survStations_.get(i).resetMeasureTime();
+		for(Sensor itrSensor:sensors){
+			itrSensor.clean();
 		}
 	}
 
@@ -305,12 +529,12 @@ public class MesoNetwork extends RoadNetwork {
 
 		// Record travel time for vehicle still in the network
 
-		for (i = 0; i < nSegments(); i++) {
-			cell = mesoSegment(i).firstCell();
+		for (Segment segment:segments) {
+			cell = ((MesoSegment)segment).firstCell();
 			while (cell != null) {
 				pv = cell.firstVehicle();
 				while (pv != null) {
-					pv.getLink().recordExpectedTravelTime(pv);
+					pv.getLink().recordExpectedTravelTime(pv,linkTimes);
 					pv = pv.trailing();
 				}
 				cell = cell.trailing();
@@ -319,10 +543,10 @@ public class MesoNetwork extends RoadNetwork {
 
 		// Record travel time for vehicle in ths spill back queues
 
-		for (i = 0; i < nLinks(); i++) {
-			pv = mesoLink(i).queueHead();
+		for (Link link:links) {
+			pv = ((MesoLink)link).queueHead();
 			while (pv != null) {
-				pv.nextLink().recordExpectedTravelTime(pv);
+				pv.getNextLink().recordExpectedTravelTime(pv,linkTimes);
 				pv = pv.trailing();
 			}
 		}
@@ -335,7 +559,7 @@ public class MesoNetwork extends RoadNetwork {
 		VehicleData vd;
 		//从对象池中获取frame对象
 
-		ListIterator<Segment> i = segments_.listIterator();
+		ListIterator<Segment> i = segments.listIterator();
 		//遍历segment
 		while (i.hasNext()) {
 			ps = (MesoSegment) i.next();
@@ -351,9 +575,8 @@ public class MesoNetwork extends RoadNetwork {
 					vd.init(vhc,true,0,null);
 					//将vehicledata插入frame
 					try {
-						FrameQueue.getInstance().offer(vd, MesoVehicle.nVehicles());
+						FrameQueue.getInstance().offer(vd, vhcCounter);
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					//下一辆车

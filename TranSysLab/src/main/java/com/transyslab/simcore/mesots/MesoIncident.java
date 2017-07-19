@@ -2,13 +2,13 @@
  *
  */
 package com.transyslab.simcore.mesots;
-import com.transyslab.roadnetwork.CodedObject;
+import com.transyslab.roadnetwork.NetworkObject;
 
 /**
  * @author its312
  *
  */
-public class MesoIncident extends CodedObject {
+public class MesoIncident  {
 	private double stime_;
 	private double etime_;
 	private float capChange_;
@@ -24,6 +24,7 @@ public class MesoIncident extends CodedObject {
 		capChange_ = 0.0f;
 	}
 	// 事件编号：c;发生时间：st;结束时间：et;节段id：sid;减少的通行能力：cap
+	/*
 	public void init(int c, double st, double et, int sid, float cap) {
 		stime_ = st;
 		etime_ = et;
@@ -45,7 +46,7 @@ public class MesoIncident extends CodedObject {
 	public void setNeedResume(boolean b) {
 		needResume_ = b;
 	}
-	public int comp(CodedObject inc) {
+	public int comp(NetworkObject inc) {
 		MesoIncident other = (MesoIncident) inc;
 		final double epsilon = 1.0e-5;
 		if (stime_ < other.stime_ - epsilon)
@@ -76,6 +77,6 @@ public class MesoIncident extends CodedObject {
 	}
 	public double getEndTime() {
 		return etime_;
-	}
+	}*/
 
 }

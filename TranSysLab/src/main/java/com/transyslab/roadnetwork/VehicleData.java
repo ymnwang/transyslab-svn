@@ -3,7 +3,7 @@ package com.transyslab.roadnetwork;
 import com.transyslab.commons.tools.GeoUtil;
 
 //车辆轨迹数据
-public class VehicleData extends CodedObject{
+public class VehicleData implements NetworkObject{
 	//车辆id
 	protected int vehicleID_;
 	//车辆类型
@@ -11,14 +11,14 @@ public class VehicleData extends CodedObject{
 	//车辆特殊渲染的标记,0:无标记；1:MLP模型虚拟车
 	protected int specialFlag_;
 	//车辆长度
-	protected float vehicleLength_;
+	protected double vehicleLength_;
 	//车辆沿segment或lane的坐标位置
 	protected GeoPoint headPosition;
 	//车辆形状
 	protected GeoSurface rectangle;
 	//车辆信息
 	protected String info;
-	
+	protected boolean isSelected;
 	public int getVehicleID(){
 		return vehicleID_;
 	}                      
@@ -31,6 +31,18 @@ public class VehicleData extends CodedObject{
 	public double getVhcLocationY(){
 		return headPosition.getLocationY();
 	}
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
+	}
+	public int getId(){
+		return this.vehicleID_;
+	}
+	public String getObjInfo(){
+		return this.info;
+	}
 	public int getSpecialFlag(){
 		return specialFlag_;
 	}
@@ -41,7 +53,7 @@ public class VehicleData extends CodedObject{
 		return this.info;
 	}
 	public void init(Vehicle vhc, boolean isSegBased, int specialflag, String info){
-		vehicleID_ = vhc.getCode();
+		vehicleID_ = vhc.id;
 		vehicleType_ = vhc.getType();
 		vehicleLength_ = vhc.getLength();
 		specialFlag_ = specialflag;
@@ -53,23 +65,23 @@ public class VehicleData extends CodedObject{
 		if(isSegBased){
 			Segment seg = vhc.getSegment();
 			double l = seg.getLength();
-			double s = l-vhc.distance();
+			double s = l-vhc.getDistance();
 			vhcHeadX = seg.getStartPnt().getLocationX() + s * (seg.getEndPnt().getLocationX() - seg.getStartPnt().getLocationX()) / l;
 			vhcHeadY = seg.getStartPnt().getLocationY() + s * (seg.getEndPnt().getLocationY() - seg.getStartPnt().getLocationY()) / l;						
 			//按车道数压缩
-			s = s - vehicleLength_/seg.nLanes_;
+			s = s - vehicleLength_/seg.nLanes();
 			vhcTrailX = seg.getStartPnt().getLocationX() + s * (seg.getEndPnt().getLocationX() - seg.getStartPnt().getLocationX()) / l;
 			vhcTrailY = seg.getStartPnt().getLocationY() + s * (seg.getEndPnt().getLocationY() - seg.getStartPnt().getLocationY()) / l;
 			// TODO 写死高度z
 			this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.5);
 			GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 0.5);
 			// TODO 检查路段宽度
-			this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, seg.nLanes_*Constants.LANE_WIDTH, false); 
+			this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, seg.nLanes() *Constants.LANE_WIDTH, false);
 		}
 		else{
 			Lane lane = vhc.getLane();
 			double l = lane.getLength();
-			double s = l-vhc.distance();
+			double s = l-vhc.getDistance();
 			vhcHeadX = lane.getStartPnt().getLocationX() + s * (lane.getEndPnt().getLocationX() - lane.getStartPnt().getLocationX()) / l;
 			vhcHeadY = lane.getStartPnt().getLocationY() + s * (lane.getEndPnt().getLocationY() - lane.getStartPnt().getLocationY()) / l;
 			s = s - vehicleLength_;

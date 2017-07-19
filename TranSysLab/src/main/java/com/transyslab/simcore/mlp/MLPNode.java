@@ -1,10 +1,6 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
@@ -18,14 +14,17 @@ public class MLPNode extends Node{
 		stopCount = 0;
 	}
 	public int serve(MLPVehicle veh) {
-		MLPLane lane_ = veh.lane_;
-		MLPLink link_ = veh.link_;
-		if (lane_.checkPass()) {//lane_.checkPass()
+		MLPLane lane_ = veh.lane;
+		MLPLink link_ = veh.link;
+		if (lane_.checkPass()) {//lane.checkPass()
+			//TODO 获取currentTime待优化
+			double currentTime = veh.link.getNetwork().getSimClock().getCurrentTime();
 			//passed output capacity checking
-			if (veh.nextLink() == null) {
+			if (veh.getNextLink() == null) {
 				lane_.scheduleNextEmitTime();//passed upstream lane
 				//arrived destination no constrain
-				link_.tripTime.add((double) veh.timeInLink());//record linkTravelTime
+				//record linkTravelTime
+				link_.tripTime.add(veh.timeInLink(currentTime));
 				lane_.removeVeh(veh, true);
 				return 1;
 			}
@@ -37,8 +36,8 @@ public class MLPNode extends Node{
 				return 0;
 			}
 			//deal with non-intersection nodes
-//			List<MLPLane> candidates = lane_.selectDnLane(veh.nextLink().getStartSegment());//不以successiveDnLane运行
-			MLPLane nextLane = lane_.successiveDnLaneInLink((MLPLink) veh.nextLink());
+//			List<MLPLane> candidates = lane.selectDnLane(veh.getNextLink().getStartSegment());//不以successiveDnLane运行
+			MLPLane nextLane = lane_.successiveDnLaneInLink((MLPLink) veh.getNextLink());
 			if (nextLane != null) {// at least one topology available down lane
 				if (nextLane.checkVolum(MLPParameter.VEHICLE_LENGTH,0.0)) {//check every down lane' volume //before: checkVolum(veh)
 					//no priority control for now
@@ -47,22 +46,21 @@ public class MLPNode extends Node{
 //							MLPLane confLane = (MLPLane) nextLane.upLane(j); //不以successiveDnLane运行
 					for (int j = 0; j < nextLane.successiveUpLanes.size() && canpass; j++) {
 						MLPLane confLane = nextLane.successiveUpLanes.get(j);
-						canpass &= confLane.getCode() == lane_.getCode() ||
+						canpass &= confLane.getId() == lane_.getId() ||
 								confLane.vehsOnLn.isEmpty() ||
-								// lane_.priority > confLane.priority || //路权较大时可以直接通过
+								// lane.priority > confLane.priority || //路权较大时可以直接通过
 								!need2Giveway(veh, confLane.vehsOnLn.get(0)) ||
 								reachFirst(veh, confLane.vehsOnLn.get(0));//同等路权下先到先得，加入路权后替换成下面的代码
-						//(lane_.priority == confLane.priority && reachFirst(veh, confLane.vehsOnLn.get(0))
+						//(lane.priority == confLane.priority && reachFirst(veh, confLane.vehsOnLn.get(0))
 					}
 					if (canpass && !checkPlaceTaken(veh, nextLane)) {//pass to this very nexlane
 						lane_.scheduleNextEmitTime();//passed upstream lane
-						link_.tripTime.add((double) veh.timeInLink());//record linkTravelTime
-						double now = SimulationClock.getInstance().getCurrentTime();
-						veh.timeEntersLink((float)now);
+						link_.tripTime.add(veh.timeInLink(currentTime));//record linkTravelTime
+						veh.setTimeEntersLink(currentTime);
 						lane_.removeVeh(veh, false);
-						veh.time2Dispatch = now;
+						veh.time2Dispatch = currentTime;
 						statVeh(veh, nextLane);
-						veh.OnRouteChoosePath(veh.link_.getDnNode());
+						veh.onRouteChoosePath(veh.link.getDnNode(),veh.link.getNetwork());
 						return 0;
 					}
 //					else
@@ -81,22 +79,26 @@ public class MLPNode extends Node{
 		return 0;	
 	}
 	private boolean need2Giveway(MLPVehicle vehPass, MLPVehicle vehCheck) {		
-		double dis_headway = vehCheck.distance() - vehPass.newDis - vehCheck.currentSpeed();
+		double dis_headway = vehCheck.getDistance() - vehPass.newDis - vehCheck.getCurrentSpeed();
 		double crSpeed;
-		float followerLen;
+		double followerLen;
 		if (dis_headway > 0) {
 			crSpeed = vehPass.newSpeed;
 			followerLen = vehCheck.getLength();
 		}
 		else {
 			dis_headway *= -1;
-			crSpeed = vehCheck.currentSpeed();
+			crSpeed = vehCheck.getCurrentSpeed();
 			followerLen = vehPass.getLength();
 		}
-		return dis_headway - followerLen < MLPParameter.getInstance().minGap(crSpeed);
+		//TODO parameter获取方式待优化
+		MLPParameter mlpParameter = (MLPParameter) vehPass.link.getNetwork().getSimParameter();
+		return dis_headway - followerLen < mlpParameter.minGap(crSpeed);
 	}
 	private boolean reachFirst(MLPVehicle vehPass, MLPVehicle vehCheck) {
-		double dis_headway = vehCheck.distance() - vehPass.newDis - vehCheck.currentSpeed()*SimulationClock.getInstance().getStepSize();
+		//TODO clock获取方式待优化
+		SimulationClock simClock = vehPass.link.getNetwork().getSimClock();
+		double dis_headway = vehCheck.getDistance() - vehPass.newDis - vehCheck.getCurrentSpeed()*simClock.getStepSize();
 		return dis_headway >= 0;
 		//加入了checkPlaceTaken机制，可以不判断边界
 //		if (dis_headway != 0) {
@@ -110,22 +112,28 @@ public class MLPNode extends Node{
 	}
 	private void statVeh(MLPVehicle veh, MLPLane nextLane) {
 		//processingVeh.lane/seg/link setting
-		veh.lane_ = nextLane;
-		veh.segment_ = nextLane.getSegment();
-		veh.link_ = (MLPLink) nextLane.getLink();
+		veh.lane = nextLane;
+		veh.segment = nextLane.getSegment();
+		veh.link = (MLPLink) nextLane.getLink();
 		veh.newDis += nextLane.getLength();
 		if (veh.newDis < 0.0) {//每次最多经过一个link
 			veh.newDis = 0.0;
-			veh.newSpeed = (veh.distance() + nextLane.getLength()) / SimulationClock.getInstance().getStepSize();
+			//TODO clock获取方式待优化
+			SimulationClock simClock = veh.link.getNetwork().getSimClock();
+			veh.newSpeed = (veh.getDistance() + nextLane.getLength()) / simClock.getStepSize();
 		}
 		statedVehs.add(veh);
 	}
 	protected void dispatchStatedVeh() {
-		double now = SimulationClock.getInstance().getCurrentTime();
+		//TODO clock获取方式待优化
+		if (statedVehs.size() <= 0)
+			return;
+		SimulationClock simClock = getDnLink(0).getNetwork().getSimClock();
+		double now = simClock.getCurrentTime();
 		for (int i = 0; i < statedVehs.size(); i++) {
 			MLPVehicle tmpveh = statedVehs.get(i);
 			if (now >= tmpveh.time2Dispatch) {
-				tmpveh.lane_.insertVeh(tmpveh);//增加一个倒序插入会更快
+				tmpveh.lane.insertVeh(tmpveh);//增加一个倒序插入会更快
 				statedVehs.remove(i);
 				i -= 1;
 			}
@@ -135,9 +143,11 @@ public class MLPNode extends Node{
 		boolean ans = false;
 		for (int i=0; i<statedVehs.size() && (!ans); i++){
 			MLPVehicle v = statedVehs.get(i);
-			if (v.lane_.getCode() == nextLane.getCode()){
+			if (v.lane.getId() == nextLane.getId()){
 				double gap = veh.newDis + nextLane.getLength() - v.newDis - v.getLength();
-				ans |= ( gap < MLPParameter.getInstance().minGap(veh.newSpeed) );
+				//TODO parameter获取方式待优化
+				MLPParameter mlpParameter = (MLPParameter) veh.link.getNetwork().getSimParameter();
+				ans |= ( gap < mlpParameter.minGap(veh.newSpeed) );
 			}
 		}
 		return ans;

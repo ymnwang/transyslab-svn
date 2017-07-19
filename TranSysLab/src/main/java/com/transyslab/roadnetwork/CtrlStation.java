@@ -2,72 +2,83 @@
  *
  */
 package com.transyslab.roadnetwork;
+
+
 import java.util.*;
 
 /**
  * //-------------------------------------------------------------------- //
  * CLASS NAME: RN_CtrlStation -- a surveillance station consists of // one or
  * more signals. Ctrlerllace station is stored in a sorted // list in each link
- * according to their distance from the end of the // link. The sorting is in
+ * according to their getDistance from the end of the // link. The sorting is in
  * descending order (Upstream = // LongerDistance = Top) //------
  *
  * @author YYL 2016-6-5
  */
-public class CtrlStation extends CodedObject {
+public class CtrlStation {
 	protected static float maxVisibility_;
 	protected int type_; // signal type
 	protected Segment segment_; // pointer to segment
-	protected float distance_; // distance from the link end
+	protected float distance_; // getDistance from the link end
 	protected float visibility_; // length of detection zone
 	protected float position_; // position in % from segment end
 	protected Vector<Signal> signals_; // array of pointers to signals
+	protected String objInfo;
+	protected int id;
 
 	public CtrlStation() {
 
-	}/*
-		 * public int type() { return (CTRL_SIGNAL_TYPE & type_); } public int
-		 * isLinkWide() { return (CTRL_LINKWIDE & type_); }
+	}
+	public int getId(){
+		return this.id;
+	}
+	public String getObjInfo(){
+		return this.objInfo;
+	}
+	/*
+		 * public int type() { return (CTRL_SIGNAL_TYPE & type); } public int
+		 * isLinkWide() { return (CTRL_LINKWIDE & type); }
 		 *
-		 * public RN_Segment segment() { return segment_; } public RN_Link
-		 * getLink(){ return segment_.getLink(); }
+		 * public RN_Segment segment() { return segment; } public RN_Link
+		 * getLink(){ return segment.getLink(); }
 		 *
-		 * public int nLanes(){ return segment_.nLanes(); }
+		 * public int nLanes(){ return segment.nLanes(); }
 		 *
 		 * // Returns pointer to the signal in ith lane. It may be NULL if //
 		 * there is no signal in the ith lane.
 		 *
 		 * public RN_Signal signal(int i){ //Î´´¦Àí if (isLinkWide()>0) return
-		 * signals_.get(0); else return signals_.get(i); }
+		 * signals.get(0); else return signals.get(i); }
 		 *
 		 * // Connect ith point to the signal
 		 *
 		 * public void signal(int i, RN_Signal s){ if (isLinkWide()>0) i = 0;
-		 * signals_.add(i,s); }
+		 * signals.add(i,s); }
 		 *
-		 * public float distance() { return distance_; } public float
-		 * visibility() { return visibility_; } public void visibility(float d){
-		 * visibility_ = d; if (visibility_ > maxVisibility_) { maxVisibility_ =
-		 * visibility_; } } public float position() { return position_; }
+		 * public float getDistance() { return getDistance; } public float
+		 * visibility() { return visibility; } public void visibility(float d){
+		 * visibility = d; if (visibility > maxVisibility_) { maxVisibility_ =
+		 * visibility; } } public float position() { return position; }
 		 *
 		 * public int initWithoutInsert(int ty, float vis, int seg, float pos){
 		 * switch (ty) { case CTRL_PS: case CTRL_TS: case CTRL_VSLS: case
-		 * CTRL_VMS: { type_ = (ty | CTRL_LINKWIDE); break; } default: { type_ =
+		 * CTRL_VMS: { type = (ty | CTRL_LINKWIDE); break; } default: { type =
 		 * ty; break; } }
 		 *
-		 * if (!(segment_ = theNetwork.findSegment(seg))) { // cerr <<
+		 * if (!(segment = theNetwork.findSegment(seg))) { // cerr <<
 		 * "Error:: Unknown segment <" << seg << ">. "; return -1; }
 		 *
 		 * vis *= theBaseParameter.lengthFactor(); vis *=
 		 * theBaseParameter.visibilityScaler(); visibility(vis);
 		 *
-		 * position_ = (float) (1.0 - pos); // position in % from segment end
+		 * position = (float) (1.0 - pos); // position in % from segment end
 		 *
-		 * distance_ = segment_.getDistance() + position_ *
-		 * segment_.getLength();
+		 * getDistance = segment.getDistance() + position *
+		 * segment.getLength();
 		 *
-		 * if (isLinkWide()>0) { // signals_.reserve(1); signals_.add(0,null); }
-		 * else { int n = segment_.nLanes(); // signals_.reserve(n); while (n >
-		 * 0) { n --; signals_.add(n,null); } }
+		 * if (isLinkWide()>0) { // signals.reserve(1); signals.add(0,null); }
+		 * else { int n = segment.nLanes(); // signals.reserve(n); while (n >
+		 * 0) { n --; signals.add(n,null); } }
 		 *
 		 * return 0; }
 		 */
@@ -90,7 +101,7 @@ public class CtrlStation extends CodedObject {
 	 * getLink().getCtrlStationList().add(this);
 	 * theNetwork.lastCtrlStation(this); code_ = ++serial_no; }
 	 */
-
+/*
 	@Override
 	public void print() {
 
@@ -99,9 +110,9 @@ public class CtrlStation extends CodedObject {
 	@Override
 	public int cmp(CodedObject other) {
 		CtrlStation ctrl = (CtrlStation) other;
-		if (distance_ < ctrl.distance_)
+		if (getDistance < ctrl.getDistance)
 			return 1;
-		else if (distance_ > ctrl.distance_)
+		else if (getDistance > ctrl.getDistance)
 			return -1;
 		else
 			return 0;
@@ -109,5 +120,5 @@ public class CtrlStation extends CodedObject {
 	@Override
 	public int cmp(int c) {
 		return this.cmp(c);
-	}
+	}*/
 }

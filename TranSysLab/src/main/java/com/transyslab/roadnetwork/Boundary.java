@@ -2,33 +2,45 @@ package com.transyslab.roadnetwork;
 
 import jhplot.math.LinearAlgebra;
 
-public class Boundary extends CodedObject {
-	protected GeoPoint startPnt_;
-	protected GeoPoint endPnt_;
-	protected int index_;
+public class Boundary implements NetworkObject{
+	protected GeoPoint startPnt;
+	protected GeoPoint endPnt;
+	protected int index;
+	protected int id;
+	protected String objInfo;
+	protected boolean isSelected;
 	public Boundary() {
 
 	}
-	public void init(int code, double beginx, double beginy, double endx, double endy) {
-		setCode(code);
-		startPnt_ = new GeoPoint(beginx, beginy);
-		endPnt_ = new GeoPoint(endx, endy);
-		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(startPnt_);
-		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(endPnt_);
-		index_ = RoadNetwork.getInstance().nBoundarys();
-		RoadNetwork.getInstance().addBoundary(this);
+	public boolean isSelected(){
+		return this.isSelected;
+	}
+	public void setSelected(boolean flag){
+		this.isSelected = flag;
+	}
+	public void init(int id, int index,double beginx, double beginy, double endx, double endy ){
+		this.id = id;
+		this.index = index;
+		startPnt = new GeoPoint(beginx,beginy);
+		endPnt = new GeoPoint(endx,endy);
+	}
+	public int getId(){
+		return this.id;
+	}
+	public String getObjInfo(){
+		return this.objInfo;
 	}
 	public void translateInWorldSpace(WorldSpace world_space) {
-		startPnt_ = world_space.worldSpacePoint(startPnt_);
-		endPnt_ = world_space.worldSpacePoint(endPnt_);
+		startPnt = world_space.worldSpacePoint(startPnt);
+		endPnt = world_space.worldSpacePoint(endPnt);
 	}
 	public GeoPoint getStartPnt() {
-		return startPnt_;
+		return startPnt;
 	}
 	public GeoPoint getEndPnt() {
-		return endPnt_;
+		return endPnt;
 	}
 	public double[] getDelta() {
-		return LinearAlgebra.minus(endPnt_.getLocCoods(), startPnt_.getLocCoods());
+		return LinearAlgebra.minus(endPnt.getLocCoods(), startPnt.getLocCoods());
 	}
 }

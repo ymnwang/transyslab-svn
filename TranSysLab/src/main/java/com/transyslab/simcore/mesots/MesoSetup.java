@@ -15,13 +15,10 @@ import com.transyslab.simcore.AppSetup;
  *
  */
 public class MesoSetup {
+	/*
 	
 	public static void ParseParameters() {
 
-		/*
-		 * if(MESO_Parameter.getInstance()!=null){
-		 * MESO_Parameter.getInstance().load(); }
-		 */
 	}
 	// --------------------------------------------------------------------
 	// Read the network database. This include network objects (nodes,
@@ -63,11 +60,6 @@ public class MesoSetup {
 		XmlParser.parseVehicleTable("src/main/resources/demo_neihuan/scenario2/emitList(2.28).xml");
 	}
 	public static void SetupMiscellaneous() {
-		// Assign the pointers to control and surveillance devices in
-		// MESO_Segment objects.
-		/*
-		 * MESO_Network.getInstance().assignCtrlListInSegments();
-		 * MESO_Network.getInstance().assignSurvListInSegments();
-		 */
-	}
+
+	}*/
 }
