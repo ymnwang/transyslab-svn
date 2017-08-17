@@ -7,6 +7,7 @@ import java.util.List;
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
+import com.transyslab.commons.tools.mutitask.TaskWorker;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.EngThread;
 import com.transyslab.simcore.mlp.Functions.TSFun;
@@ -182,7 +183,7 @@ public class DE2 extends SchedulerThread{
 			taskList.clear();
 			long tb = System.currentTimeMillis();
 			for (int j = 0; j < population_; j++) {
-				taskList.add(dispatch(newidvds_[j].pos_));//dispatch task
+				taskList.add(dispatch(newidvds_[j].pos_, TaskWorker.ANY_WORKER));//dispatch task
 			}
 			
 			for (int j = 0; j < population_; j++) {

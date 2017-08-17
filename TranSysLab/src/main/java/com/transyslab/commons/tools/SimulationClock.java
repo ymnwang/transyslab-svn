@@ -88,7 +88,6 @@ public class SimulationClock {
 		currentTime += step;
 		int sec10 = (int) (10.0 * currentTime + 0.5);
 		currentTime = sec10 / 10.0;
-
 	}
 
 	public double getCurrentTime() {

@@ -19,6 +19,7 @@ public class Loop implements Sensor{
 	protected int id;
 	protected String name;
 	protected String objInfo;
+
 	protected int indexInLoops; // index in SurvStation array
 	protected Lane lane; // pointer to lane
 	protected int state; // occupied/working etc

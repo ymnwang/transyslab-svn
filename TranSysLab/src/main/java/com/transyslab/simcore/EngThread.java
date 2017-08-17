@@ -1,25 +1,17 @@
 package com.transyslab.simcore;
 
 import java.io.File;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import com.transyslab.commons.tools.FitnessFunction;
-import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
-import com.transyslab.roadnetwork.Parameter;
-import com.transyslab.roadnetwork.RoadNetwork;
-import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
-import com.transyslab.simcore.mlp.MLPParameter;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 public abstract class EngThread extends Thread implements TaskWorker{
-	private TaskCenter taskCenter;
+	protected TaskCenter taskCenter;
 	protected SimulationEngine engine;
 
 	public EngThread(String thread_name, TaskCenter task_center, String masterFileDir) {
@@ -43,7 +35,7 @@ public abstract class EngThread extends Thread implements TaskWorker{
 	@Override
 	public void run() {
 		engine.loadFiles();
-		gotowork(taskCenter);
+		goToWork(taskCenter, false);
 	}
 
 	public String getModelType(String fileDir) {

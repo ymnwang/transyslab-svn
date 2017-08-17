@@ -1,6 +1,7 @@
 package com.transyslab.simcore.mlp;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class MLPEngine extends SimulationEngine{
     public boolean needEmpData;
 	protected double updateTime_;
 	protected double LCDTime_;
+	protected double statTime_;
 	protected boolean firstEntry; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
 	protected TXTUtils loopRecWriter;
@@ -134,6 +136,13 @@ public class MLPEngine extends SimulationEngine{
 		runningSeed = seedFixed ? Long.parseLong(config.getString("runningSeed")) : 0l;
 		needEmpData = Boolean.parseBoolean(config.getString("needEmpData"));
 		displayOn = Boolean.parseBoolean(config.getString("displayOn"));
+
+		//Statistic Output setting
+		getSimParameter().statWarmUp = Double.parseDouble(config.getString("statWarmUp"));//set time to Parameter
+		getSimParameter().statStepSize = Double.parseDouble(config.getString("statTimeStep"));
+		//输出变量在loadfiles后再进行初始化，当前只将String读入
+		runProperties.put("statLinkIds",config.getString("statLinkIds"));
+		runProperties.put("statDetNames",config.getString("statDetNames"));
 	}
 
 	@Override
@@ -192,7 +201,7 @@ public class MLPEngine extends SimulationEngine{
 			}		
 		}
 		
-		if (now>= updateTime_){
+		if (now >= updateTime_){
 			mlpNetwork.resetReleaseTime();
 			if (loopRecOn) 
 				loopRecWriter.flushBuffer();
@@ -201,6 +210,13 @@ public class MLPEngine extends SimulationEngine{
 			if (infoOn)
 				infoWriter.flushBuffer();
 			updateTime_ = now + ((MLPParameter) mlpNetwork.getSimParameter()).updateStepSize_;
+		}
+
+		if (now >= statTime_){
+			double stepSize = ((MLPParameter) mlpNetwork.getSimParameter()).statStepSize;
+			mlpNetwork.sectionStatistics(statTime_ - stepSize, now, Constants.ARITHMETIC_MEAN);//TODO: change
+			mlpNetwork.linkStatistics(statTime_ - stepSize, now);
+			statTime_ = now + stepSize;
 		}
 		
 		//读入发车表
@@ -242,7 +258,7 @@ public class MLPEngine extends SimulationEngine{
 			}
 			//加载transpose车辆
 			for (int i = 0; i < mlpNetwork.nNodes(); i++) {
-				mlpNetwork.getNode(i).dispatchStatedVeh();
+				mlpNetwork.mlpNode(i).dispatchStatedVeh();
 			}
 
 		}
@@ -336,10 +352,14 @@ public class MLPEngine extends SimulationEngine{
 		XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkDir"));
 		// 读入路网数据后组织路网不同要素的关系
 		mlpNetwork.calcStaticInfo();
-		//生成面 与仿真计算无关
+		// 生成面元素 与仿真计算无关
 		if (displayOn)
 			mlpNetwork.createLoopSurface();
+		// 读入检测器数据
 		XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorDir"));
+		// 解释输出变量
+		mlpNetwork.initLinkStatMap(runProperties.get("statLinkIds"));
+		mlpNetwork.initSectionStatMap(runProperties.get("statDetNames"));
 		return 0;
 	}
 	
@@ -351,6 +371,7 @@ public class MLPEngine extends SimulationEngine{
 		double now = clock.getCurrentTime();
 		updateTime_ = now;
 		LCDTime_ = now;
+		statTime_ = now + getSimParameter().statWarmUp + getSimParameter().statStepSize; //第一次统计时刻为：现在时间+warmUp+统计间隔
 	}
 
 	public void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam]
@@ -365,7 +386,7 @@ public class MLPEngine extends SimulationEngine{
 		allParas.CF_NEAR = allParas.limitingParam_[0];//锁定与kjam吻合
 	}
 
-	public void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.(是否要考虑dlower dupper)
+	public void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
 		if (optparas != null) {
 			MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
 			allParas.limitingParam_[1] = (float) optparas[0];//ts
@@ -376,6 +397,15 @@ public class MLPEngine extends SimulationEngine{
 			mlpNetwork.setOverallSDParas(new double[] {optparas[2], optparas[3]}, mask);//alpha, beta
 			allParas.setLCPara(new double[] {optparas[4], optparas[5]});//gamma1 gamma2
 		}		
+	}
+
+	public void setParas(double[] ob_paras, double[] varying_paras) {//varying_paras [0]xc, [1]alpha, [2]beta, [3]gamma1, [4]gamma2.
+		setObservedParas(ob_paras);
+		double ts = getSimParameter().genSolution2(ob_paras, varying_paras[0]);
+		double[] opt_paras = new double[6];
+		opt_paras[0] = ts;
+		System.arraycopy(varying_paras,0,opt_paras,1,5);
+		setOptParas(opt_paras);
 	}
 
 	public MLPParameter getSimParameter() {
@@ -394,6 +424,15 @@ public class MLPEngine extends SimulationEngine{
 	//TODO: 待删除 将统计功能集成到Network下
 	public double[] getEmpData() {
 		return (double[]) empData;
+	}
+
+	public void testLoop() {
+		for (int i = 0; i < 3; i++) {
+			System.out.println("In " + (i+1) + "Time: " + getSimClock().getCurrentTime());
+			simulationLoop();
+			System.out.println("Out " + (i+1) + "Time: " + getSimClock().getCurrentTime());
+		}
+
 	}
 
 }

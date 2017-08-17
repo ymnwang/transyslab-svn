@@ -12,7 +12,7 @@ public class MLPLink extends Link {
 	public List<JointLane> jointLanes;
 	protected List<MLPVehicle> platoon;//正在处理的车队
 	public Dynamics dynaFun;
-	public List<Double> tripTime;
+	public List<double[]> tripTime;
 //	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
 //	public double capacity;//unit: veh/s/lane
 //	private double releaseTime_;
@@ -281,7 +281,7 @@ public class MLPLink extends Link {
 		}
 	}
 
-	protected void generateInflow(int demand, double[] speed, double[] time, List<Lane> lanes, int tlnkID){
+	public void generateInflow(int demand, double[] speed, double[] time, List<Lane> lanes, int tlnkID){
 		Random r = getNetwork().getSysRand();
 		double mean = speed[0];
 		double sd = speed[1];

@@ -78,23 +78,24 @@ public class MLPLoop extends Loop{
 			return 0.0;
 	}
 	public List<Double> getPeriodSpds(double ftime, double ttime){
-		double sum = 0.0, count = 0.0;
 		List<Double> ans = new ArrayList<>();
-		for (double[] line : records) {
+		/*for (double[] line : records) {
 			if (line[0]>ftime && line[0]<=ttime) {
 				ans.add(line[1]);
 			}
-		}
+		}*/
+		records.stream().filter(l -> l[0]>ftime && l[0]<=ttime).forEach(r -> ans.add(r[1]));
 		return ans;
 	}
 	public double countPeriodFlow(double ftime, double ttime){
-		double sum = 0.0;
+		/*double sum = 0.0;
 		for (double[] line : records) {
 			if (line[0]>ftime && line[0]<=ttime) {
 				sum += 1.0;
 			}
 		}
-		return sum;
+		return sum;*/
+		return records.stream().filter(l -> l[0]>ftime && l[0]<=ttime).count();
 	}
 	protected void clearRecords() {
 		records.clear();

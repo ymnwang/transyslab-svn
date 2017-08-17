@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
+import com.transyslab.commons.tools.mutitask.TaskWorker;
 import org.apache.commons.csv.CSVRecord;
 
 import com.transyslab.commons.io.CSVUtils;
@@ -98,7 +99,7 @@ public class Sensitive2 extends SchedulerThread{
 		        	}
 		        	//set parameters
 		        	for (int j = 0; j < tasks; j++) {
-		        		taskList.add(dispatch(param[j]));
+		        		taskList.add(dispatch(param[j], TaskWorker.ANY_WORKER));
 					}
 		        	for(int i=0;i<tasks;i++){
 		        		double[] result_i = taskList.get(i).getOutputs();

@@ -664,10 +664,13 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 		for (Link itrLink:links) {
 			itrLink.calcIndicesAtNodes();
-			// Set variables in links
-			itrLink.calcStaticInfo();
 		}
 
+		// Set variables in links
+
+		for (Link itrLink:links) {
+			itrLink.calcStaticInfo();
+		}
 
 		// Set variables in segments
 
@@ -677,9 +680,11 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 		// Set variables in upLanes
 		// 增加坐标平移操作
+
 		for (Lane itrLane:lanes) {
 			itrLane.calcStaticInfo(this.worldSpace);
 		}
+
 	}
 
 	public void initializeLinkStatistics() {

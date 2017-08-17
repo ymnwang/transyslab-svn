@@ -8,14 +8,30 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class ContainTest {
 
 	public static void main(String[] args) {
+		//测试null
+		List<Integer> lista = Arrays.asList(1, 10, 3, 7, 5);
+		List<Integer> listb = new ArrayList<>();
+		lista.parallelStream().filter(a -> a>2).count();
+
+
+		//测试无限长时间仿真的边界判断
+		System.out.println(Double.POSITIVE_INFINITY+1 > Double.POSITIVE_INFINITY);
+
+		//测试流计算的边界
+		List<Integer> list = Arrays.asList(1, 10, 3, 7, 5);
+		Integer a = list.stream()
+				.peek(num -> System.out.println("will filter " + num))
+				.filter(x -> x > 100)
+				.findFirst()
+				.orElse(null);
+		System.out.println(a);
+
+
 		File testFile = new File("./test.txt");
 		Configurations configs = new Configurations();
 		Configuration config = null;

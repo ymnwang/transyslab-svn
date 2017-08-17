@@ -7,10 +7,12 @@ public class Task {
 	private double[] inputs;
 	private double[] outputs;
 	private boolean canRetrieve;
+	protected String workerName;
 
-	public Task(double[] arg_inputs) {
+	public Task(double[] arg_inputs, String workerName) {
 		inputs = arg_inputs;
 		canRetrieve = false;
+		this.workerName = workerName;
 	}
 
 	public double[] getInputs() {

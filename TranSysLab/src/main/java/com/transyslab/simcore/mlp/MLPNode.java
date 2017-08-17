@@ -24,7 +24,7 @@ public class MLPNode extends Node{
 				lane_.scheduleNextEmitTime();//passed upstream lane
 				//arrived destination no constrain
 				//record linkTravelTime
-				link_.tripTime.add(veh.timeInLink(currentTime));
+				link_.tripTime.add(new double[] {currentTime, veh.timeInLink(currentTime), veh.dspEntrance});
 				lane_.removeVeh(veh, true);
 				return 1;
 			}
@@ -55,7 +55,7 @@ public class MLPNode extends Node{
 					}
 					if (canpass && !checkPlaceTaken(veh, nextLane)) {//pass to this very nexlane
 						lane_.scheduleNextEmitTime();//passed upstream lane
-						link_.tripTime.add(veh.timeInLink(currentTime));//record linkTravelTime
+						link_.tripTime.add(new double[] {currentTime, veh.timeInLink(currentTime), veh.dspEntrance});//record linkTravelTime
 						veh.setTimeEntersLink(currentTime);
 						lane_.removeVeh(veh, false);
 						veh.time2Dispatch = currentTime;

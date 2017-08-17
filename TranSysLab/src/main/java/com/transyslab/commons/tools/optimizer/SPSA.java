@@ -2,6 +2,7 @@ package com.transyslab.commons.tools.optimizer;
 
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
+import com.transyslab.commons.tools.mutitask.TaskWorker;
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
 import java.util.ArrayList;
@@ -160,7 +161,7 @@ public class SPSA extends SchedulerThread{
 			newPara[2] = inverseNomal(parameters_);
 			long tb = System.currentTimeMillis();
 			for (int j = 0; j < 3; j++) {
-				taskList.add(dispatch(newPara[j]));
+				taskList.add(dispatch(newPara[j], TaskWorker.ANY_WORKER));
 			}
 			double tmp2 = taskList.get(2).getOutputs()[0];
 			if(tmp2<fitness)

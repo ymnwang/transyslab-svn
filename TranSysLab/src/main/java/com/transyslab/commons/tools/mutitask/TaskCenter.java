@@ -1,5 +1,6 @@
 package com.transyslab.commons.tools.mutitask;
 
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -35,12 +36,22 @@ public class TaskCenter {
 		}
 	}
 
-	protected Task fetchTask() {
+	protected Task fetchUnspecificTask() {
 		try {
 			return undoneTasksQueue.poll(100, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	protected synchronized Task fetchSpecificTask() {
+		Task theTask = undoneTasksQueue.stream()
+				.filter(t -> t.workerName.equals(Thread.currentThread().getName()))
+				.findFirst().orElse(null);
+		if (theTask != null) {
+			undoneTasksQueue.remove(theTask);
+		}
+		return theTask;
 	}
 }
