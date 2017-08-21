@@ -6,11 +6,8 @@ package com.transyslab.commons.tools.optimizer;
 import com.transyslab.commons.tools.Function;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
-import com.transyslab.commons.tools.mutitask.TaskGiver;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
-import com.transyslab.experiments.EXP1;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.simcore.EngThread;
 import com.transyslab.simcore.mlp.Functions.QSDFun;
 import com.transyslab.simcore.mlp.Functions.QSDMax;
 import com.transyslab.simcore.mlp.Functions.TSFun;
@@ -300,7 +297,7 @@ public class DE extends SchedulerThread{
 //		de.start();
 //		EngThread mlp_eng_thread;
 //		for (int i = 0; i < 20; i++) {
-//			mlp_eng_thread = new EXP1("Eng" + i, tc, "./master") {
+//			mlp_eng_thread = new EXP_KS("Eng" + i, tc, "./master") {
 //			};
 //			mlp_eng_thread.start();
 //		}

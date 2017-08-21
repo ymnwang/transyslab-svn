@@ -221,11 +221,12 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return null;
 	}
 	public ODPair findODPair(Node oriNode, Node desNode){
-		for(ODPair odPair:odPairs){
+		return odPairs.stream().filter(p -> p.oriNode == oriNode && p.desNode == desNode).findFirst().orElse(null);
+		/*for(ODPair odPair:odPairs){
 			if(odPair.oriNode == oriNode && odPair.desNode == desNode)
 				return odPair;
 		}
-		return null;
+		return null;*/
 	}
 
 	public List<Sensor> getSurvStations() {
@@ -685,6 +686,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 			itrLane.calcStaticInfo(this.worldSpace);
 		}
 
+		for(Sensor itrSensor:sensors){
+			itrSensor.createSurface();
+		}
 	}
 
 	public void initializeLinkStatistics() {

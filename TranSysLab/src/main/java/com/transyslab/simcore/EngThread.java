@@ -20,7 +20,6 @@ public abstract class EngThread extends Thread implements TaskWorker{
 		String modelType = getModelType(masterFileDir);
 		switch (modelType) {
 			case "MesoTS":
-				//TODO 待确认
 				//TODO dir需要去掉文件名后缀
 				engine = new MesoEngine(0,null);
 				break;
@@ -30,12 +29,6 @@ public abstract class EngThread extends Thread implements TaskWorker{
 				default:
 					System.err.println("Unsupported model name");
 		}
-	}
-	
-	@Override
-	public void run() {
-		engine.loadFiles();
-		goToWork(taskCenter, false);
 	}
 
 	public String getModelType(String fileDir) {
@@ -47,8 +40,6 @@ public abstract class EngThread extends Thread implements TaskWorker{
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
 		}
-
 		return config.getString("modelType");
 	}
-
 }

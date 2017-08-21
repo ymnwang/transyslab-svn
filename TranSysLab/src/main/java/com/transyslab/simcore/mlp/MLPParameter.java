@@ -6,7 +6,8 @@ import com.transyslab.simcore.mlp.Functions.FunsCombination2;
 import com.transyslab.simcore.mlp.Functions.TSFun;
 import com.transyslab.commons.tools.optimizer.DE;
 
-public class MLPParameter extends Parameter {		
+public class MLPParameter extends Parameter {
+	public static final double[] DEFAULT_PARAMETERS = new double[] {0.5122,20.37,0.1928,45.50056,0.92191446,7.792739,1.6195029,0.6170239};
 	private double SegLenBuff_;//强制换道边界（segment实线长度）meter
 	private double LCBuffTime_;//Lane Changing影响时长 / 单车换道后的冷却时间
 	private int LCBuff_;//LCBuffTmie转换为帧数Frame or fin

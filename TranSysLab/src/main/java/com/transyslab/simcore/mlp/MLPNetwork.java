@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 
 import com.transyslab.commons.io.CSVUtils;
+import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
 import org.apache.commons.csv.CSVRecord;
@@ -14,7 +15,7 @@ public class MLPNetwork extends RoadNetwork {
 	private int newVehID_;
 	public List<MLPVehicle> veh_list;
 	protected LinkedList<MLPVehicle> vehPool;
-	public List<MLPLoop> loops;
+//	public List<MLPLoop> sensors;
 
 	//引擎输出变量
 	protected HashMap<MLPLink, List<MacroCharacter>> linkStatMap;
@@ -26,7 +27,6 @@ public class MLPNetwork extends RoadNetwork {
 		newVehID_ = 0;
 		veh_list = new ArrayList<>();
 		vehPool = new LinkedList<>();
-		loops = new ArrayList<>();
 
 		linkStatMap = new HashMap<>();
 		sectionStatMap = new HashMap<>();
@@ -77,16 +77,10 @@ public class MLPNetwork extends RoadNetwork {
 		for (int i = 0; i < seg.nLanes(); i++) {
 			MLPLane ln = seg.getLane(i);
 			MLPLoop loop = new MLPLoop(ln, seg, lnk, detName, dsp, pos);
-			loops.add(loop);
+			sensors.add(loop);
 		}
 	}
 
-	public void createLoopSurface(){
-		// 创建 Loop面
-		for(MLPLoop loop:loops){
-			loop.createSurface();
-		}
-	}
 
 	public MLPNode mlpNode(int i) {
 		return (MLPNode) getNode(i);
@@ -166,11 +160,13 @@ public class MLPNetwork extends RoadNetwork {
 	public void loadEmtTable(){
 		double now = simClock.getCurrentTime();
 		for (int i = 0; i<nLinks(); i++){
-			while (mlpLink(i).checkFirstEmtTableRec()){
-				Inflow emitVeh = mlpLink(i).getInflow().poll();
+			MLPLink launchingLink = mlpLink(i);
+			while (launchingLink.checkFirstEmtTableRec()){
+				Inflow emitVeh = launchingLink.getInflow().poll();
 				MLPVehicle newVeh = generateVeh();
-				newVeh.initInfo(0,mlpLink(i),(MLPSegment) mlpLink(i).getStartSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
+				newVeh.initInfo(0,launchingLink,(MLPSegment) launchingLink.getStartSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
+				assignPath(newVeh, (MLPNode) launchingLink.getUpNode(), (MLPNode) findLink(emitVeh.tLinkID).getDnNode(), false);
 				//todo 调试阶段暂时固定路径
 				newVeh.fixPath();
 				newVeh.initEntrance(simClock.getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
@@ -227,7 +223,7 @@ public class MLPNetwork extends RoadNetwork {
 			double portion = (dsp - endSeg.startDSP) / endSeg.getLength();
 			for (int k = 0; k<theSeg.nLanes(); k++) {
 				theLane = theSeg.getLane(k);
-				loops.add(new MLPLoop(theLane, theSeg, theLink, name, dsp, portion));
+				sensors.add(new MLPLoop(theLane, theSeg, theLink, name, dsp, portion));
 			}
 		}
 		
@@ -240,19 +236,20 @@ public class MLPNetwork extends RoadNetwork {
 		double dsp = theSeg.startDSP + theSeg.getLength() * portion;
 		for (int k = 0; k<theSeg.nLanes(); k++) {
 			theLane = theSeg.getLane(k);
-			loops.add(new MLPLoop(theLane, theSeg, (MLPLink) theSeg.getLink(), name, dsp, portion));
+			sensors.add(new MLPLoop(theLane, theSeg, (MLPLink) theSeg.getLink(), name, dsp, portion));
 		}
 	}
 
 	public double sectionMeanSpd(String det_name, double fTime, double tTime) {
-		if (loops.size()<1) {
-			System.err.println("no loops in network");
+		if (sensors.size()<1) {
+			System.err.println("no sensors in network");
 			return 0.0;
 		}
 		List<Double> tmpAll = new ArrayList<>();
-		for (MLPLoop lp : loops) {
-			if (lp.detName.equals(det_name)) {
-				tmpAll.addAll(lp.getPeriodSpds(fTime, tTime));
+		for (Sensor lp : sensors) {
+			MLPLoop mlpLoop = (MLPLoop) lp;
+			if (mlpLoop.detName.equals(det_name)) {
+				tmpAll.addAll(mlpLoop.getPeriodSpds(fTime, tTime));
 			}
 		}
 		if (tmpAll.size()>0){
@@ -285,21 +282,23 @@ public class MLPNetwork extends RoadNetwork {
 		double now = getSimClock().getCurrentTime();
 		for (MLPLink mlpLink : linkStatMap.keySet()) {
 			double linkLen = mlpLink.length();
-			Object[] servingVehsObj = veh_list.stream().filter(v ->
+			/*Object[] servingVehsObj = veh_list.stream().filter(v ->
 					v.virtualType>0
 					&& v.getLink().equals(mlpLink)
 					&& v.timeEntersLink()<now).toArray();
 			MLPVehicle[] servingVehs = Arrays.copyOf(servingVehsObj,servingVehsObj.length,MLPVehicle[].class);
 			double onLinkTripSum = Arrays.stream(servingVehs).mapToDouble(v -> (v.Displacement()-v.dspEntrance)/linkLen).sum();
-			double onLinkTrTSum = Arrays.stream(servingVehs).mapToDouble(v -> (now - v.timeEntersLink())).sum();
+			double onLinkTrTSum = Arrays.stream(servingVehs).mapToDouble(v -> (now - v.timeEntersLink())).sum();*/
 
 			Object[] servedRecordsObj = mlpLink.tripTime.stream().filter(trT -> trT[0]>fTime && trT[0]<=tTime).toArray();
 			double[][] servedRecords = Arrays.copyOf(servedRecordsObj,servedRecordsObj.length,double[][].class);
 			double servedTripSum = Arrays.stream(servedRecords).mapToDouble(r -> (linkLen-r[2])/linkLen).sum();
 			double servedTrTSum = Arrays.stream(servedRecords).mapToDouble(r -> r[1]).sum();
 
-			double flow = onLinkTripSum + servedTripSum;
-			double meanSpd = flow<=0.0 ? 0.0 : linkLen*flow/(onLinkTrTSum+servedTrTSum);
+			/*double flow = onLinkTripSum + servedTripSum;
+			double meanSpd = flow<=0.0 ? 0.0 : linkLen*flow/(onLinkTrTSum+servedTrTSum);*/
+			double flow = servedTripSum;
+			double meanSpd = flow<=0.0 ? 0.0 : linkLen*flow/servedTrTSum;
 			double trT = meanSpd<=0.0 ? 0.0 : linkLen / meanSpd;
 
 			linkStatMap.get(mlpLink).add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow/meanSpd, trT));
@@ -337,15 +336,15 @@ public class MLPNetwork extends RoadNetwork {
 		for (int i = 0; i < nNodes(); i++) {
 			mlpNode(i).clearStatedVehs();//从Node上清除未加入路段的车辆
 		}
-		for (int i = 0; i < loops.size(); i++) {
-			loops.get(i).clearRecords();//清除检测器记录结果
+		for (int i = 0; i < sensors.size(); i++) {
+			((MLPLoop) sensors.get(i)).clearRecords();//清除检测器记录结果
 		}
 		recycleAllVehs();//回收所有在网车辆
 		buildEmitTable(needRET, odFileDir, emitFileDir);//重新建立发车
 
 		//重置输出参数
-		linkStatMap.entrySet().forEach(e -> e.getValue().clear());
-		sectionStatMap.entrySet().forEach(e -> e.getValue().clear());
+		clearSecStat();
+		clearLinkStat();
 	}
 	
 	public void recordVehicleData(){
@@ -382,10 +381,6 @@ public class MLPNetwork extends RoadNetwork {
 	@Override
 	public ODPair findODPair(Node oriNode, Node desNode) {
 		ODPair thePair = super.findODPair(oriNode, desNode);
-//		ODPair thePair = odPairs.stream().
-//				filter(x -> x.getOriNode().equals(oriNode) && x.getDesNode().equals(desNode)).
-//				findFirst().
-//				orElse(null);
 		if (thePair == null) {
 			// todo 应加入所有可行路径，非最短路
 			GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
@@ -498,7 +493,7 @@ public class MLPNetwork extends RoadNetwork {
 		String[] parts = detNameStr.split(",");
 		if (parts.length<=0 || parts[0].equals("")) return;
 		for (String p : parts) {
-			Object[] secObj = loops.stream().filter(l -> l.detName.equals(p)).toArray();
+			Object[] secObj = sensors.stream().filter(l -> ((MLPLoop) l).detName.equals(p)).toArray();
 			MLPLoop[] sec = Arrays.copyOf(secObj, secObj.length, MLPLoop[].class);
 			sectionStatMap.put(sec, new ArrayList<>());
 		}
@@ -516,6 +511,45 @@ public class MLPNetwork extends RoadNetwork {
 				findFirst().
 				orElse(null);
 		return theLink == null ? null : linkStatMap.get(theLink);
+	}
+	public void	writeStat(String filename){
+		TXTUtils writer = new TXTUtils(filename);
+		writer.writeNFlush("DET,TIME_PERIOD,FLOW,SPEED,DENSITY,TRAVEL_TIME\r\n");
+		sectionStatMap.forEach((k,v) -> {
+			String det = k[0].detName;
+			for (int i = 0; i<v.size(); i++) {
+				MacroCharacter r = v.get(i);
+				writer.write(det + "," +
+						(i+1) + "," +
+						r.getHourFlow() + "," +
+						r.getKmSpeed() + "," +
+						r.getKmDensity() + "," +
+						r.travelTime + "\r\n");
+			}
+		});
+		writer.flushBuffer();
+		linkStatMap.forEach((k,v) -> {
+			String det = "Link" + k.getId();
+			for (int i = 0; i<v.size(); i++) {
+				MacroCharacter r = v.get(i);
+				writer.write(det + "," +
+						(i+1) + "," +
+						r.getHourFlow() + "," +
+						r.getKmSpeed() + "," +
+						r.getKmDensity() + "," +
+						r.travelTime + "\r\n");
+			}
+		});
+		writer.flushBuffer();
+		writer.closeWriter();
+	}
+
+	public void clearSecStat() {
+		sectionStatMap.forEach((k,v) -> v.clear());
+	}
+
+	public void clearLinkStat() {
+		linkStatMap.forEach((k,v) -> v.clear());
 	}
 
 }

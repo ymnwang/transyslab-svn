@@ -11,5 +11,6 @@ public interface Sensor extends NetworkObject{
 	double getPosition();
 
 	void clean();
-	 
+
+	GeoSurface getSurface();
 }

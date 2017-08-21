@@ -552,7 +552,7 @@ public class MainWindow extends JFrame{
 				engines[0] = new MesoEngine(0,"E:\\test\\");
 				break;
 			case 2:
-				engines[0] = new MLPEngine("./master");
+				engines[0] = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master.properties");
 				break;
 				default:
 					break;
@@ -597,7 +597,7 @@ public class MainWindow extends JFrame{
 		}*/
 		// Network is ready for simulation
 		canvas_.setFirstRender(true);
-		canvas_.setDrawableNetwork(((MesoEngine)engines[0]).getNetwork());
+		canvas_.setDrawableNetwork(engines[0].getNetwork());
 		canvas_.requestFocusInWindow();
 	}
 }

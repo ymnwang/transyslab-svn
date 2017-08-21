@@ -35,6 +35,7 @@ public class MLPEngine extends SimulationEngine{
 	protected boolean trackOn;
 	protected TXTUtils infoWriter;
 	protected boolean infoOn;
+	protected boolean statRecordOn;
 	protected String msg;
 	private Object empData;
 	private int mod;//总计运行次数，在输出结束仿真信号时自增
@@ -58,6 +59,7 @@ public class MLPEngine extends SimulationEngine{
 		loopRecOn = false;
 		trackOn = false;
 		infoOn = false;
+		statRecordOn = false;
 		msg = "";
 		seedFixed = false;
 		runningSeed = 0l;
@@ -89,6 +91,7 @@ public class MLPEngine extends SimulationEngine{
 //		loopRecOn = false;
 //		trackOn = false;
 //		infoOn = false;
+//		statRecordOn = false;
 		msg = "";
 //		seedFixed = false;
 //		runningSeed = 0l;
@@ -132,6 +135,7 @@ public class MLPEngine extends SimulationEngine{
 		loopRecOn = Boolean.parseBoolean(config.getString("loopRecOn"));
 		trackOn = Boolean.parseBoolean(config.getString("trackOn"));
 		infoOn = Boolean.parseBoolean(config.getString("infoOn"));
+		statRecordOn = Boolean.parseBoolean(config.getString("statRecordOn"));
 		seedFixed = Boolean.parseBoolean(config.getString("seedFixed"));
 		runningSeed = seedFixed ? Long.parseLong(config.getString("runningSeed")) : 0l;
 		needEmpData = Boolean.parseBoolean(config.getString("needEmpData"));
@@ -143,16 +147,6 @@ public class MLPEngine extends SimulationEngine{
 		//输出变量在loadfiles后再进行初始化，当前只将String读入
 		runProperties.put("statLinkIds",config.getString("statLinkIds"));
 		runProperties.put("statDetNames",config.getString("statDetNames"));
-	}
-
-	@Override
-    public void run(int mode) {
-		//TODO: for display mode
-		timeStart = 0.0;
-		timeEnd = 6900.0;
-		timeStep = 0.2;
-		resetEngine();
-		while (simulationLoop() >= 0) ;
 	}
 
 	@Override
@@ -246,8 +240,8 @@ public class MLPEngine extends SimulationEngine{
 					k -=1;
 			}
 			//线圈检测
-			for (int j = 0; j < mlpNetwork.loops.size(); j++){
-				msg = mlpNetwork.loops.get(j).detect(now);
+			for (int j = 0; j < mlpNetwork.nSensors(); j++){
+				msg = ((MLPLoop) mlpNetwork.getSensor(j)).detect(now);
 				if (loopRecOn) {//按需输出记录
 					loopRecWriter.write(msg);
 				}
@@ -342,7 +336,7 @@ public class MLPEngine extends SimulationEngine{
 			//readFromLoop(MLPSetup.getLoopData_fileName());
 		}
 	}
-	
+
 	public int loadSimulationFiles(){
 		
 		//load xml
@@ -352,9 +346,6 @@ public class MLPEngine extends SimulationEngine{
 		XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkDir"));
 		// 读入路网数据后组织路网不同要素的关系
 		mlpNetwork.calcStaticInfo();
-		// 生成面元素 与仿真计算无关
-		if (displayOn)
-			mlpNetwork.createLoopSurface();
 		// 读入检测器数据
 		XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorDir"));
 		// 解释输出变量
@@ -362,8 +353,9 @@ public class MLPEngine extends SimulationEngine{
 		mlpNetwork.initSectionStatMap(runProperties.get("statDetNames"));
 		return 0;
 	}
-	
-	public void resetEngine() {//重置引擎时钟 时间相关的参数
+
+	@Override
+	public void resetBeforeSimLoop() {//重置引擎时钟 时间相关的参数
 		SimulationClock clock = mlpNetwork.getSimClock();
 		firstEntry = true;
 		clock.init(timeStart, timeEnd, timeStep);
@@ -375,6 +367,10 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	public void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam]
+		if (ob_paras.length != 3) {
+			System.err.println("length does not match");
+			return;
+		}
 		mlpNetwork.setOverallCapacity(ob_paras[0]);//路段单车道每秒通行能力
 		int mask = 0;
 		mask |= 1<<(1-1);//Vmax
@@ -387,25 +383,43 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	public void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
-		if (optparas != null) {
-			MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
-			allParas.limitingParam_[1] = (float) optparas[0];//ts
-			allParas.CF_FAR = (float) optparas[1];//xc
-			int mask = 0;
-			mask |= 1<<(4-1);
-			mask |= 1<<(5-1);
-			mlpNetwork.setOverallSDParas(new double[] {optparas[2], optparas[3]}, mask);//alpha, beta
-			allParas.setLCPara(new double[] {optparas[4], optparas[5]});//gamma1 gamma2
-		}		
+		if (optparas.length != 6) {
+			System.err.println("length does not match");
+			return;
+		}
+		MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
+		allParas.limitingParam_[1] = (float) optparas[0];//ts
+		allParas.CF_FAR = (float) optparas[1];//xc
+		int mask = 0;
+		mask |= 1<<(4-1);
+		mask |= 1<<(5-1);
+		mlpNetwork.setOverallSDParas(new double[] {optparas[2], optparas[3]}, mask);//alpha, beta
+		allParas.setLCPara(new double[] {optparas[4], optparas[5]});//gamma1 gamma2
 	}
 
 	public void setParas(double[] ob_paras, double[] varying_paras) {//varying_paras [0]xc, [1]alpha, [2]beta, [3]gamma1, [4]gamma2.
+		if (ob_paras.length != 3 || varying_paras.length != 5) {
+			System.err.println("length does not match");
+			return;
+		}
 		setObservedParas(ob_paras);
 		double ts = getSimParameter().genSolution2(ob_paras, varying_paras[0]);
 		double[] opt_paras = new double[6];
 		opt_paras[0] = ts;
 		System.arraycopy(varying_paras,0,opt_paras,1,5);
 		setOptParas(opt_paras);
+	}
+
+	public void setParas(double[] fullParas) {
+		if (fullParas.length != 8) {
+			System.err.println("length does not match");
+			return;
+		}
+		double[] ob = new double[3];
+		double[] varying = new double[5];
+		System.arraycopy(fullParas,0,ob,0,3);
+		System.arraycopy(fullParas,3,varying,0,5);
+		setParas(ob,varying);
 	}
 
 	public MLPParameter getSimParameter() {
@@ -426,13 +440,48 @@ public class MLPEngine extends SimulationEngine{
 		return (double[]) empData;
 	}
 
-	public void testLoop() {
-		for (int i = 0; i < 3; i++) {
-			System.out.println("In " + (i+1) + "Time: " + getSimClock().getCurrentTime());
-			simulationLoop();
-			System.out.println("Out " + (i+1) + "Time: " + getSimClock().getCurrentTime());
+	public void runWithPara(double[] fullParas) {
+		resetBeforeSimLoop();
+		setParas(fullParas);
+		run(1);//process loop only
+		if(statRecordOn) {
+			String statFileOut = "src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv";
+			mlpNetwork.writeStat(statFileOut);
 		}
 
+	}
+
+	@Override
+	public void run(int mode) {
+		switch (mode) {
+			case 0:
+				resetBeforeSimLoop();
+				setParas(MLPParameter.DEFAULT_PARAMETERS);
+				while (simulationLoop() >= 0);
+				break;
+			case 1:
+				while (simulationLoop() >= 0);
+				break;
+				default:
+					break;
+		}
+	}
+
+	@Override
+	public MLPNetwork getNetwork() {
+		return mlpNetwork;
+	}
+
+	public static void main(String[] args) {
+		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master.properties");
+		mlpEngine.loadFiles();
+		for (int i = 0; i < 3; i++) {
+			double[] fullParas = new double[]{0.5122,20.37,0.1928,45.50056,0.92191446,7.792739,1.6195029,0.6170239};
+			mlpEngine.runWithPara(fullParas);
+			List<MacroCharacter> records = mlpEngine.mlpNetwork.getSecStatRecords("det2");
+			double[] kmSpd = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
+			System.out.println(Arrays.toString(kmSpd));
+		}
 	}
 
 }

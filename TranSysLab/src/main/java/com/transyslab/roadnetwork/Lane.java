@@ -309,12 +309,10 @@ public class Lane implements NetworkObject {
 			rulesExclude(Constants.LANE_CHANGE_RIGHT);
 		setLaneType();
 		//起终点坐标平移
-		// TODO 无车道坐标信息
-		/*
 		startPnt = worldSpace.worldSpacePoint(startPnt);
 		endPnt = worldSpace.worldSpacePoint(endPnt);
 		//生成车道面
-		createLaneSurface();*/
+		createLaneSurface();
 	}
 	/*
 	 * --------------------------------------------------------------------

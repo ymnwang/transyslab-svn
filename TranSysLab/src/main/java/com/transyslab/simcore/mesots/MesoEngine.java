@@ -68,6 +68,7 @@ public class MesoEngine extends SimulationEngine {
 		frequency = (1.0 / theNetwork.getSimClock().getStepSize());
 	}
 
+	@Override
 	public void resetBeforeSimLoop() {
 		firstEntry = 1;
 		theNetwork.getSimClock().init(0*3600,2*3600, 0.2);
@@ -103,6 +104,8 @@ public class MesoEngine extends SimulationEngine {
 		
 		loadSimulationFiles();
 	}
+
+	@Override
 	public MesoNetwork getNetwork(){
 		return this.theNetwork;
 	}
@@ -440,5 +443,4 @@ public class MesoEngine extends SimulationEngine {
 		else
 			return state_ = Constants.STATE_OK;
 	}
-
 }

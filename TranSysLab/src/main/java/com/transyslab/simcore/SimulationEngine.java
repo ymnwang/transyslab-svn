@@ -2,6 +2,7 @@ package com.transyslab.simcore;
 
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
+import com.transyslab.roadnetwork.RoadNetwork;
 
 public abstract class SimulationEngine {
 
@@ -73,4 +74,7 @@ public abstract class SimulationEngine {
 	// overloaded in derived class to do the real things. The dummy
 	// function just prints the current time in the console window.
 
+	public abstract void resetBeforeSimLoop();
+
+	public abstract RoadNetwork getNetwork();
 }

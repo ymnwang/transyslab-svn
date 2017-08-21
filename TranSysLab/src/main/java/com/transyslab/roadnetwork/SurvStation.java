@@ -227,4 +227,9 @@ public class SurvStation implements Sensor{
 		flowList.clear();
 		speedList.clear();
 	}
+
+	@Override
+	public GeoSurface getSurface() {
+		return this.surface;
+	}
 }

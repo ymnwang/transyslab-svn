@@ -196,12 +196,16 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				}*/
 				//选择车辆
 				if(isPause && curFrame!=null){
+					/*
 					for(VehicleData vd:curFrame.getVhcDataQueue()){
 						if(GeoUtil.isIntersect(raycast, vd.getVhcShape())){
 							//被选中对象用黄色渲染
 							vd.setSelected(true);
 							pickedObjects.add(vd);
 						}
+					}*/
+					for(int i=0;i<drawableNetwork_.nLanes();i++){
+						drawableNetwork_.getLane(i);
 					}
 				}
 				if(!pickedObjects.isEmpty()){
@@ -238,10 +242,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			ShapeUtil.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 2,
 					Constants.COLOR_WHITE);
 			if(camHeight>=200){
+				/*
 				double width = tmpsegment.nLanes()*Constants.LANE_WIDTH;
 				double offset = Math.max(width, 0.0008*camHeight*width);
 				GeoSurface tmpSurface = GeoUtil.lineToRectangle(tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), offset, false);
-				ShapeUtil.drawPolygon(gl, tmpSurface.getKerbList(), Constants.COLOR_GREY, false);
+				ShapeUtil.drawPolygon(gl, tmpSurface.getKerbList(), Constants.COLOR_GREY, false);*/
 			}
 //			ShapeUtil.drawPoint(gl, tmpsegment.getStartPnt().getLocationX(), tmpsegment.getStartPnt().getLocationY(),0.5, 10, Constants.COLOR_RED);
 //			ShapeUtil.drawPoint(gl, tmpsegment.getEndPnt().getLocationX(), tmpsegment.getEndPnt().getLocationY(),1, 10, Constants.COLOR_BLUE);
@@ -266,7 +271,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			JOGLDrawShapes.drawPoint(gl, tmplane.getEndPnt().getLocationX(), tmplane.getEndPnt().getLocationY(), 5, Constants.COLOR_GREEN);
 			
 		}*/
-		/*
+
 		if(camHeight<200){
 			for(int i=0;i<drawableNetwork_.nLanes();i++){
 				GeoSurface lanesf = drawableNetwork_.getLane(i).getSurface();
@@ -275,12 +280,12 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				
 				ShapeUtil.drawPolygon(gl, lanesf.getKerbList(),Constants.COLOR_GREY, lanesf.isSelected());
 			}
-		}*/
-		/*
-		for(int i=0;i<((MLPNetwork)drawableNetwork_).loops.size();i++){
-			GeoSurface loopsf = ((MLPNetwork)drawableNetwork_).loops.get(i).getSurface();
+		}
+
+		for(int i=0;i<drawableNetwork_.nSensors();i++){
+			GeoSurface loopsf = drawableNetwork_.getSensor(i).getSurface();
 			ShapeUtil.drawPolygon(gl, loopsf.getKerbList(),Constants.COLOR_GREEN, loopsf.isSelected());
-		}*/
+		}
 		//暂停时不更新数组索引
 		curFrame =FrameQueue.getInstance().poll(isPause);
 		//暂停时保留VehicleData
