@@ -114,10 +114,8 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public void createBoundary(int id, double beginx, double beginy, double endx, double endy){
 		Boundary newBoundary = new Boundary();
 		newBoundary.init(id,nBoundaries(),beginx,beginy,endx,endy);
-		//TODO 暂无Boundary 坐标
-		/*
 		this.worldSpace.recordExtremePoints(newBoundary.getStartPnt());
-		this.worldSpace.recordExtremePoints(newBoundary.getEndPnt());*/
+		this.worldSpace.recordExtremePoints(newBoundary.getEndPnt());
 		this.boundaries.add(newBoundary);
 	}
 	public WorldSpace getWorldSpace() {
@@ -147,6 +145,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return this.lanes.get(i);
 	}
 	public Path getPath(int i){ return this.paths.get(i);}
+	public Boundary getBoundary(int i){
+		return this.boundaries.get(i);
+	}
 	public Sensor getSensor(int i){return this.sensors.get(i);}
 	public int nLinks(){return links.size();}
 	public int nNodes(){
@@ -231,9 +232,6 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 	public List<Sensor> getSurvStations() {
 		return this.sensors;
-	}
-	public List<Boundary> getBoundarys() {
-		return this.boundaries;
 	}
 
 	// Connects lane 'up' with lane 'dn'. Return -1 if error, 1 if these
@@ -633,10 +631,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		}
 
 		// Boundary 位置平移
-		/*
 		for (Boundary itrBoundary:boundaries) {
 			itrBoundary.translateInWorldSpace(worldSpace);
-		}*/
+		}
 
 		// Sort outgoing and incoming arcs at each node.
 		// Make sure RN_Link::comp() is based on angle.
@@ -686,9 +683,6 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 			itrLane.calcStaticInfo(this.worldSpace);
 		}
 
-		for(Sensor itrSensor:sensors){
-			itrSensor.createSurface();
-		}
 	}
 
 	public void initializeLinkStatistics() {

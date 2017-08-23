@@ -229,14 +229,14 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	public void dispose(GLAutoDrawable drawable) {
 	}
 	public void scene(GL2 gl) {
-		List<Boundary> boundarys = drawableNetwork_.getBoundarys();
 		float camHeight =  cam_.getEyeLocation()[2];
 		Segment tmpsegment;
-		/*
-		for (Boundary tmpboundary:boundarys) {
+
+		for (int i=0;i<drawableNetwork_.nBoundaries();i++) {
+			Boundary tmpboundary = drawableNetwork_.getBoundary(i);
 			ShapeUtil.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
 					Constants.COLOR_WHITE);
-		}*/
+		}
 		for(int i=0;i<drawableNetwork_.nSegments();i++){
 			tmpsegment = drawableNetwork_.getSegment(i);
 			ShapeUtil.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 2,

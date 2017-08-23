@@ -32,6 +32,7 @@ public class MLPLoop extends Loop{
 		distance = Seg.endDSP - dsp;
 //		detectedSpds = new LinkedList<>();
 		records = new LinkedList<>();
+		this.createSurface();
 	}
 	public String detect(double timeNow){//当处于seg边界上存在漏洞
 		String str = "";

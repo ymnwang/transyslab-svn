@@ -114,6 +114,7 @@ public class SurvStation implements Sensor{
 		if (segment.sensors == null)
 			segment.sensors = new ArrayList<Sensor>();
 		this.index = index;
+		this.createSurface();
 		segment.addSensor(this);
 	}
 	public void initDectTime(double startTime,double interval){
