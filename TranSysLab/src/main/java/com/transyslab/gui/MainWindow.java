@@ -120,14 +120,14 @@ public class MainWindow extends JFrame{
 
 		
 		JPanel panel_2 = new JPanel();
-		
+
 		JPanel panel_3 = new JPanel();
-		
+
 		JPanel panel_5 = new JPanel();
 		// 信息显示区
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		
-		
+
+
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -168,8 +168,8 @@ public class MainWindow extends JFrame{
 		//设置自动换行
 		this.txtConsole.setLineWrap(true);
 		scrollPane.setViewportView(txtConsole);
-	
-		
+
+
 		// 带滚动条的面板，显示方案信息
 		JScrollPane scrollPane2 = new JScrollPane();
 		tabbedPane.addTab("方案", null, scrollPane2, null);
@@ -178,19 +178,19 @@ public class MainWindow extends JFrame{
 		this.txtCase.setLineWrap(true);
 		scrollPane2.setViewportView(txtCase);
 
-		
+
 		JPanel panel_6 = new JPanel();
 		panel_6.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		
+
 		JPanel panel_7 = new JPanel();
 		panel_7.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel_7.setToolTipText("");
-		
+
 		JLabel label = new JLabel("\u6587\u4EF6");
 		label.setBackground(Color.LIGHT_GRAY);
 		label.setLabelFor(panel_6);
 		label.setFont(new Font("宋体", Font.PLAIN, 15));
-		
+
 		JLabel label_1 = new JLabel("\u9053\u8DEF\u89C4\u5219");
 		label_1.setBackground(Color.LIGHT_GRAY);
 		label_1.setLabelFor(panel_7);
@@ -220,26 +220,26 @@ public class MainWindow extends JFrame{
 					.addComponent(panel_7, GroupLayout.PREFERRED_SIZE, 146, GroupLayout.PREFERRED_SIZE)
 					.addContainerGap(25, Short.MAX_VALUE))
 		);
-		
+
 		JLabel label_2 = new JLabel("\u5F53\u524D\u5BF9\u8C61");
 		label_2.setFont(new Font("宋体", Font.PLAIN, 14));
-		
+
 		textField = new JTextField();
 		textField.setText("Lane31101");
 		textField.setFont(new Font("宋体", Font.PLAIN, 15));
 		textField.setEditable(false);
 		textField.setColumns(10);
-		
+
 		JLabel label_3 = new JLabel("\u6A2A\u5411\u89C4\u5219");
 		label_3.setFont(new Font("宋体", Font.PLAIN, 14));
-		
+
 		JLabel label_4 = new JLabel("\u7EB5\u5411\u89C4\u5219");
 		label_4.setFont(new Font("宋体", Font.PLAIN, 14));
-		
+
 		JComboBox comboBox = new JComboBox();
 		comboBox.setFont(new Font("宋体", Font.PLAIN, 14));
 		comboBox.setModel(new DefaultComboBoxModel(new String[] {"\u5141\u8BB8\u5DE6\u53F3\u6362\u9053", "\u5141\u8BB8\u5DE6\u6362\u9053", "\u5141\u8BB8\u53F3\u6362\u9053", "\u7981\u6B62\u6362\u9053"}));
-		
+
 		JComboBox comboBox_1 = new JComboBox();
 		comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"\u76F4\u5DE6", "\u76F4\u53F3", "\u76F4\u5DE6\u53F3", "\u76F4\u884C", "\u4E13\u5DE6", "\u4E13\u53F3"}));
 		comboBox_1.setFont(new Font("宋体", Font.PLAIN, 14));
@@ -559,42 +559,6 @@ public class MainWindow extends JFrame{
 		}
 		engines[0].loadFiles();
 
-		/*
-		RoadNetworkPool infoarrays;
-		//选择仿真模型
-		if(AppSetup.modelType == 1)
-			infoarrays = MesoNetworkPool.getInstance();
-		else {
-			infoarrays = MLPNetworkPool.getInstance();
-		}
-		engines = new SimulationEngine[Constants.THREAD_NUM];
-
-		Producer[] producerList = new Producer[Constants.THREAD_NUM];
-		List<FutureTask<SimulationEngine>> taskList = new ArrayList<FutureTask<SimulationEngine>>();
-		Thread[] threadList = new Thread[Constants.THREAD_NUM];
-		for (int i = 0; i < Constants.THREAD_NUM; i++) {
-			
-			producerList[i] = new Producer(engines[i]);
-			taskList.add(new FutureTask<SimulationEngine>(producerList[i]));
-			threadList[i] = new Thread(taskList.get(i));
-		}
-		infoarrays.init(Constants.THREAD_NUM, infoarrays);
-		infoarrays.organizeHM(threadList);
-		for (int i = 0; i < Constants.THREAD_NUM; i++) {
-			threadList[i].start();
-		}
-
-		int tempi = 0;
-		for (FutureTask<SimulationEngine> task : taskList) {
-			try {
-				engines[tempi] = task.get();
-			}
-			catch (InterruptedException | ExecutionException e1) {
-				
-				e1.printStackTrace();
-			}
-			tempi++;
-		}*/
 		// Network is ready for simulation
 		canvas_.setFirstRender(true);
 		canvas_.setDrawableNetwork(engines[0].getNetwork());
