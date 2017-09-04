@@ -49,7 +49,7 @@ public class Segment implements NetworkObject {
 	protected double endAngle;
 
 	protected double length;
-	protected Boolean isSelected;
+	protected boolean isSelected;
 	public Segment() {
 		distance = 0.0;
 		localType = 0;

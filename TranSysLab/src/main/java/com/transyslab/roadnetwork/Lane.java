@@ -33,7 +33,7 @@ public class Lane implements NetworkObject {
 	protected int cmarker;// connection marker
 	protected Lane leftLane;
 	protected Lane rightLane;
-	protected Boolean isSelected;
+	protected boolean isSelected;
 	public Lane() {
 		segment = null;
 		type = 0;

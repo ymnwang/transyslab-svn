@@ -3,22 +3,6 @@
  */
 package com.transyslab.simcore.mesots;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-
-import javax.swing.SwingUtilities;
-
-import com.transyslab.commons.renderer.FrameQueue;
-import com.transyslab.commons.tools.Producer;
-import com.transyslab.commons.tools.Worker;
-import com.transyslab.gui.MainWindow;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.simcore.SimulationEngine;
-
 /**
  * @author yali
  *

@@ -1,4 +1,6 @@
 package com.transyslab.gui;
+import com.transyslab.roadnetwork.*;
+
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,22 +13,39 @@ import javax.swing.border.*;
 public class LayerPanel {
 
     private Map<String, JPanel> layers;
+    private Map<String,PanelAction> panelAction;
 
     public LayerPanel(){
         layers = new HashMap<>();
-        layers.put("Node",new NodePanel());
-        layers.put("Link",new LinkPanel());
-        layers.put("Segment",new SegmentPanel());
-        layers.put("Lane",new LanePanel());
-        layers.put("Vehicle",new VehiclePanle());
-        layers.put("Sensor",new SensorPanel());
+        panelAction = new HashMap<>();
+        NodePanel nodeLayer = new NodePanel();
+        LinkPanel linkLayer = new LinkPanel();
+        SegmentPanel segmentLayer = new SegmentPanel();
+        LanePanel laneLayer = new LanePanel();
+        SensorPanel sensorLayer = new SensorPanel();
+        VehiclePanel vehicleLayer = new VehiclePanel();
+        layers.put("Node",nodeLayer);
+        layers.put("Link",linkLayer);
+        layers.put("Segment",segmentLayer);
+        layers.put("Lane",laneLayer);
+        layers.put("Vehicle",vehicleLayer);
+        layers.put("Sensor",sensorLayer);
+        panelAction.put("Node",nodeLayer);
+        panelAction.put("Link",linkLayer);
+        panelAction.put("Segment",segmentLayer);
+        panelAction.put("Lane",laneLayer);
+        panelAction.put("Vehicle",vehicleLayer);
+        panelAction.put("Sensor",sensorLayer);
     }
 
-    public JPanel getLayer(String layName){
-        return layers.get(layName);
+    public JPanel getLayer(String layerName){
+        return layers.get(layerName);
+    }
+    public PanelAction getAction(String layerName){
+        return panelAction.get(layerName);
     }
 
-    public class VehiclePanle extends JPanel {
+    public class VehiclePanel extends JPanel implements PanelAction{
 
         private JTextField textField1;//编号
         private JTextField textField4;//类型
@@ -36,12 +55,28 @@ public class LayerPanel {
         private JTextField textField6;//起点
         private JTextField textField7;//终点
         private JTextField textField8;//路径
+        private JTextField[] textFields;
         private JTextArea textArea4;//其它
 
-        public VehiclePanle() {
+        public VehiclePanel() {
             initComponents();
         }
-
+        public void resetTxtComponents(){
+            for(JTextField tmpText:textFields){
+                tmpText.setText("");
+            }
+            textArea4.setText("");
+        }
+        public void writeTxtComponents(NetworkObject object){
+            VehicleData vhcData = (VehicleData) object;
+            textField1.setText(String.valueOf(vhcData.getId()));
+            textField2.setText(String.valueOf(vhcData.getVhcLength()));
+            textField3.setText(String.valueOf(vhcData.getCurLaneID()));
+            textField5.setText(String.valueOf(vhcData.getCurSpeed()));
+            textField6.setText(String.valueOf(vhcData.getOriNodeID()));
+            textField7.setText(String.valueOf(vhcData.getDesNodeID()));
+            textField8.setText(vhcData.getPathInfo());
+        }
         private void initComponents() {
 
             JLabel label1 = new JLabel();
@@ -61,6 +96,9 @@ public class LayerPanel {
             textField7 = new JTextField();
             JLabel label9 = new JLabel();
             textField8 = new JTextField();
+            textFields = new JTextField[]{textField1,textField2,textField3,textField4,
+                    textField5,textField6,textField7,textField8};
+
             JLabel label4 = new JLabel();
             JScrollPane scrollPane4 = new JScrollPane();
             textArea4 = new JTextArea();
@@ -68,9 +106,9 @@ public class LayerPanel {
             //======== this ========
             setLayout(new GridBagLayout());
             ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0};
+            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 70, 0, 0};
             ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -185,23 +223,33 @@ public class LayerPanel {
         }
     }
 
-    public class SensorPanel extends JPanel {
+    public class SensorPanel extends JPanel implements PanelAction{
 
         private JTextField textField1;//编号
         private JTextField textField2;//类型
         private JTextField textField3;//隶属于
         private JTextField textField5;//开始时间
         private JTextField textField4;//统计间隔
+        private JTextField[] textFields;
         private JButton button1;//查看数据
         private JTextArea textArea4;//其它
 
         public SensorPanel() {
             initComponents();
         }
-
+        public void resetTxtComponents(){
+            for(JTextField tmpText:textFields){
+                tmpText.setText("");
+            }
+            textArea4.setText("");
+        }
+        // TODO 检测器未统一
+        public void writeTxtComponents(NetworkObject object){
+            Sensor theSensor = (Sensor) object;
+            textField1.setText(String.valueOf(theSensor.getId()));
+            textField2.setText(String.valueOf(theSensor.getObjInfo()));
+        }
         private void initComponents() {
-            // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
-            // Generated using JFormDesigner Evaluation license - Yunlin Yang
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
             JLabel label2 = new JLabel();
@@ -213,6 +261,7 @@ public class LayerPanel {
             textField5 = new JTextField();
             JLabel label6 = new JLabel();
             textField4 = new JTextField();
+            textFields = new JTextField[]{textField1, textField2, textField3, textField4, textField5};
             button1 = new JButton();
             JLabel label4 = new JLabel();
             JScrollPane scrollPane4 = new JScrollPane();
@@ -222,9 +271,9 @@ public class LayerPanel {
 
             setLayout(new GridBagLayout());
             ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
             ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -318,17 +367,31 @@ public class LayerPanel {
 
     }
 
-    public class LanePanel extends JPanel {
+    public class LanePanel extends JPanel implements PanelAction{
 
         private JTextField textField1;//编号
         private JTextField textField2;//长度
         private JTextField textField3;//隶属于
+        private JTextField[] textFields;
         private JComboBox<String> comboBox2;//横向规则
         private JComboBox<String> comboBox3;//纵向规则
         private JTextArea textArea4;//其它
 
         public LanePanel() {
             initComponents();
+        }
+        public void resetTxtComponents(){
+            for(JTextField tmpText:textFields){
+                tmpText.setText("");
+            }
+            textArea4.setText("");
+        }
+        public void writeTxtComponents(NetworkObject object){
+            Lane theLane = (Lane) object;
+            textField1.setText(String.valueOf(theLane.getId()));
+            textField2.setText(String.valueOf(theLane.getLength()));
+            String segmentID = "Segment"+ String.valueOf(theLane.getSegment().getId());
+            textField3.setText(segmentID);
         }
         private void initComponents() {
 
@@ -338,6 +401,7 @@ public class LayerPanel {
             textField2 = new JTextField();
             JLabel label3 = new JLabel();
             textField3 = new JTextField();
+            textFields = new JTextField[]{textField1, textField2, textField3};
             JPanel panel5 = new JPanel();
             JLabel label6 = new JLabel();
             comboBox2 = new JComboBox<>();
@@ -351,9 +415,9 @@ public class LayerPanel {
 
             setLayout(new GridBagLayout());
             ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
             ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -461,19 +525,35 @@ public class LayerPanel {
         }
 
     }
-    public class SegmentPanel extends JPanel {
+    public class SegmentPanel extends JPanel implements PanelAction{
 
         private JTextField textField1;//编号
         private JTextField textField2;//长度
         private JTextField textField3;//隶属于
         private JTextField textField4;//限速
         private JTextField textField5;//控制
+        private JTextField[] textFields;
         private JTextArea textArea4;//其它
 
         public SegmentPanel() {
             initComponents();
         }
-
+        public void resetTxtComponents(){
+            for(JTextField tmpText:textFields){
+                tmpText.setText("");
+            }
+            textArea4.setText("");
+        }
+        public void writeTxtComponents(NetworkObject object){
+            Segment theSegment = (Segment) object;
+            textField1.setText(String.valueOf(theSegment.getId()));
+            textField2.setText(String.valueOf(theSegment.getLength()));
+            String linkID = "Link"+ String.valueOf(theSegment.getLink().getId());
+            textField3.setText(linkID);
+            textField4.setText(String.valueOf(theSegment.getFreeSpeed()));
+            // TODO 控制策略
+            //textField5.setText(String.valueOf(theSegment));
+        }
         private void initComponents() {
 
             JLabel label1 = new JLabel();
@@ -487,6 +567,7 @@ public class LayerPanel {
             textField4 = new JTextField();
             JLabel label7 = new JLabel();
             textField5 = new JTextField();
+            textFields = new JTextField[]{textField1, textField2, textField3, textField4, textField5};
             JLabel label4 = new JLabel();
             JScrollPane scrollPane4 = new JScrollPane();
             textArea4 = new JTextArea();
@@ -495,9 +576,9 @@ public class LayerPanel {
 
             setLayout(new GridBagLayout());
             ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
             ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -587,19 +668,36 @@ public class LayerPanel {
 
     }
 
-    public class LinkPanel extends JPanel {
+    public class LinkPanel extends JPanel implements PanelAction{
 
         private JTextField textField1;//编号
         private JTextField textField3;//类型
         private JTextField textField2;//长度
         private JTextField textField4;//上游节点
         private JTextField textField5;//下游节点
+        private JTextField[] textFields;
         private JTextArea textArea4;//其它
 
         public LinkPanel() {
             initComponents();
         }
 
+        public void resetTxtComponents(){
+            for(JTextField tmpText:textFields){
+                tmpText.setText("");
+            }
+            textArea4.setText("");
+        }
+        public void writeTxtComponents(NetworkObject object){
+            Link theLink = (Link) object;
+            textField1.setText(String.valueOf(theLink.getId()));
+            // TODO 类型&长度(删除)
+            textField3.setText(String.valueOf(theLink.getName()));
+            String upNodeID = "Node"+String.valueOf(theLink.getUpNode().getId());
+            String dnNodeID = "Node"+String.valueOf(theLink.getDnNode().getId());
+            textField4.setText(upNodeID);
+            textField5.setText(dnNodeID);
+        }
         private void initComponents() {
 
             JLabel label1 = new JLabel();
@@ -613,6 +711,7 @@ public class LayerPanel {
             textField4 = new JTextField();
             JLabel label7 = new JLabel();
             textField5 = new JTextField();
+            textFields = new JTextField[]{textField1, textField2, textField3, textField4, textField5};
             JLabel label4 = new JLabel();
             JScrollPane scrollPane4 = new JScrollPane();
             textArea4 = new JTextArea();
@@ -620,9 +719,9 @@ public class LayerPanel {
             //======== this ========
             setLayout(new GridBagLayout());
             ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
             ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -706,21 +805,33 @@ public class LayerPanel {
             }
             add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 0, 3), 0, 0));
+                    new Insets(0, 3, 5, 5), 0, 0));
         }
-
-
     }
-    public class NodePanel extends JPanel{
+    public class NodePanel extends JPanel implements PanelAction{
 
         private JTextField textField1; //编号
         private JTextField textField2; //类型
         private JTextField textField3; //x
         private JTextField textField4; //y
         private JTextField textField5; //z
+        private JTextField[] textFields;
         private JTextArea textArea4; //其它信息
         public NodePanel() {
             initComponents();
+        }
+        public void resetTxtComponents(){
+            for(JTextField tmpText:textFields){
+                tmpText.setText("");
+            }
+            textArea4.setText("");
+        }
+        public void writeTxtComponents(NetworkObject object){
+            Node theNode = (Node) object;
+            textField1.setText(String.valueOf(theNode.getId()));
+            textField2.setText(String.valueOf(theNode.getType()));
+            //TODO 实现坐标读取
+
         }
         private void initComponents() {
 
@@ -735,6 +846,7 @@ public class LayerPanel {
             textField4 = new JTextField();
             JLabel label3 = new JLabel();
             textField5 = new JTextField();
+            textFields = new JTextField[]{textField1, textField2, textField3, textField4, textField5};
             JLabel label4 = new JLabel();
             JScrollPane scrollPane4 = new JScrollPane();//其它
             textArea4 = new JTextArea();
@@ -743,9 +855,9 @@ public class LayerPanel {
 
             setLayout(new GridBagLayout());
             ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0};
+            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 70, 0, 0};
             ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -829,7 +941,7 @@ public class LayerPanel {
             }
             add(scrollPane4, new GridBagConstraints(1, 3, 1, 2, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 0, 3), 0, 0));
+                    new Insets(0, 3, 5, 5), 0, 0));
         }
 
     }

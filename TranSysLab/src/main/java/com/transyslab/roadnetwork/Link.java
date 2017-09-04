@@ -22,7 +22,7 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 	protected int type;
 	protected Node upNode;
 	protected Node dnNode;
-	protected Boolean isSelected;
+	protected boolean isSelected;
 	protected RoadNetwork network;
 	// RN_LinkTime Ù–‘
 

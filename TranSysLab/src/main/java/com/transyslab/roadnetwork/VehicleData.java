@@ -18,6 +18,11 @@ public class VehicleData implements NetworkObject{
 	protected GeoSurface rectangle;
 	//车辆信息
 	protected String info;
+	protected String pathInfo;
+	protected int oriNodeID;
+	protected int desNodeID;
+	protected double curSpeed;
+	protected int curLaneID;
 	protected boolean isSelected;
 	public int getVehicleID(){
 		return vehicleID_;
@@ -25,11 +30,29 @@ public class VehicleData implements NetworkObject{
 	public int getVehicleType(){
 		return vehicleType_;
 	}
+	public double getVhcLength(){
+		return vehicleLength_;
+	}
 	public double getVhcLocationX(){
 		return headPosition.getLocationX();
 	}
 	public double getVhcLocationY(){
 		return headPosition.getLocationY();
+	}
+	public double getCurSpeed(){
+		return curSpeed;
+	}
+	public int getOriNodeID(){
+		return oriNodeID;
+	}
+	public int getDesNodeID(){
+		return desNodeID;
+	}
+	public int getCurLaneID(){
+		return curLaneID;
+	}
+	public String getPathInfo(){
+		return pathInfo;
 	}
 	public boolean isSelected(){
 		return this.isSelected;
@@ -53,11 +76,23 @@ public class VehicleData implements NetworkObject{
 		return this.info;
 	}
 	public void init(Vehicle vhc, boolean isSegBased, int specialflag, String info){
-		vehicleID_ = vhc.id;
-		vehicleType_ = vhc.getType();
-		vehicleLength_ = vhc.getLength();
-		specialFlag_ = specialflag;
+		this.vehicleID_ = vhc.id;
+		this.vehicleType_ = vhc.getType();
+		this.vehicleLength_ = vhc.getLength();
+		this.specialFlag_ = specialflag;
 		this.info = info;
+		this.curSpeed = vhc.getCurrentSpeed();
+		this.desNodeID = vhc.oriNode().getId();
+		this.oriNodeID = vhc.desNode().getId();
+		StringBuilder sb = new StringBuilder();
+		int nLinks = vhc.path.getLinks().size();
+		for(int i =0;i<vhc.path.getLinks().size();i++){
+			sb.append(vhc.path.getLink(i).getId());
+			if(i!=nLinks-1){
+				sb.append("->");
+			}
+		}
+		this.pathInfo = sb.toString();
 		//车头位置
 		double vhcHeadX, vhcHeadY;
 		//车尾位置
@@ -80,6 +115,7 @@ public class VehicleData implements NetworkObject{
 		}
 		else{
 			Lane lane = vhc.getLane();
+			this.curLaneID = lane.getId();
 			double l = lane.getLength();
 			double s = l-vhc.getDistance();
 			vhcHeadX = lane.getStartPnt().getLocationX() + s * (lane.getEndPnt().getLocationX() - lane.getStartPnt().getLocationX()) / l;

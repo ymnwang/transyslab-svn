@@ -1,567 +1,545 @@
 package com.transyslab.gui;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.SystemColor;
-import java.awt.event.*;
-import java.io.File;
-import java.sql.SQLException;
-import java.time.LocalTime;
-import java.util.List;
 
-import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.border.EtchedBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
+import com.jogamp.opengl.util.FPSAnimator;
+import com.transyslab.commons.io.JdbcUtils;
+import com.transyslab.commons.renderer.Camera;
+import com.transyslab.commons.renderer.FrameQueue;
+import com.transyslab.commons.renderer.JOGLCanvas;
+import com.transyslab.commons.renderer.OrbitCamera;
+import com.transyslab.commons.tools.DataVisualization;
+import com.transyslab.commons.tools.Worker;
+import com.transyslab.simcore.AppSetup;
+import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
-import com.transyslab.simcore.mesots.MesoNetwork;
 import com.transyslab.simcore.mlp.MLPEngine;
+import info.monitorenter.gui.chart.traces.Trace2DSimple;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
 
-import com.jogamp.opengl.util.FPSAnimator;
-import com.transyslab.commons.io.JdbcUtils;
-import com.transyslab.commons.renderer.Camera;
-import com.transyslab.commons.renderer.JOGLCanvas;
-import com.transyslab.commons.renderer.FrameQueue;
-import com.transyslab.commons.renderer.OrbitCamera;
-import com.transyslab.commons.tools.DataVisualization;
-import com.transyslab.commons.tools.Worker;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.simcore.AppSetup;
-import com.transyslab.simcore.SimulationEngine;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.sql.SQLException;
+import java.time.LocalTime;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
-import info.monitorenter.gui.chart.traces.Trace2DSimple;
+/**
+ * Created by yali on 2017/8/26.
+ */
+public class MainWindow {
+    private JFrame windowFrame;
+    private JTextArea textArea2;// 控制台信息
+    private JTextArea textArea3;// 方案信息
+    private JProgressBar progressBar1;
+    private JLabel label5;//窗口状态信息
+    private JLabel label8;//任务状态信息
+    private JLabel label9;//进度条进度值
+    private final String[] layerNames = {"Node","Link","Segment","Lane","Sensor","Vehicle"};
+    private String curLayerName = "Node";
+    private LayerPanel layerPanel;
+    private JOGLCanvas canvas;
+    private FPSAnimator animator;
+    private SubWindow subWindow;
+    private SimulationEngine[] engines;
+    private Trace2DSimple traceRT;
+    public boolean needRTPlot;
+    public MainWindow(){
 
-public class MainWindow extends JFrame{
-	// Define constants for the top-level container
-	private String title_ = "TranSysLab"; // window's title
-	private int fps_; // animator's target frames per second
-	private JOGLCanvas canvas_;
-	private FPSAnimator animator_;
-	
-	private JTextField textField;
-	// 控制台信息
-	private JTextArea txtConsole;
-	private JTextArea txtCase;
-	private int windowWidth = 810;
-	private int windowHeight = 632;
-	
-	private SimulationEngine[] engines;
-	private Trace2DSimple traceRT;
-	public boolean needRTPlot;
-	private static MainWindow theWindow = new MainWindow();
-	public static MainWindow getInstance(){
-		return theWindow;
-	}
-	/** Constructor to setup the top-level container and animator */
-	private MainWindow() {
-		//Complete window design
-		initialize();
-		// Set rendering canvas
-		fps_ = 120;		
-		Camera cam = new OrbitCamera();
-		canvas_.setCamera(cam);
-		// Create a animator that drives canvas' display() at the specified FPS.
-		animator_ = new FPSAnimator(canvas_, fps_, true);
+        try
+        {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        initComponents();
+    }
+    private void initComponents(){
+        windowFrame = new JFrame();
+        progressBar1 = new JProgressBar();
+        label5 = new JLabel();
+        label8 = new JLabel();
+        label9 = new JLabel();
+        canvas = new JOGLCanvas();
+        canvas.setMainWindow(this);
+        Camera cam = new OrbitCamera();
+        canvas.setCamera(cam);
+        // Create a animator that drives canvas' display() at the specified FPS.
+        animator = new FPSAnimator(canvas, 120, true);
+        subWindow = new SubWindow();
+        subWindow.setMainWindow(this);
+        JMenuBar menuBar1 = new JMenuBar();
+        JMenu menu1 = new JMenu();
+        JMenu menu2 = new JMenu();
+        JMenu menu3 = new JMenu();
+        JMenu menu4 = new JMenu();
+        JMenu menu5 = new JMenu();
+        JMenu menu6 = new JMenu();
+        JMenu menu7 = new JMenu();
+        JMenu menu8 = new JMenu();
+        JToolBar toolBar1 = new JToolBar();
+        JButton button1 = new JButton();
+        JButton button2 = new JButton();
+        JButton button3 = new JButton();
+        JButton button4 = new JButton();
+        JButton button5 = new JButton();
+        JButton button7 = new JButton();
+        JButton button8 = new JButton();
+        JButton button9 = new JButton();
+        JPanel panel7 = new JPanel();
+        JPanel panel2 = new JPanel();
+        JPanel panel8 = new JPanel();
+        JComboBox<String> comboBox1 = new JComboBox<>();
+        JTabbedPane tabbedPane1 = new JTabbedPane();
+        JPanel panel1 = new JPanel();
+        JScrollPane scrollPane2 = new JScrollPane();
+        textArea2 = new JTextArea();
+        JPanel panel3 = new JPanel();
+        JScrollPane scrollPane3 = new JScrollPane();
+        textArea3 = new JTextArea();
+        layerPanel = new LayerPanel();
+        //======== windowFrame ========
+        windowFrame.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
+        windowFrame.setTitle("TranSysLab");
+        Container contentPane = windowFrame.getContentPane();
+        contentPane.setLayout(new GridBagLayout());
+        ((GridBagLayout)contentPane.getLayout()).columnWidths = new int[] {409, 206, 0};
+        ((GridBagLayout)contentPane.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 131,20,0};
+        ((GridBagLayout)contentPane.getLayout()).columnWeights = new double[] {1.0, 0.0, 1.0E-4};
+        ((GridBagLayout)contentPane.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0E-4};
+        windowFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Use a dedicate thread to run the stop() to ensure that the
+                // animator stops before program exits.
+                new Thread() {
+                    @Override
+                    public void run() {
+                        if (animator.isStarted())
+                            animator.stop();
+                        System.exit(0);
+                    }
+                }.start();
+            }
+        });
 
-		// Create the top-level container frame
-		getContentPane().add(canvas_);
-		addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// Use a dedicate thread to run the stop() to ensure that the
-				// animator stops before program exits.
-				new Thread() {
-					@Override
-					public void run() {
-						if (animator_.isStarted())
-							animator_.stop();
-						System.exit(0);
-					}
-				}.start();
-			}
-		});		
-	}
-	/**
-	 * Initialize the contents of the frame.
-	 */
-	private void initialize() {
-		int screenWidth = (int) java.awt.Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-		int screenHeight = (int) java.awt.Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-		canvas_ = new JOGLCanvas();
-		
-		setBounds(screenWidth/2 - windowWidth/2, screenHeight/2-windowHeight/2, windowWidth, windowHeight);
+        //======== 菜单栏 ========
+        {
+            menuBar1.setBorder(new CompoundBorder(UIManager.getBorder("Menu.border"),
+                    null));
 
-		setTitle(title_);
-		
-		JPanel panel = new JPanel();
-		panel.setBackground(Color.WHITE);
-		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBackground(SystemColor.controlHighlight);
-		panel_1.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				windowHeight = getHeight();
-				windowWidth = getWidth();
-				int referHeight = panel_1.getHeight();
-				int referWidth = panel_1.getWidth();
-				java.awt.Point p = panel_1.getLocation();
-				canvas_.setBounds(0, (int) p.getY(), windowWidth-5-referWidth, referHeight);
-				}
-			}
-		);
+            //======== menu1 ========
+            {
+                menu1.setText("\u6587\u4ef6");
+                menu1.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu1.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu1);
 
-		
-		JPanel panel_2 = new JPanel();
+            //======== menu2 ========
+            {
+                menu2.setText("\u7f16\u8f91");
+                menu2.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu2.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu2);
 
-		JPanel panel_3 = new JPanel();
+            //======== menu3 ========
+            {
+                menu3.setText("\u8fd0\u884c");
+                menu3.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu3.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu3);
 
-		JPanel panel_5 = new JPanel();
-		// 信息显示区
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+            //======== menu4 ========
+            {
+                menu4.setText("\u7a97\u53e3");
+                menu4.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu4.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu4);
 
+            //======== menu5 ========
+            {
+                menu5.setText("\u67e5\u770b");
+                menu5.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu5.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu5);
 
-		GroupLayout groupLayout = new GroupLayout(getContentPane());
-		groupLayout.setHorizontalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(groupLayout.createSequentialGroup()
-					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 586, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED, 70, Short.MAX_VALUE)
-					.addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 138, GroupLayout.PREFERRED_SIZE))
-				.addGroup(groupLayout.createSequentialGroup()
-					.addComponent(panel_5, GroupLayout.PREFERRED_SIZE, 235, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(559, Short.MAX_VALUE))
-				.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-					.addComponent(canvas_, GroupLayout.DEFAULT_SIZE, 552, Short.MAX_VALUE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(panel_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-				.addComponent(tabbedPane, GroupLayout.DEFAULT_SIZE, 794, Short.MAX_VALUE)
-		);
-		groupLayout.setVerticalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(2)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addComponent(panel, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
-							.addGap(3)
-							.addComponent(panel_5, GroupLayout.PREFERRED_SIZE, 27, GroupLayout.PREFERRED_SIZE))
-						.addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 27, GroupLayout.PREFERRED_SIZE))
-					.addGap(1)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addComponent(canvas_, GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
-						.addComponent(panel_1, GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 136, GroupLayout.PREFERRED_SIZE))
-		);
-		// 带滚动条的面板，显示控制台输出信息
-		JScrollPane scrollPane = new JScrollPane();
-		tabbedPane.addTab("控制台", null, scrollPane, null);
-		this.txtConsole = new JTextArea();
-		//设置自动换行
-		this.txtConsole.setLineWrap(true);
-		scrollPane.setViewportView(txtConsole);
+            //======== menu6 ========
+            {
+                menu6.setText("\u65b9\u6848");
+                menu6.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu6.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu6);
 
+            //======== menu7 ========
+            {
+                menu7.setText("\u5de5\u5177");
+                menu7.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu7.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu7);
 
-		// 带滚动条的面板，显示方案信息
-		JScrollPane scrollPane2 = new JScrollPane();
-		tabbedPane.addTab("方案", null, scrollPane2, null);
-		this.txtCase = new JTextArea();
-		//设置自动换行
-		this.txtCase.setLineWrap(true);
-		scrollPane2.setViewportView(txtCase);
+            //======== menu8 ========
+            {
+                menu8.setText("\u5e2e\u52a9");
+                menu8.setFont(new Font("Dialog", Font.PLAIN, 12));
+                menu8.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+            menuBar1.add(menu8);
+        }
+        windowFrame.setJMenuBar(menuBar1);
 
+        //======== 工具栏 ========
+        {
 
-		JPanel panel_6 = new JPanel();
-		panel_6.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            toolBar1.setBorder(UIManager.getBorder("ToolBar.border"));
+            //---- button1 ----
 
-		JPanel panel_7 = new JPanel();
-		panel_7.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		panel_7.setToolTipText("");
+            button1.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/file.png")
+                            .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            //button1.setFont(new Font("\u534e\u6587\u7ec6\u9ed1", Font.PLAIN, 12));
+            button1.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    subWindow.windowFrame.setVisible(true);
+                }
+            });
+            toolBar1.add(button1);
 
-		JLabel label = new JLabel("\u6587\u4EF6");
-		label.setBackground(Color.LIGHT_GRAY);
-		label.setLabelFor(panel_6);
-		label.setFont(new Font("宋体", Font.PLAIN, 15));
+            //---- button2 ----
+            button2.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/openfile.png")
+                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            button2.addActionListener(new ActionListener() {
 
-		JLabel label_1 = new JLabel("\u9053\u8DEF\u89C4\u5219");
-		label_1.setBackground(Color.LIGHT_GRAY);
-		label_1.setLabelFor(panel_7);
-		label_1.setFont(new Font("宋体", Font.PLAIN, 15));
-		GroupLayout gl_panel_1 = new GroupLayout(panel_1);
-		gl_panel_1.setHorizontalGroup(
-			gl_panel_1.createParallelGroup(Alignment.LEADING)
-				.addGroup(Alignment.TRAILING, gl_panel_1.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(gl_panel_1.createParallelGroup(Alignment.TRAILING)
-						.addComponent(panel_6, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
-						.addComponent(panel_7, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
-						.addComponent(label, Alignment.LEADING)
-						.addComponent(label_1, Alignment.LEADING))
-					.addContainerGap())
-		);
-		gl_panel_1.setVerticalGroup(
-			gl_panel_1.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel_1.createSequentialGroup()
-					.addContainerGap()
-					.addComponent(label)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(panel_6, GroupLayout.PREFERRED_SIZE, 146, GroupLayout.PREFERRED_SIZE)
-					.addGap(5)
-					.addComponent(label_1, GroupLayout.PREFERRED_SIZE, 18, GroupLayout.PREFERRED_SIZE)
-					.addGap(3)
-					.addComponent(panel_7, GroupLayout.PREFERRED_SIZE, 146, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(25, Short.MAX_VALUE))
-		);
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JFileChooser fileChooser = new JFileChooser("src/main/resources");
+                    fileChooser.setDialogTitle("选择项目文件");
+                    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                    fileChooser.setFileFilter(new FileNameExtensionFilter("配置文件","properties"));
+                    int state = fileChooser.showOpenDialog(null);
+                    if(state == JFileChooser.APPROVE_OPTION){
+                        File file = fileChooser.getSelectedFile();
+                        Configurations configs = new Configurations();
 
-		JLabel label_2 = new JLabel("\u5F53\u524D\u5BF9\u8C61");
-		label_2.setFont(new Font("宋体", Font.PLAIN, 14));
+                        try{
+                            Configuration config = configs.properties(file);
+                            String projectName = config.getString("projectName");
+                            String networkPath = config.getString("networkPath");
+                            String caseName = config.getString("caseName");
+                            String createTime = config.getString("createTime");
+                            String simModel = config.getString("simModel");
+                            String startTime =  config.getString("startTime");
+                            String endTime = config.getString("endTime");
+                            String demandPath = config.getString("demandPath");
+                            Float simStep = config.getFloat("simStep");
+                            LocalTime stTime = LocalTime.parse(startTime);
+                            AppSetup.startTime = stTime.getHour()*3600+stTime.getMinute()*60+stTime.getSecond();
+                            LocalTime edTime = LocalTime.parse(endTime);
+                            AppSetup.endTime = edTime.getHour()*3600+edTime.getMinute()*60+edTime.getSecond();
+                            AppSetup.setupParameter.put("项目名称", projectName);
+                            AppSetup.setupParameter.put("路网路径",networkPath);
+                            AppSetup.setupParameter.put("方案名称", caseName);
+                            AppSetup.setupParameter.put("需求路径", demandPath);
+                            AppSetup.timeStep = simStep;
+                            if(simModel.equals("MesoTS"))
+                                AppSetup.modelType = 1;
+                            else {
+                                AppSetup.modelType = 2;
+                            }
+                            initSimEngines();
+                        }
+                        catch(ConfigurationException cex)
+                        {
+                            // loading of the configuration file failed
+                        }
 
-		textField = new JTextField();
-		textField.setText("Lane31101");
-		textField.setFont(new Font("宋体", Font.PLAIN, 15));
-		textField.setEditable(false);
-		textField.setColumns(10);
+                    }
 
-		JLabel label_3 = new JLabel("\u6A2A\u5411\u89C4\u5219");
-		label_3.setFont(new Font("宋体", Font.PLAIN, 14));
+                }
+            });
+            toolBar1.add(button2);
+            toolBar1.addSeparator();
 
-		JLabel label_4 = new JLabel("\u7EB5\u5411\u89C4\u5219");
-		label_4.setFont(new Font("宋体", Font.PLAIN, 14));
+            //---- button3 ----
+            button3.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/save.png")
+                   .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            toolBar1.add(button3);
+            toolBar1.addSeparator();
 
-		JComboBox comboBox = new JComboBox();
-		comboBox.setFont(new Font("宋体", Font.PLAIN, 14));
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"\u5141\u8BB8\u5DE6\u53F3\u6362\u9053", "\u5141\u8BB8\u5DE6\u6362\u9053", "\u5141\u8BB8\u53F3\u6362\u9053", "\u7981\u6B62\u6362\u9053"}));
+            //---- 按键：开始仿真 ----
+            //button4.setMargin(new Insets(0, 8, 0, ));
+            button4.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/play.png")
+                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            button4.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-		JComboBox comboBox_1 = new JComboBox();
-		comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"\u76F4\u5DE6", "\u76F4\u53F3", "\u76F4\u5DE6\u53F3", "\u76F4\u884C", "\u4E13\u5DE6", "\u4E13\u53F3"}));
-		comboBox_1.setFont(new Font("宋体", Font.PLAIN, 14));
-		GroupLayout gl_panel_7 = new GroupLayout(panel_7);
-		gl_panel_7.setHorizontalGroup(
-			gl_panel_7.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel_7.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(gl_panel_7.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_panel_7.createSequentialGroup()
-							.addComponent(label_2)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(textField, GroupLayout.DEFAULT_SIZE, 122, Short.MAX_VALUE))
-						.addGroup(gl_panel_7.createSequentialGroup()
-							.addComponent(label_3, GroupLayout.PREFERRED_SIZE, 56, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(comboBox, 0, 122, Short.MAX_VALUE))
-						.addGroup(gl_panel_7.createSequentialGroup()
-							.addComponent(label_4, GroupLayout.PREFERRED_SIZE, 56, GroupLayout.PREFERRED_SIZE)
-							.addGap(10)
-							.addComponent(comboBox_1, GroupLayout.PREFERRED_SIZE, 122, GroupLayout.PREFERRED_SIZE)))
-					.addContainerGap())
-		);
-		gl_panel_7.setVerticalGroup(
-			gl_panel_7.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel_7.createSequentialGroup()
-					.addGroup(gl_panel_7.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_panel_7.createSequentialGroup()
-							.addGap(18)
-							.addComponent(label_2))
-						.addGroup(gl_panel_7.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(textField, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE)))
-					.addGap(22)
-					.addGroup(gl_panel_7.createParallelGroup(Alignment.BASELINE)
-						.addComponent(label_3, GroupLayout.PREFERRED_SIZE, 16, GroupLayout.PREFERRED_SIZE)
-						.addComponent(comboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
-					.addGroup(gl_panel_7.createParallelGroup(Alignment.BASELINE)
-						.addComponent(comboBox_1, GroupLayout.PREFERRED_SIZE, 22, GroupLayout.PREFERRED_SIZE)
-						.addComponent(label_4, GroupLayout.PREFERRED_SIZE, 16, GroupLayout.PREFERRED_SIZE))
-					.addGap(18))
-		);
-		panel_7.setLayout(gl_panel_7);
-		
-		JButton button = new JButton("\u65B0\u5EFA\u9879\u76EE");
-		button.setFont(new Font("宋体", Font.PLAIN, 14));
-		button.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				SubWindow.createPanel("新建项目", ProjectPanel.class);
-				SubWindow.getInstance().setVisible(true);
-				
-			}
-		});
-		
-		JButton button_1 = new JButton("打开项目");
-		button_1.setFont(new Font("宋体", Font.PLAIN, 14));
-		button_1.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser fileChooser = new JFileChooser("src/main/resources");
-				fileChooser.setDialogTitle("选择项目文件");
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setFileFilter(new FileNameExtensionFilter("配置文件","properties"));
-				int state = fileChooser.showOpenDialog(null);
-				if(state == JFileChooser.APPROVE_OPTION){
-					File file = fileChooser.getSelectedFile();
-					Configurations configs = new Configurations();
-
-					try{
-						Configuration config = configs.properties(file);
-						String projectName = config.getString("projectName");
-					    String networkPath = config.getString("networkPath");
-					    String caseName = config.getString("caseName");
-					    String createTime = config.getString("createTime");
-					    String simModel = config.getString("simModel");
-					    String startTime =  config.getString("startTime");
-					    String endTime = config.getString("endTime");
-					    String demandPath = config.getString("demandPath");
-					    Float simStep = config.getFloat("simStep");
-					    LocalTime stTime = LocalTime.parse(startTime);
-					    AppSetup.startTime = stTime.getHour()*3600+stTime.getMinute()*60+stTime.getSecond();
-					    LocalTime edTime = LocalTime.parse(endTime);
-					    AppSetup.endTime = edTime.getHour()*3600+edTime.getMinute()*60+edTime.getSecond();
-					    AppSetup.setupParameter.put("项目名称", projectName);
-					    AppSetup.setupParameter.put("路网路径",networkPath);
-					    AppSetup.setupParameter.put("方案名称", caseName);
-					    AppSetup.setupParameter.put("需求路径", demandPath);
-					    AppSetup.timeStep = simStep;
-					    if(simModel.equals("MesoTS"))	    	
-					    	AppSetup.modelType = 1;
-					    else {
-					    	AppSetup.modelType = 2;
-						}
-					    initSimEngines();
-					}
-					catch(ConfigurationException cex)
-					{
-					    // loading of the configuration file failed
-					}
-					
-				}
-				
-			}
-		});
-		JButton button_2 = new JButton("车速统计");
-		button_2.setFont(new Font("宋体", Font.PLAIN, 13));
-		//TODO 限制多次点击
-		button_2.addActionListener(new ActionListener() {	
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				//TODO 硬写未设计
-				needRTPlot = true;
-				new Thread(new Runnable() {
-					
-					@Override
-					public void run() {
-			
-						QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
-						String sql = "select C,round(S/C*2*5*3) as hourfolw,meanspeed, D from (select count(\"FLOW\") AS C,sum(\"FLOW\") AS S,sum(\"FLOW\"*\"SPEED\")/(sum(\"FLOW\")+0.0000001) as meanspeed, floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300 AS D from nhschema.\"Loop\"  where \"CPN\" = 'LP/A24' "
-								+ "   and (extract(epoch from \"CTIME\")>=extract(epoch from timestamp without time zone '2016-06-20 07:55:00')) and (extract(epoch from \"CTIME\")<=extract(epoch from timestamp without time zone '2016-06-20 09:50:00'))"
-								+ " group by floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300) as derivedtable order by D";
-						try {
-							List result = (List) qr.query(sql, new ColumnListHandler(3));
-							traceRT = new Trace2DSimple("仿真车速");
-							
-							DataVisualization.realTimePlot(traceRT, null, result);
-							//System.out.println("");
-						} catch (SQLException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-					}
-				}).start();
-			}	
-		});
-		JButton button_3 = new JButton("\u9000\u51FA");
-		button_3.setFont(new Font("宋体", Font.PLAIN, 14));
-		GroupLayout gl_panel_6 = new GroupLayout(panel_6);
-		gl_panel_6.setHorizontalGroup(
-			gl_panel_6.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel_6.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(gl_panel_6.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_panel_6.createSequentialGroup()
-							.addComponent(button)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(button_1, GroupLayout.DEFAULT_SIZE, 89, Short.MAX_VALUE))
-						.addGroup(gl_panel_6.createSequentialGroup()
-							.addComponent(button_2, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(button_3, GroupLayout.DEFAULT_SIZE, 89, Short.MAX_VALUE)))
-					.addContainerGap())
-		);
-		gl_panel_6.setVerticalGroup(
-			gl_panel_6.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel_6.createSequentialGroup()
-					.addGap(31)
-					.addGroup(gl_panel_6.createParallelGroup(Alignment.BASELINE)
-						.addComponent(button_1)
-						.addComponent(button))
-					.addGap(33)
-					.addGroup(gl_panel_6.createParallelGroup(Alignment.BASELINE)
-						.addComponent(button_2)
-						.addComponent(button_3))
-					.addContainerGap(32, Short.MAX_VALUE))
-		);
-		panel_6.setLayout(gl_panel_6);
-		panel_1.setLayout(gl_panel_1);
-		panel_2.setLayout(new GridLayout(1, 0, 0, 0));
-		
-		JFormattedTextField formattedTextField = new JFormattedTextField();
-		formattedTextField.setText("\u641C\u7D22");
-		panel_2.add(formattedTextField);
-		panel_5.setLayout(new GridLayout(0, 1, 0, 0));
-		
-		JToolBar toolBar = new JToolBar();
-		toolBar.setRollover(true);
-		panel_5.add(toolBar);
-		
-		JButton btnNewButton = new JButton("");
-		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		btnNewButton.setIcon(new ImageIcon("src/main/resources/icon/play.png"));
-		toolBar.add(btnNewButton);
-		btnNewButton.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				/*
+                    /*
 				if(!canvas_.isNetworkReady()){
 					JOptionPane.showMessageDialog(null, "请先加载路网");
 					return;
 				}*/
-				//从暂停到播放
-				if(canvas_.isPause){
-					canvas_.isPause = false;
-				}
-				//第一次播放
-				else if(!canvas_.isRendering){
-					FrameQueue.getInstance().initFrameQueue();
-					Worker worker = new Worker(engines[0]);
-					Thread thread = new Thread(worker);
-					thread.start();
-				/*
-					Worker[] workerList = new Worker[Constants.THREAD_NUM];
-					Thread[] threadList = new Thread[Constants.THREAD_NUM];
+                    //从暂停到播放
+                    if(canvas.isPause){
+                        canvas.isPause = false;
+                    }
+                    //第一次播放
+                    else if(!canvas.isRendering){
+                        FrameQueue.getInstance().initFrameQueue();
+                        Worker worker = new Worker(engines[0]);
+                        Thread thread = new Thread(worker);
+                        thread.start();
+                        canvas.isRendering = true;
+                    }
+                }
+            });
+            toolBar1.add(button4);
+
+            //---- 按键：暂停仿真 ----
+            button5.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/pause.png")
+                    .getImage().getScaledInstance(20,20, Image.SCALE_SMOOTH)));
+            button5.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    canvas.isPause = true;
+                }
+            });
+            toolBar1.add(button5);
+
+            //---- 按键：停止仿真 ----
+            button7.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/stop.png")
+                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            button7.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    animator.stop();
+                }
+            });
+            toolBar1.add(button7);
+            toolBar1.addSeparator();
+
+            //---- 按键：数据库连接 ----
+            button8.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/database.png")
+                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            toolBar1.add(button8);
+
+            //---- 按键：车速统计 ----
+            button9.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/chart.png")
+                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            //TODO 限制多次点击
+            button9.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    //TODO 硬写未设计
+                    needRTPlot = true;
+                    new Thread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
+                            String sql = "select C,round(S/C*2*5*3) as hourfolw,meanspeed, D from (select count(\"FLOW\") AS C,sum(\"FLOW\") AS S,sum(\"FLOW\"*\"SPEED\")/(sum(\"FLOW\")+0.0000001) as meanspeed, floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300 AS D from nhschema.\"Loop\"  where \"CPN\" = 'LP/A24' "
+                                    + "   and (extract(epoch from \"CTIME\")>=extract(epoch from timestamp without time zone '2016-06-20 07:55:00')) and (extract(epoch from \"CTIME\")<=extract(epoch from timestamp without time zone '2016-06-20 09:50:00'))"
+                                    + " group by floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300) as derivedtable order by D";
+                            try {
+                                java.util.List result = (java.util.List) qr.query(sql, new ColumnListHandler(3));
+                                traceRT = new Trace2DSimple("仿真车速");
+
+                                DataVisualization.realTimePlot(traceRT, null, result);
+                                //System.out.println("");
+                            } catch (SQLException e1) {
+                                // TODO Auto-generated catch block
+                                e1.printStackTrace();
+                            }
+                        }
+                    }).start();
+                }
+            });
+            toolBar1.add(button9);
+        }
+        contentPane.add(toolBar1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 1, 5), 0, 0));
+
+        //======== canvas展示区 ========
+        contentPane.add(canvas, new GridBagConstraints(0, 1, 1, 12, 0.0, 0.0,
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 1, 5), 0, 0));
+
+        //======== 交通要素属性面板 ========
+        {
+            panel2.setBorder(new CompoundBorder(
+                    new TitledBorder(null, "\u5c5e\u6027", TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION,
+                            new Font("\u5fae\u8f6f\u96c5\u9ed1", Font.PLAIN, 13)),
+                    new EmptyBorder(5, 5, 5, 5)));
 
 
+            panel2.setLayout(new GridBagLayout());
+            ((GridBagLayout)panel2.getLayout()).columnWidths = new int[] {0, 0};
+            ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {0, 0, 0};
+            ((GridBagLayout)panel2.getLayout()).columnWeights = new double[] {1.0, 1.0E-4};
+            ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {1.0, 0.0, 1.0E-4};
+            //======== panel7 ========
+            //======== 默认显示Node属性 ========
+            {
+                panel7.setLayout(new CardLayout());
+                for (int i = 0; i < layerNames.length; i++) {
+                    panel7.add(layerPanel.getLayer(layerNames[i]), layerNames[i]);
+                }
+            }
+            panel2.add(panel7, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 0), 0, 0));
+            //---- 交通要素选择器 ----
+            comboBox1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
+            comboBox1.setModel(new DefaultComboBoxModel<>(layerNames));
+            comboBox1.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-					for (int i = 0; i < Constants.THREAD_NUM; i++) {
-						workerList[i] = new Worker(engines[i]);
-						threadList[i] = new Thread(workerList[i]);
-					}
+                    String selectedItem = (String)comboBox1.getSelectedItem();
+                    if(curLayerName != selectedItem){
+                        //清除要素面板内容
+                        layerPanel.getAction(curLayerName).resetTxtComponents();
+                        //清除被选对象
+                        canvas.deselect();
+                    }
 
-//					RoadNetworkPool.getInstance().organizeHM(threadList);
-					for (int i = 0; i < Constants.THREAD_NUM; i++) {
-						threadList[i].start();
-					}*/
-					canvas_.isRendering = true;
-				}
-				
-			
-			}
-		});
-		
-		JButton btnNewButton_1 = new JButton("");
-		btnNewButton_1.setIcon(new ImageIcon("src/main/resources/icon/pause.png"));
-		toolBar.add(btnNewButton_1);
-		btnNewButton_1.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
+                    curLayerName = selectedItem;
+                    ((CardLayout)panel7.getLayout()).show(panel7,curLayerName);
+                }
+            });
+            panel2.add(comboBox1, new GridBagConstraints(0, 1, 2, 1, 0.0, 0.0,
+                    GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL,
+                    new Insets(0, 3, 0, 3), 0, 0));
+        }
+        contentPane.add(panel2, new GridBagConstraints(1, 1, 1, 12, 0.0, 0.0,
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 1, 0), 0, 0));
 
-				canvas_.isPause = true;	
-			}
-		});
-		
-		JButton btnNewButton_2 = new JButton("");
-		btnNewButton_2.setIcon(new ImageIcon("src/main/resources/icon/stop.png"));
-		toolBar.add(btnNewButton_2);
-		
-		JSlider slider = new JSlider();
-		slider.setFont(new Font("宋体", Font.PLAIN, 13));
-		toolBar.add(slider);
-		panel.setLayout(new GridLayout(1, 1, 0, 0));
-		
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.setBorderPainted(false);
-		menuBar.setForeground(Color.WHITE);
-		panel.add(menuBar);
-		
-		JMenu menu = new JMenu("\u6587\u4EF6");
-		menu.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(menu);
-		
-		JMenu mnNewMenu = new JMenu("\u7F16\u8F91");
-		mnNewMenu.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(mnNewMenu);
-		
-		JMenu menu_1 = new JMenu("\u8FD0\u884C");
-		menu_1.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(menu_1);
-		
-		JMenu menu_2 = new JMenu("\u7A97\u53E3");
-		menu_2.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(menu_2);
-		
-		JMenu menu_3 = new JMenu("\u67E5\u770B");
-		menu_3.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(menu_3);
-		
-		JMenu menu_4 = new JMenu("\u65B9\u6848");
-		menu_4.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(menu_4);
-		
-		JMenu menu_5 = new JMenu("\u5DE5\u5177");
-		menu_5.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(menu_5);
-		
-		JMenu menu_6 = new JMenu("\u5E2E\u52A9");
-		menu_6.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 14));
-		menuBar.add(menu_6);
-		getContentPane().setLayout(groupLayout);
-	}
-	public void render() {
-		animator_.start(); // start the animation loop
-	}
-	public SimulationEngine[] getSimEngines(){
-		return engines;
-	}
-	public Trace2DSimple getTrace2D(){
-		return traceRT;
-	}
-	public JTextArea getTXTConsole(){
-		return txtConsole;
-	}
-	public JTextArea getTXTCase(){
-		return txtCase;
-	}
-	public void initSimEngines(){
-		engines = new SimulationEngine[1];
-		switch (AppSetup.modelType) {
-			case 1:
-				engines[0] = new MesoEngine(0,"E:\\test\\");
-				break;
-			case 2:
-				engines[0] = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master.properties");
-				break;
-				default:
-					break;
-		}
-		engines[0].loadFiles();
+        //======== 底部信息框 ========
+        {
+            tabbedPane1.setFont(new Font("\u534e\u6587\u7ec6\u9ed1", Font.PLAIN, 13));
 
-		// Network is ready for simulation
-		canvas_.setFirstRender(true);
-		canvas_.setDrawableNetwork(engines[0].getNetwork());
-		canvas_.requestFocusInWindow();
-	}
+            //======== 控制台 ========
+            {
+                panel1.setLayout(new GridBagLayout());
+                ((GridBagLayout)panel1.getLayout()).columnWidths = new int[] {0, 0};
+                ((GridBagLayout)panel1.getLayout()).rowHeights = new int[] {0, 0};
+                ((GridBagLayout)panel1.getLayout()).columnWeights = new double[] {1.0, 1.0E-4};
+                ((GridBagLayout)panel1.getLayout()).rowWeights = new double[] {1.0, 1.0E-4};
+
+                //======== scrollPane2 ========
+                {
+                    scrollPane2.setViewportView(textArea2);
+                    textArea2.setLineWrap(true);
+                }
+                panel1.add(scrollPane2, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 0, 0, 0), 0, 0));
+            }
+            tabbedPane1.addTab("\u63a7\u5236\u53f0", panel1);
+
+            //======== 方案 ========
+            {
+                panel3.setLayout(new GridBagLayout());
+                ((GridBagLayout)panel3.getLayout()).columnWidths = new int[] {0, 0};
+                ((GridBagLayout)panel3.getLayout()).rowHeights = new int[] {0, 0};
+                ((GridBagLayout)panel3.getLayout()).columnWeights = new double[] {1.0, 1.0E-4};
+                ((GridBagLayout)panel3.getLayout()).rowWeights = new double[] {1.0, 1.0E-4};
+
+                //======== scrollPane3 ========
+                {
+                    scrollPane3.setViewportView(textArea3);
+                    textArea3.setLineWrap(true);
+                }
+                panel3.add(scrollPane3, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 0, 0, 0), 0, 0));
+            }
+            tabbedPane1.addTab("\u65b9\u6848", panel3);
+        }
+        contentPane.add(tabbedPane1, new GridBagConstraints(0, 13, 2, 1, 0.0, 0.0,
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 0, 0), 0, 0));
+        //======== panel8 ========
+        {
+            panel8.setLayout(new GridBagLayout());
+            ((GridBagLayout)panel8.getLayout()).columnWidths = new int[] {12, 42, 0, 0, 0, 0};
+            ((GridBagLayout)panel8.getLayout()).rowHeights = new int[] {0, 0};
+            ((GridBagLayout)panel8.getLayout()).columnWeights = new double[] {0.0, 1.0, 0.0, 0.0, 0.0, 1.0E-4};
+            ((GridBagLayout)panel8.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
+
+            //---- label5 ----
+            label5.setText("\u72b6\u6001");
+            panel8.add(label5, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(2, 5, 2, 2), 0, 0));
+
+            //---- label8 ----
+            label8.setText("\u4efb\u52a1\u6267\u884c\u4e2d");
+            panel8.add(label8, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 2), 0, 0));
+
+            //---- label9 ----
+            label9.setText("(0%)");
+            panel8.add(label9, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 2), 0, 0));
+            panel8.add(progressBar1, new GridBagConstraints(4, 0, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 0), 0, 0));
+        }
+        contentPane.add(panel8, new GridBagConstraints(0, 14, 2, 1, 0.0, 0.0,
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 0, 0), 0, 0));
+        windowFrame.setSize(880, 660);
+        windowFrame.setLocationRelativeTo(windowFrame.getOwner());
+        windowFrame.setVisible(true);
+        windowFrame.requestFocusInWindow();
+        animator.start();
+
+    }
+    public void initSimEngines(){
+        engines = new SimulationEngine[1];
+        switch (AppSetup.modelType) {
+            case 1:
+                engines[0] = new MesoEngine(0,"E:\\test\\");
+                break;
+            case 2:
+                engines[0] = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master.properties");
+                break;
+            default:
+                break;
+        }
+        engines[0].loadFiles();
+
+        // Network is ready for simulation
+        canvas.setFirstRender(true);
+        canvas.setDrawableNetwork(engines[0].getNetwork());
+        canvas.requestFocusInWindow();
+    }
+    public String getCurLayerName(){
+        return curLayerName;
+    }
+    public LayerPanel getLayerPanel(){
+        return layerPanel;
+    }
+
 }
