@@ -473,14 +473,14 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	public static void main(String[] args) {
-		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master.properties");
+		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master_test.properties");
 		mlpEngine.loadFiles();
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 10; i++) {
 			double[] fullParas = new double[]{0.5122,20.37,0.1928,45.50056,0.92191446,7.792739,1.6195029,0.6170239};
 			mlpEngine.runWithPara(fullParas);
-			List<MacroCharacter> records = mlpEngine.mlpNetwork.getSecStatRecords("det2");
-			double[] kmSpd = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
-			System.out.println(Arrays.toString(kmSpd));
+//			List<MacroCharacter> records = mlpEngine.mlpNetwork.getSecStatRecords("det2");
+//			double[] hourq = records.stream().mapToDouble(mc -> mc.flow*300).toArray();
+//			System.out.println(Arrays.toString(hourq));
 		}
 	}
 

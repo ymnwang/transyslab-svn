@@ -273,6 +273,7 @@ public class MLPNetwork extends RoadNetwork {
 							avgMode == Constants.HARMONIC_MEAN ? flow / spdRecords.stream().mapToDouble(d -> 1/d).sum() :
 									0.0;
 			spdRecords.clear();
+			flow = flow / (tTime-fTime);
 			sectionStatMap.get(sec).add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow / meanSpd, Double.NaN));
 		}
 	}
@@ -301,6 +302,7 @@ public class MLPNetwork extends RoadNetwork {
 			double meanSpd = flow<=0.0 ? 0.0 : linkLen*flow/servedTrTSum;
 			double trT = meanSpd<=0.0 ? 0.0 : linkLen / meanSpd;
 
+			flow = flow / (tTime-fTime);
 			linkStatMap.get(mlpLink).add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow/meanSpd, trT));
 		}
 	}
@@ -314,6 +316,7 @@ public class MLPNetwork extends RoadNetwork {
 				double trT = Arrays.stream(servedRecords).mapToDouble(r -> r[1]).sum()/flow;
 				double meanSpd = flow * mlpLink.length() / trT;
 				double density = flow/meanSpd;
+				flow = flow / (tTime-fTime);
 				linkStatMap.get(mlpLink).add(new MacroCharacter(flow, meanSpd, density, trT));
 			}
 			else
