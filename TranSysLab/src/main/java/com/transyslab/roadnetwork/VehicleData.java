@@ -82,8 +82,8 @@ public class VehicleData implements NetworkObject{
 		this.specialFlag_ = specialflag;
 		this.info = info;
 		this.curSpeed = vhc.getCurrentSpeed();
-		this.desNodeID = vhc.oriNode().getId();
-		this.oriNodeID = vhc.desNode().getId();
+		this.oriNodeID = vhc.oriNode().getId();
+		this.desNodeID = vhc.desNode().getId();
 		StringBuilder sb = new StringBuilder();
 		int nLinks = vhc.path.getLinks().size();
 		for(int i =0;i<vhc.path.getLinks().size();i++){

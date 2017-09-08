@@ -158,7 +158,6 @@ public class MLPNetwork extends RoadNetwork {
 	}
 	
 	public void loadEmtTable(){
-		double now = simClock.getCurrentTime();
 		for (int i = 0; i<nLinks(); i++){
 			MLPLink launchingLink = mlpLink(i);
 			while (launchingLink.checkFirstEmtTableRec()){
@@ -370,7 +369,7 @@ public class MLPNetwork extends RoadNetwork {
 		}
 	}
 
-	private void assignPath(MLPVehicle mlpVeh, MLPNode oriNode, MLPNode desNode, boolean isImported) {
+	public void assignPath(MLPVehicle mlpVeh, MLPNode oriNode, MLPNode desNode, boolean isImported) {
 		if (isImported) {
 			// todo 完善导入路径的逻辑
 			mlpVeh.fixPath();

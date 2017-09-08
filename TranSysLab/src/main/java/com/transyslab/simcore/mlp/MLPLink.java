@@ -214,6 +214,8 @@ public class MLPLink extends Link {
 		MLPVehicle newVeh = ((MLPNetwork) network).generateVeh();
 		newVeh.initInfo(veh.getId(),veh.link,veh.segment,veh.lane,veh.rvId);
 		newVeh.init(((MLPNetwork) network).getNewVehID(), MLPParameter.VEHICLE_LENGTH, veh.getDistance(), veh.getCurrentSpeed());
+		((MLPNetwork) getNetwork()).assignPath(newVeh, (MLPNode) upNode, (MLPNode) dnNode, false);
+		newVeh.fixPath();
 		MLPParameter mlpParameter = (MLPParameter) network.getSimParameter();
 		newVeh.buffer = mlpParameter.getLCBuff();
 		thisLane.substitudeVeh(veh, newVeh);

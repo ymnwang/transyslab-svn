@@ -66,7 +66,7 @@ public class Dynamics {
 		}
 		else {
 			//准备处于Link Passing的头车
-			//暂时不加限制，以后的版本此处与节点状态结合，综合考虑进入同一节点的其他link的状态给出headSpeed
+			//TODO: 暂时不加限制，以后的版本此处与节点状态结合，综合考虑进入同一节点的其他link的状态给出headSpeed
 			return sdPara[0];
 		}
 	}
