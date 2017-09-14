@@ -163,36 +163,6 @@ public class MLPParameter extends Parameter {
 		CELL_RSP_LOWER = arg;
 	}
 
-	public double[] genSolution(double[] obsParas, double xc, double kstar){//QM,VF,Kj
-		double[] XC = new double[]{xc};
-		//deltaT,VP
-		double deltaT = simStepSize;
-		tsFun.setParas(obsParas,deltaT ,PHYSICAL_SPD_LIM);
-		double tsValue = tsFun.cal(XC);
-		// µ±k = k1
-		double k1 = obsParas[0]/PHYSICAL_SPD_LIM;
-		funsCombination1.setParas(k1, obsParas[0], obsParas[1], obsParas[2], kstar);
-		funsCombination2.setParas(obsParas[1], obsParas[2], obsParas[0], kstar);
-		double k2 = (1-obsParas[0]*(tsValue+deltaT))*obsParas[2];
-		// µ±k = k2
-		funsCombination3.setParas(k2, obsParas[0], obsParas[1], obsParas[2], kstar);
-		double[] results ;
-		double[] initValue = new double[]{0.01,0.01};
-		if(kstar<k1)
-			results = de.solve(funsCombination1, new float[]{0.01f,0.01f}, new float[]{10.0f,10.0f});//BroydenMethod.solve(funsCombination1, initValue);
-		else if(k1<=kstar&&kstar<k2)
-			results = de.solve(funsCombination2, new float[]{0.01f,0.01f}, new float[]{10.0f,10.0f});
-		else if(kstar>k2)
-			results = de.solve(funsCombination3, new float[]{0.01f,0.01f}, new float[]{10.0f,10.0f});
-		else{
-			System.out.println("check kstar!");
-			results = new double[]{-1,-1};
-		}
-		double[] finalRes = new double[3];
-		finalRes[0] = tsValue;
-		System.arraycopy(results, 0, finalRes, 1, results.length);
-		return finalRes;
-	}
 	public double genSolution2(double[] obsParas, double xc){//QM,VF,Kj
 		double[] XC = new double[]{xc};
 		//deltaT,VP

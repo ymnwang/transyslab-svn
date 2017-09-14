@@ -248,7 +248,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			textRenderer.end3DRendering();*/
 		}
 		else{
-			
 			if(curFrame!=null){
 				while(!curFrame.getVhcDataQueue().isEmpty()){
 					VehicleData vd = curFrame.getVehicleData();

@@ -158,8 +158,7 @@ public class MLPEngine extends SimulationEngine{
 		String time = String.format("%.1f", now - startTime);
 
 		if (firstEntry) {
-			// This block is called only once just before the simulation gets
-			// started.
+			// This block is called only once just before the simulation gets started.
 			firstEntry = false;
 			//Network状态重设并准备发车表
 			if (!seedFixed)
@@ -473,7 +472,7 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	public static void main(String[] args) {
-		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master_test.properties");
+		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/kscalibration.properties");
 		mlpEngine.loadFiles();
 		for (int i = 0; i < 10; i++) {
 			double[] fullParas = new double[]{0.5122,20.37,0.1928,45.50056,0.92191446,7.792739,1.6195029,0.6170239};

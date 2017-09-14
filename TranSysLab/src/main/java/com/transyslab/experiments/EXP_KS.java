@@ -21,12 +21,6 @@ public class EXP_KS extends EngThread {
 	}
 
 	@Override
-	public void run() {
-		engine.loadFiles();
-		goToWork(taskCenter, false);
-	}
-
-	@Override
 	public double[] worksUnder(double[] paras) {
 
 		MLPEngine mlpEngine = (MLPEngine) engine;

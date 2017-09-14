@@ -523,7 +523,7 @@ public class MainWindow {
                 engines[0] = new MesoEngine(0,"E:\\test\\");
                 break;
             case 2:
-                engines[0] = new MLPEngine("src/main/resources/demo_neihuan/scenario2/master.properties");
+                engines[0] = new MLPEngine("src/main/resources/demo_neihuan/scenario2/kscalibration.properties");
                 break;
             default:
                 break;

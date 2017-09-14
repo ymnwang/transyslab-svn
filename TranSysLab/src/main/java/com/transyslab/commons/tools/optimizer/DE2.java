@@ -14,16 +14,16 @@ import com.transyslab.simcore.mlp.Functions.TSFun;
 
 public class DE2 extends SchedulerThread{
 
-	private float F_;
+	private double F_;
 	private Individual[] newidvds_;
 	private Individual[] idvds_;
 	private int dims_;
 	private int population_;
-	private float[] plower_;
-	private float[] pupper_;
-	private float Cr_;
-	private float gbestFitness_;
-	private float[] gbest_;
+	private double[] plower_;
+	private double[] pupper_;
+	private double Cr_;
+	private double gbestFitness_;
+	private double[] gbest_;
 	private TSFun tsFun;
 	private static double[] res_;
 	/*private QSDFun qsdFun;
@@ -44,10 +44,10 @@ public class DE2 extends SchedulerThread{
 	public int getPopulation() {
 		return population_;
 	}
-	public float[] getPosition(int i) {
+	public double[] getPosition(int i) {
 		return idvds_[i].pos_;
 	}
-	public float[] getNewPosition(int i) {
+	public double[] getNewPosition(int i) {
 		return newidvds_[i].pos_;
 	}
 	public Individual[] getIdvds() {
@@ -56,13 +56,13 @@ public class DE2 extends SchedulerThread{
 	public Individual[] getNewIdvds() {
 		return newidvds_;
 	}
-	public void initDE(int p, int dim, float f, float cr, float[] pl, float[] pu) {
+	public void initDE(int p, int dim, double f, double cr, double[] pl, double[] pu) {
 		dims_ = dim;
 		population_ = p;
 		F_ = f;
 		Cr_ = cr;
 		gbestFitness_ = Constants.FLT_INF;
-		gbest_ = new float[dims_];
+		gbest_ = new double[dims_];
 		plower_ = pl;
 		pupper_ = pu;
 		idvds_ = new Individual[population_];
@@ -94,21 +94,21 @@ public class DE2 extends SchedulerThread{
 		
 
 	}
-	public float[] getGbest() {
+	public double[] getGbest() {
 		return gbest_;
 	}
-	public float getGbestFitness() {
+	public double getGbestFitness() {
 		return gbestFitness_;
 	}
-	public void setGbestFitness(float gbf) {
+	public void setGbestFitness(double gbf) {
 		gbestFitness_ = gbf;
 	}
-	public void setGbest(float[] gbest) {
+	public void setGbest(double[] gbest) {
 		for (int i = 0; i < gbest.length; i++) {
 			gbest_[i] = gbest[i];
 		}
 	}
-	public float getFitness(int pi) {
+	public double getFitness(int pi) {
 		return idvds_[pi].fitness_;
 	}
 	public void changePos(int pi) {
@@ -188,7 +188,7 @@ public class DE2 extends SchedulerThread{
 			
 			for (int j = 0; j < population_; j++) {
 				double[] tmpResults = taskList.get(j).getOutputs();
-				float fval = (float) tmpResults[0];//fetch result
+				double fval = tmpResults[0];//fetch result
 				newidvds_[j].setFitness(fval);
 //				newidvds_[j].results[0] = tmpResults[1];
 //				newidvds_[j].results[1] = tmpResults[2];

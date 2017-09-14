@@ -43,4 +43,8 @@ public class Task {
 		canRetrieve = false;
 	}
 
+	public boolean isFinished(){
+		return canRetrieve;
+	}
+
 }

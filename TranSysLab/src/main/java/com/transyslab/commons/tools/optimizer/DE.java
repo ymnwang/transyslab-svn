@@ -21,16 +21,16 @@ import java.util.List;
  */
 public class DE extends SchedulerThread{
 
-	private float F_;
+	private double F_;
 	private Individual[] newidvds_;
 	private Individual[] idvds_;
 	private int dims_;
 	private int population_;
-	private float[] plower_;
-	private float[] pupper_;
-	private float Cr_;
-	private float gbestFitness_;
-	private float[] gbest_;
+	private double[] plower_;
+	private double[] pupper_;
+	private double Cr_;
+	private double gbestFitness_;
+	private double[] gbest_;
 	private TSFun tsFun;
 	private QSDFun qsdFun;
 	private QSDMax qsdMax;
@@ -51,10 +51,10 @@ public class DE extends SchedulerThread{
 	public int getPopulation() {
 		return population_;
 	}
-	public float[] getPosition(int i) {
+	public double[] getPosition(int i) {
 		return idvds_[i].pos_;
 	}
-	public float[] getNewPosition(int i) {
+	public double[] getNewPosition(int i) {
 		return newidvds_[i].pos_;
 	}
 	public Individual[] getIdvds() {
@@ -63,13 +63,13 @@ public class DE extends SchedulerThread{
 	public Individual[] getNewIdvds() {
 		return newidvds_;
 	}
-	public void initDE(int p, int dim, float f, float cr, float[] pl, float[] pu) {
+	public void initDE(int p, int dim, double f, double cr, double[] pl, double[] pu) {
 		dims_ = dim;
 		population_ = p;
 		F_ = f;
 		Cr_ = cr;
 		gbestFitness_ = Constants.FLT_INF;
-		gbest_ = new float[dims_];
+		gbest_ = new double[dims_];
 		plower_ = pl;
 		pupper_ = pu;
 		idvds_ = new Individual[population_];
@@ -112,21 +112,21 @@ public class DE extends SchedulerThread{
 		
 
 	}
-	public float[] getGbest() {
+	public double[] getGbest() {
 		return gbest_;
 	}
-	public float getGbestFitness() {
+	public double getGbestFitness() {
 		return gbestFitness_;
 	}
-	public void setGbestFitness(float gbf) {
+	public void setGbestFitness(double gbf) {
 		gbestFitness_ = gbf;
 	}
-	public void setGbest(float[] gbest) {
+	public void setGbest(double[] gbest) {
 		for (int i = 0; i < gbest.length; i++) {
 			gbest_[i] = gbest[i];
 		}
 	}
-	public float getFitness(int pi) {
+	public double getFitness(int pi) {
 		return idvds_[pi].fitness_;
 	}
 	public void changePos(int pi) {
@@ -223,7 +223,7 @@ public class DE extends SchedulerThread{
 		}
 		dismissAllWorkingThreads();//stop engÏß³Ì¡£
 	}
-	public double[] solve(Function fitFun, float[] plower, float[] pupper) {
+	public double[] solve(Function fitFun, double[] plower, double[] pupper) {
 		int maxGeneration = 200;
 		int pop = 30;
 		initDE(pop, plower.length, 0.5f, 0.5f, plower, pupper);
@@ -231,7 +231,7 @@ public class DE extends SchedulerThread{
 		
 		for (int i = 0; i < iterationLim; i++) {
 			for (int j = 0; j < population_; j++) {
-				float fval = (float) fitFun.cal(fitFun.translate(newidvds_[j].pos_));
+				double fval = fitFun.cal(newidvds_[j].pos_);
 				newidvds_[j].setFitness(fval);
 				selection(j);
 				if (fval<gbestFitness_) {
@@ -242,7 +242,7 @@ public class DE extends SchedulerThread{
 			}
 		}
 		
-		return fitFun.translate(gbest_);
+		return gbest_;
 	}
 
 //	public static void main(String[] args) {

@@ -14,6 +14,12 @@ public abstract class EngThread extends Thread implements TaskWorker{
 	protected TaskCenter taskCenter;
 	protected SimulationEngine engine;
 
+	@Override
+	public void run() {
+		engine.loadFiles();
+		goToWork(taskCenter, false);
+	}
+
 	public EngThread(String thread_name, TaskCenter task_center, String masterFileDir) {
 		setName(thread_name);
 		taskCenter = task_center;
