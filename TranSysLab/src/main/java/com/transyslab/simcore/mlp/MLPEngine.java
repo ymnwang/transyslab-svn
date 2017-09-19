@@ -483,6 +483,27 @@ public class MLPEngine extends SimulationEngine{
 		setParas(ob,varying);
 	}
 
+	public boolean violateConstraints(double[] fullParas) {
+		//解释观测参数
+		double Qm = fullParas[0];
+		double Vfree = fullParas[1];
+		double Kjam = fullParas[2];
+		double VPhyLim = fullParas[3];
+		//解释自由参数
+		double Xc = fullParas[4];
+		double r = fullParas[5];
+		double gamma1 = fullParas[6];
+		double gamma2 = fullParas[7];
+		//读取deltaT
+		double deltaT = getSimClock().getStepSize();
+		//计算ts
+		double ts = MLPParameter.calcTs(Xc, Vfree, Kjam, Qm, VPhyLim, deltaT);
+		return !MLPParameter.isVpFastEnough(Vfree, VPhyLim) ||
+				Xc <= MLPParameter.xcLower(Kjam, Qm, deltaT) ||
+				deltaT >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm) ||
+				MLPParameter.isRAppropiate(r,ts,Vfree,Kjam,Qm,deltaT);
+	}
+
 	public MLPParameter getSimParameter() {
 		return (MLPParameter) mlpNetwork.getSimParameter();
 	}
@@ -501,7 +522,9 @@ public class MLPEngine extends SimulationEngine{
 		return (double[]) empData;
 	}
 
-	public void runWithPara(double[] fullParas) {
+	public int runWithPara(double[] fullParas) {
+		if (violateConstraints(fullParas))
+			return Constants.STATE_ERROR_QUIT;
 		resetBeforeSimLoop();
 		setParas(fullParas);
 		run(1);//process loop only
@@ -509,7 +532,7 @@ public class MLPEngine extends SimulationEngine{
 			String statFileOut = "src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv";
 			mlpNetwork.writeStat(statFileOut);
 		}
-
+		return Constants.STATE_DONE;
 	}
 
 	@Override
