@@ -18,6 +18,7 @@ public class MLPParameter extends Parameter {
 	protected float CELL_RSP_UPPER; // 单位米，about 500 feet 91.44f
 	protected float CF_FAR;
 	protected float CF_NEAR;
+	protected double PHYSICAL_SPD_LIM;
 	private double [] SDPara_;//[0]VMax m/s; [1]VMin m/s; [2]KJam veh/m; [3]Alpha a.u.; [4]Beta a.u.;
 	private double [] LCPara_;//[0]gamma1 a.u.; [1]gamma2 a.u.;	
 	protected float[] limitingParam_; // [0] stopping gap (m); [1] moving time gap (t); [2] ?
@@ -27,7 +28,7 @@ public class MLPParameter extends Parameter {
 	final static double SEG_NEAR = 1.0;//meter
 	final static double LC_Lambda1 = 18.4204;//换道logit模型常数项
 	final static double LC_Lambda2 = -9.2102;//换道logit模型常数项
-	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
+//	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
 	/*public KSDM_Eq ksdm_Eq;
 	public QSDFun_Eq qsdFun_Eq;
 	public QSDM_Eq qsdm_Eq;*/
@@ -54,6 +55,7 @@ public class MLPParameter extends Parameter {
 		CELL_RSP_UPPER = 91.58f;
 		CF_FAR = 91.58f;
 		CF_NEAR = (float) (5.0 * lengthFactor);
+		PHYSICAL_SPD_LIM = 120/3.6; // meter/s
 		SDPara_ = new double [] {16.67, 0.0, 0.180, 1.8, 5.0};//原{16.67, 0.0, 0.180, 5.0, 1.8}{19.76, 0.0, 0.15875, 2.04, 5.35}
 		LCPara_ = new double [] {20.0, 20.0};
 		limitingParam_ = new float[3];
@@ -163,47 +165,49 @@ public class MLPParameter extends Parameter {
 		CELL_RSP_LOWER = arg;
 	}
 
-	public double genSolution2(double[] obsParas, double xc){//QM,VF,Kj
-		double[] XC = new double[]{xc};
-		//deltaT,VP
-		double deltaT = simStepSize;
-		tsFun.setParas(obsParas,deltaT ,PHYSICAL_SPD_LIM);
-		double tsValue = tsFun.cal(XC);
-		return tsValue;
-	}
-	public boolean constraints(double[] paras) {
-		double Qm = paras[0];
-		double Vf = paras[1];
-		double Kj = paras[2];
-		
-		double ts = paras[3];
-		double xc = paras[4];
-		double alpha =paras[5];
-		double beta = paras[6];
-		double gamma1 = paras[7];
-		double gamma2 = paras[8];
-		
-		double delta_t = simStepSize;
-		double leff = 1/Kj;
-		double Vp = PHYSICAL_SPD_LIM;
-		boolean check1 = false;
-		check1 |= (ts==1/Qm - leff/Vf - delta_t && xc<=Vf/Qm) || //condition 1
-						 (xc==leff/(1-Qm*(delta_t+ts)) && ts < 1/Qm-delta_t
-								 										  && ts < (Vf-Qm*leff)/Qm/Vf-delta_t
-								 										  && ts <= (Vp-Qm*leff)/Qm/Vp
-								 										  && Vp-Qm*leff>0) || //condition 2
-						 (ts==1/Qm-leff/Vp-delta_t && xc>Vp*(delta_t+ts)+leff); //condition 3
-		
-		boolean check2;
-		double xb = Vp*(delta_t+ts)+leff, Qb = Vp/xb;
-		double Km_star = Kj/Math.pow(1+alpha*beta, 1/alpha); 
-		double Qm_star = Km_star * Vf * Math.pow(1-Math.pow(Km_star/Kj, alpha), beta);
-		//double root = solve((1/x-leff)/(delta_t+ts)==Vf*(1-(x/Kj)^alpha)^beta);//非线性方程，要造轮子才能解；暂时不考虑这个条件
-		check2 =  Qb/(Kj-1/xb)>Qm_star/(Kj-Km_star) ? Qm==Qm_star : true; //Qm==root*(1/root-leff)/(delta_t+ts);
-		return check1 && check2;
-	}
-
 	public void setSimStepSize(double arg) {
 		simStepSize = arg;
+	}
+
+	public void setPhyLim(double arg) {
+		PHYSICAL_SPD_LIM = arg;
+	}
+
+	public static double xcLower(double kj, double qm, double deltat) {
+		//xc取值需要大于此值(开区间
+		return 1.0/kj/(1-qm*deltat);
+	}
+
+	public static double deltaTUpper(double vf, double kj, double qm) {
+		//deltaT取值需要小于此值（开区间
+		return 1.0/qm - 1.0/vf/kj;
+	}
+
+	public static boolean isVpFastEnough(double vf, double vp) {
+		return vp>vf;
+	}
+
+	public static boolean isRAppropiate(double r, double ts, double vf, double kj, double qm, double deltaT) {
+		double alpha = calcAlpha(r, vf, kj, qm);
+		return (alpha > 0 &&
+				Math.pow(1+r, 1.0/alpha) > 1.0/(1-qm*(ts+deltaT)));
+	}
+
+	public static double calcTs(double Xc, double vf, double kj, double qm, double vp, double deltaT) {
+		double x1 = vf / qm;
+		double x2 = vp / qm;
+
+		if (Xc<x1) {
+			return 1/qm - 1/vf/kj - deltaT;
+		}
+		else if (Xc<x2) {
+			return 1/qm - 1/qm/kj/Xc - deltaT;
+		}
+		else
+			return 1/qm - 1/vp/kj - deltaT;
+	}
+
+	public static double calcAlpha(double r, double vf, double kj, double qm) {
+		return (r*Math.log(r)-(r-1)*Math.log(r+1)) / Math.log(qm/kj/vf);
 	}
 }

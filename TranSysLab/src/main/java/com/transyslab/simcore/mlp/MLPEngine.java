@@ -1,11 +1,11 @@
 package com.transyslab.simcore.mlp;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
+import com.jogamp.opengl.math.VectorUtil;
 import com.transyslab.commons.io.XmlParser;
+import com.transyslab.commons.tools.TimeMeasureUtil;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -17,6 +17,7 @@ import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
+import org.lsmp.djep.jama.JamaUtil;
 
 
 public class MLPEngine extends SimulationEngine{
@@ -227,7 +228,6 @@ public class MLPEngine extends SimulationEngine{
 				mlpNetwork.platoonRecognize();
 				LCDTime_ = now + ((MLPParameter) mlpNetwork.getSimParameter()).LCDStepSize_;
 			}
-			//运动计算、节点服务(暂缺)、写入发车表（暂缺）
 			//车辆速度计算
 			for (int i = 0; i < mlpNetwork.nLinks(); i++){
 				mlpNetwork.mlpLink(i).move();
@@ -347,7 +347,7 @@ public class MLPEngine extends SimulationEngine{
 		mlpNetwork.calcStaticInfo();
 		// 读入检测器数据
 		XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorDir"));
-		// 解释输出变量
+		// 解释路网输出变量
 		mlpNetwork.initLinkStatMap(runProperties.get("statLinkIds"));
 		mlpNetwork.initSectionStatMap(runProperties.get("statDetNames"));
 		return 0;
@@ -365,20 +365,46 @@ public class MLPEngine extends SimulationEngine{
 		statTime_ = now + getSimParameter().statWarmUp + getSimParameter().statStepSize; //第一次统计时刻为：现在时间+warmUp+统计间隔
 	}
 
-	public void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam]
-		if (ob_paras.length != 3) {
-			System.err.println("length does not match");
+	public void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam, VPhyLim]
+		if (ob_paras.length != 4) {
+			System.err.println("ob_paras' length does not match");
 			return;
 		}
-		mlpNetwork.setOverallCapacity(ob_paras[0]);//路段单车道每秒通行能力
+
+		//解释
+		double Qm = ob_paras[0];
+		double Vfree = ob_paras[1];
+		double Kjam = ob_paras[2];
+		double VPhyLim = ob_paras[3];
+
+		//检测运行参数设置
+		if (getSimClock().getStepSize() >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm)) {
+			System.err.println("step size of simClock is too big.");
+			return;
+		}
+		if (!MLPParameter.isVpFastEnough(Vfree, VPhyLim)) {
+			System.err.println("VPhyLim should be bigger than VFree");
+			return;
+		}
+
+		MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
+
+		//设置通行能力，包括parameter中的capacity
+		allParas.capacity = Qm;
+		mlpNetwork.setOverallCapacity(Qm);//路段单车道每秒通行能力
+
+		//路段速密函数
 		int mask = 0;
 		mask |= 1<<(1-1);//Vmax
 		mask |= 1<<(3-1);//Kjam
-		mlpNetwork.setOverallSDParas(new double[] {ob_paras[1], ob_paras[2]}, mask);
+		mlpNetwork.setOverallSDParas(new double[] {Vfree, Kjam}, mask);
+
 		//根据Kjam 保持 leff 与 CF_near 的一致性
-		MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
-		allParas.limitingParam_[0] = (float) (1.0/ob_paras[2] - allParas.VEHICLE_LENGTH);
+		allParas.limitingParam_[0] = (float) (1.0/Kjam - MLPParameter.VEHICLE_LENGTH);
 		allParas.CF_NEAR = allParas.limitingParam_[0];//锁定与kjam吻合
+
+		//设置物理限速
+		allParas.setPhyLim(VPhyLim);
 	}
 
 	public void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
@@ -396,16 +422,52 @@ public class MLPEngine extends SimulationEngine{
 		allParas.setLCPara(new double[] {optparas[4], optparas[5]});//gamma1 gamma2
 	}
 
-	public void setParas(double[] ob_paras, double[] varying_paras) {//varying_paras [0]xc, [1]alpha, [2]beta, [3]gamma1, [4]gamma2.
-		if (ob_paras.length != 3 || varying_paras.length != 5) {
-			System.err.println("length does not match");
+	public void setParas(double[] ob_paras, double[] varying_paras) {//varying_paras [0]Xc, [1]r(i.e. alpha*beta), [2]gamma1, [3]gamma2.
+		//长度检查
+		if (ob_paras.length != 4 || varying_paras.length != 4) {
+			System.err.println("parameters' length does not match");
 			return;
 		}
+
+		//解释观测参数
+		double Qm = ob_paras[0];
+		double Vfree = ob_paras[1];
+		double Kjam = ob_paras[2];
+		double VPhyLim = ob_paras[3];
+		//解释自由参数
+		double Xc = varying_paras[0];
+		double r = varying_paras[1];
+		double gamma1 = varying_paras[2];
+		double gamma2 = varying_paras[3];
+
 		setObservedParas(ob_paras);
-		double ts = getSimParameter().genSolution2(ob_paras, varying_paras[0]);
-		double[] opt_paras = new double[6];
-		opt_paras[0] = ts;
-		System.arraycopy(varying_paras,0,opt_paras,1,5);
+
+		//检测Xc取值
+		if (Xc <= MLPParameter.xcLower(Kjam, Qm, getSimClock().getStepSize())) {
+			System.err.println("Xc out of lower boundary");
+			return;
+		}
+
+		//读取deltaT
+		double deltaT = getSimClock().getStepSize();
+
+		//计算安全车头时距
+		double ts = MLPParameter.calcTs(Xc, Vfree, Kjam, Qm, VPhyLim, deltaT);
+
+		//检查r取值
+		if (!MLPParameter.isRAppropiate(r, ts, Vfree, Kjam, Qm, deltaT)) {
+			System.err.println("check r constraints");
+			return;
+		}
+
+		//计算alpha, beta
+		double alpha = MLPParameter.calcAlpha(r, Vfree, Kjam, Qm);
+		double beta = r / alpha;
+
+		//组织opt_paras
+		//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
+		double[] opt_paras = new double[] {ts, Xc, alpha, beta, gamma1, gamma2};
+
 		setOptParas(opt_paras);
 	}
 
@@ -455,7 +517,9 @@ public class MLPEngine extends SimulationEngine{
 		switch (mode) {
 			case 0:
 				resetBeforeSimLoop();
-				setParas(MLPParameter.DEFAULT_PARAMETERS);
+//				setParas(MLPParameter.DEFAULT_PARAMETERS);
+				displayOn = true;//强制开启可视化
+				setParas(new double[]{0.4633, 21.795, 0.1765, 27.37635840605779, 3.245148785533793, 4.129324499673052, 1.4263960023720346, 0.40766505489832405});
 				while (simulationLoop() >= 0);
 				break;
 			case 1:
@@ -469,18 +533,6 @@ public class MLPEngine extends SimulationEngine{
 	@Override
 	public MLPNetwork getNetwork() {
 		return mlpNetwork;
-	}
-
-	public static void main(String[] args) {
-		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/kscalibration.properties");
-		mlpEngine.loadFiles();
-		for (int i = 0; i < 10; i++) {
-			double[] fullParas = new double[]{0.5122,20.37,0.1928,45.50056,0.92191446,7.792739,1.6195029,0.6170239};
-			mlpEngine.runWithPara(fullParas);
-//			List<MacroCharacter> records = mlpEngine.mlpNetwork.getSecStatRecords("det2");
-//			double[] hourq = records.stream().mapToDouble(mc -> mc.flow*300).toArray();
-//			System.out.println(Arrays.toString(hourq));
-		}
 	}
 
 }
