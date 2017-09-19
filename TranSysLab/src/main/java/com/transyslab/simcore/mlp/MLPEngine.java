@@ -476,10 +476,10 @@ public class MLPEngine extends SimulationEngine{
 			System.err.println("length does not match");
 			return;
 		}
-		double[] ob = new double[3];
-		double[] varying = new double[5];
-		System.arraycopy(fullParas,0,ob,0,3);
-		System.arraycopy(fullParas,3,varying,0,5);
+		double[] ob = new double[4];
+		double[] varying = new double[4];
+		System.arraycopy(fullParas,0,ob,0,4);
+		System.arraycopy(fullParas,4,varying,0,4);
 		setParas(ob,varying);
 	}
 
