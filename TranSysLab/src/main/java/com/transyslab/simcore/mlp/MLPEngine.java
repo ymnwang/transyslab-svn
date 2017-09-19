@@ -501,7 +501,7 @@ public class MLPEngine extends SimulationEngine{
 		return !MLPParameter.isVpFastEnough(Vfree, VPhyLim) ||
 				Xc <= MLPParameter.xcLower(Kjam, Qm, deltaT) ||
 				deltaT >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm) ||
-				MLPParameter.isRAppropiate(r,ts,Vfree,Kjam,Qm,deltaT);
+				!MLPParameter.isRAppropiate(r,ts,Vfree,Kjam,Qm,deltaT);
 	}
 
 	public MLPParameter getSimParameter() {
