@@ -4,8 +4,10 @@ import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
+import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.EngThread;
 import com.transyslab.simcore.mlp.MLPEngine;
+import com.transyslab.simcore.mlp.MLPParameter;
 import com.transyslab.simcore.mlp.MacroCharacter;
 
 import java.util.ArrayList;
@@ -28,22 +30,24 @@ public class DERepeatedSim {
 	public static void main(String[] args) {
 		TaskCenter taskCenter = new TaskCenter();
 		int pop = 20;
-		int repeatedTimes = 5;
-		double[] plower = new double[]{5.7787,0.1,0.1,0.00,0.00};
-		double[] pupper = new double[]{65.0787,10,10,10.00,10.00};//,180.0f,25,40,100};
+		int repeatedTimes = 1;
+		double kjam = 0.1765, qmax = 0.4633, vfree = 21.7950,deltat = 0.2;
+		double xcLower = MLPParameter.xcLower(kjam, qmax,deltat);
+		double[] plower = new double[]{xcLower+0.00001,1e-4,0.0,0.0};
+		double[] pupper = new double[]{100.0, 0.99, 10.0, 10.0};//,180.0f,25,40,100};
 		//Gbest : 0.10734763
 		//Position : 15.475985 0.15889278 1.546905 6.5494165 29.030441 91.544785
 		//Gbest : 0.10625457
 		//Position : 15.993167 0.15445936 1.5821557 6.34795 33.02263 93.043655
 		DERepeatedSim exp = new DERepeatedSim();
-		exp.de.init(pop, plower.length, 0.7f, 0.5f, plower, pupper);
-		exp.de.setMaxItrGeneration(200);
+		exp.de.init(pop, plower.length,200,0.7f, 0.5f, plower, pupper);
 		new SchedulerThread("ThreadManager", taskCenter) {
 			@Override
 			public void run() {
 				exp.run(this);
 				dismissAllWorkingThreads();//stop eng线程。
 			}
+
 		}.start();
 		for (int i = 0; i < pop; i++) {
 			new EngThread("Eng" + i, taskCenter, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties") {
@@ -53,7 +57,9 @@ public class DERepeatedSim {
 					double[][] simSpeeds = new double[repeatedTimes ][];
 					for(int i = 0;i<repeatedTimes;i++){
 						//仿真过程
-						mlpEngine.runWithPara(paras);
+						if(mlpEngine.runWithPara(paras) == Constants.STATE_ERROR_QUIT){
+							return new double[]{Double.MAX_VALUE};
+						}
 
 						//获取特定结果
 						List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
@@ -82,8 +88,8 @@ public class DERepeatedSim {
 		for (int i = 0; i < de.getMaxItrGeneration(); i++) {
 			long tb = System.currentTimeMillis();
 			for (int j = 0; j < de.getPopulation(); j++) {
-				double[] parameters = new double[]{0.4633,21.7950,0.1765, 0.0, 0.0, 0.0, 0.0, 0.0};
-				System.arraycopy(de.getNewPosition(j),0,parameters,3,de.getDim());
+				double[] parameters = new double[]{0.4633,21.7950,0.1765, 120.0/3.6,0.0, 0.0, 0.0, 0.0};//[Qm, Vfree, Kjam, VPhyLim]
+				System.arraycopy(de.getNewPosition(j),0,parameters,4,de.getDim());
 				taskList.add(manager.dispatch(parameters, TaskWorker.ANY_WORKER));
 			}
 			for (int j = 0; j < de.getPopulation(); j++) {
@@ -91,8 +97,10 @@ public class DERepeatedSim {
 				de.evoluteIndividual(j,tmpResults[0]);
 			}
 			double[] bestResult = taskList.get(de.getBestIdvdIndex()).getOutputs();
-			if(bestSpeed !=null)
+			if(bestSpeed == null)
 				bestSpeed = new double[bestResult.length - 1];
+			if(bestResult.length==1)
+				System.out.println("");
 			System.arraycopy(bestResult,1,bestSpeed,0,bestSpeed.length);
 			System.out.println("Gbest : " + de.getGbestFitness());
 			System.out.println("Position : " + de.showGBestPos());

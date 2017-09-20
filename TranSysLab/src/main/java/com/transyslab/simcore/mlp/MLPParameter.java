@@ -47,7 +47,7 @@ public class MLPParameter extends Parameter {
 		SegLenBuff_ = 10.0;
 		LCBuffTime_ = 2.0;
 		updateStepSize_ = 10.0;
-		LCDStepSize_ = 0.0;//2.0
+		LCDStepSize_ = 2.0;//2.0
 		statStepSize = 300.0;//默认5分钟进行统计；引擎初始化时读取master文件会覆盖这个值。
 		statWarmUp = 300.0;//默认5分钟进行预热；引擎初始化时读取master文件会覆盖这个值。
 		capacity = 0.5;//default 0.5

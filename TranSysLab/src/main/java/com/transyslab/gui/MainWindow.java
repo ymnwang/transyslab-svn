@@ -214,7 +214,7 @@ public class MainWindow {
             button1.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    subWindow.windowFrame.setVisible(true);
+                    subWindow.showPanel("project");
                 }
             });
             toolBar1.add(button1);
@@ -345,29 +345,7 @@ public class MainWindow {
             button9.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    //TODO 硬写未设计
-                    needRTPlot = true;
-                    new Thread(new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
-                            String sql = "select C,round(S/C*2*5*3) as hourfolw,meanspeed, D from (select count(\"FLOW\") AS C,sum(\"FLOW\") AS S,sum(\"FLOW\"*\"SPEED\")/(sum(\"FLOW\")+0.0000001) as meanspeed, floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300 AS D from nhschema.\"Loop\"  where \"CPN\" = 'LP/A24' "
-                                    + "   and (extract(epoch from \"CTIME\")>=extract(epoch from timestamp without time zone '2016-06-20 07:55:00')) and (extract(epoch from \"CTIME\")<=extract(epoch from timestamp without time zone '2016-06-20 09:50:00'))"
-                                    + " group by floor((extract(epoch from \"CTIME\")-extract(epoch from timestamp without time zone '2016-06-20 07:55:00'))/300)*300) as derivedtable order by D";
-                            try {
-                                java.util.List result = (java.util.List) qr.query(sql, new ColumnListHandler(3));
-                                traceRT = new Trace2DSimple("仿真车速");
-
-                                DataVisualization.realTimePlot(traceRT, null, result);
-                                //System.out.println("");
-                            } catch (SQLException e1) {
-                                // TODO Auto-generated catch block
-                                e1.printStackTrace();
-                            }
-                        }
-                    }).start();
+                    subWindow.showPanel("calibration");
                 }
             });
             toolBar1.add(button9);
@@ -534,6 +512,19 @@ public class MainWindow {
         canvas.setFirstRender(true);
         canvas.setDrawableNetwork(engines[0].getNetwork());
         canvas.requestFocusInWindow();
+    }
+    public void launchEngineWithParas(double[] paras){
+        switch (AppSetup.modelType) {
+            case 1:
+                //TODO 待设计传入参数运行
+                ((MesoEngine)engines[0]).run(0);
+                break;
+            case 2:
+                ((MLPEngine)engines[0]).runWithPara(paras);
+                break;
+            default:
+                break;
+        }
     }
     public String getCurLayerName(){
         return curLayerName;

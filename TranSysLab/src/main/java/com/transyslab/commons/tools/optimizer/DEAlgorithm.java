@@ -66,16 +66,17 @@ public class DEAlgorithm {
 		return newidvds[i].pos;
 	}
 
-	public void init(int p, int dim, double f, double cr, double[] pl, double[] pu) {
-		dims = dim;
-		population = p;
-		F = f;
-		Cr = cr;
-		gbest = new double[dims];
-		plower = pl;
-		pupper = pu;
-		idvds = new Individual[population];
-		newidvds = new Individual[population];
+	public void init(int p, int dim, int maxItrGeneration,double f, double cr, double[] pl, double[] pu) {
+		this.maxItrGeneration = maxItrGeneration;
+		this.dims = dim;
+		this.population = p;
+		this.F = f;
+		this.Cr = cr;
+		this.gbest = new double[dims];
+		this.plower = pl;
+		this.pupper = pu;
+		this.idvds = new Individual[population];
+		this.newidvds = new Individual[population];
 		for (int i = 0; i < p; i++) {
 			idvds[i] = new Individual(dim, this.isMaximum);
 			newidvds[i] = new Individual(dim, this.isMaximum);
@@ -127,6 +128,8 @@ public class DEAlgorithm {
 	public void evoluteIndividual(int pi, double fitness){
 		newidvds[pi].fitness = fitness;
 		selection(pi);
+		if(fitness==Double.MAX_VALUE)
+			System.out.print("");
 		if (newidvds[pi].fitness< gbestFitness) {
 			setGbest(newidvds[pi].pos);
 			setGbestFitness(newidvds[pi].fitness);

@@ -2,6 +2,7 @@ package com.transyslab.gui;
 
 import com.transyslab.commons.io.FileUtils;
 import com.transyslab.simcore.AppSetup;
+import com.transyslab.simcore.SimulationEngine;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -19,10 +20,12 @@ import java.time.LocalDateTime;
  * Created by yali on 2017/8/27.
  */
 public class SubWindow {
-    public JFrame windowFrame;
+    private JFrame windowFrame;
     private ProjectPanel projectPanel;
     private CasePanel casePanel;
+    private ClbrtPanel clbrtPanel;
     private CardLayout cardLayout;
+    // TODO 单例
     private MainWindow mainWindow;
     //private Map<String,JPanel> panels;
     public SubWindow(){
@@ -31,22 +34,43 @@ public class SubWindow {
     public void setMainWindow(MainWindow window){
         mainWindow = window;
     }
+    public void showPanel(String panelName){
+        this.cardLayout.show(this.windowFrame.getContentPane(),panelName);
+        this.windowFrame.setVisible(true);
+        switch (panelName){
+            case "project":
+                this.windowFrame.setTitle("\u65b0\u5efa\u9879\u76ee");
+                break;
+            case "case":
+                this.windowFrame.setTitle("\u65b0\u5efa\u9879\u76ee");
+                break;
+            case "calibration":
+                this.windowFrame.setTitle("\u6a21\u578b\u53c2\u6570\u8bbe\u7f6e");
+                break;
+            default:
+                break;
+        }
+
+
+    }
     private void initComponets(){
 
         windowFrame = new JFrame();
         projectPanel = new ProjectPanel();
         casePanel = new CasePanel();
+        clbrtPanel = new ClbrtPanel();
         cardLayout = new CardLayout();
         //======== panel name ========
         //panels.put(panelNames[0],projectPanel);
         //panels.put(panelNames[1],casePanel);
         //======== windowFrame ========
-        windowFrame.setTitle("\u65b0\u5efa\u9879\u76ee");
+        //标题字体
         windowFrame.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
         Container contentPane = windowFrame.getContentPane();
         contentPane.setLayout(cardLayout);
         contentPane.add(projectPanel,"project");
         contentPane.add(casePanel,"case");
+        contentPane.add(clbrtPanel,"calibration");
         windowFrame.pack();
         windowFrame.setLocationRelativeTo(windowFrame.getOwner());
     }
@@ -351,8 +375,7 @@ public class SubWindow {
                         //				if(checkTextFields()){
                         //隐藏窗口
                         windowFrame.setVisible(false);
-                        //恢复到新建项目窗口
-                        cardLayout.show(windowFrame.getContentPane(),"project");
+
                         //读入面板设置的参数
                         Configurations configs = new Configurations();
 
@@ -421,6 +444,13 @@ public class SubWindow {
                 //---- 按键：取消 ----
                 button4.setText("\u53d6\u6d88");
                 button4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
+                button4.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearTextFields();
+                        windowFrame.setVisible(false);
+                    }
+                });
                 panel1.add(button4, new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0,
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 0, 0, 0), 0, 0));
@@ -442,7 +472,106 @@ public class SubWindow {
                 text.setText("");
             }
         }
+    }
+    public class ClbrtPanel extends JPanel{
+
+        private JTextField textField1;//运动参数
+        private JTextField textField2;//随机种子
+        public ClbrtPanel() {
+            initComponents();
+        }
+        private void initComponents() {
+
+            JLabel label1 = new JLabel();
+            textField1 = new JTextField();
+            JLabel label2 = new JLabel();
+            textField2 = new JTextField();
+            JPanel panel2 = new JPanel();
+            JButton button4 = new JButton();
+            JButton button5 = new JButton();
+
+            //======== this ========
+
+            setMinimumSize(new Dimension(306, 381));
+            setPreferredSize(new Dimension(306, 381));
+
+            setLayout(new GridBagLayout());
+            ((GridBagLayout)getLayout()).columnWidths = new int[] {15, 91, 63, 56, 63, 25, 0};
+            ((GridBagLayout)getLayout()).rowHeights = new int[] {45, 35, 32, 35, 32, 35, 32, 35, 35, 32, 30, 0};
+            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
 
+            //---- label1 ----
+            label1.setText("\u8fd0\u52a8\u53c2\u6570\uff1a");
+            label1.setHorizontalAlignment(SwingConstants.CENTER);
+            label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 16));
+            add(label1, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
+            add(textField1, new GridBagConstraints(2, 2, 3, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
+
+            //---- label2 ----
+            label2.setText("\u968f\u673a\u79cd\u5b50\uff1a");
+            label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 16));
+            label2.setHorizontalAlignment(SwingConstants.CENTER);
+            add(label2, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
+            add(textField2, new GridBagConstraints(2, 4, 3, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
+
+            //======== panel2 ========
+            {
+                panel2.setLayout(new GridBagLayout());
+                ((GridBagLayout)panel2.getLayout()).columnWidths = new int[] {15, 71, 31, 68, 0};
+                ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {27, 0};
+                ((GridBagLayout)panel2.getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 0.0, 1.0E-4};
+                ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
+
+                //---- 确认参数 ----
+                button4.setText("\u786e\u5b9a");
+                button4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
+                button4.setMargin(new Insets(2, 8, 2, 8));
+                panel2.add(button4, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 0, 0, 5), 0, 0));
+                button4.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        windowFrame.setVisible(false);
+                        //TODO 解析文本
+
+                        //TODO 参数传入engine
+                        mainWindow.launchEngineWithParas(null);
+
+                        //清空填写内容
+                        textField1.setText("");
+                        textField2.setText("");
+                    }
+                });
+
+                //---- 取消退出 ----
+                button5.setText("\u53d6\u6d88");
+                button5.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
+                button5.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        windowFrame.setVisible(false);
+                        textField2.setText("");
+                        textField1.setText("");
+                    }
+                });
+                panel2.add(button5, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 0, 0, 0), 0, 0));
+            }
+            add(panel2, new GridBagConstraints(2, 9, 3, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
+        }
     }
 }

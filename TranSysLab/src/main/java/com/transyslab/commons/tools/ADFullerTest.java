@@ -1,168 +1,137 @@
 package com.transyslab.commons.tools;
 
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+import jhplot.math.DoubleArray;
 
+import java.util.HashMap;
+
+/**
+ * Created by yali on 2017/9/14.
+ */
 public class ADFullerTest {
-
-	private double[] ts;
-	private int lag;
-	private boolean needsDiff = true;
-	private double[] zeroPaddedDiff;
-
-	private double PVALUE_THRESHOLD = -3.45;
-	
-	/**
-	 * Uses the Augmented Dickey Fuller test to determine
-	 * if ts is a stationary time series
-	 * @param ts
-	 * @param lag
-	 */
-	public ADFullerTest(double[] ts, int lag) {
-		this.ts = ts;
-		this.lag = lag;
-		computeADFStatistics();
+	private double pValue;
+	private String autoLag;
+	private int maxLag;
+	private double[] timeSeries;
+	private final HashMap<String, Integer> regression = new HashMap<>();
+	public enum RegressionModel{
+		NC, C, CT, CTT
 	}
-	
-	/**
-	 * Uses the Augmented Dickey Fuller test to determine
-	 * if ts is a stationary time series
-	 * @param ts
-	 */
-	public ADFullerTest(double[] ts) {
-		this.ts = ts;
-		this.lag = (int) Math.floor(Math.cbrt((ts.length - 1)));
-		computeADFStatistics();
-	}
-	
-	private void computeADFStatistics() {
-		double[] y = diff(ts);
-		RealMatrix designMatrix = null;
-		int k = lag+1;
-		int n = ts.length - 1;
-		
-		RealMatrix z = MatrixUtils.createRealMatrix(laggedMatrix(y, k)); //has rows length(ts) - 1 - k + 1
-		RealVector zcol1 = z.getColumnVector(0); //has length length(ts) - 1 - k + 1
-		double[] xt1 = subsetArray(ts, k-1, n-1);  //ts[k:(length(ts) - 1)], has length length(ts) - 1 - k + 1
-		double[] trend = sequence(k,n); //trend k:n, has length length(ts) - 1 - k + 1
-		if (k > 1) {
-			RealMatrix yt1 = z.getSubMatrix(0, ts.length - 1 - k, 1, k-1); //same as z but skips first column
-			//build design matrix as cbind(xt1, 1, trend, yt1)
-			designMatrix = MatrixUtils.createRealMatrix(ts.length - 1 - k + 1, 3 + k - 1);
-			designMatrix.setColumn(0, xt1);
-			designMatrix.setColumn(1, ones(ts.length - 1 - k + 1));
-			designMatrix.setColumn(2, trend);
-			designMatrix.setSubMatrix(yt1.getData(), 0, 3);
-			
-		} else {
-			//build design matrix as cbind(xt1, 1, tt)
-			designMatrix = MatrixUtils.createRealMatrix(ts.length - 1 - k + 1, 3);
-			designMatrix.setColumn(0, xt1);
-			designMatrix.setColumn(1, ones(ts.length - 1 - k + 1));
-			designMatrix.setColumn(2, trend);
+	/*
+	public ADFullerTestPy(double[] timeSeries){
+		this.timeSeries = new double[timeSeries.length];
+		System.arraycopy(timeSeries, 0, this.timeSeries, 0, timeSeries.length);
+	}*/
+	public static boolean stationaryTest(double[] timeSeries){
+		int nObs = timeSeries.length;
+		double[] cpTimeSeries = new double[nObs];
+		System.arraycopy(timeSeries, 0, cpTimeSeries, 0, nObs);
+		// 1. 选择regressionmodel，检查是否在集合内
+		// 2. Maximum lag which is included in test, default 12*(nobs/100)^{1/4}
+		// 3. 一阶差分
+		int maxLag = (int) Math.ceil(12 * Math.pow(nObs/100.0, 1/4.0));
+		double[] tsDiff = seriesDiff(cpTimeSeries, 1);
+		int nTsDiff = tsDiff.length;
+		double[][] tsAll = lagMatrix(tsDiff,maxLag,"both");
+		int tmpObs = nObs;
+		nObs = tsAll.length;
+		for(int i=0;i<nObs;i++){
+			tsAll[i][0] = timeSeries[(tmpObs-nObs-1) + i];
 		}
-		/*OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
-		regression.setNoIntercept(true);
-		regression.newSampleData(zcol1.toArray(), designMatrix.getData());
-		double[] beta = regression.estimateRegressionParameters();
-		double[] sd = regression.estimateRegressionParametersStandardErrors();
-		*/
-		RidgeRegression regression = new RidgeRegression(designMatrix.getData(), zcol1.toArray());
-		regression.updateCoefficients(.0001);
-		double[] beta = regression.getCoefficients();
-		double[] sd = regression.getStandarderrors();
-		
-		double t = beta[0] / sd[0];
-		if (t <= PVALUE_THRESHOLD) {
-			this.needsDiff = true;
-		} else {
-			this.needsDiff = false;
-		}	
-	}
-	
-	/**
-	 * Takes finite differences of x
-	 * @param x
-	 * @return Returns an array of length x.length-1 of
-	 * the first differences of x
-	 */
-	private double[] diff(double[] x) {
-      double[] diff = new double[x.length - 1];
-      double[] zeroPaddedDiff = new double[x.length];
-      zeroPaddedDiff[0] = 0;
-      for (int i = 0; i < diff.length; i++) {
-    	      double diff_i = x[i+1] - x[i];
-    	      diff[i] = diff_i;
-    	      zeroPaddedDiff[i+1] = diff_i;
-      }
-      this.zeroPaddedDiff = zeroPaddedDiff;
-      return diff;
-	}
-	
-	/**
-	 * Equivalent to matlab and python ones
-	 * @param n
-	 * @return an array of doubles of length n that are
-	 * initialized to 1
-	 */
-	private double[] ones(int n) {
-		double[] ones = new double[n];
-		for (int i = 0; i < n; i++) {
-			ones[i] = 1;
+		double[] tsShort = new double[nObs];
+		for(int i=0;i<nObs;i++){
+			tsShort[i] = tsDiff[(nTsDiff-nObs)+i];
 		}
-		return ones;
+		// if autolag = 'AIC','BIC',''...
+		// if regression != 'nc'
+
+		// else
+		return false;
+
 	}
-	
-	/**
-	 * Equivalent to R's embed function
-	 * @param x time series vector
-	 * @param lag number of lags, where lag=1 is the same as no lags
-	 * @return a matrix that has x.length - lag + 1 rows by lag columns.
-	 */
-	private double[][] laggedMatrix(double[]x, int lag) {
-		double[][] laggedMatrix = new double[x.length - lag + 1][lag];
-		for (int j = 0; j < lag; j++) { //loop through columns
-			for (int i = 0; i < laggedMatrix.length; i++) {
-				laggedMatrix[i][j] = x[lag - j - 1 + i];
+	public static double[] seriesDiff(double[] x, int nOrder){
+		double[] result;
+		if(nOrder == 0){
+			result = new double[x.length];
+			System.arraycopy(x, 0, result, 0, x.length);
+			return result;
+		}
+		if(nOrder < 0)
+			System.out.println("order must be non-negative but got" + String.valueOf(nOrder));
+		result = new double[x.length-1];
+		// 被减数的索引从0至length-2
+		System.arraycopy(x, 0, result, 0, x.length -1);
+		for(int i=0; i < x.length-1; i++){
+			result[i] = x[i+1] - result[i];
+		}
+		if(nOrder > 1)
+			return seriesDiff(result, nOrder-1);
+		else
+			return result;
+	}
+	public static double[][] lagMatrix(double[] x, int maxLag, String trim){
+		int nObs = x.length;
+		// 只有一个变量
+		int nVar = 1;
+		if(maxLag >= nObs)
+			System.out.println("maxlag should be < nobs");
+		// lagmatrix
+		double[][] lm = new double[nObs+maxLag][nVar*(maxLag+1)];
+		/*double[] cpx = new double[nObs];
+		System.arraycopy(x, 0, cpx, 0, nObs);*/
+		for(int j=0;j<nVar*(maxLag+1);j++){
+			for(int i=j;i<nObs+j;i++){
+				lm[i][j] = x[i];
 			}
 		}
-		return laggedMatrix;
-	}
-	
-	/**
-	 * Takes x[start] through x[end - 1]
-	 * @param x
-	 * @param start
-	 * @param end
-	 * @return
-	 */
-	private double[] subsetArray(double[] x, int start, int end) {
-		double[] subset = new double[end - start + 1];
-		System.arraycopy(x, start, subset, 0, end - start + 1);
-		return subset;
-	}
-	
-	/**
-	 * Generates a sequence of ints [start, end]
-	 * @param start
-	 * @param end
-	 * @return
-	 */
-	private double[] sequence(int start, int end) {
-		double[] sequence = new double[end - start + 1];
-		for (int i = start; i <= end; i++) {
-			sequence[i - start] = i;
+		int startObs,stopObs;
+		switch (trim) {
+			case "none":
+				startObs = 0;
+				stopObs = nObs+maxLag;
+				break;
+			case "forward":
+				startObs = 0;
+				stopObs = nObs;
+				break;
+			case "both":
+				startObs = maxLag;
+				stopObs = nObs;
+				break;
+			case "backward":
+				startObs = maxLag;
+				stopObs = nObs+maxLag;
+				break;
+			default:
+				System.out.println("trim option not valid");
+				return null;
 		}
-		return sequence;
+		double[][] lmResult = new double[stopObs - startObs][nVar*(maxLag+1)];
+		for(int j=0;j<nVar*(maxLag+1);j++){
+			for(int i=startObs;i<stopObs-startObs;i++){
+				lmResult[i-startObs][j] = lm[i][j];
+			}
+		}
+		return lmResult;
 	}
-	
-	public boolean isNeedsDiff() {
-		return needsDiff;
+	public double[][] addTrend(double[][] x, String regression, String trend/*prepend = true*/){
+		double[][] result = null;
+		switch (trend) {
+			case "c":
+				result = addConstant(x);
+				break;
+
+			default:
+				break;
+		}
+		return result;
 	}
-	
-	public double[] getZeroPaddedDiff() {
-		return zeroPaddedDiff;
+	// 矩阵最左加一列全为1的向量
+	public double[][] addConstant(double[][] x){
+		double[] constant = new double[x.length];
+		for(int i=0;i<constant.length;i++){
+			constant[i] = 1;
+		}
+		return DoubleArray.insertColumns(x, 0, constant);
+
 	}
 }
-
