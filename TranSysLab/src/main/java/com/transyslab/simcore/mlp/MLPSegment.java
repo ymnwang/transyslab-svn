@@ -2,10 +2,14 @@ package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.roadnetwork.Segment;
+
+import static java.util.stream.Collectors.toList;
 
 public class MLPSegment extends Segment{
 	public double startDSP;//在当前link中的起点里程
@@ -91,14 +95,15 @@ public class MLPSegment extends Segment{
 		return (MLPLane) super.getLane(index);
 	}
 
-	protected List<MLPLane> getValidLanes(MLPVehicle veh){
-		List<MLPLane> ans = new ArrayList<>();
+	protected List<Lane> getValidLanes(MLPVehicle veh){
+		/*List<MLPLane> ans = new ArrayList<>();
 		for(Lane LN: lanes){
 			if (((MLPLane) LN).enterAllowed){
-				//TODO 下版本改变
 				ans.add((MLPLane) LN);
 			}
 		}
-		return ans;
+		return ans;*/
+		//TODO 考虑不同车种的通行条件，例如公交专用道、HOV
+		return lanes.stream().filter(l -> ((MLPLane) l).enterAllowed).collect(toList());
 	}
 }

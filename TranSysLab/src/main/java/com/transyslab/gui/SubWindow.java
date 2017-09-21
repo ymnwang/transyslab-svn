@@ -1,5 +1,6 @@
 package com.transyslab.gui;
 
+import com.mhuss.Util.Str;
 import com.transyslab.commons.io.FileUtils;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
@@ -15,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 /**
  * Created by yali on 2017/8/27.
@@ -410,7 +412,7 @@ public class SubWindow {
                                 LocalDateTime createDateTime = LocalDateTime.now();
                                 config.addProperty("createTime", createDateTime.toString());
                                 config.addProperty("demandPath", AppSetup.setupParameter.get("需求路径"));
-                                config.addProperty("simModel", modelName);
+                                config.addProperty("modelType", modelName);//
                                 // TODO 标准时间
                                 /*
                                 //开始时间，时：分：秒
@@ -543,10 +545,17 @@ public class SubWindow {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         windowFrame.setVisible(false);
-                        //TODO 解析文本
+                        //解析文本
+                        String[] runningParasStrs = textField1.getText().split(", ");
+                        double[] runningParas = new double[runningParasStrs.length];
+                        for (int i = 0; i<runningParasStrs.length; i++) {
+                            runningParas[i] = Double.parseDouble(runningParasStrs[i]);
+                        }
+                        String runningSeedStr = textField2.getText();
+                        long runningSeed = runningSeedStr.equals("") ? -1 : Long.parseLong(runningSeedStr);
+                        //参数传入engine
+                        mainWindow.launchEngineWithParas(runningParas,runningSeed);
 
-                        //TODO 参数传入engine
-                        mainWindow.launchEngineWithParas(null);
 
                         //清空填写内容
                         textField1.setText("");

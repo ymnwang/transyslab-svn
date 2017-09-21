@@ -14,7 +14,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	private double capacity_;
 	private double releaseTime_;
 	private int lnPosNum_;
-	public LinkedList<MLPVehicle> vehsOnLn;
+	protected LinkedList<MLPVehicle> vehsOnLn;
 //	private MLPVehicle head_;
 //	private MLPVehicle tail_;
 //	private double emitTime_;
@@ -123,7 +123,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	public void appendVeh(MLPVehicle mlpveh) {
 		//处理相关lane的vehsOnLn & network.veh_list generate
 		//network.veh_list has been taken care before called
-		vehsOnLn.offer(mlpveh);		
+		vehsOnLn.offer(mlpveh);
 		//处理相关veh的lead_&trail_
 		mlpveh.updateLeadNTrail();
 		if (mlpveh.leading != null)
@@ -283,9 +283,9 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		}
 	}
 
-	private boolean connect2DnLanes(List<MLPLane> DnLanes) {
-		for (MLPLane tmpLN: DnLanes){
-			if (tmpLN.upLanes.contains(this))
+	private boolean connect2DnLanes(List<Lane> DnLanes) {
+		for (Lane tmpLN: DnLanes){
+			if (((MLPLane) tmpLN).upLanes.contains(this))
 				return true;
 		}
 		return false;
@@ -313,7 +313,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 
 			//next node is an intersection
 			if (getLink().getDnNode().type(Constants.NODE_TYPE_INTERSECTION)!=0) {
-				List<MLPLane> nextValidLanes = ((MLPSegment) nextLink.getStartSegment()).getValidLanes(theVeh);
+				List<Lane> nextValidLanes = ((MLPSegment) nextLink.getStartSegment()).getValidLanes(theVeh);
 				if (connect2DnLanes(nextValidLanes)) {
 					return 0;
 				}
@@ -338,7 +338,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 			}
 
 			//next node is NOT an intersection
-			List<MLPLane> nextValidLanes = ((MLPSegment) nextLink.getStartSegment()).getValidLanes(theVeh);
+			List<Lane> nextValidLanes = ((MLPSegment) nextLink.getStartSegment()).getValidLanes(theVeh);
 			MLPLane theSuDnLane = successiveDnLaneInLink(nextLink);
 			if (nextValidLanes.contains(theSuDnLane))
 				return 0;

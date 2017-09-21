@@ -24,16 +24,16 @@ public class MLPNode extends Node{
 				lane_.scheduleNextEmitTime();//passed upstream lane
 				//arrived destination no constrain
 				//record linkTravelTime
-				link_.tripTime.add(new double[] {currentTime, veh.timeInLink(currentTime), veh.dspEntrance});
+				link_.tripTime.add(new double[] {veh.timeEntersLink(), veh.dspLinkEntrance, currentTime + veh.newDis/veh.newSpeed});
 				lane_.removeVeh(veh, true);
-				return 1;
+				return Constants.VEHICLE_RECYCLE;
 			}
 			//trying to pass to next link
 			//if this is an intersection, deal with inner movements
 			if (type(Constants.NODE_TYPE_INTERSECTION)!=0) {				
 				//movement in an intersection not available for now
 				lane_.scheduleNextEmitTime();//passed upstream lane
-				return 0;
+				return Constants.VEHICLE_NOT_RECYCLE;
 			}
 			//deal with non-intersection nodes
 //			List<MLPLane> candidates = lane.selectDnLane(veh.getNextLink().getStartSegment());//不以successiveDnLane运行
@@ -55,13 +55,14 @@ public class MLPNode extends Node{
 					}
 					if (canpass && !checkPlaceTaken(veh, nextLane)) {//pass to this very nexlane
 						lane_.scheduleNextEmitTime();//passed upstream lane
-						link_.tripTime.add(new double[] {currentTime, veh.timeInLink(currentTime), veh.dspEntrance});//record linkTravelTime
-						veh.setTimeEntersLink(currentTime);
+						double timeAtPoint = currentTime + veh.newDis/veh.newSpeed;//newDis<0 故为+
+						link_.tripTime.add(new double[] {veh.timeEntersLink(), veh.dspLinkEntrance, timeAtPoint});//record linkTravelTime
+						veh.initLinkEntrance(timeAtPoint, 0.0);
 						lane_.removeVeh(veh, false);
 						veh.time2Dispatch = currentTime;
 						statVeh(veh, nextLane);
 						veh.onRouteChoosePath(veh.link.getDnNode(),veh.link.getNetwork());
-						return 0;
+						return Constants.VEHICLE_NOT_RECYCLE;
 					}
 //					else
 //						System.out.println("BUG Can NOT pass or has been taken place");
@@ -76,7 +77,7 @@ public class MLPNode extends Node{
 			stopCount += 1;
 		//hold still
 		veh.holdAtDnEnd();
-		return 0;	
+		return Constants.VEHICLE_NOT_RECYCLE;
 	}
 	private boolean need2Giveway(MLPVehicle vehPass, MLPVehicle vehCheck) {		
 		double dis_headway = vehCheck.getDistance() - vehPass.newDis - vehCheck.getCurrentSpeed();
@@ -133,6 +134,8 @@ public class MLPNode extends Node{
 		for (int i = 0; i < statedVehs.size(); i++) {
 			MLPVehicle tmpveh = statedVehs.get(i);
 			if (now >= tmpveh.time2Dispatch) {
+				//进入新link，更新强制换道值di
+				tmpveh.updateDi();
 				tmpveh.lane.insertVeh(tmpveh);//增加一个倒序插入会更快
 				statedVehs.remove(i);
 				i -= 1;

@@ -25,6 +25,7 @@ public class MLPEngine extends SimulationEngine{
     public boolean seedFixed;
     public long runningSeed;
     public boolean needEmpData;
+	public boolean displayOn;
 	protected double updateTime_;
 	protected double LCDTime_;
 	protected double statTime_;
@@ -40,7 +41,6 @@ public class MLPEngine extends SimulationEngine{
 	protected String msg;
 	private Object empData;
 	private int mod;//总计运行次数，在输出结束仿真信号时自增
-	private boolean displayOn;
 
 	//引用路网结构
 	private MLPNetwork mlpNetwork;
@@ -140,7 +140,7 @@ public class MLPEngine extends SimulationEngine{
 		seedFixed = Boolean.parseBoolean(config.getString("seedFixed"));
 		runningSeed = seedFixed ? Long.parseLong(config.getString("runningSeed")) : 0l;
 		needEmpData = Boolean.parseBoolean(config.getString("needEmpData"));
-		displayOn = Boolean.parseBoolean(config.getString("displayOn"));
+//		displayOn = Boolean.parseBoolean(config.getString("displayOn"));//不需要读入，在GUI启动时强制置true即可
 
 		//Statistic Output setting
 		getSimParameter().statWarmUp = Double.parseDouble(config.getString("statWarmUp"));//set time to Parameter
@@ -161,10 +161,6 @@ public class MLPEngine extends SimulationEngine{
 		if (firstEntry) {
 			// This block is called only once just before the simulation gets started.
 			firstEntry = false;
-			//Network状态重设并准备发车表
-			if (!seedFixed)
-				runningSeed = System.currentTimeMillis();
-			mlpNetwork.resetNetwork(needRndETable, runProperties.get("odFileDir"), runProperties.get("emitFileDir"), runningSeed);
 			
 			//reset update time
 			mlpNetwork.resetReleaseTime();
@@ -208,7 +204,7 @@ public class MLPEngine extends SimulationEngine{
 
 		if (now >= statTime_){
 			double stepSize = ((MLPParameter) mlpNetwork.getSimParameter()).statStepSize;
-			mlpNetwork.sectionStatistics(statTime_ - stepSize, now, Constants.ARITHMETIC_MEAN);//TODO: change
+			mlpNetwork.sectionStatistics(statTime_ - stepSize, now, Constants.HARMONIC_MEAN);//车速使用调和均值
 			mlpNetwork.linkStatistics(statTime_ - stepSize, now);
 			statTime_ = now + stepSize;
 		}
@@ -235,7 +231,7 @@ public class MLPEngine extends SimulationEngine{
 			//车辆状态更新(同时更新)
 			for (int k = 0; k<mlpNetwork.veh_list.size(); k++) {
 				MLPVehicle theVeh = mlpNetwork.veh_list.get(k);
-				if (theVeh.updateMove()==1) 
+				if (theVeh.updateMove()==Constants.VEHICLE_RECYCLE)
 					k -=1;
 			}
 			//线圈检测
@@ -259,7 +255,7 @@ public class MLPEngine extends SimulationEngine{
 		//可视化渲染
 		SimulationClock clock = mlpNetwork.getSimClock();
 		int tmp = (int) Math.floor(clock.getCurrentTime()*clock.getStepSize());
-        if (displayOn && (tmp%10)==0) { // && (tmp%10)==0
+        if (displayOn) { // && (tmp%10)==0
             mlpNetwork.recordVehicleData();
 		}
 		
@@ -301,6 +297,10 @@ public class MLPEngine extends SimulationEngine{
 				trackWriter.closeWriter();
 			if (infoOn)
 				infoWriter.closeWriter();
+			if(statRecordOn) {
+				String statFileOut = "src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv";
+				mlpNetwork.writeStat(statFileOut);
+			}
 			mod += 1;
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
 													// is done
@@ -354,7 +354,7 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	@Override
-	public void resetBeforeSimLoop() {//重置引擎时钟 时间相关的参数
+	public void resetBeforeSimLoop() {//重置引擎时钟 时间相关的参数 与路网状态
 		SimulationClock clock = mlpNetwork.getSimClock();
 		firstEntry = true;
 		clock.init(timeStart, timeEnd, timeStep);
@@ -363,6 +363,11 @@ public class MLPEngine extends SimulationEngine{
 		updateTime_ = now;
 		LCDTime_ = now;
 		statTime_ = now + getSimParameter().statWarmUp + getSimParameter().statStepSize; //第一次统计时刻为：现在时间+warmUp+统计间隔
+
+		//Network状态重设并准备发车表
+		if (!seedFixed)
+			runningSeed = System.currentTimeMillis();
+		mlpNetwork.resetNetwork(needRndETable, runProperties.get("odFileDir"), runProperties.get("emitFileDir"), runningSeed);
 	}
 
 	public void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam, VPhyLim]
@@ -527,22 +532,15 @@ public class MLPEngine extends SimulationEngine{
 			return Constants.STATE_ERROR_QUIT;
 		resetBeforeSimLoop();
 		setParas(fullParas);
-		run(1);//process loop only
-		if(statRecordOn) {
-			String statFileOut = "src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv";
-			mlpNetwork.writeStat(statFileOut);
-		}
+		run(0);//process loop only
 		return Constants.STATE_DONE;
 	}
 
-	@Override
+	/*@Override
 	public void run(int mode) {
 		switch (mode) {
 			case 0:
 				resetBeforeSimLoop();
-//				setParas(MLPParameter.DEFAULT_PARAMETERS);
-				displayOn = true;//强制开启可视化
-				setParas(new double[]{0.4633, 21.795, 0.1765, 27.37635840605779, 3.245148785533793, 4.129324499673052, 1.4263960023720346, 0.40766505489832405});
 				while (simulationLoop() >= 0);
 				break;
 			case 1:
@@ -551,7 +549,7 @@ public class MLPEngine extends SimulationEngine{
 				default:
 					break;
 		}
-	}
+	}*/
 
 	@Override
 	public MLPNetwork getNetwork() {

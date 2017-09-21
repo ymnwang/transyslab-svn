@@ -1,7 +1,9 @@
 package com.transyslab.simcore.mlp;
 
-import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.Vehicle;
+
+import java.util.HashMap;
 
 public class MLPVehicle extends Vehicle{
 	protected MLPVehicle trailing;// upstream vehicle
@@ -20,9 +22,10 @@ public class MLPVehicle extends Vehicle{
 	protected double newDis;
 	protected int usage;
 //	public double TimeEntrance;
-	protected double dspEntrance;
+	protected double dspLinkEntrance;
 	protected int rvId;
 	protected double time2Dispatch;
+	protected HashMap<MLPLane, Integer> diMap;
 //	static public TXTUtils fout = new TXTUtils("src/main/resources/output/test.csv");
 //	protected double TimeExit;
 	//private boolean active_;
@@ -37,6 +40,7 @@ public class MLPVehicle extends Vehicle{
 		platoonCode = 0;
 		stopFlag = false;
 		mlpParameter = theParameter;
+		diMap = new HashMap<>();
 	}
 
 	public MLPNetwork getMLPNetwork() {
@@ -172,7 +176,8 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	private double calH(int turning){
-		int h = lane.calDi(this) - lane.getAdjacent(turning).calDi(this);
+//		int h = lane.calDi(this) - lane.getAdjacent(turning).calDi(this);//旧方法 重复计算
+		int h = diMap.get(lane) - diMap.get(lane.getAdjacent(turning));
 		if (h==0){
 			return 0;
 		}
@@ -200,10 +205,14 @@ public class MLPVehicle extends Vehicle{
 		return pr;
 	}
 	
-	public void initEntrance(double time, double dsp) {
+	public void initNetworkEntrance(double time, double dsp) {
 		departTime = (float) time;
+		initLinkEntrance(time,dsp);
+	}
+
+	public void initLinkEntrance(double time, double dsp) {
 		timeEntersLink = (float) time;
-		dspEntrance = dsp;
+		dspLinkEntrance = dsp;
 	}
 	
 	public void initInfo(int virType, MLPLink onLink, MLPSegment onSeg, MLPLane onLane, int rvid){
@@ -227,11 +236,11 @@ public class MLPVehicle extends Vehicle{
 //			System.out.println("BUG 未在本计算帧内处理此车");
 		if (virtualType >0 && buffer == 0) {
 			lane.removeVeh(this, true);
-			return 1;
+			return Constants.VEHICLE_RECYCLE;
 		}
 		if (newDis < 0.0) 
 			return dealPassing();//Passing link or seg
-		return 0;
+		return Constants.VEHICLE_NOT_RECYCLE;
 	}
 	
 	public void advance() {
@@ -244,10 +253,8 @@ public class MLPVehicle extends Vehicle{
 		if (segment.isEndSeg()) {
 			if (virtualType != 0) {
 				//虚车最多影响到Link末端
-//				lane.removeVeh(this, true);
-//				return 1;
 				holdAtDnEnd();
-				return 0;
+				return Constants.VEHICLE_NOT_RECYCLE;
 			}
 			MLPNode server = (MLPNode) link.getDnNode();
 			return server.serve(this);
@@ -272,14 +279,16 @@ public class MLPVehicle extends Vehicle{
 				}
 				else
 					lane.removeVeh(this, true);//如果虚车触发此条件（successive lane不可用），则消失
-				return 0;
+				return Constants.VEHICLE_NOT_RECYCLE;
 			}
 			lane.passVeh2ConnDnLn(this);
 			newDis = segment.getLength() + newDis;
 			if (newDis < 0.0) {
 				dealPassing();
 			}
-			return 0;
+			//车辆移动至新的segment，更新强制换道参考值di
+			updateDi();
+			return Constants.VEHICLE_NOT_RECYCLE;
 		}
 	}
 	
@@ -328,11 +337,12 @@ public class MLPVehicle extends Vehicle{
 		currentSpeed = 0.0f;
 		departTime = 0.0f;
 		timeEntersLink = 0.0f;
-		dspEntrance = 0.0;
+		dspLinkEntrance = 0.0;
 		rvId = 0;
 		time2Dispatch = 0.0;
 		donePathIndex();
 //		TimeExit = 0.0;
+		diMap.clear();
 	}
 	
 	public void updateUsage() {
@@ -398,6 +408,12 @@ public class MLPVehicle extends Vehicle{
 	
 	public MLPVehicle getLaterallTrailing(){	
 	}*/
-	
+	public void updateDi() {
+		diMap.clear();
+		for (int i = 0; i<segment.nLanes(); i++) {
+			MLPLane theLane = segment.getLane(i);
+			diMap.put(theLane, theLane.calDi(this));
+		}
+	}
 
 }

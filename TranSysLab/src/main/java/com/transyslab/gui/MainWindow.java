@@ -237,27 +237,32 @@ public class MainWindow {
 
                         try{
                             Configuration config = configs.properties(file);
-                            String projectName = config.getString("projectName");
-                            String networkPath = config.getString("networkPath");
-                            String caseName = config.getString("caseName");
-                            String createTime = config.getString("createTime");
-                            String simModel = config.getString("simModel");
-                            String startTime =  config.getString("startTime");
-                            String endTime = config.getString("endTime");
-                            String demandPath = config.getString("demandPath");
-                            Float simStep = config.getFloat("simStep");
-                            LocalTime stTime = LocalTime.parse(startTime);
-                            AppSetup.startTime = stTime.getHour()*3600+stTime.getMinute()*60+stTime.getSecond();
-                            LocalTime edTime = LocalTime.parse(endTime);
-                            AppSetup.endTime = edTime.getHour()*3600+edTime.getMinute()*60+edTime.getSecond();
-                            AppSetup.setupParameter.put("项目名称", projectName);
-                            AppSetup.setupParameter.put("路网路径",networkPath);
-                            AppSetup.setupParameter.put("方案名称", caseName);
-                            AppSetup.setupParameter.put("需求路径", demandPath);
-                            AppSetup.timeStep = simStep;
-                            if(simModel.equals("MesoTS"))
+
+                            String modelType = config.getString("modelType");
+
+                            if(modelType.equals("MesoTS")) {
+                                //TODO: 由于properties解释过程不统一，避免报错，将meso properties的解释放在此分支之下 wym
+                                String projectName = config.getString("projectName");
+                                String networkPath = config.getString("networkPath");
+                                String caseName = config.getString("caseName");
+                                String createTime = config.getString("createTime");
+                                String startTime =  config.getString("startTime");
+                                String endTime = config.getString("endTime");
+                                String demandPath = config.getString("demandPath");
+                                Float simStep = config.getFloat("simStep");
+                                LocalTime stTime = LocalTime.parse(startTime);
+                                AppSetup.startTime = stTime.getHour()*3600+stTime.getMinute()*60+stTime.getSecond();
+                                LocalTime edTime = LocalTime.parse(endTime);
+                                AppSetup.endTime = edTime.getHour()*3600+edTime.getMinute()*60+edTime.getSecond();
+                                AppSetup.setupParameter.put("项目名称", projectName);
+                                AppSetup.setupParameter.put("路网路径",networkPath);
+                                AppSetup.setupParameter.put("方案名称", caseName);
+                                AppSetup.setupParameter.put("需求路径", demandPath);
+                                AppSetup.timeStep = simStep;
                                 AppSetup.modelType = 1;
+                            }
                             else {
+                                AppSetup.setupParameter.put("输入文件路径", fileChooser.getSelectedFile().getPath());//解释过程放在MLPEngine中
                                 AppSetup.modelType = 2;
                             }
                             initSimEngines();
@@ -299,7 +304,6 @@ public class MainWindow {
                     }
                     //第一次播放
                     else if(!canvas.isRendering){
-                        FrameQueue.getInstance().initFrameQueue();
                         Worker worker = new Worker(engines[0]);
                         Thread thread = new Thread(worker);
                         thread.start();
@@ -495,13 +499,15 @@ public class MainWindow {
 
     }
     public void initSimEngines(){
+        FrameQueue.getInstance().initFrameQueue();
         engines = new SimulationEngine[1];
         switch (AppSetup.modelType) {
             case 1:
                 engines[0] = new MesoEngine(0,"E:\\test\\");
                 break;
             case 2:
-                engines[0] = new MLPEngine("src/main/resources/demo_neihuan/scenario2/kscalibration.properties");
+                engines[0] = new MLPEngine(AppSetup.setupParameter.get("输入文件路径"));
+                ((MLPEngine)engines[0]).displayOn = true;
                 break;
             default:
                 break;
@@ -513,14 +519,25 @@ public class MainWindow {
         canvas.setDrawableNetwork(engines[0].getNetwork());
         canvas.requestFocusInWindow();
     }
-    public void launchEngineWithParas(double[] paras){
+    public void launchEngineWithParas(double[] paras, long seed){
         switch (AppSetup.modelType) {
             case 1:
                 //TODO 待设计传入参数运行
                 ((MesoEngine)engines[0]).run(0);
                 break;
             case 2:
-                ((MLPEngine)engines[0]).runWithPara(paras);
+                if (seed>=0) {
+                    ((MLPEngine)engines[0]).seedFixed = true;
+                    ((MLPEngine)engines[0]).runningSeed = seed;
+                }
+                else
+                    ((MLPEngine)engines[0]).seedFixed = false;
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            ((MLPEngine)engines[0]).runWithPara(paras);
+                        }
+                    }.start();
                 break;
             default:
                 break;

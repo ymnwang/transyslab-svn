@@ -12,7 +12,7 @@ public class MLPLink extends Link {
 	public List<JointLane> jointLanes;
 	protected List<MLPVehicle> platoon;//正在处理的车队
 	public Dynamics dynaFun;
-	public List<double[]> tripTime;
+	public List<double[]> tripTime;//double[] {timeIn, DspIn, timeOut}
 //	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
 //	public double capacity;//unit: veh/s/lane
 //	private double releaseTime_;
@@ -323,4 +323,14 @@ public class MLPLink extends Link {
 	protected void clearInflow() {
 		inflowList.clear();
 	}
+
+	public int countHoldingInflow() {
+		return inflowList.size();
+	}
+
+	public static final int TIMEIN_MASK = 0;
+
+	public static final int DSPIN_MASK = 1;
+
+	public static final int TIMEOUT_MASK = 2;
 }

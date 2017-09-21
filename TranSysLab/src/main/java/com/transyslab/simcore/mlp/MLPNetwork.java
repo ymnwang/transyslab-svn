@@ -168,7 +168,9 @@ public class MLPNetwork extends RoadNetwork {
 				assignPath(newVeh, (MLPNode) launchingLink.getUpNode(), (MLPNode) findLink(emitVeh.tLinkID).getDnNode(), false);
 				//todo 调试阶段暂时固定路径
 				newVeh.fixPath();
-				newVeh.initEntrance(simClock.getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
+				newVeh.initNetworkEntrance(simClock.getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
+				//进入路网，初始化强制换道参考值di
+				newVeh.updateDi();
 				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
 				mlpLane(emitVeh.laneIdx).appendVeh(newVeh);
 			}
@@ -282,26 +284,29 @@ public class MLPNetwork extends RoadNetwork {
 		double now = getSimClock().getCurrentTime();
 		for (MLPLink mlpLink : linkStatMap.keySet()) {
 			double linkLen = mlpLink.length();
-			/*Object[] servingVehsObj = veh_list.stream().filter(v ->
-					v.virtualType>0
-					&& v.getLink().equals(mlpLink)
-					&& v.timeEntersLink()<now).toArray();
-			MLPVehicle[] servingVehs = Arrays.copyOf(servingVehsObj,servingVehsObj.length,MLPVehicle[].class);
-			double onLinkTripSum = Arrays.stream(servingVehs).mapToDouble(v -> (v.Displacement()-v.dspEntrance)/linkLen).sum();
-			double onLinkTrTSum = Arrays.stream(servingVehs).mapToDouble(v -> (now - v.timeEntersLink())).sum();*/
 
-			Object[] servedRecordsObj = mlpLink.tripTime.stream().filter(trT -> trT[0]>fTime && trT[0]<=tTime).toArray();
+			if (simClock.getCurrentTime()<=tTime) { //当前时间正在服务的车辆也计算在内
+				Object[] servingVehsObj = veh_list.stream().filter(v ->
+						v.virtualType>0
+								&& v.getLink().equals(mlpLink)
+								&& v.timeEntersLink()<now).toArray();
+				MLPVehicle[] servingVehs = Arrays.copyOf(servingVehsObj,servingVehsObj.length,MLPVehicle[].class);
+				double onLinkTripSum = Arrays.stream(servingVehs).mapToDouble(v -> (v.Displacement()-v.dspLinkEntrance)/linkLen).sum();
+				double onLinkTrTSum = Arrays.stream(servingVehs).mapToDouble(v -> (now - v.timeEntersLink())).sum();
+			}
+
+			Object[] servedRecordsObj = mlpLink.tripTime.stream().filter(trT -> trT[MLPLink.TIMEIN_MASK]>fTime && trT[MLPLink.TIMEOUT_MASK]<=tTime).toArray();
 			double[][] servedRecords = Arrays.copyOf(servedRecordsObj,servedRecordsObj.length,double[][].class);
-			double servedTripSum = Arrays.stream(servedRecords).mapToDouble(r -> (linkLen-r[2])/linkLen).sum();
-			double servedTrTSum = Arrays.stream(servedRecords).mapToDouble(r -> r[1]).sum();
+			double servedTripSum = Arrays.stream(servedRecords).mapToDouble(r -> (linkLen-r[MLPLink.DSPIN_MASK])/linkLen).sum();
+			double servedTrTSum = Arrays.stream(servedRecords).mapToDouble(r -> r[MLPLink.TIMEOUT_MASK] - r[MLPLink.TIMEIN_MASK]).sum();
 
 			/*double flow = onLinkTripSum + servedTripSum;
 			double meanSpd = flow<=0.0 ? 0.0 : linkLen*flow/(onLinkTrTSum+servedTrTSum);*/
-			double flow = servedTripSum;
-			double meanSpd = flow<=0.0 ? 0.0 : linkLen*flow/servedTrTSum;
+			double flowSum = servedTripSum;
+			double meanSpd = flowSum<=0.0 ? 0.0 : linkLen*flowSum/servedTrTSum;
 			double trT = meanSpd<=0.0 ? 0.0 : linkLen / meanSpd;
 
-			flow = flow / (tTime-fTime);
+			double flow = flowSum / (tTime-fTime);
 			linkStatMap.get(mlpLink).add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow/meanSpd, trT));
 		}
 	}
@@ -432,6 +437,8 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	private void createRndETables(String odFileDir){
+		if (odFileDir==null || odFileDir.equals(""))
+			return;
 		String[] header = {"fLinkID","tLinkID","demand",
 				"fTime","tTime",
 				"mean","sd","vlim"};
@@ -457,6 +464,8 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	private void readETablesFrom(String filePath){
+		if (filePath==null || filePath.equals(""))
+			return;
 		String[] header = {"laneID", "tLinkID", "time", "speed", "dis", "rvId"};
 		try {
 			List<CSVRecord> rows = CSVUtils.readCSV(filePath,header);
