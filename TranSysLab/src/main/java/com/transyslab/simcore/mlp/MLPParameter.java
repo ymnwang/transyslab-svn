@@ -187,9 +187,28 @@ public class MLPParameter extends Parameter {
 		return vp>vf;
 	}
 
-	public static double rUpper(double vf, double kj, double qm) {
-		//TODO: g(r)==0 --> return r_upper
-		return 0;
+	public static double rUpper(double start, double vf, double kj, double qm) {//建议start取10
+		double epsilon = 1e-12;
+		double x = start;
+		double f = funcG(x,vf,kj,qm);
+		int iterTimes = 0;
+		while (Math.abs(f)>epsilon) {
+			if (iterTimes>1e6) {
+				System.err.println("方程不收敛");
+				return Double.NaN;
+			}
+			x = x - f*epsilon/(funcG(x+epsilon,vf,kj,qm)-f);//迭代x(k+1)
+			f = funcG(x,vf,kj,qm);
+			iterTimes += 1;
+		}
+		if (x<0 || Double.isNaN(f)) {
+			return rUpper(start*10, vf, kj, qm);
+		}
+		return x;
+	}
+
+	public static double funcG(double r, double vf, double kj, double qm) { // 辅助函数
+		return (r*r-r)*Math.pow(Math.log(r),2) + 4*Math.log(qm/kj/vf)*Math.log(1+r);
 	}
 
 	public static double calcTs(double Xc, double vf, double kj, double qm, double vp, double deltaT) {

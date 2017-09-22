@@ -460,7 +460,7 @@ public class MLPEngine extends SimulationEngine{
 		double ts = MLPParameter.calcTs(Xc, Vfree, Kjam, Qm, VPhyLim, deltaT);
 
 		//¼ì²érÈ¡Öµ
-		if (r >= MLPParameter.rUpper(Vfree, Kjam, Qm)) {
+		if (r >= MLPParameter.rUpper(10, Vfree, Kjam, Qm)) {
 			System.err.println("check r constraints");
 			return;
 		}
@@ -506,7 +506,7 @@ public class MLPEngine extends SimulationEngine{
 		return !MLPParameter.isVpFastEnough(Vfree, VPhyLim) ||
 				Xc <= MLPParameter.xcLower(Kjam, Qm, deltaT) ||
 				deltaT >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm) ||
-				r >= MLPParameter.rUpper(Vfree, Kjam, Qm);
+				r >= MLPParameter.rUpper(10, Vfree, Kjam, Qm);
 	}
 
 	public MLPParameter getSimParameter() {
