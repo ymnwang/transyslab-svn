@@ -187,10 +187,9 @@ public class MLPParameter extends Parameter {
 		return vp>vf;
 	}
 
-	public static boolean isRAppropiate(double r, double ts, double vf, double kj, double qm, double deltaT) {
-		double alpha = calcAlpha(r, vf, kj, qm);
-		return (alpha > 0 &&
-				Math.pow(1+r, 1.0/alpha) > 1.0/(1-qm*(ts+deltaT)));
+	public static double rUpper(double vf, double kj, double qm) {
+		//TODO: g(r)==0 --> return r_upper
+		return 0;
 	}
 
 	public static double calcTs(double Xc, double vf, double kj, double qm, double vp, double deltaT) {
@@ -208,6 +207,7 @@ public class MLPParameter extends Parameter {
 	}
 
 	public static double calcAlpha(double r, double vf, double kj, double qm) {
-		return (r*Math.log(r)-(r-1)*Math.log(r+1)) / Math.log(qm/kj/vf);
+		double delta = r*Math.pow(Math.log(r),2) - 4*Math.log(qm/kj/vf)*Math.log(1+r);
+		return (r*Math.log(r)-Math.sqrt(delta)) / 2 / Math.log(qm/kj/vf);
 	}
 }
