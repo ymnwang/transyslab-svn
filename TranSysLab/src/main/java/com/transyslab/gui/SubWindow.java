@@ -546,11 +546,16 @@ public class SubWindow {
                     public void actionPerformed(ActionEvent e) {
                         windowFrame.setVisible(false);
                         //解析文本
-                        String[] runningParasStrs = textField1.getText().split(", ");
-                        double[] runningParas = new double[runningParasStrs.length];
-                        for (int i = 0; i<runningParasStrs.length; i++) {
-                            runningParas[i] = Double.parseDouble(runningParasStrs[i]);
+                        String parasStr = textField1.getText();
+                        double[] runningParas = null;
+                        if (!parasStr.equals("")) {
+                            String[] parasStrArray = parasStr.split(", ");
+                            runningParas = new double[parasStrArray.length];
+                            for (int i = 0; i<parasStrArray.length; i++) {
+                                runningParas[i] = Double.parseDouble(parasStrArray[i]);
+                            }
                         }
+
                         String runningSeedStr = textField2.getText();
                         long runningSeed = runningSeedStr.equals("") ? -1 : Long.parseLong(runningSeedStr);
                         //参数传入engine

@@ -136,4 +136,8 @@ public class VehicleData implements NetworkObject{
 		vehicleID_ = vehicleType_ = 0;
 		vehicleLength_ = 0;
 	}
+	//wym
+	public GeoPoint getHeadPosition(){
+		return headPosition;
+	}
 }

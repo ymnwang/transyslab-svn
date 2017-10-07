@@ -88,4 +88,13 @@ public class JdbcUtils {
 	public static void release(Connection con, ResultSet rs, PreparedStatement pstm) {
 		DbUtils.closeQuietly(con, pstm, rs);
 	}
+	public static void close() {
+		if (dataSource != null) {
+			try {
+				((BasicDataSource) dataSource).close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

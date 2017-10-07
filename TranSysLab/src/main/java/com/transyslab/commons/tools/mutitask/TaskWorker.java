@@ -9,7 +9,12 @@ public interface TaskWorker {
 
 	double[] worksUnder(double[] paras);
 
+	default void init() {}
+
+	default void dismiss() {}
+
 	default void goToWork(TaskCenter tc, boolean taskSpecified){
+		init();
 		while (!tc.dismissAllowed()) {
 
 			//尝试从任务中心taskCenter取回任务
@@ -26,5 +31,6 @@ public interface TaskWorker {
 				task.setOutputs(fitVal);
 			}
 		}
+		dismiss();
 	}
 }

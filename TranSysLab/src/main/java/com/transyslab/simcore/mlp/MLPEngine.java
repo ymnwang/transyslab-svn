@@ -1,11 +1,11 @@
 package com.transyslab.simcore.mlp;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.*;
 
-import com.jogamp.opengl.math.VectorUtil;
+import com.transyslab.commons.io.JdbcUtils;
 import com.transyslab.commons.io.XmlParser;
-import com.transyslab.commons.tools.TimeMeasureUtil;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -17,7 +17,6 @@ import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
-import org.lsmp.djep.jama.JamaUtil;
 
 
 public class MLPEngine extends SimulationEngine{
@@ -32,7 +31,7 @@ public class MLPEngine extends SimulationEngine{
 	protected boolean firstEntry; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
 	protected TXTUtils loopRecWriter;
-	protected boolean loopRecOn;
+	protected boolean rawRecOn;
 	protected TXTUtils trackWriter;
 	protected boolean trackOn;
 	protected TXTUtils infoWriter;
@@ -57,7 +56,7 @@ public class MLPEngine extends SimulationEngine{
 		super();
 		firstEntry = true;
 		needRndETable = false;
-		loopRecOn = false;
+		rawRecOn = false;
 		trackOn = false;
 		infoOn = false;
 		statRecordOn = false;
@@ -89,7 +88,7 @@ public class MLPEngine extends SimulationEngine{
 		//MLPEngine() blocked fields are initialized in parseProperties
 		firstEntry = true;
 //		needRndETable = false;
-//		loopRecOn = false;
+//		rawRecOn = false;
 //		trackOn = false;
 //		infoOn = false;
 //		statRecordOn = false;
@@ -133,7 +132,7 @@ public class MLPEngine extends SimulationEngine{
 
 		//the value will be false if config.getString() returns null
 		needRndETable = Boolean.parseBoolean(config.getString("needRndETable"));
-		loopRecOn = Boolean.parseBoolean(config.getString("loopRecOn"));
+		rawRecOn = Boolean.parseBoolean(config.getString("rawRecOn"));
 		trackOn = Boolean.parseBoolean(config.getString("trackOn"));
 		infoOn = Boolean.parseBoolean(config.getString("infoOn"));
 		statRecordOn = Boolean.parseBoolean(config.getString("statRecordOn"));
@@ -167,7 +166,7 @@ public class MLPEngine extends SimulationEngine{
 			
 			//establish writers
 			String threadName = Thread.currentThread().getName();
-			if (loopRecOn) {
+			if (rawRecOn) {
 				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadName + "_" + mod + ".csv");
 				loopRecWriter.write("TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
 			}				
@@ -188,12 +187,12 @@ public class MLPEngine extends SimulationEngine{
 						infoWriter.write(IFList.get(j).time + ",1\r\n");
 				}
 				infoWriter.writeNFlush("随机发出真实车： " + total + "\r\n");	
-			}		
+			}
 		}
 		
 		if (now >= updateTime_){
 			mlpNetwork.resetReleaseTime();
-			if (loopRecOn) 
+			if (rawRecOn)
 				loopRecWriter.flushBuffer();
 			if (trackOn)
 				trackWriter.flushBuffer();
@@ -237,7 +236,7 @@ public class MLPEngine extends SimulationEngine{
 			//线圈检测
 			for (int j = 0; j < mlpNetwork.nSensors(); j++){
 				msg = ((MLPLoop) mlpNetwork.getSensor(j)).detect(now);
-				if (loopRecOn) {//按需输出记录
+				if (rawRecOn) {//按需输出记录
 					loopRecWriter.write(msg);
 				}
 			}
@@ -291,15 +290,16 @@ public class MLPEngine extends SimulationEngine{
 		if (now > clock.getStopTime() + epsilon) {
 			if (infoOn)
 				infoWriter.writeNFlush("共产生真实车与虚拟车：" + (mlpNetwork.getNewVehID()-1)+"\r\n");
-			if (loopRecOn) 
+			if (rawRecOn)
 				loopRecWriter.closeWriter();
 			if (trackOn)
 				trackWriter.closeWriter();
 			if (infoOn)
 				infoWriter.closeWriter();
 			if(statRecordOn) {
-				String statFileOut = "src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv";
-				mlpNetwork.writeStat(statFileOut);
+//				String statFileOut = "src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv";
+//				mlpNetwork.writeStat(statFileOut);
+				mlpNetwork.writeStat2Db(Thread.currentThread().getName() + "_" + mod, LocalDateTime.now());
 			}
 			mod += 1;
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
@@ -554,6 +554,12 @@ public class MLPEngine extends SimulationEngine{
 	@Override
 	public MLPNetwork getNetwork() {
 		return mlpNetwork;
+	}
+
+	//wym 引擎彻底关闭前执行
+	public void close() {
+		//关闭数据库连接
+		JdbcUtils.close();
 	}
 
 }

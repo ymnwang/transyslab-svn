@@ -11,6 +11,8 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.*;
+import jhplot.math.LinearAlgebra;
+import org.lsmp.djep.jama.JamaUtil;
 
 
 import static com.jogamp.opengl.GL.*; // GL constants
@@ -28,6 +30,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener, MouseListener, 
@@ -230,9 +233,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		//暂停时保留VehicleData
 		if(isPause){
 			for(VehicleData vd:curFrame.getVhcDataQueue()){
-				if(vd.getSpecialFlag()==1)
+				if ((vd.getSpecialFlag()&Constants.FOLLOWING) != 0)
+					ShapeUtil.drawPolygon(gl, platoonBoundGen(vd), Constants.COLOR_RED, vd.isSelected());
+				if((vd.getSpecialFlag()&Constants.VIRTUAL_VEHICLE) != 0)//虚拟车
 					ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected());
-				else if(vd.getSpecialFlag() == 0)
+				else //非虚拟车
 					ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected());
 			}
 			// TODO 窗口底部状态栏
@@ -251,9 +256,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			if(curFrame!=null){
 				while(!curFrame.getVhcDataQueue().isEmpty()){
 					VehicleData vd = curFrame.getVehicleData();
-					if(vd.getSpecialFlag()==1)
+					if ((vd.getSpecialFlag()&Constants.FOLLOWING) != 0)
+						ShapeUtil.drawPolygon(gl, platoonBoundGen(vd), Constants.COLOR_RED, vd.isSelected());
+					if((vd.getSpecialFlag()&Constants.VIRTUAL_VEHICLE) != 0)//虚拟车
 						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected());
-					else if(vd.getSpecialFlag() == 0)
+					else //非虚拟车
 						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected());
 					//回收vehicledata
 					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
@@ -461,5 +468,27 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	@Override
 	public void keyReleased(KeyEvent e) {
 		
+	}
+
+	//wym
+	private List<GeoPoint> platoonBoundGen(VehicleData vd) {
+		List<GeoPoint> pts = vd.getVhcShape().getKerbList();
+		double[] v1 = LinearAlgebra.minus(pts.get(1).getLocCoods(),pts.get(0).getLocCoods());
+		double[] v2 = LinearAlgebra.minus(pts.get(2).getLocCoods(),pts.get(1).getLocCoods());
+		double d1 = Math.sqrt(Arrays.stream(v1).map(e -> e*e).sum());
+		double d2 = Math.sqrt(Arrays.stream(v2).map(e -> e*e).sum());
+		double[] el, et;
+		if(d1<d2) {
+			el = LinearAlgebra.times(v2, 1/d2);
+			et = LinearAlgebra.times(v1, 1/d1);
+		}
+		else {
+			el = LinearAlgebra.times(v1, 1/d1);
+			et = LinearAlgebra.times(v2, 1/d2);
+		}
+		List<GeoPoint> ans = new ArrayList<>();
+		new
+		ans.add(LinearAlgebra.minus(vd.getHeadPosition().getLocCoods(),LinearAlgebra.times(et,Constants.LANE_WIDTH/2)))
+
 	}
 }

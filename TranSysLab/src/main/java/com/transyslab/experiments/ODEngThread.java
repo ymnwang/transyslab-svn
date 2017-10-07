@@ -64,6 +64,10 @@ public class ODEngThread extends EngThread {
 		return records==null ? null : records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
 	}
 
+	@Override
+	public void dismiss() {
+		((MLPEngine) engine).close();
+	}
 
 	public void processParas(double[] paras) {
 

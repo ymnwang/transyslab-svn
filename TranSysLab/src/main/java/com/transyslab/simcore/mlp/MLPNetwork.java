@@ -1,9 +1,13 @@
 package com.transyslab.simcore.mlp;
 
 import java.io.IOException;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import com.transyslab.commons.io.CSVUtils;
+import com.transyslab.commons.io.JdbcUtils;
+import com.transyslab.commons.io.QueryRunner;
 import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
@@ -274,7 +278,7 @@ public class MLPNetwork extends RoadNetwork {
 							avgMode == Constants.HARMONIC_MEAN ? flow / spdRecords.stream().mapToDouble(d -> 1/d).sum() :
 									0.0;
 			spdRecords.clear();
-			flow = flow / (tTime-fTime);
+			flow = flow / (tTime-fTime) / sec.length;
 			sectionStatMap.get(sec).add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow / meanSpd, Double.NaN));
 		}
 	}
@@ -553,6 +557,33 @@ public class MLPNetwork extends RoadNetwork {
 		});
 		writer.flushBuffer();
 		writer.closeWriter();
+	}
+
+	public void writeStat2Db(String tag, LocalDateTime dt) {
+		QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
+		String sql = "insert into simloop(det, time_period, flow, speed, density, travel_time, tag, create_time) values(?,?,?,?,?,?,?,?)";
+		List<Object[]> objList = new ArrayList<>();
+		sectionStatMap.forEach((k,v) -> {
+			String det = k[0].detName;
+			for (int i = 0; i<v.size(); i++) {
+				MacroCharacter r = v.get(i);
+				objList.add(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
+			}
+		});
+		linkStatMap.forEach((k,v) -> {
+			String det = "Link" + k.getId();
+			for (int i = 0; i<v.size(); i++) {
+				MacroCharacter r = v.get(i);
+				objList.add(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
+			}
+		});
+		Object[][] objs = new Object[objList.size()][];
+		objList.toArray(objs);
+		try {
+			qr.batch(sql, objList);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void clearSecStat() {

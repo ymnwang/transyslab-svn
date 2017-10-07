@@ -12,6 +12,7 @@ import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
+import com.transyslab.simcore.mlp.MLPParameter;
 import info.monitorenter.gui.chart.traces.Trace2DSimple;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -535,7 +536,7 @@ public class MainWindow {
                     new Thread() {
                         @Override
                         public void run() {
-                            ((MLPEngine)engines[0]).runWithPara(paras);
+                            ((MLPEngine)engines[0]).runWithPara(paras==null ? MLPParameter.DEFAULT_PARAMETERS : paras);
                         }
                     }.start();
                 break;

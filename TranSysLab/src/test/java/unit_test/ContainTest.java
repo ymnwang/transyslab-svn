@@ -1,10 +1,14 @@
 package unit_test;
 
+import com.transyslab.commons.io.JdbcUtils;
+import com.transyslab.simcore.mlp.MLPParameter;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.dbutils.QueryRunner;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +17,20 @@ import java.util.*;
 public class ContainTest {
 
 	public static void main(String[] args) {
+
+		QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
+		String sql = "insert into simloop(travel_time) values(?)";
+		Object[][] paras = {{Double.NaN},{Double.NaN}};
+		try {
+			qr.update(sql, paras);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println(LocalDateTime.now().toString());
+
+		System.out.println("root is " + MLPParameter.rUpper(1.0,21.7950, 0.1765, 0.4633));
+
 		//≤‚ ‘null
 		List<Integer> lista = Arrays.asList(1, 10, 3, 7, 5);
 		List<Integer> listb = new ArrayList<>();

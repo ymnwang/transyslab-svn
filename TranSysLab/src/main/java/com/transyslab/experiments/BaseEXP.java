@@ -17,7 +17,7 @@ public class BaseEXP {
 		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/kscalibration_固化路径.properties");
 		mlpEngine.loadFiles();
 		Random random = new Random();
-		double[] fullParas = new double[]{0.4633, 21.7950, 0.1765, 120/3.6, 32.92910283972989, 0.191151120786746, 0.04481781290131005, 1.5857846782395244};
+		double[] fullParas = new double[]{0.4633, 21.7950, 0.1765, 120/3.6, 48.42777377001352, 0.5259902833066845, 8.940854882903562, 6.885166468931501};
 		mlpEngine.seedFixed = true;//强制
 		mlpEngine.runningSeed = 1500613842660l;
 		TimeMeasureUtil timer = new TimeMeasureUtil();

@@ -5,6 +5,8 @@ import com.jogamp.newt.event.MouseEvent;
 import com.jogamp.opengl.math.VectorUtil;
 import com.transyslab.roadnetwork.GeoPoint;
 
+import java.awt.event.KeyEvent;
+
 public class OrbitCamera extends Camera{
 	private float zoomSpeed, rotateSpeed, panSpeed;
 	private float minDistance;
@@ -101,6 +103,13 @@ public class OrbitCamera extends Camera{
 		
 	}
 	public void calcKeyMotion(final int keyCode){
+
+		switch (keyCode) {
+			case KeyEvent.VK_LEFT :
+				break;
+			case KeyEvent.VK_RIGHT :
+				break;
+		}
 		/*
 		switch (keyCode) {
 			case KeyEvent.VK_PAGE_UP :
@@ -126,6 +135,21 @@ public class OrbitCamera extends Camera{
 				tarMotion[0] -= keyStep;
 				break;
 		}*/
+	}
+	private void rotate(int delta) {
+		rotateSpeed = (float) (rotateSpeed*radius/500.0f);
+		double angle = (2.0*Math.PI*(delta)/PIXELS_PER_ROUND * rotateSpeed);
+		float[] offset = new float[3];
+
+
+		offset[0] = (float) (radius * Math.sin(phi) * Math.sin(theta));
+		offset[1] = (float) (radius * Math.cos(phi));
+		offset[2] = (float) (radius * Math.sin(phi) * Math.cos(theta));
+
+		VectorUtil.addVec3(eyeLocation, tarLocation, offset);
+		this.thetaDelta = 0.0;
+		this.phiDelta = 0.0;
+		this.rotateSpeed = 1.0f;
 	}
 	
 }

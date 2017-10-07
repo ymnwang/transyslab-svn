@@ -7,7 +7,7 @@ import com.transyslab.simcore.mlp.Functions.TSFun;
 import com.transyslab.commons.tools.optimizer.DE;
 
 public class MLPParameter extends Parameter {
-	public static final double[] DEFAULT_PARAMETERS = new double[] {0.5122,20.37,0.1928,45.50056,0.92191446,7.792739,1.6195029,0.6170239};
+	public static final double[] DEFAULT_PARAMETERS = new double[] {0.4633,21.7950,0.1765,33.333,32,0.42,7.92,5.25};
 	private double SegLenBuff_;//强制换道边界（segment实线长度）meter
 	private double LCBuffTime_;//Lane Changing影响时长 / 单车换道后的冷却时间
 	private int LCBuff_;//LCBuffTmie转换为帧数Frame or fin
@@ -23,7 +23,7 @@ public class MLPParameter extends Parameter {
 	private double [] LCPara_;//[0]gamma1 a.u.; [1]gamma2 a.u.;	
 	protected float[] limitingParam_; // [0] stopping gap (m); [1] moving time gap (t); [2] ?
 //	protected float[] queueParam; // max speed for queue releasing
-	final static float VEHICLE_LENGTH = 6.0960f; // 单位米， 20 feet	
+	final static float VEHICLE_LENGTH = 4.6f; // 单位米， 20 feet //wym 改为4.6米
 //	final static double CF_NEAR = 0.1;//meter
 	final static double SEG_NEAR = 1.0;//meter
 	final static double LC_Lambda1 = 18.4204;//换道logit模型常数项
