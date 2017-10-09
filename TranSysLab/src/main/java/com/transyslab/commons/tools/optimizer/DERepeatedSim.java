@@ -11,6 +11,7 @@ import com.transyslab.simcore.mlp.MLPParameter;
 import com.transyslab.simcore.mlp.MacroCharacter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -33,8 +34,9 @@ public class DERepeatedSim {
 		int repeatedTimes = 1;
 		double kjam = 0.1765, qmax = 0.4633, vfree = 21.7950,deltat = 0.2;
 		double xcLower = MLPParameter.xcLower(kjam, qmax,deltat);
-		double[] plower = new double[]{xcLower+0.00001,1e-4,0.0,0.0};
-		double[] pupper = new double[]{100.0, 0.99, 10.0, 10.0};//,180.0f,25,40,100};
+		double rupper = MLPParameter.rUpper(10,vfree,kjam,qmax);
+		double[] plower = new double[]{xcLower+0.00001,1e-5,0.0,0.0};
+		double[] pupper = new double[]{100.0, rupper-1e-5, 10.0, 10.0};//,180.0f,25,40,100};
 		//Gbest : 0.10734763
 		//Position : 15.475985 0.15889278 1.546905 6.5494165 29.030441 91.544785
 		//Gbest : 0.10625457
@@ -54,13 +56,13 @@ public class DERepeatedSim {
 				@Override
 				public double[] worksUnder(double[] paras) {
 					MLPEngine mlpEngine = (MLPEngine) engine;
+					mlpEngine.getSimParameter().setLCDStepSize(2.0);
 					double[][] simSpeeds = new double[repeatedTimes ][];
 					for(int i = 0;i<repeatedTimes;i++){
 						//仿真过程
 						if(mlpEngine.runWithPara(paras) == Constants.STATE_ERROR_QUIT){
 							return new double[]{Double.MAX_VALUE};
 						}
-
 						//获取特定结果
 						List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
 						simSpeeds[i] = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
@@ -85,6 +87,7 @@ public class DERepeatedSim {
 		}
 	}
 	public void run(SchedulerThread manager){
+
 		for (int i = 0; i < de.getMaxItrGeneration(); i++) {
 			long tb = System.currentTimeMillis();
 			for (int j = 0; j < de.getPopulation(); j++) {
@@ -94,19 +97,18 @@ public class DERepeatedSim {
 			}
 			for (int j = 0; j < de.getPopulation(); j++) {
 				double[] tmpResults = taskList.get(j).getOutputs();
-				de.evoluteIndividual(j,tmpResults[0]);
+				if(de.evoluteIndividual(j,tmpResults[0])){
+					if(bestSpeed == null)
+						bestSpeed = new double[tmpResults.length - 1];
+					System.arraycopy(tmpResults,1,bestSpeed,0,bestSpeed.length);
+				}
 			}
-			double[] bestResult = taskList.get(de.getBestIdvdIndex()).getOutputs();
-			if(bestSpeed == null)
-				bestSpeed = new double[bestResult.length - 1];
-			if(bestResult.length==1)
-				System.out.println("");
-			System.arraycopy(bestResult,1,bestSpeed,0,bestSpeed.length);
 			System.out.println("Gbest : " + de.getGbestFitness());
 			System.out.println("Position : " + de.showGBestPos());
 			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
 			taskList.clear();
 		}
+		System.out.println(Arrays.toString(bestSpeed));
 	}
 
 }
