@@ -206,5 +206,5 @@ public class Constants {
 	public static final int VEHICLE_NOT_RECYCLE = 0;
 	//³µÁ¾×ÅÉ«
 	public static final int VIRTUAL_VEHICLE = 1;
-	public static final int FOLLOWING = 3;
+	public static final int FOLLOWING = 2;
 }

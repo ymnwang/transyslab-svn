@@ -18,6 +18,8 @@ public class ContainTest {
 
 	public static void main(String[] args) {
 
+		System.out.println(String.format("%.2f",12.5623));
+
 		QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
 		String sql = "insert into simloop(travel_time) values(?)";
 		Object[][] paras = {{Double.NaN},{Double.NaN}};

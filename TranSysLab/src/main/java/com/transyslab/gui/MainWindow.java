@@ -95,6 +95,7 @@ public class MainWindow {
         JButton button7 = new JButton();
         JButton button8 = new JButton();
         JButton button9 = new JButton();
+        JButton button10 = new JButton();
         JPanel panel7 = new JPanel();
         JPanel panel2 = new JPanel();
         JPanel panel8 = new JPanel();
@@ -354,6 +355,19 @@ public class MainWindow {
                 }
             });
             toolBar1.add(button9);
+
+            //---- °´¼ü£ºÏÂÒ»Ö¡ ----
+            button10.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/next.png")
+                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            button10.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (canvas.isPause) {
+                        canvas.needNextScene = true;
+                    }
+                }
+            });
+            toolBar1.add(button10);
         }
         contentPane.add(toolBar1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,

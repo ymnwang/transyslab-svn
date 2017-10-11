@@ -5,10 +5,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.io.JdbcUtils;
-import com.transyslab.commons.io.QueryRunner;
-import com.transyslab.commons.io.TXTUtils;
+import com.transyslab.commons.io.*;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
 import org.apache.commons.csv.CSVRecord;
@@ -366,12 +363,15 @@ public class MLPNetwork extends RoadNetwork {
 				//从对象池获取vehicledata对象
 				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
 				//记录车辆信息
-				vd.init(v,false,Math.min(1,v.virtualType),String.valueOf(v.getNextLink()==null ? "NA" : v.lane.successiveDnLanes.get(0).getLink().getId()==v.getNextLink().getId()));
+				vd.init(v,
+						false,
+						(v.resemblance ? Constants.FOLLOWING : 0) + Math.min(1,v.virtualType),
+						//String.valueOf(v.getNextLink()==null ? "NA" : v.lane.successiveDnLanes.get(0).getLink().getId()==v.getNextLink().getId())
+						v.getInfo());
 				//将vehicledata插入frame
 				try {
 					FrameQueue.getInstance().offer(vd, veh_list.size());
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -560,30 +560,22 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	public void writeStat2Db(String tag, LocalDateTime dt) {
-		QueryRunner qr = new QueryRunner(JdbcUtils.getDataSource());
-		String sql = "insert into simloop(det, time_period, flow, speed, density, travel_time, tag, create_time) values(?,?,?,?,?,?,?,?)";
-		List<Object[]> objList = new ArrayList<>();
+		DBWriter loopWriter = new DBWriter("insert into simloop(det, time_period, flow, speed, density, travel_time, tag, create_time) values(?,?,?,?,?,?,?,?)");
 		sectionStatMap.forEach((k,v) -> {
 			String det = k[0].detName;
 			for (int i = 0; i<v.size(); i++) {
 				MacroCharacter r = v.get(i);
-				objList.add(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
+				loopWriter.write(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
 			}
 		});
 		linkStatMap.forEach((k,v) -> {
 			String det = "Link" + k.getId();
 			for (int i = 0; i<v.size(); i++) {
 				MacroCharacter r = v.get(i);
-				objList.add(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
+				loopWriter.write(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
 			}
 		});
-		Object[][] objs = new Object[objList.size()][];
-		objList.toArray(objs);
-		try {
-			qr.batch(sql, objList);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		loopWriter.flush();
 	}
 
 	public void clearSecStat() {

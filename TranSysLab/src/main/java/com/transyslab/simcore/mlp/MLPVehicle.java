@@ -67,7 +67,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void calState() {
-		if (leading != null && distance - leading.distance <= mlpParameter.CELL_RSP_LOWER) {
+		if (leading != null && leading.Displacement() - Displacement() <= mlpParameter.CELL_RSP_LOWER) {
 			cfState = true;
 		}
 		else {
@@ -102,7 +102,7 @@ public class MLPVehicle extends Vehicle{
 		MLPVehicle frontVeh = null;
 		MLPVehicle backVeh = link.findJointLane(tarLane).getFirstVeh();//效率有待提高
 		if (backVeh == null) {//该车道上没有车
-			return true;//路段太短的情况下也会直接返回true，不合理。待修改。
+			return true;//TODO: 路段太短的情况下也会直接返回true，不合理。待修改。
 		}
 		else {
 			//front = ((MLPSegment) link.getEndSegment()).endDSP;
@@ -415,5 +415,12 @@ public class MLPVehicle extends Vehicle{
 			diMap.put(theLane, theLane.calDi(this));
 		}
 	}
-
+	public String getInfo(){
+		StringBuilder sb = new StringBuilder();
+//		if (lane != null && diMap.get(lane)==null)
+//			System.out.println("DEBUG MESSAGE");
+		sb.append("MLC\n" + String.format("%.2f",calMLC()));//(diMap.get(lane)==0 ? 0 : )
+		sb.append("\n前车距离\n" + (leading==null ? "Inf" : String.format("%.2f",leading.Displacement() - Displacement())));
+		return sb.toString();
+	}
 }

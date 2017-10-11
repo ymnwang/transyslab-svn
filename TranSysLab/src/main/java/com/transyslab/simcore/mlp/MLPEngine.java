@@ -4,16 +4,13 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import com.transyslab.commons.io.JdbcUtils;
-import com.transyslab.commons.io.XmlParser;
+import com.transyslab.commons.io.*;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.csv.CSVRecord;
 import java.io.IOException;
 
-import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
@@ -32,7 +29,7 @@ public class MLPEngine extends SimulationEngine{
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
 	protected TXTUtils loopRecWriter;
 	protected boolean rawRecOn;
-	protected TXTUtils trackWriter;
+	protected DBWriter trackWriter;
 	protected boolean trackOn;
 	protected TXTUtils infoWriter;
 	protected boolean infoOn;
@@ -171,8 +168,8 @@ public class MLPEngine extends SimulationEngine{
 				loopRecWriter.write("TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
 			}				
 			if (trackOn) {
-				trackWriter = new TXTUtils("src/main/resources/output/track" + threadName + "_" + mod + ".csv");
-				trackWriter.write("TIME,rvId,VID,VIRTYPE,BUFF,POS,SEG,LINK,DSP,SPD,LEAD,TRAIL\r\n");
+				trackWriter = new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
+						                          "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 			}				
 			if (infoOn)
 				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + "_" + mod + ".txt");
@@ -195,7 +192,7 @@ public class MLPEngine extends SimulationEngine{
 			if (rawRecOn)
 				loopRecWriter.flushBuffer();
 			if (trackOn)
-				trackWriter.flushBuffer();
+				trackWriter.flush();
 			if (infoOn)
 				infoWriter.flushBuffer();
 			updateTime_ = now + ((MLPParameter) mlpNetwork.getSimParameter()).updateStepSize_;
@@ -269,19 +266,22 @@ public class MLPEngine extends SimulationEngine{
 						LV = v.leading.getId();
 					if (v.trailing != null)
 						FV = v.trailing.getId();
-					String str = time + "," +
-							          v.rvId + "," +
-							          v.getId() + "," +
-							          v.virtualType + "," +
-							          v.buffer + "," +
-							          v.lane.getLnPosNum() + "," +
-							          v.segment.getId() + "," +
-							          v.link.getId() + "," +
-							          v.Displacement() + "," +
-							          v.getCurrentSpeed() + "," +
-							          LV + "," + 
-							          FV + "\r\n";
-					trackWriter.writeNFlush(str);
+					trackWriter.write(new Object[] {
+							now,
+							v.rvId,
+							v.getId(),
+							v.virtualType,
+							v.buffer,
+							v.lane.getLnPosNum(),
+							v.segment.getId(),
+							v.link.getId(),
+							v.Displacement(),
+							v.getCurrentSpeed(),
+							LV,
+							FV,
+							Thread.currentThread().getName() + "_" + mod,
+							LocalDateTime.now()
+					});
 				}
 			}
 		}
@@ -292,8 +292,6 @@ public class MLPEngine extends SimulationEngine{
 				infoWriter.writeNFlush("共产生真实车与虚拟车：" + (mlpNetwork.getNewVehID()-1)+"\r\n");
 			if (rawRecOn)
 				loopRecWriter.closeWriter();
-			if (trackOn)
-				trackWriter.closeWriter();
 			if (infoOn)
 				infoWriter.closeWriter();
 			if(statRecordOn) {
@@ -560,6 +558,14 @@ public class MLPEngine extends SimulationEngine{
 	public void close() {
 		//关闭数据库连接
 		JdbcUtils.close();
+	}
+
+	public int countOnHoldVeh() {
+		int vehHoldCount = 0;
+		for (int k = 0; k<mlpNetwork.nLinks(); k++) {
+			vehHoldCount += ((MLPLink) mlpNetwork.getLink(k)).countHoldingInflow();
+		}
+		return vehHoldCount;
 	}
 
 }

@@ -418,4 +418,11 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		int d2 = Math.abs(tmp.lnPosNum_ - lnPosNum_);
 		return ( d1 - d2 );
 	}
+
+	public String getSDnLnInfo() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("SuccessiveDnLanes:\r\n");
+		successiveDnLanes.stream().forEach(e -> sb.append(e.getId() + ", "));
+		return sb.toString();
+	}
 }

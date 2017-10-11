@@ -202,7 +202,7 @@ public class MLPLink extends Link {
 				if (veh.calMLC()>0.99)
 					veh.stopFlag = true;
 //				if (veh.calMLC()>0.7)
-//					System.out.println("BUG: too late to LC");
+//					System.out.println("DEBUG: too late to LC");
 			}
 		}
 	}

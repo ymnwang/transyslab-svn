@@ -65,8 +65,8 @@ public class QueryRunner extends org.apache.commons.dbutils.QueryRunner {
 		}
 	}
 
-	public void closeConn() throws SQLException {
+	/*public void closeConn() throws SQLException {
 		Connection conn = this.prepareConnection();
 		this.close(conn);
-	}
+	}*/
 }

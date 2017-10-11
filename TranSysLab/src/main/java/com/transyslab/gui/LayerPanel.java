@@ -1,5 +1,6 @@
 package com.transyslab.gui;
 import com.transyslab.roadnetwork.*;
+import com.transyslab.simcore.mlp.MLPLane;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -70,12 +71,15 @@ public class LayerPanel {
         public void writeTxtComponents(NetworkObject object){
             VehicleData vhcData = (VehicleData) object;
             textField1.setText(String.valueOf(vhcData.getId()));
-            textField2.setText(String.valueOf(vhcData.getVhcLength()));
+            textField2.setText(String.format("%.2f",vhcData.getVhcLength()));
             textField3.setText(String.valueOf(vhcData.getCurLaneID()));
-            textField5.setText(String.valueOf(vhcData.getCurSpeed()));
+            textField4.setText(((vhcData.getSpecialFlag()&Constants.VIRTUAL_VEHICLE)!=0 ? "虚拟车" : "真实车") +
+                    ((vhcData.getSpecialFlag()&Constants.FOLLOWING)!=0 ? " 队内" : " 队外"));
+            textField5.setText(String.format("%.2f",vhcData.getCurSpeed()));
             textField6.setText(String.valueOf(vhcData.getOriNodeID()));
             textField7.setText(String.valueOf(vhcData.getDesNodeID()));
             textField8.setText(vhcData.getPathInfo());
+            textArea4.setText(vhcData.getVhcInfo());
         }
         private void initComponents() {
 
@@ -392,6 +396,7 @@ public class LayerPanel {
             textField2.setText(String.valueOf(theLane.getLength()));
             String segmentID = "Segment"+ String.valueOf(theLane.getSegment().getId());
             textField3.setText(segmentID);
+            textArea4.setText(((MLPLane) theLane).getSDnLnInfo());
         }
         private void initComponents() {
 
