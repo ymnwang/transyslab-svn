@@ -22,6 +22,7 @@ public class DEAlgorithm {
 	private boolean isMaximum;
 	private Random random;
 
+
 	//默认处理目标最小化
 	public DEAlgorithm(){
 		this.random = new Random(System.currentTimeMillis());
@@ -65,6 +66,7 @@ public class DEAlgorithm {
 	public double[] getNewPosition(int i) {
 		return newidvds[i].pos;
 	}
+
 
 	public void init(int p, int dim, int maxItrGeneration,double f, double cr, double[] pl, double[] pu) {
 		this.maxItrGeneration = maxItrGeneration;
@@ -125,17 +127,18 @@ public class DEAlgorithm {
 			changePos(i);
 		}
 	}
-	public void evoluteIndividual(int pi, double fitness){
+	public boolean evoluteIndividual(int pi, double fitness){
+		boolean flag = false;
 		newidvds[pi].fitness = fitness;
 		selection(pi);
-		if(fitness==Double.MAX_VALUE)
-			System.out.print("");
 		if (newidvds[pi].fitness< gbestFitness) {
 			setGbest(newidvds[pi].pos);
 			setGbestFitness(newidvds[pi].fitness);
 			bestIdvdIndex = pi;
+			flag = true;
 		}
 		changePos(pi);
+		return flag;
 	}
 	public double[] getGbest() {
 		return gbest;
