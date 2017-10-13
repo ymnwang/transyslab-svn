@@ -396,7 +396,10 @@ public class LayerPanel {
             textField2.setText(String.valueOf(theLane.getLength()));
             String segmentID = "Segment"+ String.valueOf(theLane.getSegment().getId());
             textField3.setText(segmentID);
-            textArea4.setText(((MLPLane) theLane).getSDnLnInfo());
+            textArea4.setText(
+                    "SegID " + theLane.getSegment().getId() + "\n" +
+                    "LnkID " + theLane.getLink().getId() + "\n" +
+                    ((MLPLane) theLane).getSDnLnInfo());
         }
         private void initComponents() {
 

@@ -1,5 +1,8 @@
 package com.transyslab.commons.io;
 
+import com.transyslab.commons.tools.TimeMeasureUtil;
+import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
+
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,12 +26,26 @@ public class DBWriter {
 		rows.add(row);
 	}
 
-	public void flush() {
+	private void upload() {
+		System.out.println("uploading Db");
+		TimeMeasureUtil tm = new TimeMeasureUtil();
+		tm.tic();
 		try {
 			qr.batch(sqlStr, rows);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		rows.clear();
+		System.out.println("finished uploading in " + tm.toc() + "ms");
+	}
+
+	public synchronized void flush() {
+		if (rows.size()>100) {////ObjectSizeCalculator.getObjectSize(rows)>=1e8
+			upload();
+		}
+	}
+
+	public void close() {
+		upload();
 	}
 }

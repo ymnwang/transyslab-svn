@@ -34,20 +34,23 @@ public class MLPLoop extends Loop{
 		records = new LinkedList<>();
 		this.createSurface();
 	}
-	public String detect(double timeNow){//当处于seg边界上存在漏洞
+	public String detect(double timeNow){//当处于seg边界上存在漏洞(已修复)
 		String str = "";
 		String timeStr = String.format("%.1f", timeNow);
 		for (MLPVehicle veh : ((MLPLane) lane).vehsOnLn) {
-			if (veh.virtualType == 0 && veh.getDistance()>distance && veh.newDis<=distance) {
+			if (veh.virtualType == 0 &&
+					veh.Displacement() < displacement &&
+					veh.segment.endDSP - veh.newDis >= displacement) {
 //				detectedSpds.add(veh.newSpeed);
 				records.add(new double[] {timeNow, veh.newSpeed});
-				str += timeStr + "," +
-						   veh.getId() + "," +
-						   veh.virtualType + "," +
-						   veh.newSpeed + "," + 
-						   ((MLPLane) lane).getLnPosNum() + "," +
-						   link.getId() + "," +
-						   displacement + "\r\n";
+				str +=  detName + "," +
+						timeStr + "," +
+						veh.getId() + "," +
+						veh.virtualType + "," +
+						veh.newSpeed + "," +
+						((MLPLane) lane).getLnPosNum() + "," +
+						link.getId() + "," +
+						displacement + "\r\n";
 			}
 		}
 		return str;
