@@ -576,6 +576,7 @@ public class MLPNetwork extends RoadNetwork {
 			}
 		});
 		loopWriter.flush();
+		loopWriter.close();
 	}
 
 	public void clearSecStat() {
