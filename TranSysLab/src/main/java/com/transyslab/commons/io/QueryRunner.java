@@ -19,7 +19,7 @@ public class QueryRunner extends org.apache.commons.dbutils.QueryRunner {
 
 	public int[] batch(String sql, List<Object[]> params) throws SQLException {
 		Connection conn = this.prepareConnection();
-		return this.batch(conn, false, sql, params);
+		return this.batch(conn, true, sql, params);
 	}
 
 
