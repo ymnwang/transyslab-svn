@@ -282,7 +282,7 @@ public class MLPEngine extends SimulationEngine{
 			}
 		}
 
-		System.out.println("DEBUG Sim world time: " + time + " s");
+//		System.out.println("DEBUG Sim world time: " + time + " s");
 
 		clock.advance(clock.getStepSize());
 		if (now > clock.getStopTime() + epsilon) {

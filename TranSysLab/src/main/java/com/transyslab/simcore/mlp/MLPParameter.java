@@ -45,7 +45,7 @@ public class MLPParameter extends Parameter {
 
 	public MLPParameter() {
 		SegLenBuff_ = 10.0;
-		LCBuffTime_ = 2.0;
+		LCBuffTime_ = 0.0;
 		updateStepSize_ = 10.0;
 		LCDStepSize_ = 0.0;//2.0
 		statStepSize = 300.0;//默认5分钟进行统计；引擎初始化时读取master文件会覆盖这个值。
