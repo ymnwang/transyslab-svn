@@ -8,7 +8,7 @@ import com.transyslab.commons.tools.mutitask.TaskWorker;
 /**
  * Created by WangYimin on 2017/7/18.
  */
-public abstract class SchedulerThread extends Thread implements TaskGiver{
+public abstract class SchedulerThread extends Thread implements TaskGiver {
 	private TaskCenter taskCenter;
 
 	public SchedulerThread(String thread_name, TaskCenter task_center) {
