@@ -51,7 +51,6 @@ public class DBWriter {
 	private void upload() {
 		System.out.println("uploading Db");
 		Stopwatch timer = new Stopwatch();
-		System.out.println("Data size:"+rows.size());
 		timer.start();
 		try {
 			qr.batch(sqlStr, rows);

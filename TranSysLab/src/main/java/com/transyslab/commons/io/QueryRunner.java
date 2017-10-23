@@ -1,7 +1,5 @@
 package com.transyslab.commons.io;
 
-import org.encog.util.Stopwatch;
-
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,8 +24,6 @@ public class QueryRunner extends org.apache.commons.dbutils.QueryRunner {
 
 
 	public int[] batch(Connection conn, boolean closeConn, String sql, List<Object[]> params) throws SQLException {
-		int count = 0;
-		final int batchSize = 1000;
 		if(conn == null) {
 			throw new SQLException("Null connection");
 		} else if(sql == null) {
@@ -49,19 +45,10 @@ public class QueryRunner extends org.apache.commons.dbutils.QueryRunner {
 			try {
 				stmt = this.prepareStatement(conn, sql);
 
-				Stopwatch timer = new Stopwatch();
-				timer.start();
-
 				for (Object[] p : params) {
 					this.fillStatement(stmt, p);
 					stmt.addBatch();
-					if(++count % batchSize == 0) {
-						stmt.executeBatch();
-					}
 				}
-
-				timer.stop();
-				System.out.println("batch processing time: " + timer.getElapsedMilliseconds());
 
 				rows = stmt.executeBatch();
 			} catch (SQLException var11) {
