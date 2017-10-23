@@ -31,7 +31,7 @@ public class DERepeatedSim {
 	public static void main(String[] args) {
 		TaskCenter taskCenter = new TaskCenter();
 		int pop = 20;
-		int repeatedTimes = 5;
+		int repeatedTimes = 1;
 		double kjam = 0.1765, qmax = 0.4633, vfree = 21.7950,deltat = 0.2;
 		double xcLower = MLPParameter.xcLower(kjam, qmax,deltat);
 		double rupper = MLPParameter.rUpper(10,vfree,kjam,qmax);

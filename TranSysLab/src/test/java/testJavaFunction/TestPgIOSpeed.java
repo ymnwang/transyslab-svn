@@ -21,8 +21,8 @@ public class TestPgIOSpeed {
 		String sql = "insert into iotest(name,password,email,birthday) values(?,?,?,?)";
 
 		for (int i = 0; i < 1000; i++) {
-			Object params[][] = new Object[1000][];
-			for(int j=0;j<1000;j++){
+			Object params[][] = new Object[100][];
+			for(int j=0;j<100;j++){
 				params[j] = new Object[] { "aa" + j, "123", "aa@sina.com",
 						new Date(System.currentTimeMillis()) };
 			}

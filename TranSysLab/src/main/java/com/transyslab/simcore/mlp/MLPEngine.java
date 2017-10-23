@@ -170,7 +170,7 @@ public class MLPEngine extends SimulationEngine{
 				loopRecWriter.write("DETNAME,TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
 			}				
 			if (trackOn) {
-				trackWriter = new DBWriter("copy into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
+				trackWriter = new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
 						                          "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 			}				
 			if (infoOn)
@@ -282,7 +282,7 @@ public class MLPEngine extends SimulationEngine{
 			}
 		}
 
-//		System.out.println("DEBUG Sim world time: " + time + " s");
+		System.out.println("DEBUG Sim world time: " + time + " s");
 
 		clock.advance(clock.getStepSize());
 		if (now > clock.getStopTime() + epsilon) {
@@ -536,12 +536,7 @@ public class MLPEngine extends SimulationEngine{
 		if (violateConstraints(fullParas))
 			return Constants.STATE_ERROR_QUIT;
 		resetBeforeSimLoop();
-		double[] params1 = new double[8];
-		System.arraycopy(fullParas,0,params1,0,8);
-		setParas(params1);
-		getSimParameter().setDLower((float)fullParas[9]);
-		getSimParameter().setLCBuffTime(fullParas[8]);
-		runningSeed = (long)fullParas[10];
+		setParas(fullParas);
 		run(0);//process loop only
 		return Constants.STATE_DONE;
 	}
