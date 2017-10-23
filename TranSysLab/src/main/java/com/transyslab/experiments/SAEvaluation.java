@@ -35,6 +35,9 @@ public class SAEvaluation {
 				public double[] worksUnder(double[] paras) {
 					MLPEngine mlpEngine = (MLPEngine) engine;
 					mlpEngine.getSimParameter().setLCDStepSize(0.0);
+					mlpEngine.getSimParameter().setLCBuffTime();
+					mlpEngine.getSimParameter().setDLower();
+					mlpEngine.set
 					int vhcCount = 0;
 					double[] simSpeeds;
 					//·ÂÕæ¹ý³Ì
