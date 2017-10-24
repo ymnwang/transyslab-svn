@@ -60,6 +60,7 @@ public class CSVUtils {
 		printer.flush();
         printer.close();
     }
+	//TODO 增加参数判断是否为续写
     public static void writeCSV(String filePath,String[] header, double[][] data) throws IOException{
     	FileUtils.createFile(filePath);
         //创建CSVFormat

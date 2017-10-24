@@ -24,13 +24,14 @@ import java.util.List;
  */
 public class SAEvaluation {
 	public static void main(String[] args) throws IOException {
+		final int NUMOFWORKERS = 20;
 		TaskCenter taskCenter = new TaskCenter();
 		List<Task>taskList = new ArrayList<>();
 		List<CSVRecord> paramList = CSVUtils.readCSV("R://splitFile3.csv",null);
 		CSVPrinter printer = CSVUtils.getCSVWriter("R://SAResult3.csv",null,false);
 		int row = paramList.size();
 		int col = paramList.get(0).size();
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < NUMOFWORKERS; i++) {
 			new EngThread("Eng" + i, taskCenter, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties") {
 				@Override
 				public double[] worksUnder(double[] paras) {
@@ -78,8 +79,8 @@ public class SAEvaluation {
 						parameters[4+j] = Double.parseDouble(paramList.get(i).get(j));
 					}
 					taskList.add(dispatch(parameters, TaskWorker.ANY_WORKER));
-					if((i+1)%20.0 == 0){
-						for (int k = 0; k < 20; k++) {
+					if((i+1)%((double)NUMOFWORKERS) == 0){
+						for (int k = 0; k < NUMOFWORKERS; k++) {
 							double[] tmpResults = taskList.get(k).getOutputs();
 							List<Double> output = new ArrayList<>(tmpResults.length);
 							for(int l =0;l<tmpResults.length;l++) {
