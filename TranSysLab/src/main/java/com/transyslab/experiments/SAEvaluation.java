@@ -16,6 +16,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -25,7 +26,7 @@ public class SAEvaluation {
 	public static void main(String[] args) throws IOException {
 		TaskCenter taskCenter = new TaskCenter();
 		List<Task>taskList = new ArrayList<>();
-		List<CSVRecord> paramList = CSVUtils.readCSV("R://out3.csv",null);
+		List<CSVRecord> paramList = CSVUtils.readCSV("R://splitFile3.csv",null);
 		CSVPrinter printer = CSVUtils.getCSVWriter("R://SAResult3.csv",null,false);
 		int row = paramList.size();
 		int col = paramList.get(0).size();
@@ -35,13 +36,18 @@ public class SAEvaluation {
 				public double[] worksUnder(double[] paras) {
 					MLPEngine mlpEngine = (MLPEngine) engine;
 					mlpEngine.getSimParameter().setLCDStepSize(0.0);
-					mlpEngine.getSimParameter().setLCBuffTime();
-					mlpEngine.getSimParameter().setDLower();
-					mlpEngine.set
+					mlpEngine.seedFixed = true;
+					mlpEngine.runningSeed = (long)paras[10];
+					//其他设置(properties中没有的设置)
+					mlpEngine.getSimParameter().setDLower((float)paras[9]);//车队判别阈值
+					mlpEngine.getSimParameter().setLCBuffTime(paras[8]);//换道影响时间
+					// 待优化参数
+					double[] optParams = Arrays.copyOfRange(paras,0,8);
+
 					int vhcCount = 0;
 					double[] simSpeeds;
 					//仿真过程
-					if (mlpEngine.runWithPara(paras) == Constants.STATE_ERROR_QUIT) {
+					if (mlpEngine.runWithPara(optParams) == Constants.STATE_ERROR_QUIT) {
 						return new double[]{Integer.MAX_VALUE};
 					}
 					//获取特定结果

@@ -27,7 +27,7 @@ public class MLPEngine extends SimulationEngine{
 	protected double updateTime_;
 	protected double LCDTime_;
 	protected double statTime_;
-	protected boolean firstEntry; // simulationLoop中第一次循环的标记
+	private boolean firstEntry; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
 	protected TXTUtils loopRecWriter;
 	protected boolean rawRecOn;
@@ -152,17 +152,18 @@ public class MLPEngine extends SimulationEngine{
 	public int simulationLoop() {
 		final double epsilon = 1.0E-3;
 
-		double now = mlpNetwork.getSimClock().getCurrentTime();
-		double startTime = mlpNetwork.getSimClock().getStartTime();
-		String time = String.format("%.1f", now - startTime);
-
 		if (firstEntry) {
 			// This block is called only once just before the simulation gets started.
 			firstEntry = false;
-			
+
+			//确保在Simloop前执行resetBeforeSimloop
+			resetBeforeSimLoop();
+
+			//TODO: 待确定此函数是否可以放在resetBeforeSimLoop中
 			//reset update time
 			mlpNetwork.resetReleaseTime();
-			
+
+			//TODO: 待确定此函数是否可以放在initEngine中
 			//establish writers
 			String threadName = Thread.currentThread().getName();
 			if (rawRecOn) {
@@ -170,7 +171,7 @@ public class MLPEngine extends SimulationEngine{
 				loopRecWriter.write("DETNAME,TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
 			}				
 			if (trackOn) {
-				trackWriter = new DBWriter("copy into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
+				trackWriter = new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
 						                          "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 			}				
 			if (infoOn)
@@ -188,6 +189,10 @@ public class MLPEngine extends SimulationEngine{
 				infoWriter.writeNFlush("随机发出真实车： " + total + "\r\n");	
 			}
 		}
+
+		double now = mlpNetwork.getSimClock().getCurrentTime();
+		double startTime = mlpNetwork.getSimClock().getStartTime();
+//		String time = String.format("%.1f", now - startTime);
 		
 		if (now >= updateTime_){
 			mlpNetwork.resetReleaseTime();
@@ -299,7 +304,9 @@ public class MLPEngine extends SimulationEngine{
 //				mlpNetwork.writeStat(statFileOut);
 				mlpNetwork.writeStat2Db(Thread.currentThread().getName() + "_" + mod, LocalDateTime.now());
 			}
+			//完整运行次数+1，重置firstEntry为真，以便下次再执行SimLoop时可以重置参数。
 			mod += 1;
+			firstEntry = true;
 			return (state_ = Constants.STATE_DONE);// STATE_DONE宏定义 simulation
 													// is done
 		}
@@ -318,7 +325,7 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	@Override
-	public void loadFiles() {
+	public void loadFiles() {//读入仿真输入文件并进行引擎初始化
 		//读入仿真文件
 		loadSimulationFiles();
 		//读入实测数据用于计算fitness
@@ -338,9 +345,11 @@ public class MLPEngine extends SimulationEngine{
 			}
 			//readFromLoop(MLPSetup.getLoopData_fileName());
 		}
+		//引擎初始化
+		initEngine();
 	}
 
-	public int loadSimulationFiles(){
+	private int loadSimulationFiles(){
 		
 		//load xml
 		//parse xml into parameter & network
@@ -358,12 +367,17 @@ public class MLPEngine extends SimulationEngine{
 		return 0;
 	}
 
-	@Override
-	public void resetBeforeSimLoop() {//重置引擎时钟 时间相关的参数 与路网状态
-		SimulationClock clock = mlpNetwork.getSimClock();
-		firstEntry = true;
-		clock.init(timeStart, timeEnd, timeStep);
+	private void initEngine(){
 		getSimParameter().setSimStepSize(timeStep);
+		SimulationClock clock = mlpNetwork.getSimClock();
+		clock.init(timeStart, timeEnd, timeStep);
+	}
+
+	//重置引擎时钟 时间相关的参数 与路网状态
+	//注意：若要设置种子、发车等于路网状态重设过程相关的参数，需要在执行此函数前进行。
+	private void resetBeforeSimLoop() {
+		SimulationClock clock = mlpNetwork.getSimClock();
+		clock.resetTimer();
 		double now = clock.getCurrentTime();
 		updateTime_ = now;
 		LCDTime_ = now;
@@ -375,7 +389,12 @@ public class MLPEngine extends SimulationEngine{
 		mlpNetwork.resetNetwork(needRndETable, runProperties.get("odFileDir"), runProperties.get("emitFileDir"), runningSeed);
 	}
 
-	public void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam, VPhyLim]
+	public void forceResetEngine() {
+		firstEntry = true;
+		resetBeforeSimLoop();
+	}
+
+	private void setObservedParas (double [] ob_paras){//[Qm, Vfree, Kjam, VPhyLim]
 		if (ob_paras.length != 4) {
 			System.err.println("ob_paras' length does not match");
 			return;
@@ -417,7 +436,7 @@ public class MLPEngine extends SimulationEngine{
 		allParas.setPhyLim(VPhyLim);
 	}
 
-	public void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
+	private void setOptParas(double [] optparas) {//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
 		if (optparas.length != 6) {
 			System.err.println("length does not match");
 			return;
@@ -432,7 +451,7 @@ public class MLPEngine extends SimulationEngine{
 		allParas.setLCPara(new double[] {optparas[4], optparas[5]});//gamma1 gamma2
 	}
 
-	public void setParas(double[] ob_paras, double[] varying_paras) {//varying_paras [0]Xc, [1]r(i.e. alpha*beta), [2]gamma1, [3]gamma2.
+	private void setParas(double[] ob_paras, double[] varying_paras) {//varying_paras [0]Xc, [1]r(i.e. alpha*beta), [2]gamma1, [3]gamma2.
 		//长度检查
 		if (ob_paras.length != 4 || varying_paras.length != 4) {
 			System.err.println("parameters' length does not match");
@@ -493,7 +512,7 @@ public class MLPEngine extends SimulationEngine{
 		setParas(ob,varying);
 	}
 
-	public boolean violateConstraints(double[] fullParas) {
+	protected boolean violateConstraints(double[] fullParas) {
 		//解释观测参数
 		double Qm = fullParas[0];
 		double Vfree = fullParas[1];
@@ -535,30 +554,15 @@ public class MLPEngine extends SimulationEngine{
 	public int runWithPara(double[] fullParas) {
 		if (violateConstraints(fullParas))
 			return Constants.STATE_ERROR_QUIT;
-		resetBeforeSimLoop();
-		double[] params1 = new double[8];
-		System.arraycopy(fullParas,0,params1,0,8);
-		setParas(params1);
-		getSimParameter().setDLower((float)fullParas[9]);
-		getSimParameter().setLCBuffTime(fullParas[8]);
-		runningSeed = (long)fullParas[10];
-		run(0);//process loop only
+		setParas(fullParas);
+		run();
 		return Constants.STATE_DONE;
 	}
 
 	/*@Override
-	public void run(int mode) {
-		switch (mode) {
-			case 0:
-				resetBeforeSimLoop();
-				while (simulationLoop() >= 0);
-				break;
-			case 1:
-				while (simulationLoop() >= 0);
-				break;
-				default:
-					break;
-		}
+	public void run() {
+		resetBeforeSimLoop();
+		while (simulationLoop() >= 0);
 	}*/
 
 	@Override
@@ -582,30 +586,37 @@ public class MLPEngine extends SimulationEngine{
 
 	public static void main(String[] args) {
 		//初始化
-		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/kscalibration_固化路径.properties");
+		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/kscalibration.properties");
 		mlpEngine.loadFiles();
 
-		double[] fullParas = MLPParameter.DEFAULT_PARAMETERS;//new double[]{0.4633, 21.7950, 0.1765, 120/3.6, 48.42777377001352, 0.5259902833066845, 8.940854882903562, 6.885166468931501};
+		//运动模型参数
+		double[] fullParas = /*MLPParameter.DEFAULT_PARAMETERS;//*/new double[]{0.4633, 21.7950, 0.1765, 120/3.6, 72.327, 3.2948, 1.4838, 1.0046};
 
 		//强制设置(override properties' setting)
 		mlpEngine.seedFixed = true;
-		mlpEngine.runningSeed = 1500613842660l;
-		mlpEngine.trackOn = true;
+		mlpEngine.runningSeed = (long)2.83E+08;
+		//其他设置(properties中没有的设置)
+		mlpEngine.getSimParameter().setDLower((float)89.961);//车队判别阈值
+		mlpEngine.getSimParameter().setLCBuffTime(5.2022);//换道影响时间
 
-		//计时器
-		Stopwatch timer = new Stopwatch();
-		timer.start();
+		for (int i = 0; i < 10; i++) {
+			//计时器
+			Stopwatch timer = new Stopwatch();
+			timer.start();
 
-		//运行
-		mlpEngine.runWithPara(fullParas);
+			//运行
+			mlpEngine.runWithPara(fullParas);
 
-		//计时结束
-		timer.stop();
+			//计时结束
+			timer.stop();
 
-		//输出信息
-		System.out.println("time " + timer.getElapsedMilliseconds() + " ms");
-		//统计发车
-		System.out.println("未发车辆数：" + mlpEngine.countOnHoldVeh() + "辆");
+			//输出信息
+			System.out.println("time " + timer.getElapsedMilliseconds() + " ms");
+			//统计发车
+			System.out.println("未发车辆数：" + mlpEngine.countOnHoldVeh() + "辆");
+			if (mlpEngine.countOnHoldVeh()>2051)
+				System.out.println("DEBUG");
+		}
 
 		//关闭引擎
 		mlpEngine.close();

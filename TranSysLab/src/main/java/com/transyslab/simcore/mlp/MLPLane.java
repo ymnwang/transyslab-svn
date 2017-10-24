@@ -425,4 +425,8 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		successiveDnLanes.stream().forEach(e -> sb.append(e.getId() + ", "));
 		return sb.toString();
 	}
+
+	public double getCapacity() {
+		return capacity_;
+	}
 }
