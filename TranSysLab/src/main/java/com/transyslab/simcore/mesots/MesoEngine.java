@@ -68,7 +68,6 @@ public class MesoEngine extends SimulationEngine {
 		frequency = (1.0 / theNetwork.getSimClock().getStepSize());
 	}
 
-	@Override
 	public void resetBeforeSimLoop() {
 		firstEntry = 1;
 		theNetwork.getSimClock().init(0*3600,2*3600, 0.2);
@@ -111,16 +110,14 @@ public class MesoEngine extends SimulationEngine {
 	}
 
 	// 多次运行
-	public void run(int mode) {
-		if(mode==0){
-			//TODO 重构待改
-			//theNetwork.updateParaSdfns(0.5,0.0, 19.76, 158.75,2.04,5.35);
-			//theNetwork.getSimParameter().setRspLower(30.87f);//parameter[4]);
-			//theNetwork.getSimParameter().setRspUpper(91.58f);//parameter[5]);
-			//theNetwork.getSimParameter().updateCSG();
-			while (simulationLoop() >= 0) {
+	public void run() {
+		//TODO 重构待改
+		//theNetwork.updateParaSdfns(0.5,0.0, 19.76, 158.75,2.04,5.35);
+		//theNetwork.getSimParameter().setRspLower(30.87f);//parameter[4]);
+		//theNetwork.getSimParameter().setRspUpper(91.58f);//parameter[5]);
+		//theNetwork.getSimParameter().updateCSG();
+		while (simulationLoop() >= 0) {
 
-			}
 		}
 		/*
 		else if (mode == 1) {

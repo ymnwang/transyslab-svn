@@ -6,20 +6,23 @@ import java.util.TimeZone;
 
 public class SimulationClock {
 
-	protected static long baseTime; // time of 00:00:00AM today
-	protected static long localTime; // current local clock time
+	private static long baseTime; // time of 00:00:00AM today
+	private static long localTime; // current local clock time
 
-	protected double startTime; // simulation start time
-	protected double stopTime; // simulation stop time
-	protected double simulationTime; // total simultion time
-	protected double stepSize; // simulation step size
-	protected double currentTime; // current simulation clock time
-	protected double masterTime; // current time of master clock
+	private double startTime; // simulation start time
+	private double stopTime; // simulation stop time
+	private double simulationTime; // total simultion time
+	private double stepSize; // simulation step size
+	private double currentTime; // current simulation clock time
+	private double masterTime; // current time of master clock
 
 	public SimulationClock() {
 		masterTime = 86400.0;
-		startTime = 12 * 3600f;
-		stopTime = 14 * 3600 + 50 * 60f;
+		/*startTime = 12 * 3600f;
+		stopTime = 14 * 3600 + 50 * 60f;*/
+		startTime = Double.NaN;
+		stopTime = Double.NaN;
+		stepSize = Double.NaN;
 	}
 
 
@@ -34,19 +37,43 @@ public class SimulationClock {
 		if (start > stop || step < 0.0) {
 			return 1;
 		}
-		stepSize = step;
-		currentTime = start;
+		this.startTime = start;
+		this.stopTime = stop;
+		this.stepSize = step;
+		resetTimer();
 
-		setStartTime(start);
-		setStopTime(stop);
+//------------易引起歧义，已废除-------------
+//		setStartTime(start);
+//		setStopTime(stop);
+//------------易引起歧义，已废除-------------
 
 		return 0;
 	}
 
+	//wym 重设随start/stoptime改变的时间参数
+	public void resetTimer(){
+		if (Double.isNaN(startTime)||Double.isNaN(stopTime))
+			System.err.println("未设置开始/结束时间");
+		simulationTime = stopTime - startTime;
+		currentTime = startTime;
+
+	}
+
+	//------------易引起歧义，已废除-------------
+	/*public void setStartTime(double t) {
+		startTime = t;
+		currentTime = t;
+		simulationTime = stopTime - startTime;
+	}
+	public void setStopTime(double t) {
+		stopTime = t;
+		simulationTime = stopTime - startTime;
+	}
 	public void setStepSize(double step) {
 		stepSize = step;
 
-	}
+	}*/
+	//------------易引起歧义，已废除-------------
 
 	public double getMasterTime() {
 		return masterTime;
@@ -58,24 +85,19 @@ public class SimulationClock {
 		return (currentTime >= masterTime);
 	}
 
-
-	public void setStartTime(double t) {
-		startTime = t;
-		currentTime = t;
-		simulationTime = stopTime - startTime;
-	}
-	public void setStopTime(double t) {
-		stopTime = t;
-		simulationTime = stopTime - startTime;
-	}
-
 	public double getStartTime() {
+		if (Double.isNaN(startTime))
+			System.err.println("未设置开始时间");
 		return startTime;
 	}
 	public double getStopTime() {
+		if (Double.isNaN(stopTime))
+			System.err.println("未设置结束时间");
 		return stopTime;
 	}
 	public double getStepSize() {
+		if (Double.isNaN(stepSize))
+			System.err.println("未设置仿真步长");
 		return stepSize;
 	}
 

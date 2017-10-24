@@ -19,11 +19,10 @@ public class FD {
 		for (int i = 0; i < 10; i++) {
 			if (i!=9)
 				continue;
-			mlpEngine.resetBeforeSimLoop();
 			mlpEngine.setParas(fullParas);
 			launchLink.generateInflow(demand,speed,time,launchLink.getStartSegment().getLanes(),112);
 			System.out.println("generates: " + launchLink.countHoldingInflow());
-			mlpEngine.run(0);
+			mlpEngine.run();
 			System.out.println("remains: " + launchLink.countHoldingInflow());
 			demand += 24000;
 		}

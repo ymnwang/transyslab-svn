@@ -32,8 +32,6 @@ public class ODEngThread extends EngThread {
 		//此实验中，引擎接受指定任务，且连续运行，即在此初始化后不再reset
 		//加载路网文件
 		engine.loadFiles();
-		//初始化引擎
-		engine.resetBeforeSimLoop();
 
 		//工作线程挂到TC中开始循环工作
 		goToWork(taskCenter, true);

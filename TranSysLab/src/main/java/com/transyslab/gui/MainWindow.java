@@ -538,7 +538,7 @@ public class MainWindow {
         switch (AppSetup.modelType) {
             case 1:
                 //TODO 待设计传入参数运行
-                ((MesoEngine)engines[0]).run(0);
+                ((MesoEngine)engines[0]).run();
                 break;
             case 2:
                 if (seed>=0) {

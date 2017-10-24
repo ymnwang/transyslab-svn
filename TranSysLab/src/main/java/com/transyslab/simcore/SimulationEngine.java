@@ -65,7 +65,7 @@ public abstract class SimulationEngine {
 	// would be good enough. This function will NOT return until the
 	// simulation is done.
 
-	public void run(int mode) {
+	public void run() {
 		while (simulationLoop() >= 0);
 	}
 	public abstract int simulationLoop();
@@ -73,8 +73,6 @@ public abstract class SimulationEngine {
 	// One step of the simulation. This function needs to be
 	// overloaded in derived class to do the real things. The dummy
 	// function just prints the current time in the console window.
-
-	public abstract void resetBeforeSimLoop();
 
 	public abstract RoadNetwork getNetwork();
 }
