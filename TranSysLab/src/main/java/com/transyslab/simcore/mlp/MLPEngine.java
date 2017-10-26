@@ -155,39 +155,8 @@ public class MLPEngine extends SimulationEngine{
 		if (firstEntry) {
 			// This block is called only once just before the simulation gets started.
 			firstEntry = false;
-
 			//确保在Simloop前执行resetBeforeSimloop
 			resetBeforeSimLoop();
-
-			//TODO: 待确定此函数是否可以放在resetBeforeSimLoop中
-			//reset update time
-			mlpNetwork.resetReleaseTime();
-
-			//TODO: 待确定此函数是否可以放在initEngine中
-			//establish writers
-			String threadName = Thread.currentThread().getName();
-			if (rawRecOn) {
-				loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadName + "_" + mod + ".csv");
-				loopRecWriter.write("DETNAME,TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
-			}				
-			if (trackOn) {
-				trackWriter = new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
-						                          "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-			}				
-			if (infoOn)
-				infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + "_" + mod + ".txt");
-			//信息统计：发车数
-			if (infoOn) {
-				int total = 0;
-				for (int i = 0; i < mlpNetwork.nLinks(); i++) {
-					List<Inflow> IFList = mlpNetwork.mlpLink(i).getInflow();
-					int tmp = IFList.size();
-					total += tmp;
-					for (int j = 0; j < tmp; j++)
-						infoWriter.write(IFList.get(j).time + ",1\r\n");
-				}
-				infoWriter.writeNFlush("随机发出真实车： " + total + "\r\n");	
-			}
 		}
 
 		double now = mlpNetwork.getSimClock().getCurrentTime();
@@ -371,6 +340,31 @@ public class MLPEngine extends SimulationEngine{
 		getSimParameter().setSimStepSize(timeStep);
 		SimulationClock clock = mlpNetwork.getSimClock();
 		clock.init(timeStart, timeEnd, timeStep);
+
+		//establish writers
+		String threadName = Thread.currentThread().getName();
+		if (rawRecOn) {
+			loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadName + "_" + mod + ".csv");
+			loopRecWriter.write("DETNAME,TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
+		}
+		if (trackOn) {
+			trackWriter = new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
+					"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+		}
+		if (infoOn)
+			infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + "_" + mod + ".txt");
+		//信息统计：发车数
+		if (infoOn) {
+			int total = 0;
+			for (int i = 0; i < mlpNetwork.nLinks(); i++) {
+				List<Inflow> IFList = mlpNetwork.mlpLink(i).getInflow();
+				int tmp = IFList.size();
+				total += tmp;
+				for (int j = 0; j < tmp; j++)
+					infoWriter.write(IFList.get(j).time + ",1\r\n");
+			}
+			infoWriter.writeNFlush("随机发出真实车： " + total + "\r\n");
+		}
 	}
 
 	//重置引擎时钟 时间相关的参数 与路网状态
@@ -614,8 +608,6 @@ public class MLPEngine extends SimulationEngine{
 			System.out.println("time " + timer.getElapsedMilliseconds() + " ms");
 			//统计发车
 			System.out.println("未发车辆数：" + mlpEngine.countOnHoldVeh() + "辆");
-			if (mlpEngine.countOnHoldVeh()>2051)
-				System.out.println("DEBUG");
 		}
 
 		//关闭引擎

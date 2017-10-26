@@ -330,8 +330,9 @@ public class MLPNetwork extends RoadNetwork {
 	}
 	
 	public void resetNetwork(boolean needRET, String odFileDir, String emitFileDir, long seed) {
-		sysRand.setSeed(seed);
-		newVehID_ = 0;
+		sysRand.setSeed(seed);//重置系统种子
+		newVehID_ = 0;//重置车辆编号
+		resetReleaseTime();//重置capacity控制周期时间
 		for (int i = 0; i < nLinks(); i++) {
 			MLPLink LNK = mlpLink(i);
 			LNK.clearInflow();//未发出的车从emtTable中移除
