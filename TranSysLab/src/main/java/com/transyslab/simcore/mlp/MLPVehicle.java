@@ -67,8 +67,12 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void calState() {
-		if (leading != null && leading.Displacement() - Displacement() <= mlpParameter.CELL_RSP_LOWER) {
+		if (leading != null ) {//&&leading.Displacement() - Displacement() <= mlpParameter.CELL_RSP_LOWER
+			double headway = (leading.Displacement() - Displacement()) / Math.max(currentSpeed, 1e-5);
+			if (MLPParameter.inPlatoon(headway))
 			cfState = true;
+			else
+				cfState = false;
 		}
 		else {
 			cfState = false;
@@ -171,7 +175,7 @@ public class MLPVehicle extends Vehicle{
 			return 1.0;
 		}
 		else{
-			return (Math.min(Displacement(), len-buff))/(len-buff);
+			return (Math.min(segment.getLength() -distance, len-buff))/(len-buff);
 		}
 	}
 	

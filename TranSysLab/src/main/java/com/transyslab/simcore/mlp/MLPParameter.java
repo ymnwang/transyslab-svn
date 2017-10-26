@@ -5,6 +5,7 @@ import com.transyslab.simcore.mlp.Functions.FunsCombination1;
 import com.transyslab.simcore.mlp.Functions.FunsCombination2;
 import com.transyslab.simcore.mlp.Functions.TSFun;
 import com.transyslab.commons.tools.optimizer.DE;
+import org.apache.commons.math3.special.Gamma;
 
 public class MLPParameter extends Parameter {
 	public static final double[] DEFAULT_PARAMETERS = new double[] {0.4633,21.7950,0.1765,33.333,32,0.42,7.92,5.25};
@@ -228,5 +229,19 @@ public class MLPParameter extends Parameter {
 	public static double calcAlpha(double r, double vf, double kj, double qm) {
 		double delta = r*Math.pow(Math.log(r),2) - 4*Math.log(qm/kj/vf)*Math.log(1+r);
 		return (r*Math.log(r)-Math.sqrt(delta)) / 2 / Math.log(qm/kj/vf);
+	}
+
+	//³µ¶ÓÅÐ¶Ïº¯Êý
+	public static boolean inPlatoon(double headway) {
+		//calibrated paras
+		double alpha = 3.7515;
+		double lamda0 = 1.6480;
+		double lamda1 = 0.5086;
+		//beta distribution
+
+		double gammaFunVal = Math.exp(Gamma.logGamma(alpha));
+		double g0 = Math.pow(lamda0,alpha) / gammaFunVal * Math.pow(headway, alpha-1) * Math.exp(-lamda0*headway);
+		double g1 = Math.pow(lamda1,alpha) / gammaFunVal * Math.pow(headway, alpha-1) * Math.exp(-lamda1*headway);
+		return (g0 > g1);
 	}
 }
