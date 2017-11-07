@@ -19,7 +19,7 @@ public class TXTUtils {
 		}
 	}
 	
-	public void writeNFlush(String str) {
+	public synchronized void writeNFlush(String str) {
 		try {
 			writer.write(str);
 			writer.flush();
@@ -28,7 +28,7 @@ public class TXTUtils {
 			e.getStackTrace();
 		}
 	}
-	public void write(String str) {
+	public synchronized void write(String str) {
 		try {
 			writer.write(str);
 		} catch (Exception e) {
@@ -36,7 +36,7 @@ public class TXTUtils {
 			e.getStackTrace();
 		}
 	}
-	public void flushBuffer() {
+	public synchronized void flushBuffer() {
 		try {
 			writer.flush();
 		} catch (Exception e) {
