@@ -8,6 +8,7 @@ import com.transyslab.commons.renderer.JOGLCanvas;
 import com.transyslab.commons.renderer.OrbitCamera;
 import com.transyslab.commons.tools.DataVisualization;
 import com.transyslab.commons.tools.Worker;
+import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
@@ -517,10 +518,10 @@ public class MainWindow {
         FrameQueue.getInstance().initFrameQueue();
         engines = new SimulationEngine[1];
         switch (AppSetup.modelType) {
-            case 1:
+            case Constants.MODEL_TYPE_MESO:
                 engines[0] = new MesoEngine(0,"E:\\test\\");
                 break;
-            case 2:
+            case Constants.MODEL_TYPE_MLP:
                 engines[0] = new MLPEngine(AppSetup.setupParameter.get("输入文件路径"));
                 ((MLPEngine)engines[0]).displayOn = true;
                 break;

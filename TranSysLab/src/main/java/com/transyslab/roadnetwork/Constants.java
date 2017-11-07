@@ -207,4 +207,7 @@ public class Constants {
 	//车辆着色
 	public static final int VIRTUAL_VEHICLE = 1;
 	public static final int FOLLOWING = 2;
+	//模型类别
+	public static final int MODEL_TYPE_MESO = 1;
+	public static final int MODEL_TYPE_MLP = 2;
 }
