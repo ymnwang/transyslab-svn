@@ -164,6 +164,7 @@ public class MLPNetwork extends RoadNetwork {
 			while (launchingLink.checkFirstEmtTableRec()){
 				Inflow emitVeh = launchingLink.getInflow().poll();
 				MLPVehicle newVeh = generateVeh();
+				//TODO: 未实现从路段中间断面开始发车
 				newVeh.initInfo(0,launchingLink,(MLPSegment) launchingLink.getStartSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
 				assignPath(newVeh, (MLPNode) launchingLink.getUpNode(), (MLPNode) findLink(emitVeh.tLinkID).getDnNode(), false);
@@ -586,6 +587,13 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void clearLinkStat() {
 		linkStatMap.forEach((k,v) -> v.clear());
+	}
+
+	public HashMap<String, List<MacroCharacter>> exportStat() {
+		HashMap<String, List<MacroCharacter>> statMap = new HashMap<>();
+		linkStatMap.forEach((k,v) -> statMap.put("link"+k.getId(),v));
+		sectionStatMap.forEach((k,v) -> statMap.put(k[0].detName,v));
+		return statMap;
 	}
 
 }

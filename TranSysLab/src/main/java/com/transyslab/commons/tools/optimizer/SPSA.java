@@ -1,5 +1,6 @@
 package com.transyslab.commons.tools.optimizer;
 
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //同步扰动随机逼近算法
-public class SPSA extends SchedulerThread{
+public class SPSA extends SchedulerThread {
 	private int dims_;
 	//需要标定的参数，已做归一化操作
 	private float[] parameters_;
@@ -163,7 +164,7 @@ public class SPSA extends SchedulerThread{
 			for (int j = 0; j < 3; j++) {
 				taskList.add(dispatch(newPara[j], TaskWorker.ANY_WORKER));
 			}
-			double tmp2 = taskList.get(2).getOutputs()[0];
+			double tmp2 = taskList.get(2).getObjectiveValues()[0];
 			if(tmp2<fitness)
 				fitness = tmp2;
 			
@@ -172,8 +173,8 @@ public class SPSA extends SchedulerThread{
 			System.out.println("Gneration " + i + " used " + ((System.currentTimeMillis() - tb)/1000) + " sec");
 			if(i!=iterationLim-1){
 				//梯度逼近
-				double tmp0 = taskList.get(2).getOutputs()[0];
-				double tmp1 = taskList.get(2).getOutputs()[0];
+				double tmp0 = taskList.get(2).getObjectiveValues()[0];
+				double tmp1 = taskList.get(2).getObjectiveValues()[0];
 				estimateGradient(tmp0, tmp1);
 				//更新spsa里面的parameter（属于[0,1]区间），同时更新第三个engine的参数
 				updateParameters(i);

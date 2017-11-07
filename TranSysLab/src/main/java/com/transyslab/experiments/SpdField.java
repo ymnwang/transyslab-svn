@@ -1,12 +1,7 @@
 package com.transyslab.experiments;
 
-import com.transyslab.commons.tools.TimeMeasureUtil;
 import com.transyslab.simcore.mlp.*;
 import org.encog.util.Stopwatch;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
 
 /**
  * Created by WANG YiMin on 2017/10/12.
@@ -39,11 +34,11 @@ public class SpdField {
         mlpEngine.runningSeed = 1500613842660l;
 
         //生成路段虚拟线圈
-        SpdField.addLoop(mlpEngine.getMlpNetwork().findLink(111), 50);
-        SpdField.addLoop(mlpEngine.getMlpNetwork().findLink(112), 50);
-        SpdField.addLoop(mlpEngine.getMlpNetwork().findLink(26), 50);
-        SpdField.addLoop(mlpEngine.getMlpNetwork().findLink(113), 50);
-        SpdField.addLoop(mlpEngine.getMlpNetwork().findLink(25), 50);
+        SpdField.addLoop(mlpEngine.getNetwork().findLink(111), 50);
+        SpdField.addLoop(mlpEngine.getNetwork().findLink(112), 50);
+        SpdField.addLoop(mlpEngine.getNetwork().findLink(26), 50);
+        SpdField.addLoop(mlpEngine.getNetwork().findLink(113), 50);
+        SpdField.addLoop(mlpEngine.getNetwork().findLink(25), 50);
 
         //初始化计时器
         Stopwatch timer = new Stopwatch();

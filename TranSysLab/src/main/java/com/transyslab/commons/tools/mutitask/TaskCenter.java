@@ -1,5 +1,8 @@
 package com.transyslab.commons.tools.mutitask;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -15,8 +18,7 @@ public class TaskCenter {
 	}
 
 	public TaskCenter() {
-		undoneTasksQueue = new ArrayBlockingQueue<>(100);
-		killThreadSignal = false;
+		this(100);
 	}
 
 	protected synchronized boolean dismissAllowed() {
@@ -31,6 +33,7 @@ public class TaskCenter {
 	protected void addTask(Task task) {
 		try {
 			undoneTasksQueue.put(task);
+//			System.out.println("DEBUG: Task added at " + LocalDateTime.now());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

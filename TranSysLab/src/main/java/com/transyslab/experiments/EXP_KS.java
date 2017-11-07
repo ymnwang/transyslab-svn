@@ -3,12 +3,13 @@ package com.transyslab.experiments;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
-import com.transyslab.commons.tools.optimizer.SchedulerThread;
-import com.transyslab.simcore.EngThread;
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
+import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.simcore.mlp.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by WangYimin on 2017/7/18.
@@ -17,11 +18,11 @@ import java.util.List;
 
 public class EXP_KS extends EngThread {
 	public EXP_KS(String thread_name, TaskCenter task_center, String masterFileDir) {
-		super(thread_name, task_center, masterFileDir);
+		super(thread_name, masterFileDir, task_center);
 	}
 
 	@Override
-	public double[] worksUnder(double[] paras) {
+	public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
 
 		MLPEngine mlpEngine = (MLPEngine) engine;
 
@@ -29,7 +30,7 @@ public class EXP_KS extends EngThread {
 		mlpEngine.runWithPara(paras);
 
 		//获取特定结果
-		List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
+		List<MacroCharacter> records = mlpEngine.getNetwork().getSecStatRecords("det2");
 		double[] kmSpd = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
 		System.out.println(Arrays.toString(kmSpd));
 
@@ -48,7 +49,7 @@ public class EXP_KS extends EngThread {
 			public void run() {
 				//测试参数输入处
 				Task testingTask = dispatch(new double[]{0.5122,20.37,0.1928,45.50056,0.92191446,7.792739,1.6195029,0.6170239}, TaskWorker.ANY_WORKER);
-				System.out.println(Arrays.toString(testingTask.getOutputs()));
+				System.out.println(Arrays.toString(testingTask.getObjectiveValues()));
 				dismissAllWorkingThreads();
 				System.out.println("All workers are killed.");
 			}

@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.transyslab.commons.io.CSVUtils;
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.simcore.EngThread;
 import com.transyslab.simcore.mlp.Functions.TSFun;
 
-public class DE2 extends SchedulerThread{
+public class DE2 extends SchedulerThread {
 
 	private double F_;
 	private Individual[] newidvds_;
@@ -187,7 +187,7 @@ public class DE2 extends SchedulerThread{
 			}
 			
 			for (int j = 0; j < population_; j++) {
-				double[] tmpResults = taskList.get(j).getOutputs();
+				double[] tmpResults = taskList.get(j).getObjectiveValues();
 				double fval = tmpResults[0];//fetch result
 				newidvds_[j].setFitness(fval);
 //				newidvds_[j].results[0] = tmpResults[1];

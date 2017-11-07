@@ -3,10 +3,11 @@ package com.transyslab.commons.tools.optimizer;
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.tools.ADFullerTest;
 import com.transyslab.commons.tools.FitnessFunction;
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
-import com.transyslab.simcore.EngThread;
+import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.simcore.mlp.MLPEngine;
 import com.transyslab.simcore.mlp.MacroCharacter;
 import org.apache.commons.csv.CSVRecord;
@@ -18,6 +19,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by yali on 2017/9/14.
@@ -72,7 +74,7 @@ public class DERunWithPython {
 					}
 					simResults = new double[simRstLength][de.getPopulation()];
 					for (int j = 0; j < de.getPopulation(); j++) {
-						double[] tmpResults = taskList.get(j).getOutputs();
+						double[] tmpResults = taskList.get(j).getObjectiveValues();
 						fvals[j] = tmpResults[0];//fetch result
 						randSeed[j] = tmpResults[1];
 						for(int k=0;k <tmpResults.length-2;k++){
@@ -137,7 +139,7 @@ public class DERunWithPython {
 										// TODO 车速数据点个数
 										simResults = new double[simRstLength][failIndex.size()];
 										for (int kj = 0; kj < failParams; kj++) {
-											double[] tmpResults = taskList.get(failIndex.get(kj)).getOutputs();
+											double[] tmpResults = taskList.get(failIndex.get(kj)).getObjectiveValues();
 											fvals[failIndex.get(kj)] = (float)tmpResults[0];//fetch result
 											randSeed[failIndex.get(kj)] = tmpResults[1];
 											for(int kk=0;kk <tmpResults.length-2;kk++){
@@ -220,15 +222,15 @@ public class DERunWithPython {
 			}
 		}.start();
 		for (int i = 0; i < pop; i++) {
-			new EngThread("Eng" + i, taskCenter, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties") {
+			new EngThread("Eng" + i, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties", taskCenter) {
 				@Override
-				public double[] worksUnder(double[] paras) {
+				public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
 					MLPEngine mlpEngine = (MLPEngine) engine;
 						//仿真过程
 					mlpEngine.runWithPara(paras);
 
 					//获取特定结果
-					List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
+					List<MacroCharacter> records = mlpEngine.getNetwork().getSecStatRecords("det2");
 					double[] simSpeeds = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
 					//评价结果
 					exp.simRstLength = simSpeeds.length;

@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
@@ -15,7 +16,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import com.transyslab.commons.io.CSVUtils;
 
-public class SensitiveTest extends SchedulerThread{
+public class SensitiveTest extends SchedulerThread {
 
 	public SensitiveTest(String thread_name, TaskCenter task_center) {
 		super(thread_name, task_center);
@@ -102,7 +103,7 @@ public class SensitiveTest extends SchedulerThread{
 						taskList.add(dispatch(param[j], TaskWorker.ANY_WORKER));//dispatch task
 					}
 		        	for(int i=0;i<tasks;i++){
-		        		double[] result_i = taskList.get(i).getOutputs();
+		        		double[] result_i = taskList.get(i).getObjectiveValues();
 	    				for(int j=0;j<200;j++){
 	    					simSpeed[j][i] = result_i[j+1];
 	    				}

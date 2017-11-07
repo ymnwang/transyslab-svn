@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
@@ -15,7 +16,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import com.transyslab.commons.io.CSVUtils;
 
-public class Sensitive2 extends SchedulerThread{
+public class Sensitive2 extends SchedulerThread {
 	public Sensitive2(String thread_name, TaskCenter task_center) {
 		super(thread_name, task_center);
 		// TODO Auto-generated constructor stub
@@ -102,7 +103,7 @@ public class Sensitive2 extends SchedulerThread{
 		        		taskList.add(dispatch(param[j], TaskWorker.ANY_WORKER));
 					}
 		        	for(int i=0;i<tasks;i++){
-		        		double[] result_i = taskList.get(i).getOutputs();
+		        		double[] result_i = taskList.get(i).getObjectiveValues();
 	    				for(int j=0;j<20;j++){
 	    					simSpeed[j][i] = result_i[j+1];
 	    				}

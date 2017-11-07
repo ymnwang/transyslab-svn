@@ -3,6 +3,10 @@ package com.transyslab.simcore;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.RoadNetwork;
+import com.transyslab.simcore.mlp.MacroCharacter;
+
+import java.util.HashMap;
+import java.util.List;
 
 public abstract class SimulationEngine {
 
@@ -75,4 +79,10 @@ public abstract class SimulationEngine {
 	// function just prints the current time in the console window.
 
 	public abstract RoadNetwork getNetwork();
+
+	public abstract HashMap<String, List<MacroCharacter>> repeatProcess(double[] paras);
+
+	public abstract void close();
+
+	public abstract HashMap<String, List<MacroCharacter>> getEmpMap();
 }

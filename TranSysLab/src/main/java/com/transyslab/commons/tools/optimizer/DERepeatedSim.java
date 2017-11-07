@@ -1,11 +1,12 @@
 package com.transyslab.commons.tools.optimizer;
 
 import com.transyslab.commons.tools.FitnessFunction;
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.simcore.EngThread;
+import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.simcore.mlp.MLPEngine;
 import com.transyslab.simcore.mlp.MLPParameter;
 import com.transyslab.simcore.mlp.MacroCharacter;
@@ -13,6 +14,7 @@ import com.transyslab.simcore.mlp.MacroCharacter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by yali on 2017/9/11.
@@ -52,9 +54,9 @@ public class DERepeatedSim {
 
 		}.start();
 		for (int i = 0; i < pop; i++) {
-			new EngThread("Eng" + i, taskCenter, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties") {
+			new EngThread("Eng" + i, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties", taskCenter) {
 				@Override
-				public double[] worksUnder(double[] paras) {
+				public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
 					MLPEngine mlpEngine = (MLPEngine) engine;
 					mlpEngine.getSimParameter().setLCDStepSize(2.0);
 					double[][] simSpeeds = new double[repeatedTimes ][];
@@ -64,7 +66,7 @@ public class DERepeatedSim {
 							return new double[]{Double.MAX_VALUE};
 						}
 						//获取特定结果
-						List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
+						List<MacroCharacter> records = mlpEngine.getNetwork().getSecStatRecords("det2");
 						simSpeeds[i] = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
 					}
 					//评价结果
@@ -96,7 +98,7 @@ public class DERepeatedSim {
 				taskList.add(manager.dispatch(parameters, TaskWorker.ANY_WORKER));
 			}
 			for (int j = 0; j < de.getPopulation(); j++) {
-				double[] tmpResults = taskList.get(j).getOutputs();
+				double[] tmpResults = taskList.get(j).getObjectiveValues();
 				if(de.evoluteIndividual(j,tmpResults[0])){
 					if(bestSpeed == null)
 						bestSpeed = new double[tmpResults.length - 1];

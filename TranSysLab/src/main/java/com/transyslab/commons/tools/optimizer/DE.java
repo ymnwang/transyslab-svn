@@ -4,6 +4,7 @@
 package com.transyslab.commons.tools.optimizer;
 
 import com.transyslab.commons.tools.Function;
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
@@ -19,7 +20,7 @@ import java.util.List;
  * @author yali
  *
  */
-public class DE extends SchedulerThread{
+public class DE extends SchedulerThread {
 
 	private double F_;
 	private Individual[] newidvds_;
@@ -208,7 +209,7 @@ public class DE extends SchedulerThread{
 			}
 			
 			for (int j = 0; j < population_; j++) {
-				double[] tmpResults = taskList.get(j).getOutputs();
+				double[] tmpResults = taskList.get(j).getObjectiveValues();
 				float fval = (float) tmpResults[0];//fetch result
 				newidvds_[j].setFitness(fval);
 				newidvds_[j].results[0] = tmpResults[1];

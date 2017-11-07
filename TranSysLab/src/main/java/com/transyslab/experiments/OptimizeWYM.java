@@ -6,9 +6,9 @@ import com.transyslab.commons.tools.mutitask.Task;
 import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
 import com.transyslab.commons.tools.optimizer.DEAlgorithm;
-import com.transyslab.commons.tools.optimizer.SchedulerThread;
+import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.roadnetwork.Constants;
-import com.transyslab.simcore.EngThread;
+import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.simcore.mlp.MLPEngine;
 import com.transyslab.simcore.mlp.MLPParameter;
 import com.transyslab.simcore.mlp.MacroCharacter;
@@ -16,6 +16,7 @@ import com.transyslab.simcore.mlp.MacroCharacter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by WangYimin on 2017/10/13.
@@ -50,7 +51,7 @@ public class OptimizeWYM {
 						taskList.add(dispatch(parameters, TaskWorker.ANY_WORKER));
 					}
 					for (int j = 0; j < de.getPopulation(); j++) {
-						double[] tmpResults = taskList.get(j).getOutputs();
+						double[] tmpResults = taskList.get(j).getObjectiveValues();
 						String tmpStr = Arrays.toString(de.getPosition(j)).replace(" ","");
 						txtWriter.write(tmpStr.substring(1,tmpStr.length()-1) + "," + tmpResults[0] + "," + (i+1) + "\r\n");
 						if(de.evoluteIndividual(j,tmpResults[0])){
@@ -73,12 +74,10 @@ public class OptimizeWYM {
 
 		for (int i = 0; i < pop; i++) {
 
-			new EngThread("Eng" + i, taskCenter, "src/main/resources/demo_neihuan/scenario2/optwym.properties") {
+			new EngThread("Eng" + i, "src/main/resources/demo_neihuan/scenario2/optwym.properties", taskCenter) {
 				@Override
-				public double[] worksUnder(double[] paras) {
+				public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
 					MLPEngine mlpEngine = (MLPEngine) engine;
-					mlpEngine.getSimParameter().setLCDStepSize(2.0);//注意
-					mlpEngine.getSimParameter().setDLower(100.0f);//注意
 
 					//仿真过程
 					if(mlpEngine.runWithPara(paras) == Constants.STATE_ERROR_QUIT){
@@ -86,7 +85,7 @@ public class OptimizeWYM {
 					}
 
 					//获取特定结果
-					List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
+					List<MacroCharacter> records = mlpEngine.getNetwork().getSecStatRecords("det2");
 					double[] simSpeeds = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
 
 

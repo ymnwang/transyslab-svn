@@ -1,10 +1,13 @@
 package unit_test;
 
+import com.google.common.hash.HashCode;
+import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.JdbcUtils;
 import com.transyslab.simcore.mlp.MLPParameter;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.io.FileUtils;
 
@@ -20,6 +23,24 @@ import java.util.*;
 public class ContainTest {
 
 	public static void main(String[] args) {
+
+		System.out.println(String.valueOf(Double.parseDouble("NaN")));
+
+		List<CSVRecord> results = null;
+		try {
+			results = CSVUtils.readCSV("testHashCode.csv",null);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		double[] data = new double[results.size()];
+		for (int i = 0; i < results.size(); i++) {
+			data[i] = results.get(i).get(0).hashCode();
+		}
+		try {
+			CSVUtils.writeCSV("POIHashCode.csv",null, data);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		System.out.println(String.format("%.2f",12.5623));
 

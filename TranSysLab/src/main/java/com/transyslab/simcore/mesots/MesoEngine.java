@@ -4,12 +4,14 @@
 package com.transyslab.simcore.mesots;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.transyslab.commons.io.XmlParser;
 
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
+import com.transyslab.simcore.mlp.MacroCharacter;
 
 /**
  * @author its312
@@ -107,6 +109,21 @@ public class MesoEngine extends SimulationEngine {
 	@Override
 	public MesoNetwork getNetwork(){
 		return this.theNetwork;
+	}
+
+	@Override
+	public HashMap<String, List<MacroCharacter>> repeatProcess(double[] paras) {
+		return null;
+	}
+
+	@Override
+	public void close() {
+
+	}
+
+	@Override
+	public HashMap<String, List<MacroCharacter>> getEmpMap() {
+		return null;
 	}
 
 	// 多次运行
