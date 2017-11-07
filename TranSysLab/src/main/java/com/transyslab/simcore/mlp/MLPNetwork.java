@@ -165,7 +165,7 @@ public class MLPNetwork extends RoadNetwork {
 				Inflow emitVeh = launchingLink.getInflow().poll();
 				MLPVehicle newVeh = generateVeh();
 				//TODO: 未实现从路段中间断面开始发车
-				newVeh.initInfo(0,launchingLink,(MLPSegment) launchingLink.getStartSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
+				newVeh.initInfo(0,launchingLink,mlpLane(emitVeh.laneIdx).getSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
 				assignPath(newVeh, (MLPNode) launchingLink.getUpNode(), (MLPNode) findLink(emitVeh.tLinkID).getDnNode(), false);
 				//todo 调试阶段暂时固定路径
