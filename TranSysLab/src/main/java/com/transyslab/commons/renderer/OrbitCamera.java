@@ -105,9 +105,18 @@ public class OrbitCamera extends Camera{
 	public void calcKeyMotion(final int keyCode){
 
 		switch (keyCode) {
-			case KeyEvent.VK_LEFT :
+			case KeyEvent.VK_SPACE :
+				phi = Math.PI /2 - EPS;
+				theta =  0.0;
+				float[] offset = new float[3];
+				offset[0] = (float) (radius * Math.sin(phi) * Math.sin(theta));
+				offset[1] = (float) (radius * Math.cos(phi));
+				offset[2] = (float) (radius * Math.sin(phi) * Math.cos(theta));
+				VectorUtil.addVec3(eyeLocation, tarLocation, offset);
 				break;
 			case KeyEvent.VK_RIGHT :
+				break;
+			default:
 				break;
 		}
 		/*
@@ -135,21 +144,6 @@ public class OrbitCamera extends Camera{
 				tarMotion[0] -= keyStep;
 				break;
 		}*/
-	}
-	private void rotate(int delta) {
-		rotateSpeed = (float) (rotateSpeed*radius/500.0f);
-		double angle = (2.0*Math.PI*(delta)/PIXELS_PER_ROUND * rotateSpeed);
-		float[] offset = new float[3];
-
-
-		offset[0] = (float) (radius * Math.sin(phi) * Math.sin(theta));
-		offset[1] = (float) (radius * Math.cos(phi));
-		offset[2] = (float) (radius * Math.sin(phi) * Math.cos(theta));
-
-		VectorUtil.addVec3(eyeLocation, tarLocation, offset);
-		this.thetaDelta = 0.0;
-		this.phiDelta = 0.0;
-		this.rotateSpeed = 1.0f;
 	}
 	
 }
