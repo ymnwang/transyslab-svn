@@ -211,7 +211,7 @@ public class MainWindow {
             toolBar1.setBorder(UIManager.getBorder("ToolBar.border"));
             //---- button1 ----
 
-            button1.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/file.png")
+            button1.setIcon(new ImageIcon(loadImage("icon/new/file.png")
                             .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             //button1.setFont(new Font("\u534e\u6587\u7ec6\u9ed1", Font.PLAIN, 12));
             button1.addActionListener(new ActionListener() {
@@ -223,7 +223,7 @@ public class MainWindow {
             toolBar1.add(button1);
 
             //---- button2 ----
-            button2.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/openfile.png")
+            button2.setIcon(new ImageIcon(loadImage("icon/new/openfile.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             button2.addActionListener(new ActionListener() {
 
@@ -262,11 +262,11 @@ public class MainWindow {
                                 AppSetup.setupParameter.put("方案名称", caseName);
                                 AppSetup.setupParameter.put("需求路径", demandPath);
                                 AppSetup.timeStep = simStep;
-                                AppSetup.modelType = 1;
+                                AppSetup.modelType = Constants.MODEL_TYPE_MESO;
                             }
                             else {
                                 AppSetup.setupParameter.put("输入文件路径", fileChooser.getSelectedFile().getPath());//解释过程放在MLPEngine中
-                                AppSetup.modelType = 2;
+                                AppSetup.modelType = Constants.MODEL_TYPE_MLP;
                             }
                             initSimEngines();
                         }
@@ -283,14 +283,14 @@ public class MainWindow {
             toolBar1.addSeparator();
 
             //---- button3 ----
-            button3.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/save.png")
+            button3.setIcon(new ImageIcon(loadImage("icon/new/save.png")
                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             toolBar1.add(button3);
             toolBar1.addSeparator();
 
             //---- 按键：开始仿真 ----
             //button4.setMargin(new Insets(0, 8, 0, ));
-            button4.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/play.png")
+            button4.setIcon(new ImageIcon(loadImage("icon/new/play.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             button4.addActionListener(new ActionListener() {
                 @Override
@@ -307,9 +307,7 @@ public class MainWindow {
                     }
                     //第一次播放
                     else if(!canvas.isRendering){
-                        Worker worker = new Worker(engines[0]);
-                        Thread thread = new Thread(worker);
-                        thread.start();
+                        new Thread(()->engines[0].run()).start();
                         canvas.isRendering = true;
                     }
                 }
@@ -317,7 +315,7 @@ public class MainWindow {
             toolBar1.add(button4);
 
             //---- 按键：暂停仿真 ----
-            button5.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/pause.png")
+            button5.setIcon(new ImageIcon(loadImage("icon/new/pause.png")
                     .getImage().getScaledInstance(20,20, Image.SCALE_SMOOTH)));
             button5.addActionListener(new ActionListener() {
 
@@ -329,7 +327,7 @@ public class MainWindow {
             toolBar1.add(button5);
 
             //---- 按键：停止仿真 ----
-            button7.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/stop.png")
+            button7.setIcon(new ImageIcon(loadImage("icon/new/stop.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             button7.addActionListener(new ActionListener() {
                 @Override
@@ -341,12 +339,12 @@ public class MainWindow {
             toolBar1.addSeparator();
 
             //---- 按键：数据库连接 ----
-            button8.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/database.png")
+            button8.setIcon(new ImageIcon(loadImage("icon/new/database.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             toolBar1.add(button8);
 
             //---- 按键：车速统计 ----
-            button9.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/chart.png")
+            button9.setIcon(new ImageIcon(loadImage("icon/new/chart.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             //TODO 限制多次点击
             button9.addActionListener(new ActionListener() {
@@ -358,7 +356,7 @@ public class MainWindow {
             toolBar1.add(button9);
 
             //---- 按键：下一帧 ----
-            button10.setIcon(new ImageIcon(new ImageIcon("src/main/resources/icon/new/next.png")
+            button10.setIcon(new ImageIcon(loadImage("icon/new/next.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             button10.addActionListener(new ActionListener() {
                 @Override
@@ -537,23 +535,18 @@ public class MainWindow {
     }
     public void launchEngineWithParas(double[] paras, long seed){
         switch (AppSetup.modelType) {
-            case 1:
+            case Constants.MODEL_TYPE_MESO:
                 //TODO 待设计传入参数运行
                 ((MesoEngine)engines[0]).run();
                 break;
-            case 2:
+            case Constants.MODEL_TYPE_MLP:
                 if (seed>=0) {
                     ((MLPEngine)engines[0]).seedFixed = true;
                     ((MLPEngine)engines[0]).runningSeed = seed;
                 }
                 else
                     ((MLPEngine)engines[0]).seedFixed = false;
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            ((MLPEngine)engines[0]).runWithPara(paras==null ? MLPParameter.DEFAULT_PARAMETERS : paras);
-                        }
-                    }.start();
+                    new Thread(() -> ((MLPEngine)engines[0]).runWithPara(paras==null ? MLPParameter.DEFAULT_PARAMETERS : paras)).start();
                 break;
             default:
                 break;
@@ -564,6 +557,9 @@ public class MainWindow {
     }
     public LayerPanel getLayerPanel(){
         return layerPanel;
+    }
+    private ImageIcon loadImage(String relativePath) {
+        return new ImageIcon(ClassLoader.getSystemResource(relativePath));
     }
 
 }

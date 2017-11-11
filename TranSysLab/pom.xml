@@ -130,6 +130,38 @@
 		  <artifactId>jmetal-exec</artifactId>
 		  <version>5.3</version>
 	  </dependency>
-
   </dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-5</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.transyslab.simcore.AppMain</mainClass>
+						</manifest>
+					</archive>
+					<!--appendAssemblyId属性控制是否在生成的打包文件的文件名中包含assembly id-->
+					<appendAssemblyId>false</appendAssemblyId>
+					<!--descriptores属性指定自定义打包格式的配置文件的路径-->
+					<descriptors>
+						<!--descriptor>assembly.xml</descriptor-->
+					</descriptors>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<!--execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution-->
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

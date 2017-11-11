@@ -5,18 +5,13 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import com.transyslab.commons.io.*;
-import com.transyslab.commons.tools.TimeMeasureUtil;
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.csv.CSVRecord;
 import java.io.IOException;
 
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
-import org.apache.commons.lang.time.StopWatch;
-import org.encog.util.Stopwatch;
 
 
 public class MLPEngine extends SimulationEngine{
@@ -32,7 +27,7 @@ public class MLPEngine extends SimulationEngine{
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
 	protected TXTUtils loopRecWriter;
 	protected boolean rawRecOn;
-	protected DBWriter trackWriter;
+	protected TXTUtils trackWriter;
 	protected boolean trackOn;
 	protected TXTUtils infoWriter;
 	protected boolean infoOn;
@@ -50,10 +45,11 @@ public class MLPEngine extends SimulationEngine{
 	private double timeEnd;
 	private double timeStep;
 	//引擎运行参数
-	int repeatTimes;
-	double[] ob_paras;
+	private int repeatTimes;
+	private double[] ob_paras;
+	private double[] free_paras;
 
-	public MLPEngine(String masterFileDir) {
+	private MLPEngine(){
 		master_ = null;
 		state_ = Constants.STATE_NOT_STARTED;
 		mode_ = 0;
@@ -65,19 +61,25 @@ public class MLPEngine extends SimulationEngine{
 
 		mlpNetwork = new MLPNetwork();
 		runProperties = new HashMap<>();
-
-		parseProperties(masterFileDir);
 	}
 
-	public void parseProperties(String fileDir) {
-		Configuration config = ConfigUtils.createConfig(fileDir);
+	public MLPEngine(String masterFilePath) {
+		this();
+		parseProperties(masterFilePath);
+	}
+
+
+	private void parseProperties(String configFilePath) {
+		Configuration config = ConfigUtils.createConfig(configFilePath);
+		String rootDir = new File(configFilePath).getParent() + "/";
 
 		//input files
-		runProperties.put("roadNetworkDir", config.getString("roadNetworkDir"));
-		runProperties.put("emitFileDir", config.getString("emitFileDir"));
-		runProperties.put("odFileDir", config.getString("odFileDir"));
-		runProperties.put("sensorDir", config.getString("sensorDir"));
-		runProperties.put("empDataDir", config.getString("empDataDir"));
+		runProperties.put("roadNetworkPath", rootDir + config.getString("roadNetworkPath"));
+		runProperties.put("emitFilePath", rootDir + config.getString("emitFilePath"));
+		runProperties.put("odFilePath", rootDir + config.getString("odFilePath"));
+		runProperties.put("sensorPath", rootDir + config.getString("sensorPath"));
+		runProperties.put("empDataPath", rootDir + config.getString("empDataPath"));
+		runProperties.put("outputPath", rootDir + config.getString("outputPath"));
 
 		//time setting
 		timeStart = Double.parseDouble(config.getString("timeStart"));
@@ -101,13 +103,23 @@ public class MLPEngine extends SimulationEngine{
 		runProperties.put("statLinkIds",config.getString("statLinkIds"));
 		runProperties.put("statDetNames",config.getString("statDetNames"));
 
-		//repeatProcess settting
+		//repeatProcess setting
 		repeatTimes = Integer.parseInt(config.getString("repeatTimes"));
 		String[] parasStrArray = config.getString("obParas").split(",");
 		ob_paras = new double[parasStrArray.length];
 		for (int i = 0; i<parasStrArray.length; i++) {
 			ob_paras[i] = Double.parseDouble(parasStrArray[i]);
 		}
+
+		//read-in free parameters setting
+		String[] freeStrArray = config.getString("freeParas").split(",");
+		free_paras = new double[freeStrArray.length];
+		for (int i = 0; i<freeStrArray.length; i++) {
+			free_paras[i] = Double.parseDouble(freeStrArray[i]);
+		}
+		//other parameters
+		runProperties.put("lcBufferTime",config.getString("lcBufferTime"));
+		runProperties.put("lcdStepSize",config.getString("lcdStepSize"));
 	}
 
 	@Override
@@ -198,22 +210,22 @@ public class MLPEngine extends SimulationEngine{
 						LV = v.leading.getId();
 					if (v.trailing != null)
 						FV = v.trailing.getId();
-					trackWriter.write(new Object[] {
-							now,
-							v.rvId,
-							v.getId(),
-							v.virtualType,
-							v.buffer,
-							v.lane.getLnPosNum(),
-							v.segment.getId(),
-							v.link.getId(),
-							v.Displacement(),
-							v.getCurrentSpeed(),
-							LV,
-							FV,
-							Thread.currentThread().getName() + "_" + mod + "100",
-							LocalDateTime.now()
-					});
+					trackWriter.write(
+							now + "," +
+								v.rvId + "," +
+								v.getId() + "," +
+								v.virtualType + "," +
+								v.buffer + "," +
+								v.lane.getLnPosNum() + "," +
+								v.segment.getId() + "," +
+								v.link.getId() + "," +
+								v.Displacement() + "," +
+								v.getCurrentSpeed() + "," +
+								LV + "," +
+								FV + "," +
+								/*Thread.currentThread().getName() + "_" + mod + "," +
+								LocalDateTime.now() +*/ "\r\n"
+					);
 				}
 			}
 		}
@@ -227,7 +239,7 @@ public class MLPEngine extends SimulationEngine{
 			if (rawRecOn)
 				loopRecWriter.closeWriter();
 			if (trackOn)
-				trackWriter.close();
+				trackWriter.closeWriter();
 			if (infoOn)
 				infoWriter.closeWriter();
 			if(statRecordOn) {
@@ -248,7 +260,7 @@ public class MLPEngine extends SimulationEngine{
 			if (rawRecOn)
 				loopRecWriter.flushBuffer();
 			if (trackOn)
-				trackWriter.flush();
+				trackWriter.flushBuffer();
 			if (infoOn)
 				infoWriter.flushBuffer();
 			return state_ = Constants.STATE_OK;// STATE_OK宏定义
@@ -264,7 +276,7 @@ public class MLPEngine extends SimulationEngine{
 		loadSimulationFiles();
 		//读入实测数据用于计算fitness
 		if(needEmpData) {
-			readEmpData(runProperties.get("empDataDir"));
+			readEmpData(runProperties.get("empDataPath"));
 		}
 		//引擎初始化
 		initEngine();
@@ -276,12 +288,12 @@ public class MLPEngine extends SimulationEngine{
 		//parse xml into parameter & network
 
 		// 读取路网xml
-		XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkDir"));
+		XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkPath"));
 		// 读入路网数据后组织路网不同要素的关系
 		mlpNetwork.calcStaticInfo();
 		// 读入检测器数据
-		if (!runProperties.get("sensorDir").equals(""))
-			XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorDir"));
+		if (!runProperties.get("sensorPath").equals(""))
+			XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorPath"));
 		// 解释路网输出变量
 		mlpNetwork.initLinkStatMap(runProperties.get("statLinkIds"));
 		mlpNetwork.initSectionStatMap(runProperties.get("statDetNames"));
@@ -322,15 +334,17 @@ public class MLPEngine extends SimulationEngine{
 		//establish writers
 		String threadName = Thread.currentThread().getName();
 		if (rawRecOn) {
-			loopRecWriter = new TXTUtils("src/main/resources/output/loop" + threadName + "_" + mod + ".csv");
+			loopRecWriter = new TXTUtils(runProperties.get("outputPath") + "/" + "loop" + threadName + "_" + mod + ".csv");
 			loopRecWriter.write("DETNAME,TIME,VID,VIRTYPE,SPD,POS,LINK,LOCATION\r\n");
 		}
 		if (trackOn) {
-			trackWriter = new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
-					"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+			trackWriter = /*new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
+					"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)")*/
+							new TXTUtils(runProperties.get("outputPath") + "/" + "track" + threadName + "_" + mod + ".csv");
+			trackWriter.write("TIME,RVID,VID,VIRTUALIDX,BUFF,LANEPOS,SEGMENT,LINK,DISPLACEMENT,SPEED,LEAD\r\n");
 		}
 		if (infoOn)
-			infoWriter = new TXTUtils("src/main/resources/output/info" + threadName + "_" + mod + ".txt");
+			infoWriter = new TXTUtils(runProperties.get("outputPath") + "/" + "info" + threadName + "_" + mod + ".txt");
 		//信息统计：发车数
 		if (infoOn) {
 			int total = 0;
@@ -360,7 +374,7 @@ public class MLPEngine extends SimulationEngine{
 		//Network状态重设并准备发车表
 		if (!seedFixed)
 			runningSeed = System.currentTimeMillis();
-		mlpNetwork.resetNetwork(needRndETable, runProperties.get("odFileDir"), runProperties.get("emitFileDir"), runningSeed);
+		mlpNetwork.resetNetwork(needRndETable, runProperties.get("odFilePath"), runProperties.get("emitFilePath"), runningSeed);
 	}
 
 	public void forceResetEngine() {
@@ -593,7 +607,7 @@ public class MLPEngine extends SimulationEngine{
 		HashMap<String,List<MacroCharacter>> exportedStatMap = mlpNetwork.exportStat();
 
 		//若有重复仿真任务，则多次运行进行平均
-		for(int i = 0;i<repeatTimes;i++){
+		for(int i = 1; i < Math.max(repeatTimes,1); i++){
 			runWithPara(ob_paras,paras);
 			sumStat(exportedStatMap, mlpNetwork.exportStat());
 		}
@@ -602,6 +616,14 @@ public class MLPEngine extends SimulationEngine{
 		averageStat(exportedStatMap);
 
 		return exportedStatMap;
+	}
+
+	@Override
+	public void run() {
+		setParas(ob_paras,free_paras);
+		((MLPParameter) mlpNetwork.getSimParameter()).setLCDStepSize(Double.parseDouble(runProperties.get("lcdStepSize")));
+		((MLPParameter) mlpNetwork.getSimParameter()).setLCBuffTime(Double.parseDouble(runProperties.get("lcBufferTime")));
+		while (simulationLoop()>=0);
 	}
 
 	@Override
@@ -644,6 +666,10 @@ public class MLPEngine extends SimulationEngine{
 			e.flow = e.flow / ((double) repeatTimes);
 			e.density = e.density / ((double) repeatTimes);
 		}));
+	}
+
+	public int countRunTimes(){
+		return mod;
 	}
 
 }
