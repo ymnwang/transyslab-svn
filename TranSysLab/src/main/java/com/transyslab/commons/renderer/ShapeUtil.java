@@ -66,6 +66,16 @@ public class ShapeUtil {
 		gl.glEnd();
 		
 	}
+	public static void drawPolygon(GL2 gl,List<GeoPoint>points, final float[] color, final boolean isSelected, double height){
+		gl.glColor3f(color[0], color[1], color[2]);
+		if(isSelected)
+			gl.glColor3f(1.0f, 1.0f, 0.0f);
+		gl.glBegin(GL2.GL_POLYGON);
+		for(GeoPoint p:points ){
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
+		}
+		gl.glEnd();
+	}
 	
 	public static void drawCylinder(GL2 gl, GLU glu, final float[] spnt, final float[] epnt, final float[] color){
 		float[] dir = new float[3];

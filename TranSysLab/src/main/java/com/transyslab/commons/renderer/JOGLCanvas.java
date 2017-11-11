@@ -241,13 +241,13 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			for(VehicleData vd:curFrame.getVhcDataQueue()){
 				if ((vd.getSpecialFlag()&Constants.FOLLOWING) == 0){
 					//ShapeUtil.drawPolygon(gl, platoonBoundGen(vd), Constants.COLOR_RED, vd.isSelected());
-					ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected());
+					ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(),0.2);
 				}
 				else {
 					if((vd.getSpecialFlag()&Constants.VIRTUAL_VEHICLE) != 0)//虚拟车
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected());
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected(),0.2);
 					else //非虚拟车
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected());
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(),0.2);
 				}
 
 			}
@@ -268,13 +268,13 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				while(!curFrame.getVhcDataQueue().isEmpty()){
 					VehicleData vd = curFrame.getVehicleData();
 					if ((vd.getSpecialFlag()&Constants.FOLLOWING) == 0){
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected());
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(),0.2);
 					}
 					else {
 						if((vd.getSpecialFlag()&Constants.VIRTUAL_VEHICLE) != 0)//虚拟车
-							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected());
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected(),0.2);
 						else //非虚拟车
-							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected());
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(),0.2);
 					}
 
 
