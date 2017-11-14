@@ -9,7 +9,6 @@ import com.transyslab.simcore.mlp.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by WangYimin on 2017/7/18.
@@ -22,12 +21,12 @@ public class EXP_KS extends EngThread {
 	}
 
 	@Override
-	public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
+	public double[] worksWith(Task task) {
 
-		MLPEngine mlpEngine = (MLPEngine) engine;
+		MLPEngine mlpEngine = (MLPEngine) getEngine();
 
 		//仿真过程
-		mlpEngine.runWithPara(paras);
+		mlpEngine.runWithPara(task.getInputVariables());
 
 		//获取特定结果
 		List<MacroCharacter> records = mlpEngine.getNetwork().getSecStatRecords("det2");

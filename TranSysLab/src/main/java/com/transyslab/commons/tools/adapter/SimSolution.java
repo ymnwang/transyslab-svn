@@ -17,10 +17,9 @@ public class SimSolution extends Task implements DoubleSolution {
 
 	public SimSolution(SimProblem problem, String workerName) {
 		super(new double[problem.getNumberOfVariables()], workerName);
-		//objectiveValues 与 attributes 的初始化只是为了与JMetal对应，
+		//objectiveValues 的初始化只是为了与JMetal对应，
 		//在此为冗余操作。
 		objectiveValues = new double[problem.getNumberOfObjectives()];
-		attributes = new HashMap<>() ;
 		this.problem = problem;
 		randomGenerator = JMetalRandom.getInstance();
 		initializeDoubleVariables();
@@ -37,14 +36,12 @@ public class SimSolution extends Task implements DoubleSolution {
 			setVariableValue(i, solution.getVariableValue(i));
 		}
 
-		//objectiveValues 与 attributes 的初始化只是为了与JMetal对应，
+		//objectiveValues 的初始化只是为了与JMetal对应，
 		//在此为冗余操作。
 
 		for (int i = 0; i < problem.getNumberOfObjectives(); i++) {
 			objectiveValues[i] = solution.getObjective(i);
 		}
-
-		attributes = new HashMap<Object, Object>(solution.attributes) ;
 	}
 
 	/**
@@ -95,16 +92,6 @@ public class SimSolution extends Task implements DoubleSolution {
 	@Override
 	public Solution copy() {
 		return new SimSolution(this);
-	}
-
-	@Override
-	public void setAttribute(Object id, Object value) {
-		attributes.put(id, value);
-	}
-
-	@Override
-	public Object getAttribute(Object id) {
-		return attributes.get(id);
 	}
 
 	@Override

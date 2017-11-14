@@ -17,11 +17,11 @@ public class OptToolBoxDemo {
 
 		JMetalRandom.getInstance().setSeed(2017);
 		int popSize = 5;
-		int maxGeneration = 5;
+		int maxGeneration = 2;
 		double crossOver_cr = 0.5;
 		double crossOver_f = 0.5;
 		String crossOver_variant = "rand/1/bin";
-		String simMasterFileName = "src/main/resources/demo_neihuan/scenario2/default.properties";
+		String simMasterFileName = "src/main/resources/demo_neihuan/scenario2/test.properties";
 
 		SimProblem problem = new DefaultMLPProblem(simMasterFileName);
 		Algorithm<DoubleSolution> algorithm;

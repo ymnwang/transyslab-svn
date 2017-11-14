@@ -162,7 +162,7 @@ public class MLPNetwork extends RoadNetwork {
 		for (int i = 0; i<nLinks(); i++){
 			MLPLink launchingLink = mlpLink(i);
 			while (launchingLink.checkFirstEmtTableRec()){
-				Inflow emitVeh = launchingLink.getInflow().poll();
+				Inflow emitVeh = launchingLink.pollInflow();
 				MLPVehicle newVeh = generateVeh();
 				//TODO: 未实现从路段中间断面开始发车
 				newVeh.initInfo(0,launchingLink,mlpLane(emitVeh.laneIdx).getSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
@@ -338,6 +338,7 @@ public class MLPNetwork extends RoadNetwork {
 			MLPLink LNK = mlpLink(i);
 			LNK.clearInflow();//未发出的车从emtTable中移除
 			LNK.tripTime.clear();//重置已记录的Trip Time
+			LNK.resetEmitCount();//重置发车计数
 			Collections.sort(LNK.jointLanes, (a,b) -> a.jlNum <b.jlNum ? -1 : a.jlNum ==b.jlNum ? 0 : 1);//车道排列顺序复位
 		}
 		for (int i = 0; i < nLanes(); i++) {

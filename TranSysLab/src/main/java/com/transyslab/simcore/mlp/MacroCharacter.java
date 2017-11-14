@@ -1,12 +1,20 @@
 package com.transyslab.simcore.mlp;
 
+import com.transyslab.roadnetwork.Constants;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by WangYimin on 2017/8/16.
  */
 public class MacroCharacter {
+	//属性挑选
+	public static final int SELECT_FLOW = 1;
+	public static final int SELECT_SPEED = 2;
+	public static final int SELECT_DENSITY = 4;
+	public static final int SELECT_TRAVELTIME = 8;
 	//所有属性都为宏观统计均值；且未平均车道
 	protected double flow; //unit: veh/s/lane
 	protected double speed; //unit: m/s
@@ -37,15 +45,27 @@ public class MacroCharacter {
 	}
 
 	public static double getHourFlow(double flow) {
-		return flow * 3600;
+		return flow * 3600.0;
+	}
+
+	public static double[] getHourFlow(double[] flows) {
+		return Arrays.stream(flows).map(e->e*3600.0).toArray();
 	}
 
 	public static double getKmSpeed(double speed) {
 		return speed * 3.6;
 	}
 
+	public static double[] getKmSpeed(double[] speeds) {
+		return Arrays.stream(speeds).map(e->e*3.6).toArray();
+	}
+
 	public static double getKmDensity(double density) {
-		return density * 1000;
+		return density * 1000.0;
+	}
+
+	public static double[] getKmDensity(double[] densities) {
+		return Arrays.stream(densities).map(e->e*1000.0).toArray();
 	}
 
 	/**
@@ -69,19 +89,18 @@ public class MacroCharacter {
 		return results;
 	}
 
-	public static List<double[]> transferToKmH(List<MacroCharacter> mcList) {
-		List<double[]> results = new ArrayList<>();
-
-		double[] flow = mcList.stream().mapToDouble(MacroCharacter::getHourFlow).toArray();
-		double[] speed = mcList.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();
-		double[] density = mcList.stream().mapToDouble(MacroCharacter::getKmDensity).toArray();
-		double[] travelTime = mcList.stream().mapToDouble(MacroCharacter::getHourTravelTime).toArray();
-
-		results.add(flow);
-		results.add(speed);
-		results.add(density);
-		results.add(travelTime);
-
-		return results;
+	public static double[] select(List<MacroCharacter> mcList, int mask) {
+		switch (mask) {
+			case SELECT_FLOW:
+				return mcList.stream().mapToDouble(e -> e.flow).toArray();
+			case SELECT_SPEED:
+				return mcList.stream().mapToDouble(e -> e.speed).toArray();
+			case SELECT_DENSITY:
+				return mcList.stream().mapToDouble(e -> e.density).toArray();
+			case SELECT_TRAVELTIME:
+				return mcList.stream().mapToDouble(e -> e.travelTime).toArray();
+			default:
+				return null;
+		}
 	}
 }

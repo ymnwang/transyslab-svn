@@ -13,7 +13,6 @@ import com.transyslab.simcore.mlp.MacroCharacter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by WangYimin on 2017/8/12.
@@ -27,21 +26,10 @@ public class ODEngThread extends EngThread {
 		super(thread_name, masterFileDir, task_center);
 	}
 
-	@Override
-	public void run() {
-		//worker线程的运行方式
-		//此实验中，引擎接受指定任务，且连续运行，即在此初始化后不再reset
-		//加载路网文件
-		engine.loadFiles();
-
-		//工作线程挂到TC中开始循环工作
-		goToWork(taskCenter, true);
-	}
-
 	//worker线程的fitness计算
 	@Override
-	public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
-		MLPEngine mlpEngine = (MLPEngine) engine;
+	public double[] worksWith(Task task) {
+		MLPEngine mlpEngine = (MLPEngine) getEngine();
 
 		//清除发车表以及统计结果，其余状态保持
 		mlpEngine.getNetwork().clearInflows();
@@ -49,7 +37,7 @@ public class ODEngThread extends EngThread {
 		mlpEngine.getNetwork().clearLinkStat();
 
 		//处理输入参数截至时间+OD
-		processParas(paras);
+		processParas(task.getInputVariables());
 
 		//外部控制simulationLoop的执行
 		double now = mlpEngine.getSimClock().getCurrentTime();
@@ -65,7 +53,7 @@ public class ODEngThread extends EngThread {
 
 	@Override
 	public void onDismiss() {
-		((MLPEngine) engine).close();
+		((MLPEngine) getEngine()).close();
 	}
 
 	public void processParas(double[] paras) {
@@ -73,7 +61,7 @@ public class ODEngThread extends EngThread {
 		//参数参数格式
 		//paras = {periodEndTime, fLinkId_1, tLinkId_1, demand_1, ... fLinkId_n, tLinkId_n, demand_n }
 
-		MLPNetwork mlpNetwork = ((MLPEngine) engine).getNetwork();
+		MLPNetwork mlpNetwork = ((MLPEngine) getEngine()).getNetwork();
 		double[] speed = {15, 2, 20};//已标定默认值
 		double[] time = {periodEndTime, paras[0]};
 		periodEndTime = paras[0];
@@ -125,7 +113,9 @@ public class ODEngThread extends EngThread {
 		//实例化并启动工作线程
 		//TODO: 按实际需要确定数量和线程命名。
 		for (int i = 0; i < 4; i++) {
-			new ODEngThread("Eng" + (i+1), taskCenter, "src/main/resources/demo_neihuan/scenario2/neverEnd.properties").start();
+			new ODEngThread("Eng" + (i+1), taskCenter, "src/main/resources/demo_neihuan/scenario2/neverEnd.properties")
+					.setTaskSpecified()
+					.start();
 		}
 	}
 }

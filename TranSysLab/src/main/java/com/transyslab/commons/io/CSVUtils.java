@@ -74,7 +74,6 @@ public class CSVUtils {
         CSVPrinter printer = new CSVPrinter(fileWriter,formator);
         List<Double> dataRecord = new ArrayList<>(); 
         for(int i=0;i<data.length;i++){
-        	
         	for(int j=0;j<data[i].length;j++){
         		dataRecord.add(data[i][j]);
         	}
