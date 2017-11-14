@@ -112,8 +112,8 @@ public class MesoEngine extends SimulationEngine {
 	}
 
 	@Override
-	public HashMap<String, List<MacroCharacter>> repeatProcess(double[] paras) {
-		return null;
+	public int repeatRun() {
+		return Integer.MAX_VALUE;
 	}
 
 	@Override
@@ -123,6 +123,11 @@ public class MesoEngine extends SimulationEngine {
 
 	@Override
 	public HashMap<String, List<MacroCharacter>> getEmpMap() {
+		return null;
+	}
+
+	@Override
+	public HashMap<String, List<MacroCharacter>> getSimMap() {
 		return null;
 	}
 

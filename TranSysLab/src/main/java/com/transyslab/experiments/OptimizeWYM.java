@@ -16,7 +16,6 @@ import com.transyslab.simcore.mlp.MacroCharacter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by WangYimin on 2017/10/13.
@@ -76,11 +75,11 @@ public class OptimizeWYM {
 
 			new EngThread("Eng" + i, "src/main/resources/demo_neihuan/scenario2/optwym.properties", taskCenter) {
 				@Override
-				public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
-					MLPEngine mlpEngine = (MLPEngine) engine;
+				public double[] worksWith(Task task) {
+					MLPEngine mlpEngine = (MLPEngine) getEngine();
 
 					//·ÂÕæ¹ý³Ì
-					if(mlpEngine.runWithPara(paras) == Constants.STATE_ERROR_QUIT){
+					if(mlpEngine.runWithPara(task.getInputVariables()) == Constants.STATE_ERROR_QUIT){
 						return new double[]{Double.MAX_VALUE};
 					}
 

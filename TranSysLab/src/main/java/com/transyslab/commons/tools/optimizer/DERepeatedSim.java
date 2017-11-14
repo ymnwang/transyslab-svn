@@ -14,7 +14,6 @@ import com.transyslab.simcore.mlp.MacroCharacter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by yali on 2017/9/11.
@@ -56,13 +55,13 @@ public class DERepeatedSim {
 		for (int i = 0; i < pop; i++) {
 			new EngThread("Eng" + i, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties", taskCenter) {
 				@Override
-				public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
-					MLPEngine mlpEngine = (MLPEngine) engine;
+				public double[] worksWith(Task task) {
+					MLPEngine mlpEngine = (MLPEngine) getEngine();
 					mlpEngine.getSimParameter().setLCDStepSize(2.0);
 					double[][] simSpeeds = new double[repeatedTimes ][];
 					for(int i = 0;i<repeatedTimes;i++){
 						//仿真过程
-						if(mlpEngine.runWithPara(paras) == Constants.STATE_ERROR_QUIT){
+						if(mlpEngine.runWithPara(task.getInputVariables()) == Constants.STATE_ERROR_QUIT){
 							return new double[]{Double.MAX_VALUE};
 						}
 						//获取特定结果

@@ -19,7 +19,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by yali on 2017/9/14.
@@ -224,10 +223,10 @@ public class DERunWithPython {
 		for (int i = 0; i < pop; i++) {
 			new EngThread("Eng" + i, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties", taskCenter) {
 				@Override
-				public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
-					MLPEngine mlpEngine = (MLPEngine) engine;
+				public double[] worksWith(Task task) {
+					MLPEngine mlpEngine = (MLPEngine) getEngine();
 						//仿真过程
-					mlpEngine.runWithPara(paras);
+					mlpEngine.runWithPara(task.getInputVariables());
 
 					//获取特定结果
 					List<MacroCharacter> records = mlpEngine.getNetwork().getSecStatRecords("det2");

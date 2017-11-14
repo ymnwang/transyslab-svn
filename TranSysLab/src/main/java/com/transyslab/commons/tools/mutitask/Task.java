@@ -19,7 +19,7 @@ public class Task {
 		this.workerName = workerName;
 	}
 
-	protected double[] getInputVariables() {
+	public double[] getInputVariables() {
 		return inputVariables;
 	}
 

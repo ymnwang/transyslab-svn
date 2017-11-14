@@ -10,7 +10,7 @@ public interface TaskWorker {
 
 	String ANY_WORKER = null;
 
-	double[] worksWith(double[] paras, Map<Object, Object> attributes);
+	double[] worksWith(Task task);
 
 	default void init() {}
 
@@ -29,10 +29,8 @@ public interface TaskWorker {
 
 			if (task != null) {
 //					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
-				double [] p = task.getInputVariables();
-				Map<Object, Object> atrributes = new HashMap<>();
-				double[] fitness = worksWith(p, atrributes);
-				task.setResults(fitness, atrributes);
+				double[] fitness = worksWith(task);
+				task.setResults(fitness, task.attributes);
 			}
 		}
 		onDismiss();

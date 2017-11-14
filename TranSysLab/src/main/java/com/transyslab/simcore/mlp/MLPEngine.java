@@ -33,6 +33,7 @@ public class MLPEngine extends SimulationEngine{
 	protected boolean infoOn;
 	protected boolean statRecordOn;
 	private HashMap<String, List<MacroCharacter>> empMap;
+	private HashMap<String, List<MacroCharacter>> simMap;
 	private int mod;//总计运行次数，在输出结束仿真信号时自增
 
 	//引用路网结构
@@ -103,7 +104,7 @@ public class MLPEngine extends SimulationEngine{
 		runProperties.put("statLinkIds",config.getString("statLinkIds"));
 		runProperties.put("statDetNames",config.getString("statDetNames"));
 
-		//repeatProcess setting
+		//repeatRun setting
 		repeatTimes = Integer.parseInt(config.getString("repeatTimes"));
 		String[] parasStrArray = config.getString("obParas").split(",");
 		ob_paras = new double[parasStrArray.length];
@@ -506,7 +507,7 @@ public class MLPEngine extends SimulationEngine{
 	 * 设置全体运动参数
 	 * @param fullParas [0]Qm, [1]VFree, [2]KJam, [3]VPhyLim, [4]Xc, [5]r(i.e. alpha*beta), [6]gamma1, [7]gamma2.
 	 */
-	public void setParas(double[] fullParas) {
+	private void setParas(double[] fullParas) {
 		if (fullParas.length != 8) {
 			System.err.println("length does not match");
 			return;
@@ -574,50 +575,79 @@ public class MLPEngine extends SimulationEngine{
 	 */
 	//TODO: 待删除 目前为了将就旧代码保留
 	public double[] getEmpData() {
-		return MacroCharacter.transferToKmH(empMap.get("det2")).get(1);
+		return MacroCharacter.getKmSpeed(
+				MacroCharacter.select(empMap.get("det2"),MacroCharacter.SELECT_SPEED));
 	}
 
 	public HashMap<String, List<MacroCharacter>> getEmpMap(){
 		return empMap;
 	}
 
+	@Override
+	public HashMap<String, List<MacroCharacter>> getSimMap() {
+		return simMap;
+	}
+
 	public int runWithPara(double[] fullParas) {
 		if (violateConstraints(fullParas))
 			return Constants.STATE_ERROR_QUIT;
 		setParas(fullParas);
-		run();
-		return Constants.STATE_DONE;
+		int state;
+		do {
+			state = simulationLoop();
+		}
+		while (state >= 0);
+		return state;
 	}
 
 	public int runWithPara(double[] obParas, double[]varParas) {
 		if (violateConstraints(obParas,varParas))
 			return Constants.STATE_ERROR_QUIT;
 		setParas(obParas,varParas);
-		run();
-		return Constants.STATE_DONE;
+		int state;
+		do {
+			state = simulationLoop();
+		}
+		while (state >= 0);
+		return state;
 	}
 
 	@Override
-	public HashMap<String, List<MacroCharacter>> repeatProcess(double[] paras) {
+	public int repeatRun() {
 
-		//首次运行，若参数不满足约束即返回NULL
-		if(runWithPara(ob_paras,paras) == Constants.STATE_ERROR_QUIT){
-			return null;
-		}
-		HashMap<String,List<MacroCharacter>> exportedStatMap = mlpNetwork.exportStat();
+		if (violateConstraints(ob_paras,free_paras))
+			return Constants.STATE_ERROR_QUIT;
+
+		setParas(ob_paras,free_paras);
 
 		//若有重复仿真任务，则多次运行进行平均
-		for(int i = 1; i < Math.max(repeatTimes,1); i++){
-			runWithPara(ob_paras,paras);
-			sumStat(exportedStatMap, mlpNetwork.exportStat());
+		for(int i = 0; i < Math.max(repeatTimes,1); i++){
+			int state;
+			do {
+				state = simulationLoop();
+			}
+			while (state>=0);
+			if (state == Constants.STATE_DONE) {
+				if (simMap==null)
+					simMap = mlpNetwork.exportStat();
+				else
+					sumStat(simMap,mlpNetwork.exportStat());
+			}
+			else
+				return state;
+
 		}
 
 		//统计数据平均
-		averageStat(exportedStatMap);
+		if (repeatTimes > 1)
+			averageStat(simMap);
 
-		return exportedStatMap;
+		return Constants.STATE_DONE;
 	}
 
+	/**
+	 * 应该只在MainWindow中调用，仅用于可视化debug.
+	 */
 	@Override
 	public void run() {
 		setParas(ob_paras,free_paras);
@@ -670,6 +700,16 @@ public class MLPEngine extends SimulationEngine{
 
 	public int countRunTimes(){
 		return mod;
+	}
+
+	public MLPEngine alterEngineObParas(double[] args) {
+		ob_paras = args;
+		return this;
+	}
+
+	public MLPEngine alterEngineFreeParas(double[] args) {
+		free_paras = args;
+		return this;
 	}
 
 }

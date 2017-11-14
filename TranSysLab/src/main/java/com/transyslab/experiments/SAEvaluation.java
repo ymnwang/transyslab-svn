@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by yali on 2017/10/22.
@@ -35,16 +34,16 @@ public class SAEvaluation {
 		for (int i = 0; i < NUMOFWORKERS; i++) {
 			new EngThread("Eng" + i, "src/main/resources/demo_neihuan/scenario2/kscalibration.properties", taskCenter) {
 				@Override
-				public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
-					MLPEngine mlpEngine = (MLPEngine) engine;
+				public double[] worksWith(Task task) {
+					MLPEngine mlpEngine = (MLPEngine) getEngine();
 					mlpEngine.getSimParameter().setLCDStepSize(0.0);
 					mlpEngine.seedFixed = true;
-					mlpEngine.runningSeed = (long)paras[10];
+					mlpEngine.runningSeed = (long)task.getInputVariables()[10];
 					//其他设置(properties中没有的设置)
-					mlpEngine.getSimParameter().setDLower((float)paras[9]);//车队判别阈值
-					mlpEngine.getSimParameter().setLCBuffTime(paras[8]);//换道影响时间
+					mlpEngine.getSimParameter().setDLower((float)task.getInputVariables()[9]);//车队判别阈值
+					mlpEngine.getSimParameter().setLCBuffTime(task.getInputVariables()[8]);//换道影响时间
 					// 待优化参数
-					double[] optParams = Arrays.copyOfRange(paras,0,8);
+					double[] optParams = Arrays.copyOfRange(task.getInputVariables(),0,8);
 
 					int vhcCount = 0;
 					double[] simSpeeds;

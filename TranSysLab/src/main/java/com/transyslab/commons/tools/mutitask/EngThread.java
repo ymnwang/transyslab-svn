@@ -2,22 +2,22 @@ package com.transyslab.commons.tools.mutitask;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.adapter.SimProblem;
-import com.transyslab.roadnetwork.Parameter;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
 import org.apache.commons.configuration2.Configuration;
 
 public class EngThread extends Thread implements TaskWorker{
-	protected SimProblem problem;
-	protected TaskCenter taskCenter;
-	protected SimulationEngine engine;
+	private TaskCenter taskCenter;
+	private SimulationEngine engine;
 	private boolean logOn;
+	private boolean taskSpecified;
+	private SimulationConductor conductor;
+	//TODO: 修改输出路径
 	private static TXTUtils writer = new TXTUtils("src/main/resources/output/solutions.csv");
 
 	public EngThread(String thread_name, String masterFileDir, TaskCenter taskCenter) {
@@ -44,28 +44,36 @@ public class EngThread extends Thread implements TaskWorker{
 		}
 
 		logOn = Boolean.parseBoolean(config.getString("positionLogOn"));
+		taskSpecified = false;//默认为false
 	}
 
 	@Override
-	public double[] worksWith(double[] paras, Map<Object, Object> attributes) {
+	public double[] worksWith(Task task) {
 
-		HashMap exportedStatMap = engine.repeatProcess(paras);
+		if (conductor == null)
+			System.err.println("Engine behavior not been determined");
 
-		//记录统计数据到Task中（attributes）
-		if (exportedStatMap!=null)
-			exportedStatMap.forEach((k,v) -> attributes.put(k,v));
+		//参数设置
+		conductor.alterEngineParameters(engine, task.getInputVariables());
+
+		//仿真过程
+		engine.repeatRun();
+
+		if (task.attributes == null)
+			task.attributes = new HashMap<>();
 
 		//结果评价
-		double[] fitness = problem.evaluate(exportedStatMap, engine.getEmpMap());
+		double[] fitness = conductor.evaluateFitness(engine);
 
 		//输出解的log
 		if (logOn)
-			writer.writeNFlush(Arrays.toString(paras).replace(" ","")
-					.replace("[","")
-					.replace("]","") + "," +
+			writer.writeNFlush(Arrays.toString(task.getInputVariables())
+						.replace(" ","")
+						.replace("[","")
+						.replace("]","") + "," +
 					Arrays.toString(fitness).replace(" ","")
-							.replace("[","")
-							.replace("]","")+ "\r\n");
+						.replace("[","")
+						.replace("]","")+ "\r\n");
 
 		return fitness;
 	}
@@ -74,7 +82,7 @@ public class EngThread extends Thread implements TaskWorker{
 	public void run() {
 		if (taskCenter == null)
 			System.err.println("Engine has not been assigned.");
-		goToWork(taskCenter, false);
+		goToWork(taskCenter, taskSpecified);
 	}
 
 	@Override
@@ -93,12 +101,21 @@ public class EngThread extends Thread implements TaskWorker{
 	}
 
 	public EngThread assignTo(SimProblem problem) {
-		this.problem = problem;
 		return assignTo(problem.getTaskCenter());
 	}
 
-	public Parameter getParameters() {
-		return engine.getNetwork().getSimParameter();
+	protected EngThread setTaskSpecified(){
+		taskSpecified = true;
+		return this;
+	}
+
+	public EngThread setSimConductor(SimulationConductor conductor) {
+		this.conductor = conductor;
+		return this;
+	}
+
+	protected SimulationEngine getEngine() {
+		return engine;
 	}
 
 }

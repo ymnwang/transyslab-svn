@@ -2,6 +2,11 @@ package com.transyslab.commons.tools.adapter;
 
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.tools.FitnessFunction;
+import com.transyslab.commons.tools.mutitask.EngThread;
+import com.transyslab.commons.tools.mutitask.SimulationConductor;
+import com.transyslab.simcore.SimulationEngine;
+import com.transyslab.simcore.mlp.MLPEngine;
+import com.transyslab.simcore.mlp.MLPLink;
 import com.transyslab.simcore.mlp.MLPParameter;
 import com.transyslab.simcore.mlp.MacroCharacter;
 import org.apache.commons.configuration2.Configuration;
@@ -14,8 +19,6 @@ import java.util.*;
  * Created by WangYimin on 2017/10/27.
  */
 public class DefaultMLPProblem extends SimProblem {
-
-	private double[] p;
 
 	public DefaultMLPProblem(String masterFileDir){
 		initProblem(masterFileDir);
@@ -32,12 +35,6 @@ public class DefaultMLPProblem extends SimProblem {
 		double[] ob_paras = new double[parasStrArray.length];
 		for (int i = 0; i<parasStrArray.length; i++) {
 			ob_paras[i] = Double.parseDouble(parasStrArray[i]);
-		}
-		String PartitionStr = config.getString("ObjectivePartition");
-		String[] PartitionStrArray = PartitionStr.split(",");
-		p = new double[PartitionStrArray.length];
-		for (int i = 0; i<PartitionStrArray.length; i++) {
-			p[i] = Double.parseDouble(PartitionStrArray[i]);
 		}
 
 		double qmax = ob_paras[0], vfree = ob_paras[1], kjam = ob_paras[2];
@@ -64,37 +61,52 @@ public class DefaultMLPProblem extends SimProblem {
 	}
 
 	@Override
-	public synchronized double[] evaluate(HashMap simMap, HashMap empMap) {
-
-		if (simMap != null && empMap != null) {
-
-			List<Double> resultList = new ArrayList<>();
-
-			empMap.forEach((k,v) -> {
-				List<MacroCharacter> records = (List<MacroCharacter>) simMap.get(k);
-				if (records != null && !records.isEmpty()) {
-
-					//transfer sim results
-					List<double[]> simDetection = MacroCharacter.transfer(records);
-
-					//transfer emp results
-					List<double[]> empDetection = MacroCharacter.transfer((List<MacroCharacter>) v);
-
-					Double tmp = 0.0;
-					for (int i = 0; i < 3; i++)
-						tmp += p[i]*FitnessFunction.evaRNSE(simDetection.get(i), empDetection.get(i));
-					resultList.add(tmp);
-				}
-			});
-
-			if (!resultList.isEmpty()) {
-				double nObj = (double) resultList.size();
-				double avgFitness = resultList.stream().mapToDouble(e->e/nObj).sum();
-				return new double[] {avgFitness};
-			}
-		}
-
-		return new double[] {Double.POSITIVE_INFINITY};
+	protected EngThread createEngThread(String name, String masterFileDir) {
+		return new EngThread(name,masterFileDir);
 	}
 
+	@Override
+	protected SimulationConductor createConductor() {
+		return new SimulationConductor() {
+			@Override
+			public void alterEngineParameters(SimulationEngine engine, double[] inputVariables) {
+				((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(inputVariables,0,4));
+				((MLPEngine) engine).runningSeed = 2017;
+				((MLPEngine) engine).getSimParameter().setLCDStepSize(2.0);
+				((MLPEngine) engine).getSimParameter().setLCBuffTime(2.0);
+			}
+
+			@Override
+			public double[] evaluateFitness(SimulationEngine engine) {
+				HashMap simMap = engine.getSimMap();
+				HashMap empMap = engine.getEmpMap();
+
+				if (simMap != null && empMap != null) {
+
+					List<Double> resultList = new ArrayList<>();
+
+					empMap.forEach((k,v) -> {
+						List<MacroCharacter> records = (List<MacroCharacter>) simMap.get(k);
+						if (records != null && !records.isEmpty()) {
+
+							double[] simSpeed = MacroCharacter.select(records, MacroCharacter.SELECT_SPEED);
+							double[] empSpeed = MacroCharacter.select((List<MacroCharacter>) v, MacroCharacter.SELECT_SPEED);
+
+							Double tmp = FitnessFunction.evaRNSE(simSpeed, empSpeed);
+
+							resultList.add(tmp);
+						}
+					});
+
+					if (!resultList.isEmpty()) {
+						double nObj = (double) resultList.size();
+						double avgFitness = resultList.stream().mapToDouble(e->e/nObj).sum();
+						return new double[] {avgFitness};
+					}
+				}
+
+				return new double[] {Double.POSITIVE_INFINITY};
+			}
+		};
+	}
 }

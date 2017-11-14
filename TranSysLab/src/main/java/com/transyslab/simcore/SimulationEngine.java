@@ -1,6 +1,5 @@
 package com.transyslab.simcore;
 
-import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.simcore.mlp.MacroCharacter;
@@ -80,9 +79,11 @@ public abstract class SimulationEngine {
 
 	public abstract RoadNetwork getNetwork();
 
-	public abstract HashMap<String, List<MacroCharacter>> repeatProcess(double[] paras);
+	public abstract int repeatRun();
 
 	public abstract void close();
 
 	public abstract HashMap<String, List<MacroCharacter>> getEmpMap();
+
+	public abstract HashMap<String, List<MacroCharacter>> getSimMap();
 }
