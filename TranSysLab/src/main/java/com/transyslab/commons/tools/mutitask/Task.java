@@ -1,6 +1,7 @@
 package com.transyslab.commons.tools.mutitask;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -76,4 +77,9 @@ public class Task {
 			System.err.println("wrong index");
 	}
 
+	public Map getAttributes() {
+		if (attributes==null)
+			attributes = new HashMap<>();
+		return attributes;
+	}
 }
