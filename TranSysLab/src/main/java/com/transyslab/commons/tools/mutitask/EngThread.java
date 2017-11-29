@@ -54,7 +54,7 @@ public class EngThread extends Thread implements TaskWorker{
 			System.err.println("Engine behavior not been determined");
 
 		//参数设置
-		conductor.alterEngineParameters(engine, task.getInputVariables());
+		conductor.modifyEngineBeforeStart(engine, , task.getInputVariables());
 
 		//仿真过程
 		do {
@@ -66,7 +66,7 @@ public class EngThread extends Thread implements TaskWorker{
 		double[] fitness = conductor.evaluateFitness(engine);
 
 		//修改solution的属性
-		conductor.modifySolutionBeforeEnd((SimSolution) task);
+		conductor.modifySolutionBeforeEnd(, (SimSolution) task);
 
 		//输出解的log
 		if (logOn)
@@ -124,5 +124,7 @@ public class EngThread extends Thread implements TaskWorker{
 	public boolean check(){
 		return true;
 	}
+
+	public void pushAtrributesBeforeSimDone(){}
 
 }

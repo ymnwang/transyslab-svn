@@ -7,7 +7,7 @@ import com.transyslab.simcore.SimulationEngine;
  * Created by WangYimin on 2017/11/14.
  */
 public interface SimulationConductor {
-	void alterEngineParameters(SimulationEngine engine, double[] inputVariables);
+	void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution);
 	double[] evaluateFitness(SimulationEngine engine);
-	void modifySolutionBeforeEnd(SimSolution simSolution);
+	void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution);
 }

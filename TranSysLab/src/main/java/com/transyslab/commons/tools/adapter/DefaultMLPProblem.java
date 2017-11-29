@@ -6,7 +6,6 @@ import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.commons.tools.mutitask.SimulationConductor;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
-import com.transyslab.simcore.mlp.MLPLink;
 import com.transyslab.simcore.mlp.MLPParameter;
 import com.transyslab.simcore.mlp.MacroCharacter;
 import org.apache.commons.configuration2.Configuration;
@@ -69,8 +68,9 @@ public class DefaultMLPProblem extends SimProblem {
 	protected SimulationConductor createConductor() {
 		return new SimulationConductor() {
 			@Override
-			public void alterEngineParameters(SimulationEngine engine, double[] inputVariables) {
-				((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(inputVariables,0,4));
+			public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
+				double[] var = simSolution.getInputVariables();
+				((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
 				((MLPEngine) engine).runningSeed = 2017;
 				((MLPEngine) engine).getSimParameter().setLCDStepSize(2.0);
 				((MLPEngine) engine).getSimParameter().setLCBuffTime(2.0);
@@ -109,7 +109,7 @@ public class DefaultMLPProblem extends SimProblem {
 			}
 
 			@Override
-			public void modifySolutionBeforeEnd(SimSolution simSolution) {
+			public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {
 
 			}
 		};
