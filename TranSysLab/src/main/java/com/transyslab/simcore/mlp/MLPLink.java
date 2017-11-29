@@ -8,11 +8,12 @@ import com.transyslab.roadnetwork.Node;
 import com.transyslab.roadnetwork.RoadNetwork;
 
 public class MLPLink extends Link {
-	protected LinkedList<Inflow> inflowList;
+	private LinkedList<Inflow> inflowList;
 	public List<JointLane> jointLanes;
 	protected List<MLPVehicle> platoon;//正在处理的车队
 	public Dynamics dynaFun;
 	public List<double[]> tripTime;//double[] {timeIn, DspIn, timeOut}
+	private int emitCount;
 //	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
 //	public double capacity;//unit: veh/s/lane
 //	private double releaseTime_;
@@ -23,6 +24,7 @@ public class MLPLink extends Link {
 		jointLanes = new ArrayList<JointLane>();
 		platoon = new ArrayList<>();
 		tripTime = new ArrayList<>();
+		emitCount = 0;
 //		capacity = MLPParameter.getInstance().capacity;
 	}
 
@@ -318,6 +320,19 @@ public class MLPLink extends Link {
 
 	protected LinkedList<Inflow> getInflow() {
 		return inflowList;
+	}
+
+	protected Inflow pollInflow() {
+		emitCount++;
+		return inflowList.poll();
+	}
+
+	public int getEmitNum() {
+		return emitCount;
+	}
+
+	protected void resetEmitCount() {
+		emitCount = 0;
 	}
 
 	protected void clearInflow() {

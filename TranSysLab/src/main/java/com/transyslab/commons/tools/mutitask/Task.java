@@ -1,6 +1,5 @@
 package com.transyslab.commons.tools.mutitask;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,12 +9,13 @@ import java.util.Map;
 public class Task {
 	protected double[] inputVariables;
 	protected double[] objectiveValues;
-	protected Map<Object, Object> attributes;
+	private Map<Object, Object> attributes;
 	private boolean canRetrieve;
 	protected String workerName;
 
 	public Task(double[] arg_inputs, String workerName) {
 		inputVariables = arg_inputs;
+		attributes = new HashMap<>();
 		canRetrieve = false;
 		this.workerName = workerName;
 	}
@@ -24,9 +24,8 @@ public class Task {
 		return inputVariables;
 	}
 
-	protected synchronized void setResults(double[] objectiveVals, Map<Object, Object> attributes) {
+	protected synchronized void setResults(double[] objectiveVals) {
 		this.objectiveValues = objectiveVals;
-		this.attributes = attributes;
 		canRetrieve = true;
 //		System.out.println("DEBUG: SimTask finished at " + LocalDateTime.now() + " by " + Thread.currentThread().getName());
 		notify();
@@ -43,7 +42,7 @@ public class Task {
 		return objectiveValues;
 	}
 
-	public synchronized Object getAttributes(Object id) {
+	public synchronized Object getAttribute(Object id) {
 		while (!canRetrieve) {
 			try {
 				wait();
@@ -77,9 +76,7 @@ public class Task {
 			System.err.println("wrong index");
 	}
 
-	public Map getAttributes() {
-		if (attributes==null)
-			attributes = new HashMap<>();
-		return attributes;
+	public void setAttribute(Object k, Object v) {
+		attributes.put(k,v);
 	}
 }

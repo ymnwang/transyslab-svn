@@ -107,6 +107,11 @@ public class DefaultMLPProblem extends SimProblem {
 
 				return new double[] {Double.POSITIVE_INFINITY};
 			}
+
+			@Override
+			public void modifySolutionBeforeEnd(SimSolution simSolution) {
+
+			}
 		};
 	}
 }

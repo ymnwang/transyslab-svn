@@ -1,11 +1,11 @@
 package com.transyslab.commons.tools.mutitask;
 
 import java.util.Arrays;
-import java.util.HashMap;
 
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.adapter.SimProblem;
+import com.transyslab.commons.tools.adapter.SimSolution;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
@@ -57,13 +57,16 @@ public class EngThread extends Thread implements TaskWorker{
 		conductor.alterEngineParameters(engine, task.getInputVariables());
 
 		//仿真过程
-		engine.repeatRun();
-
-		if (task.attributes == null)
-			task.attributes = new HashMap<>();
+		do {
+			engine.repeatRun();
+		}
+		while (!check());
 
 		//结果评价
 		double[] fitness = conductor.evaluateFitness(engine);
+
+		//修改solution的属性
+		conductor.modifySolutionBeforeEnd((SimSolution) task);
 
 		//输出解的log
 		if (logOn)
@@ -116,6 +119,10 @@ public class EngThread extends Thread implements TaskWorker{
 
 	protected SimulationEngine getEngine() {
 		return engine;
+	}
+
+	public boolean check(){
+		return true;
 	}
 
 }

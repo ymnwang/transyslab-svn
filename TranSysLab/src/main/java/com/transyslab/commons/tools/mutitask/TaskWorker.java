@@ -1,8 +1,5 @@
 package com.transyslab.commons.tools.mutitask;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Created by WangYimin on 2017/7/18.
  */
@@ -30,7 +27,7 @@ public interface TaskWorker {
 			if (task != null) {
 //					System.out.println(Thread.currentThread().getName() + " received TID " + (int) task[0]);
 				double[] fitness = worksWith(task);
-				task.setResults(fitness, task.attributes);
+				task.setResults(fitness);
 			}
 		}
 		onDismiss();
