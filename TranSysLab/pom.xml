@@ -130,6 +130,21 @@
 		  <artifactId>jmetal-exec</artifactId>
 		  <version>5.3</version>
 	  </dependency>
+	  <dependency>
+		  <groupId>team.simulator.commercial.matlab</groupId>
+		  <artifactId>engine</artifactId>
+		  <version>2017b</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>team.simulator.commercial.matlab</groupId>
+		  <artifactId>javabuilder</artifactId>
+		  <version>2017b</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>team.simulator.commercial.matlab</groupId>
+		  <artifactId>matlabfunctions</artifactId>
+		  <version>2017b</version>
+	  </dependency>
   </dependencies>
 	<build>
 		<plugins>

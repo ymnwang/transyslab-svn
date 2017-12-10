@@ -60,5 +60,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: org.uma.jmetal:jmetal-problem:5.3"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: org.uma.jmetal:jmetal-algorithm:5.3"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: org.uma.jmetal:jmetal-exec:5.3"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: team.simulator.commercial.matlab:engine:2017b"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: team.simulator.commercial.matlab:javabuilder:2017b"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: team.simulator.commercial.matlab:matlabfunctions:2017b"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
