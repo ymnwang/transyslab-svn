@@ -1,7 +1,6 @@
 package com.transyslab.simcore.mlp;
 
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import com.transyslab.commons.io.*;
@@ -23,6 +22,7 @@ public class MLPEngine extends SimulationEngine{
 	protected double updateTime_;
 	protected double LCDTime_;
 	protected double statTime_;
+	protected double loadTime;
 	private boolean firstEntry; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
 	protected TXTUtils loopRecWriter;
@@ -82,6 +82,9 @@ public class MLPEngine extends SimulationEngine{
 		runProperties.put("empDataPath", rootDir + config.getString("empDataPath"));
 		runProperties.put("outputPath", rootDir + config.getString("outputPath"));
 
+		runProperties.put("emitSource", rootDir + config.getString("emitSource"));
+		runProperties.put("emitSourceType", config.getString("emitSourceType"));
+
 		//time setting
 		timeStart = Double.parseDouble(config.getString("timeStart"));
 		timeEnd = Double.parseDouble(config.getString("timeEnd"));
@@ -121,6 +124,7 @@ public class MLPEngine extends SimulationEngine{
 		//other parameters
 		runProperties.put("lcBufferTime",config.getString("lcBufferTime"));
 		runProperties.put("lcdStepSize",config.getString("lcdStepSize"));
+
 	}
 
 	@Override
@@ -148,6 +152,17 @@ public class MLPEngine extends SimulationEngine{
 			mlpNetwork.sectionStatistics(statTime_ - stepSize, now, Constants.HARMONIC_MEAN);//车速使用调和均值
 			mlpNetwork.linkStatistics(statTime_ - stepSize, now);
 			statTime_ = now + stepSize;
+		}
+
+		if (now >= loadTime) {
+			double loadTimeStep = 3600 * 12;
+			String sourceType = runProperties.get("emitSourceType");
+			if (sourceType.equals("SQL"))
+				mlpNetwork.loadInflowFromSQL(runProperties.get("emitSource"), loadTime, loadTime + loadTimeStep);
+			else if (sourceType.equals("FILE"))
+				mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
+			loadTime += loadTimeStep;
+			System.out.println("day: " + now/3600/24 );
 		}
 		
 		//读入发车表
@@ -231,7 +246,7 @@ public class MLPEngine extends SimulationEngine{
 			}
 		}
 
-//		System.out.println("DEBUG Sim world time: " + time + " s");
+//		System.out.println("DEBUG Sim world day: " + (now / 3600.0 / 24 + 1)  );
 
 		clock.advance(clock.getStepSize());
 		if (now > clock.getStopTime() + epsilon) {
@@ -246,7 +261,8 @@ public class MLPEngine extends SimulationEngine{
 			if(statRecordOn) {
 //				String statFileOut = "src/main/resources/output/loop" + Thread.currentThread().getName() + "_" + mod + ".csv";
 //				mlpNetwork.writeStat(statFileOut);
-				mlpNetwork.writeStat2Db(Thread.currentThread().getName() + "_" + mod, LocalDateTime.now());
+				String outputFileName = runProperties.get("outputPath") + "/LoopRec_" + Thread.currentThread().getName() +"_"+ mod + ".csv";
+				mlpNetwork.writeStat(outputFileName);
 			}
 			//完整运行次数+1，重置firstEntry为真，以便下次再执行SimLoop时可以重置参数。
 			mod += 1;
@@ -332,6 +348,10 @@ public class MLPEngine extends SimulationEngine{
 		SimulationClock clock = mlpNetwork.getSimClock();
 		clock.init(timeStart, timeEnd, timeStep);
 
+		//applying
+		((MLPParameter) mlpNetwork.getSimParameter()).setLCDStepSize(Double.parseDouble(runProperties.get("lcdStepSize")));
+		((MLPParameter) mlpNetwork.getSimParameter()).setLCBuffTime(Double.parseDouble(runProperties.get("lcBufferTime")));
+
 		//establish writers
 		String threadName = Thread.currentThread().getName();
 		if (rawRecOn) {
@@ -371,6 +391,7 @@ public class MLPEngine extends SimulationEngine{
 		updateTime_ = now;
 		LCDTime_ = now;
 		statTime_ = now + getSimParameter().statWarmUp + getSimParameter().statStepSize; //第一次统计时刻为：现在时间+warmUp+统计间隔
+		loadTime = now;
 
 		//Network状态重设并准备发车表
 		if (!seedFixed)
@@ -654,9 +675,7 @@ public class MLPEngine extends SimulationEngine{
 	@Override
 	public void run() {
 		setParas(ob_paras,free_paras);
-		((MLPParameter) mlpNetwork.getSimParameter()).setLCDStepSize(Double.parseDouble(runProperties.get("lcdStepSize")));
-		((MLPParameter) mlpNetwork.getSimParameter()).setLCBuffTime(Double.parseDouble(runProperties.get("lcBufferTime")));
-		while (simulationLoop()>=0);
+		super.run();
 	}
 
 	@Override

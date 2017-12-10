@@ -10,13 +10,14 @@ import java.util.List;
 /**
  * Created by WangYimin on 2017/10/11.
  */
-public class DBWriter {
+public class DBWriter extends JdbcUtils{
 	protected QueryRunner qr;
 	protected String sqlStr;
 	protected List<Object[]> rows;
 
 	public DBWriter(String sqlStr) {
-		this.qr = new QueryRunner(JdbcUtils.getDataSource());
+		initDataSource();
+		this.qr = new QueryRunner(getDataSource());
 		this.sqlStr = sqlStr;
 		this.rows = new ArrayList<>();
 	}
@@ -69,7 +70,7 @@ public class DBWriter {
 		}
 	}
 
-	public void close() {
+	public void beforeClose() {
 		batchUpload();
 	}
 }

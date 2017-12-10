@@ -1,6 +1,9 @@
 package com.transyslab.simcore.mlp;
 
-import java.io.IOException;
+import java.io.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -9,6 +12,7 @@ import com.transyslab.commons.io.*;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.*;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
@@ -16,6 +20,7 @@ public class MLPNetwork extends RoadNetwork {
 	private int newVehID_;
 	public List<MLPVehicle> veh_list;
 	protected LinkedList<MLPVehicle> vehPool;
+	BufferedReader bReader;
 //	public List<MLPLoop> sensors;
 
 	//引擎输出变量
@@ -163,8 +168,8 @@ public class MLPNetwork extends RoadNetwork {
 			MLPLink launchingLink = mlpLink(i);
 			while (launchingLink.checkFirstEmtTableRec()){
 				Inflow emitVeh = launchingLink.pollInflow();
+//				System.out.println("DEBUG " + emitVeh.time + " " + emitVeh.laneIdx + " " + emitVeh.realVID);
 				MLPVehicle newVeh = generateVeh();
-				//TODO: 未实现从路段中间断面开始发车
 				newVeh.initInfo(0,launchingLink,mlpLane(emitVeh.laneIdx).getSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
 				assignPath(newVeh, (MLPNode) launchingLink.getUpNode(), (MLPNode) findLink(emitVeh.tLinkID).getDnNode(), false);
@@ -243,27 +248,6 @@ public class MLPNetwork extends RoadNetwork {
 		}
 	}
 
-	public double sectionMeanSpd(String det_name, double fTime, double tTime) {
-		if (sensors.size()<1) {
-			System.err.println("no sensors in network");
-			return 0.0;
-		}
-		List<Double> tmpAll = new ArrayList<>();
-		for (Sensor lp : sensors) {
-			MLPLoop mlpLoop = (MLPLoop) lp;
-			if (mlpLoop.detName.equals(det_name)) {
-				tmpAll.addAll(mlpLoop.getPeriodSpds(fTime, tTime));
-			}
-		}
-		if (tmpAll.size()>0){
-			double sum = 0.0;
-			for(Double val : tmpAll)
-				sum += val;
-			return sum/tmpAll.size();
-		}
-		return 0.0;
-	}
-
 	public void sectionStatistics(double fTime, double tTime, int avgMode) {
 		List<Double> spdRecords = new ArrayList<>();
 		for (MLPLoop[] sec : sectionStatMap.keySet()) {
@@ -297,10 +281,11 @@ public class MLPNetwork extends RoadNetwork {
 				double onLinkTrTSum = Arrays.stream(servingVehs).mapToDouble(v -> (now - v.timeEntersLink())).sum();
 			}
 
-			Object[] servedRecordsObj = mlpLink.tripTime.stream().filter(trT -> trT[MLPLink.TIMEIN_MASK]>fTime && trT[MLPLink.TIMEOUT_MASK]<=tTime).toArray();
-			double[][] servedRecords = Arrays.copyOf(servedRecordsObj,servedRecordsObj.length,double[][].class);
-			double servedTripSum = Arrays.stream(servedRecords).mapToDouble(r -> (linkLen-r[MLPLink.DSPIN_MASK])/linkLen).sum();
-			double servedTrTSum = Arrays.stream(servedRecords).mapToDouble(r -> r[MLPLink.TIMEOUT_MASK] - r[MLPLink.TIMEIN_MASK]).sum();
+//			Object[] servedRecordsObj = mlpLink.tripTime.stream().filter(trT -> trT[MLPLink.TIMEIN_MASK]>fTime && trT[MLPLink.TIMEOUT_MASK]<=tTime).toArray();
+//			double[][] servedRecords = Arrays.copyOf(servedRecordsObj,servedRecordsObj.length,double[][].class);
+			List<double[]> servedRecords = mlpLink.getServedVehRecs(fTime,tTime);
+			double servedTripSum = servedRecords.stream().mapToDouble(r -> (linkLen-r[MLPLink.DSPIN_MASK])/linkLen).sum();
+			double servedTrTSum = servedRecords.stream().mapToDouble(r -> r[MLPLink.TIMEOUT_MASK] - r[MLPLink.TIMEIN_MASK]).sum();
 
 			/*double flow = onLinkTripSum + servedTripSum;
 			double meanSpd = flow<=0.0 ? 0.0 : linkLen*flow/(onLinkTrTSum+servedTrTSum);*/
@@ -351,7 +336,8 @@ public class MLPNetwork extends RoadNetwork {
 			((MLPLoop) sensors.get(i)).clearRecords();//清除检测器记录结果
 		}
 		recycleAllVehs();//回收所有在网车辆
-		buildEmitTable(needRET, odFileDir, emitFileDir);//重新建立发车
+//		buildEmitTable(needRET, odFileDir, emitFileDir);//重新建立发车(旧设计 每次完整load进所有的发车信息)
+		bReader = null; //新设计，重置缓冲区。
 
 		//重置输出参数
 		clearSecStat();
@@ -499,6 +485,72 @@ public class MLPNetwork extends RoadNetwork {
 		}
 	}
 
+	public void loadInflowFromSQL(String tableName, double fTime, double tTime){
+		try {
+			Connection con = SQLConnection.getInstance().getConn();
+			String sql = "SELECT * FROM public." + tableName +
+					" WHERE emitTime >= " + fTime +
+					" AND emitTime < " + tTime +
+					" ORDER BY rvid";
+			PreparedStatement ps = con.prepareStatement(sql);
+			ResultSet result = ps.executeQuery();
+			int theLNID = Integer.MIN_VALUE;
+			MLPLink theLNK = null;
+			while (result.next()) {
+				int LNID = result.getInt(1);
+				if (theLNID != LNID) {
+					MLPLane theLN = (MLPLane) findLane(LNID);
+					theLNK = (MLPLink) theLN.getLink();
+					theLNID = LNID;
+				}
+				theLNK.appendInflowFromCSV(LNID,
+						result.getInt(2),
+						result.getDouble(3),
+						result.getDouble(4),
+						result.getDouble(5),
+						result.getInt(6));
+			}
+			SQLConnection.getInstance().release();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void loadInflowFromFile(String fileName, double tTime){
+		try {
+
+			if (bReader == null) {
+				File f = new File(fileName);
+				bReader = new BufferedReader(new FileReader(f));
+			}
+
+			String readLine = "";
+			int theLNID = Integer.MIN_VALUE;
+			double emitTime = 0.0;
+			while ((readLine = bReader.readLine()) != null && emitTime <= tTime) {
+				String[] items = readLine.split(",");
+				emitTime = Double.parseDouble(items[2]);
+				MLPLink theLNK = null;
+				int LNID = Integer.parseInt(items[0]);
+				if (theLNID != LNID) {
+					MLPLane theLN = (MLPLane) findLane(LNID);
+					theLNK = (MLPLink) theLN.getLink();
+					theLNID = LNID;
+				}
+				theLNK.appendInflowFromCSV(LNID,
+						Integer.parseInt(items[1]),
+						emitTime,
+						Double.parseDouble(items[3]),
+						Double.parseDouble(items[4]),
+						Integer.parseInt(items[5]));
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void clearInflows() {
 		links.stream().forEach(l -> ((MLPLink) l).clearInflow());
 	}
@@ -579,7 +631,12 @@ public class MLPNetwork extends RoadNetwork {
 			}
 		});
 		loopWriter.flush();
-		loopWriter.close();
+		loopWriter.beforeClose();
+		try {
+			loopWriter.getConnection().close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void clearSecStat() {

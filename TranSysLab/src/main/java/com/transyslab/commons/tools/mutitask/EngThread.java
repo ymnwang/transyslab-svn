@@ -81,7 +81,9 @@ public class EngThread extends Thread implements TaskWorker{
 						.replace("]","") + "," +
 					Arrays.toString(fitness).replace(" ","")
 						.replace("[","")
-						.replace("]","")+ "\r\n");
+						.replace("]","") + "," +
+					(engine instanceof MLPEngine ? Thread.currentThread().getName() + "_" + ((MLPEngine)engine).countRunTimes() : "Default") /*若为MLP引擎则加上引擎号*/
+					+ "\r\n");
 
 		return fitness;
 	}

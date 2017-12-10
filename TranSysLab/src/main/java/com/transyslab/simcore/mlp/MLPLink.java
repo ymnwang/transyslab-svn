@@ -343,6 +343,13 @@ public class MLPLink extends Link {
 		return inflowList.size();
 	}
 
+	public List<double[]> getServedVehRecs(double fTime, double tTime) {
+		List<double[]> list = new ArrayList<>();
+		tripTime.stream().filter(trT -> trT[MLPLink.TIMEIN_MASK]>fTime && trT[MLPLink.TIMEOUT_MASK]<=tTime).forEach(r -> list.add(r));
+		tripTime.removeAll(list);
+		return list;
+	}
+
 	public static final int TIMEIN_MASK = 0;
 
 	public static final int DSPIN_MASK = 1;

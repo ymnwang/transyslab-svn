@@ -95,6 +95,11 @@ public class JdbcUtils {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
+			dataSource = null;
 		}
+	}
+
+	public static boolean isIdle() {
+		return (dataSource == null);
 	}
 }
