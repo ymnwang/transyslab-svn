@@ -24,20 +24,20 @@ public class BaseEXP {
 		mlpEngine.loadFiles();
 		mlpEngine.getSimParameter().setLCBuffTime(3.5627);
 		mlpEngine.getSimParameter().setLCDStepSize(2.0);
-		mlpEngine.seedFixed = false;
+		//mlpEngine.seedFixed = false;
 		for(int i=0;i<10;i++){
-			mlpEngine.alterEngineFreeParas(new double[]{170.19,1.4367,4.1219,3.6699});
+			mlpEngine.alterEngineFreeParas(new double[]{170.19,1.4367,4.1219,3.6699});//170.19,1.4367,4.1219,3.6699,3.5627
 			mlpEngine.repeatRun();
 			List<MacroCharacter> result = mlpEngine.getSimMap().get("det2");
 			double[] speed = result.stream().mapToDouble(e -> e.getKmSpeed()).toArray();
-			double[] flow = result.stream().mapToDouble(e -> e.getHourFlow()*3/12.0).toArray();
+			double[] flow = MacroCharacter.select(result,MacroCharacter.SELECT_FLOW);//result.stream().mapToDouble(e -> e.getHourFlow()*3/12.0).toArray();
 			double rmsne = FitnessFunction.evaRNSE(speed,mlpEngine.getEmpData());
 			double ksdis = FitnessFunction.evaKSDistance(ADFullerTest.seriesDiff(speed,1),
 					ADFullerTest.seriesDiff(mlpEngine.getEmpData(),1));
-			printer.printRecords(rmsne,ksdis,speed,flow);
+			printer.printRecords(rmsne,ksdis,Arrays.toString(speed),Arrays.toString(flow));
 			printer.flush();
-//			System.out.println(Arrays.toString(flow));
-//			System.out.println(Arrays.toString(speed));
+			System.out.println(Arrays.toString(flow));
+			System.out.println(Arrays.toString(speed));
 			System.out.println(rmsne);
 			System.out.println(ksdis);
 		}

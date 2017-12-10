@@ -1,5 +1,6 @@
 package com.transyslab.commons.tools.mutitask;
 
+import java.io.File;
 import java.util.Arrays;
 
 import com.transyslab.commons.io.ConfigUtils;
@@ -17,8 +18,7 @@ public class EngThread extends Thread implements TaskWorker{
 	private boolean logOn;
 	private boolean taskSpecified;
 	private SimulationConductor conductor;
-	//TODO: 修改输出路径
-	private static TXTUtils writer = new TXTUtils("src/main/resources/output/solutions.csv");
+	private static TXTUtils writer;
 
 	public EngThread(String thread_name, String masterFileDir, TaskCenter taskCenter) {
 		this(thread_name,masterFileDir);
@@ -44,6 +44,11 @@ public class EngThread extends Thread implements TaskWorker{
 		}
 
 		logOn = Boolean.parseBoolean(config.getString("positionLogOn"));
+		if (writer==null && logOn){
+			String rootDir = new File(masterFileDir).getParent() + "/";
+			String outputPath = rootDir + config.getString("outputPath");
+			writer = new TXTUtils(  outputPath + "/" +"solutions.csv");
+		}
 		taskSpecified = false;//默认为false
 	}
 

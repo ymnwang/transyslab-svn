@@ -210,4 +210,7 @@ public class Constants {
 	//模型类别
 	public static final int MODEL_TYPE_MESO = 1;
 	public static final int MODEL_TYPE_MLP = 2;
+
+	//参数优化最大检验次数
+	public static final int REPEAT_TEST_TIMES = 5;
 }
