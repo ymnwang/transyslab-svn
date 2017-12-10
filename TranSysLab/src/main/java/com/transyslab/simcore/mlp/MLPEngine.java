@@ -615,6 +615,9 @@ public class MLPEngine extends SimulationEngine{
 	@Override
 	public int repeatRun() {
 
+		//simMap置空，重置状态。避免重复执行repeatRun()时出错。
+		simMap = null;
+
 		if (violateConstraints(ob_paras,free_paras))
 			return Constants.STATE_ERROR_QUIT;
 
