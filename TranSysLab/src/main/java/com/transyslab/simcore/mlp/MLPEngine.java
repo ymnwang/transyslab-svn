@@ -50,6 +50,9 @@ public class MLPEngine extends SimulationEngine{
 	private double[] ob_paras;
 	private double[] free_paras;
 
+	String rootDir;
+	String emitSource;
+
 	private MLPEngine(){
 		master_ = null;
 		state_ = Constants.STATE_NOT_STARTED;
@@ -66,13 +69,13 @@ public class MLPEngine extends SimulationEngine{
 
 	public MLPEngine(String masterFilePath) {
 		this();
+		rootDir = new File(masterFilePath).getParent() + "/";
 		parseProperties(masterFilePath);
 	}
 
 
 	private void parseProperties(String configFilePath) {
 		Configuration config = ConfigUtils.createConfig(configFilePath);
-		String rootDir = new File(configFilePath).getParent() + "/";
 
 		//input files
 		runProperties.put("roadNetworkPath", rootDir + config.getString("roadNetworkPath"));
@@ -732,6 +735,14 @@ public class MLPEngine extends SimulationEngine{
 	public MLPEngine alterEngineFreeParas(double[] args) {
 		free_paras = args;
 		return this;
+	}
+
+	public void modifyEmitSource(String sourceName) {
+		String sourceType = runProperties.get("emitSourceType");
+		if (sourceType.equals("FILE"))
+			this.emitSource = this.rootDir + sourceName;
+		else if (sourceType.equals("SQL"))
+			this.emitSource = sourceName;
 	}
 
 }
