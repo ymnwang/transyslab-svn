@@ -12,7 +12,6 @@ import com.transyslab.commons.io.*;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.*;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
@@ -315,7 +314,7 @@ public class MLPNetwork extends RoadNetwork {
 		}
 	}
 	
-	public void resetNetwork(boolean needRET, String odFileDir, String emitFileDir, long seed) {
+	public void resetNetwork(long seed) {
 		sysRand.setSeed(seed);//重置系统种子
 		newVehID_ = 0;//重置车辆编号
 		resetReleaseTime();//重置capacity控制周期时间

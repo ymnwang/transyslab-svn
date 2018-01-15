@@ -12,8 +12,6 @@ import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 
-import javax.crypto.Mac;
-
 
 public class MLPEngine extends SimulationEngine{
 
@@ -81,8 +79,6 @@ public class MLPEngine extends SimulationEngine{
 
 		//input files
 		runProperties.put("roadNetworkPath", rootDir + config.getString("roadNetworkPath"));
-		runProperties.put("emitFilePath", rootDir + config.getString("emitFilePath"));
-		runProperties.put("odFilePath", rootDir + config.getString("odFilePath"));
 		runProperties.put("sensorPath", rootDir + config.getString("sensorPath"));
 		runProperties.put("empDataPath", rootDir + config.getString("empDataPath"));
 		runProperties.put("outputPath", rootDir + config.getString("outputPath"));
@@ -410,7 +406,7 @@ public class MLPEngine extends SimulationEngine{
 		//Network状态重设并准备发车表
 		if (!seedFixed)
 			runningSeed = System.currentTimeMillis();
-		mlpNetwork.resetNetwork(needRndETable, runProperties.get("odFilePath"), runProperties.get("emitFilePath"), runningSeed);
+		mlpNetwork.resetNetwork(runningSeed);
 	}
 
 	public void forceResetEngine() {

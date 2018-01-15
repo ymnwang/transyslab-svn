@@ -24,8 +24,8 @@ public class BaseEXP {
 		mlpEngine.loadFiles();
 		//mlpEngine.seedFixed = false;
 		for(int i=0;i<1;i++){
-			mlpEngine.alterEngineFreeParas(new double[] {194.40976009457938, 1.1744497803529734, 10.0, 5.221432806331366});
-			mlpEngine.getSimParameter().setLCBuffTime(1.1997313089770296);
+//			mlpEngine.alterEngineFreeParas(new double[] {168.6467545456, 5.21389125582427, 2.60032585710801, 2.17110747371225});
+//			mlpEngine.getSimParameter().setLCBuffTime(9.42296995168615);
 			StopWatch watch = new StopWatch();
 			watch.start();
 			mlpEngine.repeatRun();
