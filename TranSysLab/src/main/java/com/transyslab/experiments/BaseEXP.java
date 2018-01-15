@@ -20,31 +20,23 @@ import java.util.Map;
  */
 public class BaseEXP {
 	public static void main(String[] args) throws IOException {
-		CSVPrinter printer = CSVUtils.getCSVWriter("E://BestResult.csv",null,false);
-		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/FD.properties");
+		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/default.properties");
 		mlpEngine.loadFiles();
-		mlpEngine.getSimParameter().setLCBuffTime(3.5627);
-		mlpEngine.getSimParameter().setLCDStepSize(2.0);
 		//mlpEngine.seedFixed = false;
 		for(int i=0;i<1;i++){
-			mlpEngine.alterEngineFreeParas(new double[]{170.19,1.4367,4.1219,3.6699});//170.19,1.4367,4.1219,3.6699,3.5627
+			mlpEngine.alterEngineFreeParas(new double[] {194.40976009457938, 1.1744497803529734, 10.0, 5.221432806331366});
+			mlpEngine.getSimParameter().setLCBuffTime(1.1997313089770296);
 			StopWatch watch = new StopWatch();
 			watch.start();
 			mlpEngine.repeatRun();
 			watch.stop();
 			System.out.println("time used: " + watch.getTime()/1000.0 + " s.");
 			List<MacroCharacter> result = mlpEngine.getSimMap().get("det2");
-//			double[] speed = result.stream().mapToDouble(e -> e.getKmSpeed()).toArray();
-			double[] flow = MacroCharacter.select(result,MacroCharacter.SELECT_FLOW);//result.stream().mapToDouble(e -> e.getHourFlow()*3/12.0).toArray();
-//			double rmsne = FitnessFunction.evaRNSE(speed,mlpEngine.getEmpData());
-//			double ksdis = FitnessFunction.evaKSDistance(ADFullerTest.seriesDiff(speed,1),
-//					ADFullerTest.seriesDiff(mlpEngine.getEmpData(),1));
-//			printer.printRecords(rmsne,ksdis,Arrays.toString(speed),Arrays.toString(flow));
-//			printer.flush();
+			double[] flow = MacroCharacter.select(result,MacroCharacter.SELECT_FLOW);
 			System.out.println(Arrays.toString(flow));
-//			System.out.println(Arrays.toString(speed));
-//			System.out.println(rmsne);
-//			System.out.println(ksdis);
+			System.out.println(Arrays.toString(Arrays.stream(flow).map(f -> f*3.0*300).toArray()));
+			System.out.println(Arrays.toString(result.stream().mapToDouble(r->r.getHourFlow()*3.0/12.0).toArray()));//
+
 		}
 		mlpEngine.close();
 	}

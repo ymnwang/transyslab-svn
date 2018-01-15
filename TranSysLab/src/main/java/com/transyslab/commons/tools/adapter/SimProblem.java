@@ -18,6 +18,8 @@ public abstract class SimProblem extends AbstractDoubleProblem implements TaskGi
         taskCenter = new TaskCenter();
     }
 
+    public abstract void initProblem(String masterFileName);
+
     @Override
     public void evaluate(DoubleSolution doubleSolution) {
         dispatch((SimSolution) doubleSolution);

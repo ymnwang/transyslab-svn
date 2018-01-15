@@ -1,6 +1,5 @@
 package com.transyslab.experiments;
 
-import com.transyslab.commons.tools.adapter.DefaultMLPProblem;
 import com.transyslab.commons.tools.adapter.SimProblem;
 import org.uma.jmetal.algorithm.Algorithm;
 import org.uma.jmetal.algorithm.singleobjective.differentialevolution.DifferentialEvolutionBuilder;

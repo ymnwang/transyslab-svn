@@ -5,16 +5,12 @@ import com.mathworks.toolbox.javabuilder.MWNumericArray;
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.tools.ADFullerTest;
 import com.transyslab.commons.tools.FitnessFunction;
-import com.transyslab.commons.tools.adapter.SimProblem;
 import com.transyslab.commons.tools.adapter.SimSolution;
 import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.commons.tools.mutitask.SimulationConductor;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
-import com.transyslab.simcore.mlp.MLPEngine;
-import com.transyslab.simcore.mlp.MLPLink;
-import com.transyslab.simcore.mlp.MLPParameter;
-import com.transyslab.simcore.mlp.MacroCharacter;
+import com.transyslab.simcore.mlp.*;
 import matlabfunctions.MatlabFunctions;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.ArrayUtils;
@@ -23,29 +19,22 @@ import java.util.*;
 /**
  * Created by yali on 2017/11/26.
  */
-public class KSProblem extends SimProblem {
-	public KSProblem(String masterFileDir){
-		initProblem(masterFileDir);
+public class KSProblem extends MLPProblem {
+
+	public KSProblem(){}
+
+	public KSProblem(String masterFileName) {
+		super(masterFileName);
 	}
-	protected void initProblem(String masterFileDir){
-		Configuration config = ConfigUtils.createConfig(masterFileDir);
 
-		//parsing
-		double simStepSize = Double.parseDouble(config.getString("timeStep"));
-		int numOfEngines = Integer.parseInt(config.getString("numOfEngines"));
-		String obParaStr = config.getString("obParas");
-		String[] parasStrArray = obParaStr.split(",");
-		double[] ob_paras = new double[parasStrArray.length];
-		for (int i = 0; i<parasStrArray.length; i++) {
-			ob_paras[i] = Double.parseDouble(parasStrArray[i]);
-		}
-
-		double qmax = ob_paras[0], vfree = ob_paras[1], kjam = ob_paras[2];
-		double xcLower = MLPParameter.xcLower(kjam, qmax, simStepSize);
-		double rupper = MLPParameter.rUpper(10, vfree, kjam, qmax);
+	@Override
+	public void initProblem(String masterFileName) {
+		super.initProblem(masterFileName);
+		double xcLower = getXcLower();
+		double rlower = getRLower(200.0);
 		//'xc','r','gama1','gama2','lcb_ime'
-		double[] plower = new double[]{xcLower+1E-5,1e-5,0.0,0.0,1.0};
-		double[] pupper = new double[]{200.0, rupper-1e-5, 10.0, 10.0,10.0};
+		double[] plower = new double[]{xcLower+1E-5,rlower+1E-5,0.0,0.0,1.0};
+		double[] pupper = new double[]{200.0, 100.0, 10.0, 10.0,10.0};
 
 		List<Double> lowerLimit;
 		List<Double> upperLimit;
@@ -61,8 +50,9 @@ public class KSProblem extends SimProblem {
 		setLowerLimit(lowerLimit);
 		setUpperLimit(upperLimit);
 
-		prepareEng(masterFileDir,numOfEngines);
+		prepareEng(masterFileName,Integer.parseInt(config.getString("numOfEngines")));
 	}
+
 	@Override
 	protected EngThread createEngThread(String name, String masterFileDir) {
 		return  new EngThread(name,masterFileDir);

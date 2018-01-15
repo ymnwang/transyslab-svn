@@ -385,6 +385,8 @@ public class MLPNetwork extends RoadNetwork {
 			// todo 应加入所有可行路径，非最短路
 			GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
 			ODPair newPair = new ODPair(oriNode, desNode);
+			oriNode.setType(oriNode.getType() | Constants.NODE_TYPE_ORI);
+			desNode.setType(oriNode.getType() | Constants.NODE_TYPE_DES);
 			newPair.addPath(new Path(gpath));
 			odPairs.add(newPair);
 			return newPair;
@@ -522,15 +524,16 @@ public class MLPNetwork extends RoadNetwork {
 			if (bReader == null) {
 				File f = new File(fileName);
 				bReader = new BufferedReader(new FileReader(f));
+				bReader.readLine();//table heading
 			}
 
 			String readLine = "";
+			MLPLink theLNK = null;
 			int theLNID = Integer.MIN_VALUE;
 			double emitTime = 0.0;
 			while ((readLine = bReader.readLine()) != null && emitTime <= tTime) {
 				String[] items = readLine.split(",");
 				emitTime = Double.parseDouble(items[2]);
-				MLPLink theLNK = null;
 				int LNID = Integer.parseInt(items[0]);
 				if (theLNID != LNID) {
 					MLPLane theLN = (MLPLane) findLane(LNID);
@@ -543,6 +546,39 @@ public class MLPNetwork extends RoadNetwork {
 						Double.parseDouble(items[3]),
 						Double.parseDouble(items[4]),
 						Integer.parseInt(items[5]));
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void genInflowFromFile(String fileName, double tTime){
+		try {
+
+			if (bReader == null) {
+				File f = new File(fileName);
+				bReader = new BufferedReader(new FileReader(f));
+				bReader.readLine();//table heading
+			}
+
+			String readLine;
+			double emitTime = 0.0;
+			while ((readLine = bReader.readLine()) != null && emitTime <= tTime) {
+				String[] items = readLine.split(",");
+				emitTime = Double.parseDouble(items[4]);
+				int fLinkID = Integer.parseInt(items[0]);
+				int tLinkID = Integer.parseInt(items[1]);
+				int demand = Integer.parseInt(items[2]);
+				double [] time = {Double.parseDouble(items[3]),
+						Double.parseDouble(items[4])};
+				double [] speed = {Double.parseDouble(items[5]),
+						Double.parseDouble(items[6]),
+						Double.parseDouble(items[7])};
+				MLPLink theLink = findLink(fLinkID);
+				List<Lane> lanes = theLink.getStartSegment().getLanes();
+				theLink.generateInflow(demand, speed, time, lanes, tLinkID);
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

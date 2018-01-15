@@ -2,7 +2,6 @@ package com.transyslab.experiments;
 
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.tools.FitnessFunction;
-import com.transyslab.commons.tools.adapter.DefaultMLPProblem;
 import com.transyslab.commons.tools.adapter.SimProblem;
 import com.transyslab.commons.tools.adapter.SimSolution;
 import com.transyslab.commons.tools.mutitask.EngThread;
@@ -21,45 +20,10 @@ import java.util.List;
 /**
  * Created by WangYimin on 2017/12/12.
  */
-public class FDProblem extends SimProblem{
-	public FDProblem(String masterFileDir) {
-		initProblem(masterFileDir);
-	}
-	protected void initProblem(String masterFileDir){
-		Configuration config = ConfigUtils.createConfig(masterFileDir);
+public class FDProblem extends DefaultMLPProblem{
 
-		//parsing
-		double simStepSize = Double.parseDouble(config.getString("timeStep"));
-		int numOfEngines = Integer.parseInt(config.getString("numOfEngines"));
-		String obParaStr = config.getString("obParas");
-		String[] parasStrArray = obParaStr.split(",");
-		double[] ob_paras = new double[parasStrArray.length];
-		for (int i = 0; i<parasStrArray.length; i++) {
-			ob_paras[i] = Double.parseDouble(parasStrArray[i]);
-		}
+	public FDProblem(){	}
 
-		double qmax = ob_paras[0], vfree = ob_paras[1], kjam = ob_paras[2];
-		double xcLower = MLPParameter.xcLower(kjam, qmax, simStepSize);
-		double rupper = MLPParameter.rUpper(10, vfree, kjam, qmax);
-		double[] plower = new double[]{xcLower+1E-5,1e-5,0.0,0.0,0.1};
-		double[] pupper = new double[]{200.0, rupper-1e-5, 10.0, 10.0,10.0};
-
-		List<Double> lowerLimit;
-		List<Double> upperLimit;
-		Double[] doubleArray = ArrayUtils.toObject(plower);
-		lowerLimit = Arrays.asList(doubleArray);
-		doubleArray = ArrayUtils.toObject(pupper);
-		upperLimit =  Arrays.asList(doubleArray);
-
-		setName("Default MLP Parameters Optimization Problem");
-		setNumberOfConstraints(0);//约束已在SIMEngine内部处理，所以此处为无约束问题。
-		setNumberOfVariables(5);
-		setNumberOfObjectives(1);//已在内部组合为单目标优化
-		setLowerLimit(lowerLimit);
-		setUpperLimit(upperLimit);
-
-		prepareEng(masterFileDir,numOfEngines);
-	}
 	@Override
 	protected EngThread createEngThread(String name, String masterFileDir) {
 		return new EngThread(name,masterFileDir);

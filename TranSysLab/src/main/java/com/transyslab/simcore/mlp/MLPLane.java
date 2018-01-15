@@ -49,10 +49,8 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	}
 
 	public boolean checkPass() {
-		if (releaseTime_ <= getNetwork().getSimClock().getCurrentTime())
-			return true;
-		else 
-			return false;
+		/*(segment.getLink().getDnNode().getType() & Constants.NODE_TYPE_DES) == 0 ||*/
+		return releaseTime_ <= getNetwork().getSimClock().getCurrentTime();
 	}
 	
 	public void resetReleaseTime() {

@@ -103,4 +103,8 @@ public class MacroCharacter {
 				return null;
 		}
 	}
+
+	public MacroCharacter copy() {
+		return new MacroCharacter(this.flow, this.speed, this.density, this.travelTime);
+	}
 }

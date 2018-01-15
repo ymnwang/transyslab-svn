@@ -12,6 +12,8 @@ import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 
+import javax.crypto.Mac;
+
 
 public class MLPEngine extends SimulationEngine{
 
@@ -85,8 +87,11 @@ public class MLPEngine extends SimulationEngine{
 		runProperties.put("empDataPath", rootDir + config.getString("empDataPath"));
 		runProperties.put("outputPath", rootDir + config.getString("outputPath"));
 
-		runProperties.put("emitSource", rootDir + config.getString("emitSource"));
 		runProperties.put("emitSourceType", config.getString("emitSourceType"));
+		if (runProperties.get("emitSourceType").equals("FILE"))
+			runProperties.put("emitSource", rootDir + config.getString("emitSource"));
+		else
+			runProperties.put("emitSource", config.getString("emitSource"));
 
 		//time setting
 		timeStart = Double.parseDouble(config.getString("timeStart"));
@@ -160,12 +165,18 @@ public class MLPEngine extends SimulationEngine{
 		if (now >= loadTime) {
 			double loadTimeStep = 3600 * 12;
 			String sourceType = runProperties.get("emitSourceType");
-			if (sourceType.equals("SQL"))
-				mlpNetwork.loadInflowFromSQL(runProperties.get("emitSource"), loadTime, loadTime + loadTimeStep);
-			else if (sourceType.equals("FILE"))
-				mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
+			if (needRndETable) {
+				//TODO: 未完成从数据库随机发车
+				mlpNetwork.genInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
+			}
+			else {
+				if (sourceType.equals("SQL"))
+					mlpNetwork.loadInflowFromSQL(runProperties.get("emitSource"), loadTime, loadTime + loadTimeStep);
+				else if (sourceType.equals("FILE"))
+					mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
+			}
 			loadTime += loadTimeStep;
-			System.out.println("day: " + now/3600/24 );
+//			System.out.println("day: " + now/3600/24 );
 		}
 		
 		//读入发车表
@@ -510,11 +521,12 @@ public class MLPEngine extends SimulationEngine{
 		//计算安全车头时距
 		double ts = MLPParameter.calcTs(Xc, Vfree, Kjam, Qm, VPhyLim, deltaT);
 
-		//检查r取值
+		/*弃用*/
+		/*//检查r取值
 		if (r >= MLPParameter.rUpper(10, Vfree, Kjam, Qm)) {
 			System.err.println("check r constraints");
 			return;
-		}
+		}*/
 
 		//计算alpha, beta
 		double alpha = MLPParameter.calcAlpha(r, Vfree, Kjam, Qm);
@@ -576,8 +588,7 @@ public class MLPEngine extends SimulationEngine{
 		double ts = MLPParameter.calcTs(Xc, Vfree, Kjam, Qm, VPhyLim, deltaT);
 		return !MLPParameter.isVpFastEnough(Vfree, VPhyLim) ||
 				Xc <= MLPParameter.xcLower(Kjam, Qm, deltaT) ||
-				deltaT >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm) ||
-				r >= MLPParameter.rUpper(10, Vfree, Kjam, Qm);
+				deltaT >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm);
 	}
 
 	public MLPParameter getSimParameter() {
@@ -655,10 +666,7 @@ public class MLPEngine extends SimulationEngine{
 			}
 			while (state>=0);
 			if (state == Constants.STATE_DONE) {
-				if (simMap==null)
-					simMap = mlpNetwork.exportStat();
-				else
-					sumStat(simMap,mlpNetwork.exportStat());
+				sumStat(mlpNetwork.exportStat());
 			}
 			else
 				return state;
@@ -695,8 +703,16 @@ public class MLPEngine extends SimulationEngine{
 		return vehHoldCount;
 	}
 
-	private void sumStat(Map<String, List<MacroCharacter>> srcMap,
-						   Map<String, List<MacroCharacter>> addingMap) {
+	private void sumStat(Map<String, List<MacroCharacter>> addingMap) {
+		if (simMap == null) {
+			simMap = new HashMap<>();
+			addingMap.forEach((k,v) -> {
+				List<MacroCharacter> newList = new ArrayList<>();
+				v.stream().forEach(l -> newList.add(l.copy()));
+				simMap.put(k,newList);
+			});
+		}
+		Map<String, List<MacroCharacter>> srcMap = this.simMap;
 		srcMap.forEach((k,v) -> {
 			List<MacroCharacter> addingRecords = addingMap.get(k);
 			for (int i = 0; i < v.size(); i++) {

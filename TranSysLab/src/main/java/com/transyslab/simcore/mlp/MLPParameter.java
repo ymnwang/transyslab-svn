@@ -1,5 +1,6 @@
 package com.transyslab.simcore.mlp;
 
+import com.transyslab.commons.tools.NewtonFunction;
 import com.transyslab.roadnetwork.Parameter;
 import com.transyslab.simcore.mlp.Functions.FunsCombination1;
 import com.transyslab.simcore.mlp.Functions.FunsCombination2;
@@ -30,19 +31,29 @@ public class MLPParameter extends Parameter {
 	final static double LC_Lambda1 = 18.4204;//换道logit模型常数项
 	final static double LC_Lambda2 = -9.2102;//换道logit模型常数项
 //	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
-	/*public KSDM_Eq ksdm_Eq;
-	public QSDFun_Eq qsdFun_Eq;
-	public QSDM_Eq qsdm_Eq;*/
-	public FunsCombination1 funsCombination1;
-	public FunsCombination2 funsCombination2;
-	public FunsCombination1 funsCombination3;
-	public TSFun tsFun;
-	private DE de;
 	private double simStepSize;
 
 	//输出时间设置
 	protected double statWarmUp;
 	protected double statStepSize;//stat(统计)阶段时长，单位：秒
+
+	public static NewtonFunction rLowerFunc = new NewtonFunction() {
+		/**
+		 * paras: [0]qm, [1]vf, [2]kj, [3]vp, [4]deltaT, [5]xc*/
+		@Override
+		public double calculate(double input, double[] paras) {
+			double qm = paras[0];
+			double vf = paras[1];
+			double kj = paras[2];
+			double vp = paras[3];
+			double deltaT = paras[4];
+			double xc = paras[5];
+			double phi = calcTs(xc,vf,kj,qm,vp,deltaT);
+			double a = Math.pow(1.0+input,1.0/calcAlpha(input,vf,kj,qm));
+			double b = 1.0 / (1.0 - qm * (phi + deltaT));
+			return a-b;
+		}
+	};
 
 	public MLPParameter() {
 		SegLenBuff_ = 10.0;
@@ -69,11 +80,6 @@ public class MLPParameter extends Parameter {
 //		queueParam[0] = -0.001f;
 //		queueParam[1] = (float) (25.0 * speedFactor);
 //		queueParam[2] = 100.0f;// seconds
-		funsCombination1 = new FunsCombination1();
-		funsCombination2 = new FunsCombination2();
-		funsCombination3 = new FunsCombination1();
-		tsFun = new TSFun();
-		de = new DE();
 		simStepSize = 0.0;
 	}
 	public double getUpdateStepSize() {
@@ -188,6 +194,7 @@ public class MLPParameter extends Parameter {
 		return vp>vf;
 	}
 
+	/*错误，弃用*/
 	public static double rUpper(double start, double vf, double kj, double qm) {//建议start取10
 		double epsilon = 1e-12;
 		double x = start;
@@ -227,8 +234,13 @@ public class MLPParameter extends Parameter {
 	}
 
 	public static double calcAlpha(double r, double vf, double kj, double qm) {
-		double delta = r*Math.pow(Math.log(r),2) - 4*Math.log(qm/kj/vf)*Math.log(1+r);
-		return (r*Math.log(r)-Math.sqrt(delta)) / 2 / Math.log(qm/kj/vf);
+		/*以下计算错误，暂保留公式留作校对*/
+//		double delta = r*Math.pow(Math.log(r),2) - 4*Math.log(qm/kj/vf)*Math.log(1+r);
+//		return (r*Math.log(r)-Math.sqrt(delta)) / 2 / Math.log(qm/kj/vf);
+
+		double top = r*Math.log(r) - (r+1)*Math.log(r+1);
+		double bottom = Math.log(qm/kj/vf);
+		return top/bottom;
 	}
 
 	//车队判断函数
