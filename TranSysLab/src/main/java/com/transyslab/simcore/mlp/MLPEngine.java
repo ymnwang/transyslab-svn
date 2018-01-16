@@ -17,7 +17,6 @@ public class MLPEngine extends SimulationEngine{
 
     public boolean seedFixed;
     public long runningSeed;
-    public boolean needEmpData;
 	public boolean displayOn = false;
 	protected double updateTime_;
 	protected double LCDTime_;
@@ -102,7 +101,6 @@ public class MLPEngine extends SimulationEngine{
 		statRecordOn = Boolean.parseBoolean(config.getString("statRecordOn"));
 		seedFixed = Boolean.parseBoolean(config.getString("seedFixed"));
 		runningSeed = seedFixed ? Long.parseLong(config.getString("runningSeed")) : 0l;
-		needEmpData = Boolean.parseBoolean(config.getString("needEmpData"));
 
 		//Statistic Output setting
 		getSimParameter().statWarmUp = Double.parseDouble(config.getString("statWarmUp"));//set time to Parameter
@@ -302,9 +300,7 @@ public class MLPEngine extends SimulationEngine{
 		//读入仿真文件
 		loadSimulationFiles();
 		//读入实测数据用于计算fitness
-		if(needEmpData) {
-			readEmpData(runProperties.get("empDataPath"));
-		}
+		readEmpData(runProperties.get("empDataPath"));
 		//引擎初始化
 		initEngine();
 	}
@@ -328,6 +324,10 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	private void readEmpData(String fileName) {
+		if (fileName==null || fileName.equals("")){
+			System.out.println("warning: have no empirical data read in");
+			return;
+		}
 		empMap = new HashMap<>();
 		String[] headers = {"NAME","FLOW_RATE","SPEED","DENSITY","TRAVEL_TIME"};
 		List<CSVRecord> results = null;

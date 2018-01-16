@@ -26,9 +26,11 @@ public class OptToolBox {
 		String crossOver_variant = "rand/1/bin";
 		String simMasterFileName = args.length>0 ? args[0]
 												 : "src/main/resources/demo_neihuan/scenario2/default.properties";
+		System.out.println("using: " + simMasterFileName.substring(simMasterFileName.lastIndexOf('/') + 1));
 		Configuration config = ConfigUtils.createConfig(simMasterFileName);
 
 		String problemName = config.getString("problemName");
+		System.out.println("problem name: " + problemName);
 		SimProblem problem = (SimProblem) ProblemUtils.<DoubleSolution> loadProblem(problemName);
 		problem.initProblem(simMasterFileName);
 		DifferentialEvolution algorithm;
