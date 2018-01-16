@@ -57,77 +57,65 @@ public class DefaultMLPProblem extends MLPProblem {
 
 	@Override
 	protected SimulationConductor createConductor() {
-		try {
-			return new SimulationConductor() {
+		return new SimulationConductor() {
 
-				MatlabFunctions matlabFunctions = new MatlabFunctions();
+			@Override
+			public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
+				double[] var = simSolution.getInputVariables();
+				((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
+				((MLPEngine) engine).getSimParameter().setLCBuffTime(var[4]);
+			}
 
-				@Override
-				public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
-					double[] var = simSolution.getInputVariables();
-					((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
-					((MLPEngine) engine).getSimParameter().setLCBuffTime(var[4]);
-				}
+			@Override
+			public boolean checkStatusBeforeEvaluate(SimulationEngine engine) {
+				return true;
+			}
 
-				@Override
-				public boolean checkStatusBeforeEvaluate(SimulationEngine engine) {
-					return true;
-				}
+			@Override
+			public double[] evaluateFitness(SimulationEngine engine) {
+				HashMap simMap = engine.getSimMap();
+				HashMap empMap = engine.getEmpMap();
 
-				@Override
-				public double[] evaluateFitness(SimulationEngine engine) {
-					HashMap simMap = engine.getSimMap();
-					HashMap empMap = engine.getEmpMap();
+				if (simMap != null && empMap != null) {
 
-					if (simMap != null && empMap != null) {
+					List<Double> speedFitness = new ArrayList<>();
+					List<Double> flowFitness = new ArrayList<>();
 
-						List<Double> speedFitness = new ArrayList<>();
-						List<Double> flowFitness = new ArrayList<>();
+					empMap.forEach((k,v) -> {
+						List<MacroCharacter> records = (List<MacroCharacter>) simMap.get(k);
+						if (records != null && !records.isEmpty()) {
 
-						empMap.forEach((k,v) -> {
-							List<MacroCharacter> records = (List<MacroCharacter>) simMap.get(k);
-							if (records != null && !records.isEmpty()) {
+							double[] simSpeed = MacroCharacter.select(records, MacroCharacter.SELECT_SPEED);
+							double[] empSpeed = MacroCharacter.select((List<MacroCharacter>) v, MacroCharacter.SELECT_SPEED);
 
-								double[] simSpeed = MacroCharacter.select(records, MacroCharacter.SELECT_SPEED);
-								double[] empSpeed = MacroCharacter.select((List<MacroCharacter>) v, MacroCharacter.SELECT_SPEED);
+							Double tmp = FitnessFunction.evaMAPE(simSpeed, empSpeed);
 
-								Double tmp = FitnessFunction.evaMAPE(simSpeed, empSpeed);
+							speedFitness.add(tmp);
 
-								speedFitness.add(tmp);
+							double[] simFlow = MacroCharacter.select(records,MacroCharacter.SELECT_FLOW);
+							double[] empFlow = MacroCharacter.select((List<MacroCharacter>) v,MacroCharacter.SELECT_FLOW);
+							flowFitness.add(FitnessFunction.evaMAPE(simFlow,empFlow));
 
-								double[] simFlow = MacroCharacter.select(records,MacroCharacter.SELECT_FLOW);
-								double[] empFlow = MacroCharacter.select((List<MacroCharacter>) v,MacroCharacter.SELECT_FLOW);
-								flowFitness.add(FitnessFunction.evaMAPE(simFlow,empFlow));
-
-								try {
-									matlabFunctions.displaySim(simSpeed,simFlow);
-								} catch (MWException e) {
-									e.printStackTrace();
-								}
-							}
-						});
-
-						if (!speedFitness.isEmpty()) {
-							double nObj = (double) speedFitness.size();
-							double avgSpdFitness = speedFitness.stream().mapToDouble(e->e/nObj).sum();
-							double avgFlowFitness = flowFitness.stream().mapToDouble(e->e/nObj).sum();
-							double output = (avgSpdFitness+avgFlowFitness)/2.0;
-							System.out.println("fitness = " + output);
-							return new double[] {output};
 						}
+					});
+
+					if (!speedFitness.isEmpty()) {
+						double nObj = (double) speedFitness.size();
+						double avgSpdFitness = speedFitness.stream().mapToDouble(e->e/nObj).sum();
+						double avgFlowFitness = flowFitness.stream().mapToDouble(e->e/nObj).sum();
+						double output = (avgSpdFitness+avgFlowFitness)/2.0;
+						System.out.println("fitness = " + output);
+						return new double[] {output};
 					}
-
-					return new double[] {Double.POSITIVE_INFINITY};
 				}
 
-				@Override
-				public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {
+				return new double[] {Double.POSITIVE_INFINITY};
+			}
 
-				}
-			};
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
+			@Override
+			public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {
+
+			}
+		};
 	}
 }
