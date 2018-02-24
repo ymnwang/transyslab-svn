@@ -52,6 +52,8 @@ public class MLPEngine extends SimulationEngine{
 	String rootDir;
 	String emitSource;
 
+	public InterConstraints interConstraints; //在每次设定观测参数时初始化
+
 	private MLPEngine(){
 		master_ = null;
 		state_ = Constants.STATE_NOT_STARTED;
@@ -170,7 +172,7 @@ public class MLPEngine extends SimulationEngine{
 					mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
 			}
 			loadTime += loadTimeStep;
-//			System.out.println("day: " + now/3600/24 );
+			System.out.println("day: " + now/3600/24 );
 		}
 		
 		//读入发车表
@@ -414,177 +416,137 @@ public class MLPEngine extends SimulationEngine{
 		resetBeforeSimLoop();
 	}
 
-	/**
-	 * 设置观测参数
-	 * @param ob_paras [0]Qm, [1]Vfree, [2]Kjam, [3]VPhyLim
-	 */
-	private void setObservedParas (double [] ob_paras){
+	private void setObservedParas (double qm, double vf_CF, double vf_SD, double vp, double kJLower, double kJUpper){
 		if (ob_paras.length != 4) {
 			System.err.println("ob_paras' length does not match");
-			return;
-		}
-
-		//解释
-		double Qm = ob_paras[0];
-		double Vfree = ob_paras[1];
-		double Kjam = ob_paras[2];
-		double VPhyLim = ob_paras[3];
-
-		//检测运行参数设置
-		if (getSimClock().getStepSize() >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm)) {
-			System.err.println("step size of simClock is too big.");
-			return;
-		}
-		if (!MLPParameter.isVpFastEnough(Vfree, VPhyLim)) {
-			System.err.println("VPhyLim should be bigger than VFree");
 			return;
 		}
 
 		MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
 
 		//设置通行能力，包括parameter中的capacity
-		allParas.capacity = Qm;
-		mlpNetwork.setOverallCapacity(Qm);//路段单车道每秒通行能力
+		allParas.capacity = qm;
+		mlpNetwork.setOverallCapacity(qm);//路段单车道每秒通行能力
 
-		//路段速密函数
+		//路段运动函数
 		int mask = 0;
-		mask |= 1<<(1-1);//Vmax
-		mask |= 1<<(3-1);//Kjam
-		mlpNetwork.setOverallSDParas(new double[] {Vfree, Kjam}, mask);
-
-		//根据Kjam 保持 leff 与 CF_near 的一致性
-		allParas.limitingParam_[0] = (float) (1.0/Kjam - MLPParameter.VEHICLE_LENGTH);
-		allParas.CF_NEAR = allParas.limitingParam_[0];//锁定与kjam吻合
+		mask |= 1<<(1-1);//vf_SD
+		mask |= 1<<(6-1);//vf_CF
+		mlpNetwork.setOverallSDParas(new double[] {vf_SD, vf_CF}, mask);
 
 		//设置物理限速
-		allParas.setPhyLim(VPhyLim);
+		allParas.setPhyLim(vp);
+
+		interConstraints = new InterConstraints(kJUpper,kJLower,qm,vf_CF,vf_SD);
 	}
 
 	/**
 	 * 设置非观测参数，内部调用
 	 * 参数间存在依赖，不是完全独立的。详见@setParas
-	 * @param optparas [0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
 	 */
-	private void setOptParas(double [] optparas) {
-		if (optparas.length != 6) {
-			System.err.println("length does not match");
-			return;
-		}
+	private void setOptParas(double kJam, double ts, double xc, double alpha, double beta, double gamma1, double gamma2) {
+
 		MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
-		allParas.limitingParam_[1] = (float) optparas[0];//ts
-		allParas.CF_FAR = (float) optparas[1];//xc
+		allParas.limitingParam_[1] = (float) ts;
+		allParas.CF_FAR = (float) xc;
 		int mask = 0;
-		mask |= 1<<(4-1);
-		mask |= 1<<(5-1);
-		mlpNetwork.setOverallSDParas(new double[] {optparas[2], optparas[3]}, mask);//alpha, beta
-		allParas.setLCPara(new double[] {optparas[4], optparas[5]});//gamma1 gamma2
+		mask |= 1<<(3-1);//kJam
+		mask |= 1<<(4-1);//alpha
+		mask |= 1<<(5-1);//beta
+		mlpNetwork.setOverallSDParas(new double[] {kJam, alpha, beta}, mask);//kJam, alpha, beta
+
+		//根据Kjam 保持 leff 与 CF_near 的一致性 (CF 与 MS model 的参数一致性)
+		allParas.limitingParam_[0] = (float) (1.0/kJam - MLPParameter.VEHICLE_LENGTH);
+		allParas.CF_NEAR = allParas.limitingParam_[0];//锁定与kjam吻合
+
+		allParas.setLCPara(new double[] {gamma1, gamma2});
 	}
 
 	/**
-	 * 设置全体运动参数
-	 * @param ob_paras [0]Qm, [1]Vfree, [2]Kjam, [3]VPhyLim
-	 * @param varying_paras 自由参数 [0]Xc, [1]r(i.e. alpha*beta), [2]gamma1, [3]gamma2.
+	 * 设置观测参数与自由参数
+	 * @param ob_paras [0]qm, [1]vf_CF, [2]vf_SD, [3]vp, [4]kJamLower, [5]kJamUpper
+	 * @param varying_paras [0]kJam, [1]alpha, [2]gamma1, [3]gamma2.
 	 */
 	private void setParas(double[] ob_paras, double[] varying_paras) {
 		//长度检查
-		if (ob_paras.length != 4 || varying_paras.length != 4) {
+		if (ob_paras.length != 6 || varying_paras.length != 4) {
 			System.err.println("parameters' length does not match");
 			return;
 		}
 
 		//解释观测参数
-		double Qm = ob_paras[0];
-		double Vfree = ob_paras[1];
-		double Kjam = ob_paras[2];
-		double VPhyLim = ob_paras[3];
+		double qm = ob_paras[0];
+		double vf_CF = ob_paras[1];
+		double vf_SD = ob_paras[2];
+		double vp = ob_paras[3];
+		double kJLower = ob_paras[4];
+		double kJUpper = ob_paras[5];
+
+		//设置观测参数
+		setObservedParas(qm,vf_CF,vf_SD,vp,kJLower,kJUpper);
+
 		//解释自由参数
-		double Xc = varying_paras[0];
-		double r = varying_paras[1];
+		double kJam = varying_paras[0];
+		double alpha = varying_paras[1];
 		double gamma1 = varying_paras[2];
 		double gamma2 = varying_paras[3];
-
-		setObservedParas(ob_paras);
-
-		//检测Xc取值
-		if (Xc <= MLPParameter.xcLower(Kjam, Qm, getSimClock().getStepSize())) {
-			System.err.println("Xc out of lower boundary");
-			return;
-		}
-
-		//读取deltaT
+		//读取其他参数
 		double deltaT = getSimClock().getStepSize();
+		//计算其余optPara
+		double ts = interConstraints.calTs(kJam, deltaT);
+		double xc = interConstraints.calXc();
+		double beta = interConstraints.calBeta(alpha,kJam);
 
-		//计算安全车头时距
-		double ts = MLPParameter.calcTs(Xc, Vfree, Kjam, Qm, VPhyLim, deltaT);
-
-		/*弃用*/
-		/*//检查r取值
-		if (r >= MLPParameter.rUpper(10, Vfree, Kjam, Qm)) {
-			System.err.println("check r constraints");
-			return;
-		}*/
-
-		//计算alpha, beta
-		double alpha = MLPParameter.calcAlpha(r, Vfree, Kjam, Qm);
-		double beta = r / alpha;
-
-		//组织opt_paras
-		//[0]ts, [1]xc, [2]alpha, [3]beta, [4]gamma1, [5]gamma2.
-		double[] opt_paras = new double[] {ts, Xc, alpha, beta, gamma1, gamma2};
-
-		setOptParas(opt_paras);
+		setOptParas(kJam, ts, xc, alpha, beta, gamma1, gamma2);
 	}
 
 	/**
 	 * 设置全体运动参数
-	 * @param fullParas [0]Qm, [1]VFree, [2]KJam, [3]VPhyLim, [4]Xc, [5]r(i.e. alpha*beta), [6]gamma1, [7]gamma2.
+	 * @param fullParas [0]qm, [1]vf_CF, [2]vf_SD, [3]vp, [4]kJamLower,
+	 *                  [5]kJamUpper, [6]kJam, [7]alpha, [8]gamma1, [9]gamma2.
 	 */
 	private void setParas(double[] fullParas) {
-		if (fullParas.length != 8) {
+		if (fullParas.length != 10) {
 			System.err.println("length does not match");
 			return;
 		}
 		double[] ob = new double[4];
 		double[] varying = new double[4];
 		System.arraycopy(fullParas,0,ob,0,4);
-		System.arraycopy(fullParas,4,varying,0,4);
+		System.arraycopy(fullParas,6,varying,0,4);
 		setParas(ob,varying);
 	}
 
-	/**
-	 * 检查约束
-	 * @param fullParas [0]Qm, [1]VFree, [2]KJam, [3]VPhyLim, [4]Xc, [5]r(i.e. alpha*beta), [6]gamma1, [7]gamma2.
-	 * @return 是否违反约束
-	 */
 	protected boolean violateConstraints(double[] fullParas) {
-		return violateConstraints(Arrays.copyOfRange(fullParas,0,4),
-				                  Arrays.copyOfRange(fullParas,4,8));
+		return violateConstraints(Arrays.copyOfRange(fullParas,0,6),
+				                  Arrays.copyOfRange(fullParas,6,10));
 	}
 
-	/**
-	 * 检查约束
-	 * @param obsParas [0]Qm, [1]Vfree, [2]Kjam, [3]VPhyLim
-	 * @param varyingParas 自由参数 [0]Xc, [1]r(i.e. alpha*beta), [2]gamma1, [3]gamma2.
-	 * @return 是否违反约束
-	 */
 	protected boolean violateConstraints(double[] obsParas, double[]varyingParas) {
 		//解释观测参数
-		double Qm = obsParas[0];
-		double Vfree = obsParas[1];
-		double Kjam = obsParas[2];
-		double VPhyLim = obsParas[3];
+		double qm = ob_paras[0];
+		double vf_CF = ob_paras[1];
+		double vf_SD = ob_paras[2];
+		double vp = ob_paras[3];
+		double kJLower = ob_paras[4];
+		double kJUpper = ob_paras[5];
+
+		//设置观测参数
+		setObservedParas(qm,vf_CF,vf_SD,vp,kJLower,kJUpper);
+
 		//解释自由参数
-		double Xc = varyingParas[0];
-		double r = varyingParas[1];
+		double kJam = varyingParas[0];
+		double alpha = varyingParas[1];
 		double gamma1 = varyingParas[2];
 		double gamma2 = varyingParas[3];
+
 		//读取deltaT
 		double deltaT = getSimClock().getStepSize();
-		//计算ts
-		double ts = MLPParameter.calcTs(Xc, Vfree, Kjam, Qm, VPhyLim, deltaT);
-		return !MLPParameter.isVpFastEnough(Vfree, VPhyLim) ||
-				Xc <= MLPParameter.xcLower(Kjam, Qm, deltaT) ||
-				deltaT >= MLPParameter.deltaTUpper(Vfree, Kjam, Qm);
+
+		return (interConstraints.getConstraint("kj").checkViolated(kJam,null) |
+				interConstraints.getConstraint("alpha").checkViolated(kJam,new double[] {kJam}) |
+				interConstraints.getConstraint("vp").checkViolated(kJam,null) |
+				interConstraints.getConstraint("deltaT").checkViolated(kJam,new double[] {kJam}));
 	}
 
 	public MLPParameter getSimParameter() {
@@ -681,6 +643,8 @@ public class MLPEngine extends SimulationEngine{
 	 */
 	@Override
 	public void run() {
+		if (violateConstraints(ob_paras,free_paras))
+			System.out.println("运行参数违反约束。");
 		setParas(ob_paras,free_paras);
 		super.run();
 	}

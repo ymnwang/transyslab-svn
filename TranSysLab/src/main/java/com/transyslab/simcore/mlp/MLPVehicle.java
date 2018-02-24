@@ -127,7 +127,7 @@ public class MLPVehicle extends Vehicle{
 	private double calDLC(int turning, double fDSP, double tDSP, double PlatoonCount){
 		try {
 			double [] s = sum(turning, segment, fDSP, tDSP, new double []{0.0,0.0});
-			return (PlatoonCount/(tDSP - fDSP) - (s[0] + 1.0) /s[1]) / link.dynaFun.sdPara[2];
+			return (PlatoonCount/(tDSP - fDSP) - (s[0] + 1.0) /s[1]) / link.dynaFun.linkCharacteristics[2];
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -142,7 +142,7 @@ public class MLPVehicle extends Vehicle{
 				double [] answer = new double [2];
 				MLPLane tarlane = lane.getAdjacent(turning).getSamePosLane(seg);
 				if (tarlane == null || !tarlane.enterAllowed || !tarlane.checkLCAllowen((turning+1)%2)) {
-					answer[0] = count[0] + (t-f)* link.dynaFun.sdPara[2];
+					answer[0] = count[0] + (t-f)* link.dynaFun.linkCharacteristics[2];
 				}
 				else {
 					answer[0] = count[0] + tarlane.countVehWhere(f, t);

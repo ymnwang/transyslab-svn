@@ -37,24 +37,6 @@ public class MLPParameter extends Parameter {
 	protected double statWarmUp;
 	protected double statStepSize;//stat(统计)阶段时长，单位：秒
 
-	public static NewtonFunction rLowerFunc = new NewtonFunction() {
-		/**
-		 * paras: [0]qm, [1]vf, [2]kj, [3]vp, [4]deltaT, [5]xc*/
-		@Override
-		public double calculate(double input, double[] paras) {
-			double qm = paras[0];
-			double vf = paras[1];
-			double kj = paras[2];
-			double vp = paras[3];
-			double deltaT = paras[4];
-			double xc = paras[5];
-			double phi = calcTs(xc,vf,kj,qm,vp,deltaT);
-			double a = Math.pow(1.0+input,1.0/calcAlpha(input,vf,kj,qm));
-			double b = 1.0 / (1.0 - qm * (phi + deltaT));
-			return a-b;
-		}
-	};
-
 	public MLPParameter() {
 		SegLenBuff_ = 10.0;
 		LCBuffTime_ = 2.0;
@@ -178,69 +160,6 @@ public class MLPParameter extends Parameter {
 
 	public void setPhyLim(double arg) {
 		PHYSICAL_SPD_LIM = arg;
-	}
-
-	public static double xcLower(double kj, double qm, double deltat) {
-		//xc取值需要大于此值(开区间
-		return 1.0/kj/(1-qm*deltat);
-	}
-
-	public static double deltaTUpper(double vf, double kj, double qm) {
-		//deltaT取值需要小于此值（开区间
-		return 1.0/qm - 1.0/vf/kj;
-	}
-
-	public static boolean isVpFastEnough(double vf, double vp) {
-		return vp>vf;
-	}
-
-	/*错误，弃用*/
-	public static double rUpper(double start, double vf, double kj, double qm) {//建议start取10
-		double epsilon = 1e-12;
-		double x = start;
-		double f = funcG(x,vf,kj,qm);
-		int iterTimes = 0;
-		while (Math.abs(f)>epsilon) {
-			if (iterTimes>1e6) {
-				System.err.println("方程不收敛");
-				return Double.NaN;
-			}
-			x = x - f*epsilon/(funcG(x+epsilon,vf,kj,qm)-f);//迭代x(k+1)
-			f = funcG(x,vf,kj,qm);
-			iterTimes += 1;
-		}
-		if (x<0 || Double.isNaN(f)) {
-			return rUpper(start*10, vf, kj, qm);
-		}
-		return x;
-	}
-
-	public static double funcG(double r, double vf, double kj, double qm) { // 辅助函数
-		return (r*r-r)*Math.pow(Math.log(r),2) + 4*Math.log(qm/kj/vf)*Math.log(1+r);
-	}
-
-	public static double calcTs(double Xc, double vf, double kj, double qm, double vp, double deltaT) {
-		double x1 = vf / qm;
-		double x2 = vp / qm;
-
-		if (Xc<x1) {
-			return 1/qm - 1/vf/kj - deltaT;
-		}
-		else if (Xc<x2) {
-			return 1/qm - 1/qm/kj/Xc - deltaT;
-		}
-		else
-			return 1/qm - 1/vp/kj - deltaT;
-	}
-
-	public static double calcAlpha(double r, double vf, double kj, double qm) {
-		/*以下计算错误，暂保留公式留作校对*/
-//		double delta = r*Math.pow(Math.log(r),2) - 4*Math.log(qm/kj/vf)*Math.log(1+r);
-//		return (r*Math.log(r)-Math.sqrt(delta)) / 2 / Math.log(qm/kj/vf);
-
-		double top = r*Math.log(r) - (r+1)*Math.log(r+1);
-		double bottom = Math.log(qm/kj/vf);
-		return top/bottom;
 	}
 
 	//车队判断函数

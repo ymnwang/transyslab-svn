@@ -9,6 +9,7 @@ import com.transyslab.commons.tools.mutitask.SimulationConductor;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
 import com.transyslab.simcore.mlp.MLPParameter;
+import com.transyslab.simcore.mlp.MLPProblem;
 import com.transyslab.simcore.mlp.MacroCharacter;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.ArrayUtils;
@@ -20,14 +21,10 @@ import java.util.List;
 /**
  * Created by WangYimin on 2017/12/12.
  */
-public class FDProblem extends DefaultMLPProblem{
+public class FDProblem extends MLPProblem{
 
 	public FDProblem(){	}
 
-	@Override
-	protected EngThread createEngThread(String name, String masterFileDir) {
-		return new EngThread(name,masterFileDir);
-	}
 	@Override
 	protected SimulationConductor createConductor() {
 		return new SimulationConductor() {

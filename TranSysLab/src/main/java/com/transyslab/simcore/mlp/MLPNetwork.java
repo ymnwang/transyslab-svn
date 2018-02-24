@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.transyslab.commons.io.*;
 import com.transyslab.commons.renderer.FrameQueue;
@@ -24,7 +25,8 @@ public class MLPNetwork extends RoadNetwork {
 
 	//引擎输出变量
 	protected HashMap<MLPLink, List<MacroCharacter>> linkStatMap;
-	protected HashMap<MLPLoop[], List<MacroCharacter>> sectionStatMap;
+	protected HashMap<String, List<MacroCharacter>> sectionStatMap;
+	protected HashMap<MLPLoop, List<MacroCharacter>> laneSecMap;
 
 	public MLPNetwork() {
 		simParameter = new MLPParameter();//需要在RoadNetwork子类初始化
@@ -35,6 +37,7 @@ public class MLPNetwork extends RoadNetwork {
 
 		linkStatMap = new HashMap<>();
 		sectionStatMap = new HashMap<>();
+		laneSecMap = new HashMap<>();
 	}
 
 	@Override
@@ -207,11 +210,11 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void setOverallSDParas(double[] args, int mask) {
 		for (int i = 0; i < nLinks(); i++) {
-			mlpLink(i).dynaFun.setPartialSD(args, mask);
+			mlpLink(i).dynaFun.setPartialCharacteristics(args, mask);
 		}
 	}
 	public void setSDParas(int linkIdx, double[] args, int mask) {
-		mlpLink(linkIdx).dynaFun.setPartialSD(args, mask);
+		mlpLink(linkIdx).dynaFun.setPartialCharacteristics(args, mask);
 	}
 	
 	public void setLoopsOnLink(String name, int linkID, double p) {
@@ -249,8 +252,8 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void sectionStatistics(double fTime, double tTime, int avgMode) {
 		List<Double> spdRecords = new ArrayList<>();
-		for (MLPLoop[] sec : sectionStatMap.keySet()) {
-			Arrays.stream(sec).forEach(loop -> spdRecords.addAll(loop.getPeriodSpds(fTime, tTime)));
+		laneSecMap.forEach((loop,r) -> {
+			spdRecords.addAll(loop.getPeriodSpds(fTime,tTime,false));
 			//cal flow
 			double flow = spdRecords.size();
 			//cal meanSpd
@@ -259,8 +262,21 @@ public class MLPNetwork extends RoadNetwork {
 							avgMode == Constants.HARMONIC_MEAN ? flow / spdRecords.stream().mapToDouble(d -> 1/d).sum() :
 									0.0;
 			spdRecords.clear();
-			flow = flow / (tTime-fTime) / sec.length;
-			sectionStatMap.get(sec).add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow / meanSpd, Double.NaN));
+			flow = flow / (tTime-fTime);
+			r.add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow / meanSpd, Double.NaN));
+		});
+		for (String detName : sectionStatMap.keySet()) {
+			List<MLPLoop> sec = laneSecMap.keySet().stream().filter(l->l.detName.equals(detName)).collect(Collectors.toList());
+			double tmpFlow = 0.0, tmpSpeed = 0.0, tmpDensity = 0.0;
+			for (MLPLoop l :sec) {
+				List<MacroCharacter> records = laneSecMap.get(l);
+				MacroCharacter lastRecord = records.get(records.size()-1);
+				tmpFlow += lastRecord.flow;
+				tmpSpeed += lastRecord.speed * lastRecord.flow;
+			}
+			tmpSpeed = tmpFlow <= 0.0 ? 0.0 : tmpSpeed / tmpFlow;
+			tmpDensity = tmpFlow <= 0.0 ? 0.0 : tmpFlow / tmpSpeed;
+			sectionStatMap.get(detName).add(new MacroCharacter(tmpFlow, tmpSpeed, tmpDensity, Double.NaN));
 		}
 	}
 
@@ -598,17 +614,15 @@ public class MLPNetwork extends RoadNetwork {
 		String[] parts = detNameStr.split(",");
 		if (parts.length<=0 || parts[0].equals("")) return;
 		for (String p : parts) {
-			Object[] secObj = sensors.stream().filter(l -> ((MLPLoop) l).detName.equals(p)).toArray();
-			MLPLoop[] sec = Arrays.copyOf(secObj, secObj.length, MLPLoop[].class);
-			sectionStatMap.put(sec, new ArrayList<>());
+			/*Object[] secObj = sensors.stream().filter(l -> ((MLPLoop) l).detName.equals(p)).toArray();
+			MLPLoop[] sec = Arrays.copyOf(secObj, secObj.length, MLPLoop[].class);*/
+			List<Sensor> laneSensors = sensors.stream().filter(l -> ((MLPLoop) l).detName.equals(p)).collect(Collectors.toList());
+			laneSensors.forEach(s -> laneSecMap.put((MLPLoop) s, new ArrayList<>()));
+			sectionStatMap.put(detNameStr, new ArrayList<>());
 		}
 	}
 	public List<MacroCharacter> getSecStatRecords(String detName) {
-		MLPLoop[] theSec = sectionStatMap.keySet().stream().
-				filter(sec -> sec[0].detName.equals(detName)).
-				findFirst().
-				orElse(null);
-		return theSec == null ? null : sectionStatMap.get(theSec);
+		return sectionStatMap.get(detName);
 	}
 	public List<MacroCharacter> getLinkStatRecords(int LinkId) {
 		MLPLink theLink = linkStatMap.keySet().stream().
@@ -621,7 +635,20 @@ public class MLPNetwork extends RoadNetwork {
 		TXTUtils writer = new TXTUtils(filename);
 		writer.writeNFlush("DET,TIME_PERIOD,FLOW,SPEED,DENSITY,TRAVEL_TIME\r\n");
 		sectionStatMap.forEach((k,v) -> {
-			String det = k[0].detName;
+			String det = k;
+			for (int i = 0; i<v.size(); i++) {
+				MacroCharacter r = v.get(i);
+				writer.write(det + "," +
+						(i+1) + "," +
+						r.getHourFlow() + "," +
+						r.getKmSpeed() + "," +
+						r.getKmDensity() + "," +
+						r.travelTime + "\r\n");
+			}
+		});
+		writer.flushBuffer();
+		laneSecMap.forEach((k,v) -> {
+			String det = k.detName + "_" + k.getLane().getId();
 			for (int i = 0; i<v.size(); i++) {
 				MacroCharacter r = v.get(i);
 				writer.write(det + "," +
@@ -652,7 +679,14 @@ public class MLPNetwork extends RoadNetwork {
 	public void writeStat2Db(String tag, LocalDateTime dt) {
 		DBWriter loopWriter = new DBWriter("insert into simloop(det, time_period, flow, speed, density, travel_time, tag, create_time) values(?,?,?,?,?,?,?,?)");
 		sectionStatMap.forEach((k,v) -> {
-			String det = k[0].detName;
+			String det = k;
+			for (int i = 0; i<v.size(); i++) {
+				MacroCharacter r = v.get(i);
+				loopWriter.write(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
+			}
+		});
+		laneSecMap.forEach((k,v) -> {
+			String det = k.detName + "_" + k.getLane().getId();
 			for (int i = 0; i<v.size(); i++) {
 				MacroCharacter r = v.get(i);
 				loopWriter.write(new Object[] {det, (i+1), r.flow, r.speed, r.density, r.travelTime, tag, dt});
@@ -676,6 +710,7 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void clearSecStat() {
 		sectionStatMap.forEach((k,v) -> v.clear());
+		laneSecMap.forEach((k,v) -> v.clear());
 	}
 
 	public void clearLinkStat() {
@@ -685,7 +720,8 @@ public class MLPNetwork extends RoadNetwork {
 	public HashMap<String, List<MacroCharacter>> exportStat() {
 		HashMap<String, List<MacroCharacter>> statMap = new HashMap<>();
 		linkStatMap.forEach((k,v) -> statMap.put("link"+k.getId(),v));
-		sectionStatMap.forEach((k,v) -> statMap.put(k[0].detName,v));
+		sectionStatMap.forEach((k,v) -> statMap.put(k,v));
+		laneSecMap.forEach((k,v) -> statMap.put("lane"+k.getLane().getId(),v));
 		return statMap;
 	}
 

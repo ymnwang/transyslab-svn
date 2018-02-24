@@ -27,35 +27,6 @@ public class DefaultMLPProblem extends MLPProblem {
 	}
 
 	@Override
-	public void initProblem(String masterFileName) {
-		super.initProblem(masterFileName);
-		double xcLower = getXcLower();
-		double[] plower = new double[]{xcLower+1E-5, 1E-5,0.0,0.0,1.0};
-		double[] pupper = new double[]{200.0, 100.0, 10.0, 10.0,10.0};
-
-		List<Double> lowerLimit;
-		List<Double> upperLimit;
-		Double[] doubleArray = ArrayUtils.toObject(plower);
-		lowerLimit = Arrays.asList(doubleArray);
-		doubleArray = ArrayUtils.toObject(pupper);
-		upperLimit =  Arrays.asList(doubleArray);
-
-		setName("Default MLP Parameters Optimization Problem");
-		setNumberOfConstraints(0);//约束已在SIMEngine内部处理，所以此处为无约束问题。
-		setNumberOfVariables(5);
-		setNumberOfObjectives(1);//已在内部组合为单目标优化
-		setLowerLimit(lowerLimit);
-		setUpperLimit(upperLimit);
-
-		prepareEng(masterFileName,Integer.parseInt(config.getString("numOfEngines")));
-	}
-
-	@Override
-	protected EngThread createEngThread(String name, String masterFileDir) {
-		return new EngThread(name,masterFileDir);
-	}
-
-	@Override
 	protected SimulationConductor createConductor() {
 		return new SimulationConductor() {
 
@@ -103,7 +74,7 @@ public class DefaultMLPProblem extends MLPProblem {
 						double nObj = (double) speedFitness.size();
 						double avgSpdFitness = speedFitness.stream().mapToDouble(e->e/nObj).sum();
 						double avgFlowFitness = flowFitness.stream().mapToDouble(e->e/nObj).sum();
-						double output = (avgSpdFitness+avgFlowFitness)/2.0;
+						double output = avgFlowFitness;
 						System.out.println("fitness = " + output);
 						return new double[] {output};
 					}

@@ -81,10 +81,11 @@ public class MLPLoop extends Loop{
 		else
 			return 0.0;
 	}
-	public List<Double> getPeriodSpds(double ftime, double ttime){
+	public List<Double> getPeriodSpds(double ftime, double ttime, boolean dumpAfter){
 		List<Double> ans = new ArrayList<>();
 		records.stream().filter(l -> l[0]>ftime && l[0]<=ttime).forEach(r -> ans.add(r[1]));
-		records.removeAll(ans);
+		if (dumpAfter)
+			records.removeAll(ans);
 		return ans;
 	}
 	public double countPeriodFlow(double ftime, double ttime){

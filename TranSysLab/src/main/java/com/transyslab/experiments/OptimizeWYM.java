@@ -1,3 +1,4 @@
+/*
 package com.transyslab.experiments;
 
 import com.transyslab.commons.io.TXTUtils;
@@ -17,9 +18,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+*/
 /**
  * Created by WangYimin on 2017/10/13.
- */
+ *//*
+
 public class OptimizeWYM {
 
 	public static void main(String[] args) {
@@ -100,3 +103,4 @@ public class OptimizeWYM {
 		}
 	}
 }
+*/

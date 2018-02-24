@@ -1,3 +1,4 @@
+/*
 package com.transyslab.experiments;
 
 import com.transyslab.commons.tools.mutitask.Task;
@@ -14,9 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+*/
 /**
  * Created by yali on 2017/10/12.
- */
+ *//*
+
 public class MaximizeEmittedVehicle {
 	protected List<Task> taskList;
 	protected DEAlgorithm de;
@@ -59,8 +62,10 @@ public class MaximizeEmittedVehicle {
 							return new double[]{Integer.MAX_VALUE};
 						}
 						//获取特定结果
-						/*List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
-						simSpeeds[i] = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();*/
+						*/
+/*List<MacroCharacter> records = mlpEngine.getMlpNetwork().getSecStatRecords("det2");
+						simSpeeds[i] = records.stream().mapToDouble(MacroCharacter::getKmSpeed).toArray();*//*
+
 						vhcCount[i] = mlpEngine.countOnHoldVeh();
 					}
 					//评价结果
@@ -99,3 +104,4 @@ public class MaximizeEmittedVehicle {
 		System.out.println(Arrays.toString(bestSpeed));
 	}
 }
+*/

@@ -25,7 +25,7 @@ public class OptToolBox {
 		double crossOver_f = 0.5;
 		String crossOver_variant = "rand/1/bin";
 		String simMasterFileName = args.length>0 ? args[0]
-												 : "src/main/resources/demo_neihuan/scenario2/default.properties";
+												 : "src/main/resources/demo_neihuan/scenario2/shortTerm.properties";
 		System.out.println("using: " + simMasterFileName.substring(simMasterFileName.lastIndexOf('/') + 1));
 		Configuration config = ConfigUtils.createConfig(simMasterFileName);
 

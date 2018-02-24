@@ -1,3 +1,4 @@
+/*
 package com.transyslab.experiments;
 
 import com.transyslab.commons.tools.ADFullerTest;
@@ -11,9 +12,11 @@ import com.transyslab.simcore.mlp.MacroCharacter;
 import java.util.Arrays;
 import java.util.List;
 
+*/
 /**
  * Created by yali on 2017/11/5.
- */
+ *//*
+
 public class SolutionStability {
 	public static void main(String[] args) {
 		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/optwym.properties");
@@ -53,3 +56,4 @@ public class SolutionStability {
 		mlpEngine.close();
 	}
 }
+*/

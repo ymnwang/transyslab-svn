@@ -34,11 +34,9 @@ public class DERepeatedSim {
 		int pop = 20;
 		int repeatedTimes = 5;
 		double kjam = 0.1765, qmax = 0.4633, vfree = 21.7950,deltat = 0.2, vp = 33.333;//TODO:从文件读入。
-		double xcLower = MLPParameter.xcLower(kjam, qmax,deltat);
-		//TODO: rLower应该随着xc实际取值动态变化。
-		double rlower = MLPParameter.rLowerFunc.findRoot(10,new double[]{qmax, vfree, kjam, vp, deltat, 200.0});
-		double[] plower = new double[]{xcLower+0.00001,rlower,0.0,0.0};
-		double[] pupper = new double[]{200.0, 100.0, 10.0, 10.0};//,180.0f,25,40,100};
+
+		double[] plower = new double[]{0.12,0.05,0.0,0.0};
+		double[] pupper = new double[]{0.2, 10.0, 10.0, 10.0};//,180.0f,25,40,100};
 		//Gbest : 0.10734763
 		//Position : 15.475985 0.15889278 1.546905 6.5494165 29.030441 91.544785
 		//Gbest : 0.10625457

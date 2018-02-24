@@ -1,3 +1,4 @@
+/*
 package com.transyslab.experiments;
 
 import com.transyslab.commons.tools.FitnessFunction;
@@ -16,9 +17,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+*/
 /**
  * Created by yali on 2017/10/17.
- */
+ *//*
+
 public class MOOptimization {
 	protected List<Task> taskList;
 	protected DEAlgorithm de;
@@ -122,3 +125,4 @@ public class MOOptimization {
 		System.out.println(Arrays.toString(bestSpeed));
 	}
 }
+*/
