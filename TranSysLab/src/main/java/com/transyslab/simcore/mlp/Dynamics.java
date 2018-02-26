@@ -8,7 +8,7 @@ public class Dynamics {
 	public Dynamics(MLPLink theLink){
 		link = theLink;
 		mlpParameter = (MLPParameter) theLink.getNetwork().getSimParameter();
-		linkCharacteristics = ((MLPParameter) theLink.getNetwork().getSimParameter()).getSDPara();
+		linkCharacteristics = new double[6];//((MLPParameter) theLink.getNetwork().getSimParameter()).getSDPara();
 	}
 	public Dynamics(MLPLink theLink, double [] SDParas) {
 		link = theLink;
@@ -73,7 +73,7 @@ public class Dynamics {
 
 	public void setPartialCharacteristics(double[] para, int mask) {
 		int idx = 0;
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 6; i++) {
 			if ((1<<i & mask) != 0) {
 				if (idx < para.length) {
 					linkCharacteristics[i] = para[idx];

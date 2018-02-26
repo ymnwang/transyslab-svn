@@ -24,6 +24,8 @@ public class MLPEngine extends SimulationEngine{
 	protected double loadTime;
 	private boolean firstEntry; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
+	public boolean needEmpData;
+	public boolean needEmpMicroData;
 	protected TXTUtils loopRecWriter;
 	protected boolean rawRecOn;
 	protected TXTUtils trackWriter;
@@ -32,6 +34,7 @@ public class MLPEngine extends SimulationEngine{
 	protected boolean infoOn;
 	protected boolean statRecordOn;
 	private HashMap<String, List<MacroCharacter>> empMap;
+	private HashMap<String, List<MicroCharacter>> empMicroMap;
 	private HashMap<String, List<MacroCharacter>> simMap;
 	private int mod;//总计运行次数，在输出结束仿真信号时自增
 
@@ -51,6 +54,12 @@ public class MLPEngine extends SimulationEngine{
 
 	String rootDir;
 	String emitSource;
+
+	private int status;
+
+	public int getStatus() {
+		return status;
+	}
 
 	public InterConstraints interConstraints; //在每次设定观测参数时初始化
 
@@ -89,6 +98,7 @@ public class MLPEngine extends SimulationEngine{
 			runProperties.put("emitSource", rootDir + config.getString("emitSource"));
 		else
 			runProperties.put("emitSource", config.getString("emitSource"));
+		runProperties.put("empMicroDataPath",rootDir + config.getString("empMicroDataPath"));
 
 		//time setting
 		timeStart = Double.parseDouble(config.getString("timeStart"));
@@ -97,6 +107,7 @@ public class MLPEngine extends SimulationEngine{
 
 		//the value will be false if config.getString() returns null
 		needRndETable = Boolean.parseBoolean(config.getString("needRndETable"));
+		needEmpMicroData = Boolean.parseBoolean(config.getString("needEmpMicroData"));
 		rawRecOn = Boolean.parseBoolean(config.getString("rawRecOn"));
 		trackOn = Boolean.parseBoolean(config.getString("trackOn"));
 		infoOn = Boolean.parseBoolean(config.getString("infoOn"));
@@ -172,7 +183,7 @@ public class MLPEngine extends SimulationEngine{
 					mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
 			}
 			loadTime += loadTimeStep;
-			System.out.println("day: " + now/3600/24 );
+//			System.out.println("day: " + now/3600/24 );
 		}
 		
 		//读入发车表
@@ -302,7 +313,12 @@ public class MLPEngine extends SimulationEngine{
 		//读入仿真文件
 		loadSimulationFiles();
 		//读入实测数据用于计算fitness
+
 		readEmpData(runProperties.get("empDataPath"));
+
+		if(needEmpMicroData){
+			readEmpMicroData(runProperties.get("empMicroDataPath"));
+		}
 		//引擎初始化
 		initEngine();
 	}
@@ -353,6 +369,30 @@ public class MLPEngine extends SimulationEngine{
 			records.add(new MacroCharacter(flow,speed,density,travelTime));
 		}
 		//readFromLoop(MLPSetup.getLoopData_fileName());
+	}
+	private void readEmpMicroData(String fileName) {
+		empMicroMap = new HashMap<>();
+		String[] headers = {"NAME","LANEID","DETTIME","SPEED","HEADWAY"};
+		List<CSVRecord> results = null;
+		try {
+			results = CSVUtils.readCSV(fileName, headers);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		for(int i=1;i<results.size();i++){
+			String detName = results.get(i).get(0);
+			int laneId = Integer.parseInt(results.get(i).get(1));
+			double detTime = Double.parseDouble(results.get(i).get(2));
+			double speed = Double.parseDouble(results.get(i).get(3));
+			double headway = Double.parseDouble(results.get(i).get(4));
+			List<MicroCharacter> records = empMicroMap.get(detName);
+			if (records == null) {
+				records = new ArrayList<>();
+				empMicroMap.put(detName, records);
+			}
+			records.add(new MicroCharacter(laneId,detTime,speed,headway));
+		}
 	}
 
 	private void initEngine(){
@@ -417,7 +457,7 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	private void setObservedParas (double qm, double vf_CF, double vf_SD, double vp, double kJLower, double kJUpper){
-		if (ob_paras.length != 4) {
+		if (ob_paras.length != 6) {
 			System.err.println("ob_paras' length does not match");
 			return;
 		}
@@ -462,43 +502,43 @@ public class MLPEngine extends SimulationEngine{
 		allParas.setLCPara(new double[] {gamma1, gamma2});
 	}
 
-	/**
-	 * 设置观测参数与自由参数
-	 * @param ob_paras [0]qm, [1]vf_CF, [2]vf_SD, [3]vp, [4]kJamLower, [5]kJamUpper
-	 * @param varying_paras [0]kJam, [1]alpha, [2]gamma1, [3]gamma2.
-	 */
-	private void setParas(double[] ob_paras, double[] varying_paras) {
-		//长度检查
-		if (ob_paras.length != 6 || varying_paras.length != 4) {
-			System.err.println("parameters' length does not match");
-			return;
-		}
+    /**
+     * 设置观测参数与自由参数
+     * @param ob_paras [0]qm, [1]vf_CF, [2]vf_SD, [3]vp, [4]kJamLower, [5]kJamUpper
+     * @param varying_paras [0]kJam, [1]r, [2]gamma1, [3]gamma2.
+     */
+    private void setParas(double[] ob_paras, double[] varying_paras) {
+        //长度检查
+        if (ob_paras.length != 6 || varying_paras.length != 4) {
+            System.err.println("parameters' length does not match");
+            return;
+        }
 
-		//解释观测参数
-		double qm = ob_paras[0];
-		double vf_CF = ob_paras[1];
-		double vf_SD = ob_paras[2];
-		double vp = ob_paras[3];
-		double kJLower = ob_paras[4];
-		double kJUpper = ob_paras[5];
+        //解释观测参数
+        double qm = ob_paras[0];
+        double vf_CF = ob_paras[1];
+        double vf_SD = ob_paras[2];
+        double vp = ob_paras[3];
+        double kJLower = ob_paras[4];
+        double kJUpper = ob_paras[5];
 
-		//设置观测参数
-		setObservedParas(qm,vf_CF,vf_SD,vp,kJLower,kJUpper);
+        //设置观测参数
+        setObservedParas(qm,vf_CF,vf_SD,vp,kJLower,kJUpper);
 
-		//解释自由参数
-		double kJam = varying_paras[0];
-		double alpha = varying_paras[1];
-		double gamma1 = varying_paras[2];
-		double gamma2 = varying_paras[3];
-		//读取其他参数
-		double deltaT = getSimClock().getStepSize();
-		//计算其余optPara
-		double ts = interConstraints.calTs(kJam, deltaT);
-		double xc = interConstraints.calXc();
-		double beta = interConstraints.calBeta(alpha,kJam);
+        //解释自由参数
+        double kJam = varying_paras[0];
+        double r = varying_paras[1];
+        double gamma1 = varying_paras[2];
+        double gamma2 = varying_paras[3];
+        //读取其他参数
+        double deltaT = getSimClock().getStepSize();
+        //计算其余optPara
+        double ts = interConstraints.calTs(kJam, deltaT);
+        double xc = interConstraints.calXc();
+        double beta = interConstraints.calBeta(r,kJam);
 
-		setOptParas(kJam, ts, xc, alpha, beta, gamma1, gamma2);
-	}
+        setOptParas(kJam, ts, xc, r/beta, beta, gamma1, gamma2);
+    }
 
 	/**
 	 * 设置全体运动参数
@@ -522,32 +562,28 @@ public class MLPEngine extends SimulationEngine{
 				                  Arrays.copyOfRange(fullParas,6,10));
 	}
 
-	protected boolean violateConstraints(double[] obsParas, double[]varyingParas) {
-		//解释观测参数
-		double qm = ob_paras[0];
-		double vf_CF = ob_paras[1];
-		double vf_SD = ob_paras[2];
-		double vp = ob_paras[3];
-		double kJLower = ob_paras[4];
-		double kJUpper = ob_paras[5];
+    protected boolean violateConstraints(double[] obsParas, double[]varyingParas) {
+        //解释观测参数
+        double qm = obsParas[0];
+        double vf_CF = obsParas[1];
+        double vf_SD = obsParas[2];
+        double vp = obsParas[3];
+        double kJLower = obsParas[4];
+        double kJUpper = obsParas[5];
 
-		//设置观测参数
-		setObservedParas(qm,vf_CF,vf_SD,vp,kJLower,kJUpper);
+        //解释自由参数
+        double kJam = varyingParas[0];
+        double alpha = varyingParas[1];
+        double gamma1 = varyingParas[2];
+        double gamma2 = varyingParas[3];
 
-		//解释自由参数
-		double kJam = varyingParas[0];
-		double alpha = varyingParas[1];
-		double gamma1 = varyingParas[2];
-		double gamma2 = varyingParas[3];
+        //读取deltaT
+        double deltaT = getSimClock().getStepSize();
 
-		//读取deltaT
-		double deltaT = getSimClock().getStepSize();
-
-		return (interConstraints.getConstraint("kj").checkViolated(kJam,null) |
-				interConstraints.getConstraint("alpha").checkViolated(kJam,new double[] {kJam}) |
-				interConstraints.getConstraint("vp").checkViolated(kJam,null) |
-				interConstraints.getConstraint("deltaT").checkViolated(kJam,new double[] {kJam}));
-	}
+        return (interConstraints.getConstraint("kj").checkViolated(kJam,null) |
+                interConstraints.getConstraint("vp").checkViolated(vp,null) |
+                interConstraints.getConstraint("deltaT").checkViolated(deltaT,new double[] {kJam}));
+    }
 
 	public MLPParameter getSimParameter() {
 		return (MLPParameter) mlpNetwork.getSimParameter();
@@ -580,72 +616,79 @@ public class MLPEngine extends SimulationEngine{
 	public HashMap<String, List<MacroCharacter>> getSimMap() {
 		return simMap;
 	}
-
+	public HashMap<String, List<MicroCharacter>> getEmpMicroMap() {
+		return empMicroMap;
+	}
 	public int runWithPara(double[] fullParas) {
 		if (violateConstraints(fullParas))
-			return Constants.STATE_ERROR_QUIT;
-		setParas(fullParas);
-		int state;
-		do {
-			state = simulationLoop();
+			status = Constants.STATE_ERROR_QUIT;
+		else {
+			setParas(fullParas);
+			do {
+				status = simulationLoop();
+			}
+			while (status >= 0);
 		}
-		while (state >= 0);
-		return state;
+		return status;
 	}
 
 	public int runWithPara(double[] obParas, double[]varParas) {
 		if (violateConstraints(obParas,varParas))
-			return Constants.STATE_ERROR_QUIT;
-		setParas(obParas,varParas);
-		int state;
-		do {
-			state = simulationLoop();
-		}
-		while (state >= 0);
-		return state;
-	}
-
-	@Override
-	public int repeatRun() {
-
-		//simMap置空，重置状态。避免重复执行repeatRun()时出错。
-		simMap = null;
-
-		if (violateConstraints(ob_paras,free_paras))
-			return Constants.STATE_ERROR_QUIT;
-
-		setParas(ob_paras,free_paras);
-
-		//若有重复仿真任务，则多次运行进行平均
-		for(int i = 0; i < Math.max(repeatTimes,1); i++){
-			int state;
+			status = Constants.STATE_ERROR_QUIT;
+		else {
+			setParas(obParas,varParas);
 			do {
-				state = simulationLoop();
+				status = simulationLoop();
 			}
-			while (state>=0);
-			if (state == Constants.STATE_DONE) {
-				sumStat(mlpNetwork.exportStat());
-			}
-			else
-				return state;
-
+			while (status >= 0);
 		}
-
-		//统计数据平均
-		if (repeatTimes > 1)
-			averageStat(simMap);
-
-		return Constants.STATE_DONE;
+		return status;
 	}
 
+    public int repeatRun() {
+
+        //simMap置空，重置状态。避免重复执行repeatRun()时出错。
+        simMap = null;
+
+        setParas(ob_paras,free_paras);
+
+        if (violateConstraints(ob_paras,free_paras))
+            status = Constants.STATE_ERROR_QUIT;
+        else {
+
+            //若有重复仿真任务，则多次运行进行平均
+            for(int i = 0; i < Math.max(repeatTimes,1); i++){
+                do {
+                    status = simulationLoop();
+                }
+                while (status>=0);
+                if (status == Constants.STATE_DONE) {
+                    sumStat(mlpNetwork.exportStat());
+                }
+                else
+                    return status;
+            }
+
+            //统计数据平均
+            if (repeatTimes > 1)
+                averageStat(simMap);
+
+            status = Constants.STATE_DONE;
+        }
+
+        return status;
+    }
 	/**
 	 * 应该只在MainWindow中调用，仅用于可视化debug.
 	 */
 	@Override
 	public void run() {
-		if (violateConstraints(ob_paras,free_paras))
-			System.out.println("运行参数违反约束。");
-		setParas(ob_paras,free_paras);
+//		if (violateConstraints(ob_paras,free_paras))
+//			System.out.println("运行参数违反约束。");
+//		setParas(ob_paras,free_paras);
+		setObservedParas(0.46, 19, 21, 120.0/3.6, 0.14, 0.2);
+		setOptParas(0.18857,1.6948,41.3043, 0.0513, 0.0434, 10, 7.869754413);
+		getSimParameter().setLCBuffTime(1.116270002);
 		super.run();
 	}
 
@@ -720,5 +763,6 @@ public class MLPEngine extends SimulationEngine{
 		else if (sourceType.equals("SQL"))
 			this.emitSource = sourceName;
 	}
+
 
 }

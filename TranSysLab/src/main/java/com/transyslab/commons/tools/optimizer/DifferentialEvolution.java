@@ -1,5 +1,7 @@
 package com.transyslab.commons.tools.optimizer;
 
+import com.transyslab.commons.io.TXTUtils;
+import com.transyslab.commons.tools.adapter.SimSolution;
 import org.uma.jmetal.algorithm.impl.AbstractDifferentialEvolution;
 import org.uma.jmetal.operator.impl.crossover.DifferentialEvolutionCrossover;
 import org.uma.jmetal.operator.impl.selection.DifferentialEvolutionSelection;
@@ -8,10 +10,7 @@ import org.uma.jmetal.solution.DoubleSolution;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by yali on 2017/11/27.
@@ -24,7 +23,8 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 	private SolutionListEvaluator<DoubleSolution> evaluator;
 	private Comparator<DoubleSolution> comparator;
 	private int evaluations;
-
+	private TXTUtils solutionWriter;
+	private boolean needOutput;
 	/**
 	 * Constructor
 	 *
@@ -54,7 +54,10 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 	public void setEvaluations(int evaluations) {
 		this.evaluations = evaluations;
 	}
-
+	public void setSolutionWriter(TXTUtils writer){
+		needOutput = true;
+		solutionWriter = writer;
+	}
 	@Override protected void initProgress() {
 		evaluations = populationSize;
 	}
@@ -113,6 +116,19 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 		}
 
 		Collections.sort(pop, comparator) ;
+		if(needOutput){
+			for (int i = 0; i < populationSize; i++) {
+				SimSolution solution = ((SimSolution)pop.get(i));
+				solutionWriter.writeNFlush(Arrays.toString(solution.getInputVariables())
+						.replace(" ","")
+						.replace("[","")
+						.replace("]","") + "," +
+						Arrays.toString(solution.getObjectiveValues()).replace(" ","")
+								.replace("[","")
+								.replace("]","")+ "\r\n");
+			}
+
+		}
 		return pop;
 	}
 

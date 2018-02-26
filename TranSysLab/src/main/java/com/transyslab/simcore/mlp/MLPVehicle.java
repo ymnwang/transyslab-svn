@@ -136,7 +136,9 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	private double [] sum(int turning, MLPSegment seg, double f, double t, double [] count){
-		//double [] answer = {0.0,0.0};		
+		//double [] answer = {0.0,0.0};
+		if(seg==null)
+		System.out.println("BUG");
 		if (f - seg.startDSP > -0.001)	{
 			if (t - seg.endDSP < 0.001) {
 				double [] answer = new double [2];

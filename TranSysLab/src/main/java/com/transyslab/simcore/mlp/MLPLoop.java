@@ -101,4 +101,10 @@ public class MLPLoop extends Loop{
 	protected void clearRecords() {
 		records.clear();
 	}
+	public String getName(){
+		return detName;
+	}
+	public LinkedList<double[]> getRecords(){
+		return records;
+	}
 }

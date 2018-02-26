@@ -42,10 +42,8 @@ public abstract class MLPProblem extends SimProblem {
 		//设置边界值
 		double kjUpper = ob_paras[5];
 		double kjLower = ob_paras[4];
-		//最大可能边界，可能会触发约束不通过。
-		double alphaUpper = interConstraints.calAlphaUpper(kjUpper);
-		setUpperLimit(Arrays.asList(new Double[]{kjUpper, alphaUpper, 10.0, 10.0, 1.0}));
-		setLowerLimit(Arrays.asList(new Double[]{kjLower, 0.05, 0.0, 0.0, 10.0}));
+		setLowerLimit(Arrays.asList(new Double[]{kjLower, 0.0025, 0.0, 0.0, 1.0}));
+		setUpperLimit(Arrays.asList(new Double[]{kjUpper, 40.0, 10.0, 10.0, 10.0}));
 
 		prepareEng(masterFileName,Integer.parseInt(config.getString("numOfEngines")));
 	}

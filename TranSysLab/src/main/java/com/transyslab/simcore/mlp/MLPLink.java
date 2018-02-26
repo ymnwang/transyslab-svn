@@ -130,13 +130,19 @@ public class MLPLink extends Link {
 				platoon.clear();
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
-//				platoonhead = theveh.Displacement();		
+//				platoonhead = theveh.Displacement();
+				if (((MLPSegment) getEndSegment()).endDSP  == Double.NaN)
+					System.out.println("DEBUG");
 				platoonhead = ((MLPSegment) getEndSegment()).endDSP;//getSegment(nSegments -1))
+				if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
+					System.out.println("DEBUG");
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
 					if (theveh.resemblance) {						
 						platoon.add(theveh);
+						if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
+							System.out.println("DEBUG");
 						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 					else {
@@ -146,6 +152,8 @@ public class MLPLink extends Link {
 						platoon.add(theveh);//新车队
 //						platoonhead = theveh.Displacement();//新头
 						platoonhead = platoontail;
+						if (Math.max(0.0, theveh.Displacement() - theveh.getLength()) == Double.NaN)
+							System.out.println("DEBUG");
 						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 				}
@@ -156,6 +164,8 @@ public class MLPLink extends Link {
 	}
 	
 	public void dealLC(double headDsp, double tailDsp) {
+		if (headDsp == Double.NaN || tailDsp == Double.NaN)
+			System.out.println("DEBUG");
 		Random r = network.getSysRand();
 		Collections.shuffle(platoon,r);
 		for (MLPVehicle veh: platoon){

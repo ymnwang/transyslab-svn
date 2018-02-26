@@ -82,8 +82,8 @@ public class InterConstraints {
 		return this;
 	}
 
-	public double calBeta(double alpha, double kj) {
-		return Math.exp(vf_CF / vf_SD) / Math.exp(1-Math.pow(qm/vf_CF/kj,alpha));
+	public double calBeta(double r, double kj) {
+		return Math.log(qm/kj/vf_SD) / (Math.log(r/(r+1)) - Math.pow(r,-1.0)*Math.log(r+1));
 	}
 
 	public double calXc() {

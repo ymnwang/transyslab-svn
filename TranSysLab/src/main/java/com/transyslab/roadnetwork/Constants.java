@@ -2,7 +2,7 @@ package com.transyslab.roadnetwork;
 
 public class Constants {
 	public static final double DEFAULT_VEHICLE_WIDTH = 1.8; /* meters */
-	public static final double DEFAULT_VEHICLE_LENGTH = 5.5; /* meters */
+	public static final double DEFAULT_VEHICLE_LENGTH = 4.8; /* meters */
 	public static final int ATTR_FAMILIARITY = 0x00000001;
 	public static final int ATTR_TS_COMPLY = 0x00000010;
 	public static final int ATTR_PS_COMPLY = 0x00000020;
@@ -32,9 +32,9 @@ public class Constants {
 	public final static float DEFAULT_SQUEEZE_FACTOR = 1.0f;
 	public static final double POINT_EPSILON = 0.1;
 	public static final double BULGE_EPSILON = 1.0e-5;
-	public final static int LANE_CHANGE_RIGHT = 0x00000001;//ËµÃ÷£ºÓÃÓÚrules
-	public final static int LANE_CHANGE_LEFT = 0x00000002;//ËµÃ÷£ºÓÃÓÚrules
-	public final static int LANE_CHANGE = 0x00000003;//ËµÃ÷£ºÓÃÓÚrules
+	public final static int LANE_CHANGE_RIGHT = 0x00000001;//Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½rules
+	public final static int LANE_CHANGE_LEFT = 0x00000002;//Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½rules
+	public final static int LANE_CHANGE = 0x00000003;//Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½rules
 
 	public final static int LANE_CHANGE_RIGHT_REQUIRED = 0x00000004;//0100
 	public final static int LANE_CHANGE_LEFT_REQUIRED = 0x00000008;//1000
@@ -55,7 +55,7 @@ public class Constants {
 
 	public final static int LANE_TYPE_BOUNDARY = 0x00000200;
 	public final static int LANE_TYPE_DROPPED = 0x00000100;
-	// ³µµÀ¿í¶È
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	public static float LANE_WIDTH = 3.75f;
 	public static int LINK_TYPE_FREEWAY = 1;
 	public static int LINK_TYPE_RAMP = 2;
@@ -193,10 +193,10 @@ public class Constants {
 	public static final float[] COLOR_WHITE = {1.0f, 1.0f, 1.0f};
 	public static final float[] COLOR_GREY = {0.21f, 0.21f, 0.21f};
 	public static final float[] COLOR_LITEBLUE = new float[]{0.0f,0.75f,1.0f};
-	// =0:·ÇsnapshotÆô¶¯£¬°´ODÁ÷Á¿Ëæ»ú·¢³µ£»
-    // =1:·ÇsnapshotÆô¶¯£¬°´¹ý³µ¼ÇÂ¼¶¨Ê±·¢³µ;
-	// =2:snapshotÆô¶¯£¬°´ODÁ÷Á¿Ëæ»ú·¢³µ£»
-    // =3:snapshotÆô¶¯£¬°´¹ý³µ¼ÇÂ¼¶¨Ê±·¢³µ£»
+	// =0:ï¿½ï¿½snapshotï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ODï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // =1:ï¿½ï¿½snapshotï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½;
+	// =2:snapshotï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ODï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // =3:snapshotï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	public static final int SIM_MODE = 1;
 
 	//wym
@@ -204,13 +204,13 @@ public class Constants {
 	public static final int HARMONIC_MEAN = 1;
 	public static final int VEHICLE_RECYCLE = 1;
 	public static final int VEHICLE_NOT_RECYCLE = 0;
-	//³µÁ¾×ÅÉ«
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
 	public static final int VIRTUAL_VEHICLE = 1;
 	public static final int FOLLOWING = 2;
-	//Ä£ÐÍÀà±ð
+	//Ä£ï¿½ï¿½ï¿½ï¿½ï¿½
 	public static final int MODEL_TYPE_MESO = 1;
 	public static final int MODEL_TYPE_MLP = 2;
 
-	//²ÎÊýÓÅ»¯×î´ó¼ìÑé´ÎÊý
+	//ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	public static final int REPEAT_TEST_TIMES = 5;
 }
