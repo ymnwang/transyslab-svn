@@ -171,14 +171,22 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	protected double calMLC(){
-		double buff = mlpParameter.getSegLenBuff();
+		//TODO: very important 临时改动
+		/*为了解决过短的seg，临时改为以link为界的紧急性*/
+		/*double buff = mlpParameter.getSegLenBuff();
 		double len = segment.getLength();
 		if (len<=buff) {
 			return 1.0;
 		}
 		else{
 			return (Math.min(segment.getLength() -distance, len-buff))/(len-buff);
-		}
+		}*/
+
+		if (getLink().length() <= 10.0)
+			return 1.0;
+		double L = Math.min(800.0, getLink().length()-10.0);//link前800m开始考虑强制换道
+		double p = Displacement() / L;
+		return Math.min(p, 1.0);
 	}
 	
 	private double calH(int turning){

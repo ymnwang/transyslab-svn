@@ -181,6 +181,8 @@ public class MLPLink extends Link {
 							//tarLane.RtCutinAllowed &&
 							veh.checkGapAccept(tarLane)) {
 						//ªªµ¿∏≈¬ º∆À„
+						if (veh.getId()==1794)
+							System.out.println("DEBUG");
 						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
 					}
 				}

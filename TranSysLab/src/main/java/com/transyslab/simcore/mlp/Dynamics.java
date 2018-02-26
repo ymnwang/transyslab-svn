@@ -48,6 +48,8 @@ public class Dynamics {
 		}
 	}
 	public double updateHeadSpd(MLPVehicle headVeh){
+//		if (headVeh.getId() == 16)
+//			System.out.println("DEBUG");
 		MLPLane nextLane = headVeh.lane.connectedDnLane;
 		if (headVeh.getDistance() < MLPParameter.SEG_NEAR &&
 				nextLane != null && (!nextLane.enterAllowed || !nextLane.checkVolum(headVeh))) {

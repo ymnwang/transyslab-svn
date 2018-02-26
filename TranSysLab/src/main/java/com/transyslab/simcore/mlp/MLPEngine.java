@@ -683,12 +683,12 @@ public class MLPEngine extends SimulationEngine{
 	 */
 	@Override
 	public void run() {
-//		if (violateConstraints(ob_paras,free_paras))
-//			System.out.println("运行参数违反约束。");
-//		setParas(ob_paras,free_paras);
-		setObservedParas(0.46, 19, 21, 120.0/3.6, 0.14, 0.2);
-		setOptParas(0.18857,1.6948,41.3043, 0.0513, 0.0434, 10, 7.869754413);
-		getSimParameter().setLCBuffTime(1.116270002);
+		setParas(ob_paras,free_paras);
+		if (violateConstraints(ob_paras,free_paras))
+			System.out.println("运行参数违反约束。");
+//		setObservedParas(0.46, 19, 21, 120.0/3.6, 0.14, 0.2);
+//		setOptParas(0.18857,1.6948,41.3043, 0.0513, 0.0434, 10, 7.869754413);
+//		getSimParameter().setLCBuffTime(1.116270002);
 		super.run();
 	}
 
@@ -763,6 +763,5 @@ public class MLPEngine extends SimulationEngine{
 		else if (sourceType.equals("SQL"))
 			this.emitSource = sourceName;
 	}
-
 
 }
