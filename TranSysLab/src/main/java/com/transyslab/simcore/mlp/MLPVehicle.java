@@ -32,6 +32,8 @@ public class MLPVehicle extends Vehicle{
 
 	//wym !!parameter在回收过程中不需要重置
 	protected MLPParameter mlpParameter;
+
+	private int count;
 	
 	
 	public MLPVehicle(MLPParameter theParameter){
@@ -126,6 +128,9 @@ public class MLPVehicle extends Vehicle{
 	
 	private double calDLC(int turning, double fDSP, double tDSP, double PlatoonCount){
 		try {
+			//DEBUG please delete later
+			count = 0;
+			//DEBUG please delete later
 			double [] s = sum(turning, segment, fDSP, tDSP, new double []{0.0,0.0});
 			return (PlatoonCount/(tDSP - fDSP) - (s[0] + 1.0) /s[1]) / link.dynaFun.linkCharacteristics[2];
 		} catch (Exception e) {
@@ -136,6 +141,11 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	private double [] sum(int turning, MLPSegment seg, double f, double t, double [] count){
+		//DEBUG please delete later
+		this.count += 1;
+		if (this.count>100)
+			System.out.println("DEBUG: LC deadlock warning");
+		//DEBUG please delete later
 		//double [] answer = {0.0,0.0};
 		if(seg==null)
 		System.out.println("BUG");
@@ -313,6 +323,8 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void setNewState(double spd) {
+		//最大加速度平滑
+		spd = powerRate(spd);
 		if (stopFlag) {
 			newSpeed = 0.0;
 			newDis = distance;
@@ -326,6 +338,7 @@ public class MLPVehicle extends Vehicle{
 		else {
 			newSpeed = spd;
 		}
+		//TODO: 考虑将过程看做匀加速过程，增加平滑度。
 		newDis = getDistance() - newSpeed * getMLPNetwork().getSimClock().getStepSize();
 	}
 	
@@ -436,5 +449,12 @@ public class MLPVehicle extends Vehicle{
 		sb.append("MLC\n" + String.format("%.2f",calMLC()));//(diMap.get(lane)==0 ? 0 : )
 		sb.append("\n前车距离\n" + (leading==null ? "Inf" : String.format("%.2f",leading.Displacement() - Displacement())));
 		return sb.toString();
+	}
+	protected double powerRate(double spd) {
+		double maxAcc = 2.0;
+		double maxDecc = -9.0;
+		double deltaT = getMLPNetwork().getSimClock().getStepSize();
+		return spd >= currentSpeed ? Math.min(spd, maxAcc*deltaT+currentSpeed) :
+				Math.max(spd, Math.max(0.0,maxDecc*deltaT+currentSpeed));
 	}
 }
