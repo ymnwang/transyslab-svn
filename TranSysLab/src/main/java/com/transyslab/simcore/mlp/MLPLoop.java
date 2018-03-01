@@ -1,6 +1,7 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,11 +15,11 @@ public class MLPLoop extends Loop{
 	MLPLink link;
 	double displacement;
 	double distance;
-//	LinkedList<Double> detectedSpds;
+	HashMap<Integer, Double> enterMap;
 	LinkedList<double[]> records;
 	
 	public MLPLoop(){
-//		detectedSpds = new LinkedList<>();
+		enterMap = new HashMap<>();
 		records = new LinkedList<>();
 	}
 	public MLPLoop(MLPLane LN, MLPSegment Seg, MLPLink LNK, String name, double dsp, double present){
@@ -30,27 +31,43 @@ public class MLPLoop extends Loop{
 		position = present;
 		detName = name;
 		distance = Seg.endDSP - dsp;
-//		detectedSpds = new LinkedList<>();
+		enterMap = new HashMap<>();
 		records = new LinkedList<>();
 		this.createSurface();
 	}
 	public String detect(double timeNow){//当处于seg边界上存在漏洞(已修复)
 		String str = "";
 		String timeStr = String.format("%.1f", timeNow);
+		//更新车头进入记录
 		for (MLPVehicle veh : ((MLPLane) lane).vehsOnLn) {
 			if (veh.virtualType == 0 &&
 					veh.Displacement() < displacement &&
 					veh.segment.endDSP - veh.newDis >= displacement) {
-//				detectedSpds.add(veh.newSpeed);
-				records.add(new double[] {timeNow, veh.newSpeed});
-				str +=  detName + "," +
-						timeStr + "," +
-						veh.getId() + "," +
-						veh.virtualType + "," +
-						veh.newSpeed + "," +
-						((MLPLane) lane).getLnPosNum() + "," +
-						link.getId() + "," +
-						displacement + "\r\n";
+				enterMap.put(veh.getId(),timeNow);
+			}
+		}
+		//更新车尾离开记录
+		for (MLPVehicle veh : ((MLPLane) lane).vehsOnLn) {
+			if (veh.virtualType == 0 &&
+					veh.Displacement() - veh.getLength() < displacement &&
+					veh.segment.endDSP - veh.newDis - veh.getLength() >= displacement) {
+				Double timeEnter = enterMap.get(veh.getId());
+				if (timeEnter == null) {
+					System.out.println("Error: no enter record.");
+				}
+				else {
+					enterMap.remove(veh.getId());
+					double recordSpd = timeNow == timeEnter ? veh.newSpeed : veh.getLength() / (timeNow-timeEnter);
+					records.add(new double[] {timeNow, recordSpd});
+					str +=  detName + "," +
+							timeStr + "," +
+							veh.getId() + "," +
+							veh.virtualType + "," +
+							recordSpd + "," +
+							((MLPLane) lane).getLnPosNum() + "," +
+							link.getId() + "," +
+							displacement + "\r\n";
+				}
 			}
 		}
 		return str;
@@ -99,6 +116,7 @@ public class MLPLoop extends Loop{
 		return records.stream().filter(l -> l[0]>ftime && l[0]<=ttime).count();
 	}
 	protected void clearRecords() {
+		enterMap.clear();
 		records.clear();
 	}
 	public String getName(){
