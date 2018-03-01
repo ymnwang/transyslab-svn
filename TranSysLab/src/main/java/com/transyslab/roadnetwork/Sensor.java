@@ -13,4 +13,7 @@ public interface Sensor extends NetworkObject{
 	void clean();
 
 	GeoSurface getSurface();
+
+	String getName();
+
 }

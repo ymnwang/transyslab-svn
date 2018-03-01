@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Loop;
+import com.transyslab.roadnetwork.Sensor;
 
 public class MLPLoop extends Loop{
 	String detName;
@@ -51,11 +52,11 @@ public class MLPLoop extends Loop{
 					veh.segment.endDSP - veh.newDis - veh.getLength() >= displacement) {
 				Double timeEnter = enterMap.get(veh.getId());
 				if (timeEnter == null) {
-					MLPLoop[] loops = (MLPLoop[]) getLink().getNetwork().getSurvStations()
-							.stream().filter(s -> ((MLPLoop) s).detName == this.detName).toArray();
-					for (MLPLoop l : loops) {
+					Sensor[] loops = (MLPLoop[]) getLink().getNetwork().getSurvStations()
+							.stream().filter(s -> s.getName() == this.detName).toArray();
+					for (Sensor l : loops) {
 						if (timeEnter == null)
-							timeEnter = l.enterMap.get(veh.getId());
+							timeEnter = ((MLPLoop)l).enterMap.get(veh.getId());
 						else
 							System.out.println("Error duplicate enter record");
 					}
