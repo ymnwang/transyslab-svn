@@ -52,13 +52,14 @@ public class MLPLoop extends Loop{
 					veh.segment.endDSP - veh.newDis - veh.getLength() >= displacement) {
 				Double timeEnter = enterMap.get(veh.getId());
 				if (timeEnter == null) {
-					Sensor[] loops = (MLPLoop[]) getLink().getNetwork().getSurvStations()
-							.stream().filter(s -> s.getName() == this.detName).toArray();
+					List<Sensor> loops = getLink().getNetwork().getSurvStations();
 					for (Sensor l : loops) {
-						if (timeEnter == null)
+						if (l.getName().equals(this.getName()))
 							timeEnter = ((MLPLoop)l).enterMap.get(veh.getId());
-						else
-							System.out.println("Error duplicate enter record");
+						if (timeEnter!=null) {
+							((MLPLoop)l).enterMap.remove(veh.getId());
+							break;
+						}
 					}
 					if (timeEnter==null) {
 						System.out.println("Error: no enter record.");

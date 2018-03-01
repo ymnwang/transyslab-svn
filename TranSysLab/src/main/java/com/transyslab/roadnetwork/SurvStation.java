@@ -233,4 +233,9 @@ public class SurvStation implements Sensor{
 	public GeoSurface getSurface() {
 		return this.surface;
 	}
+
+	@Override
+	public String getName() {
+		return objInfo;
+	}
 }
