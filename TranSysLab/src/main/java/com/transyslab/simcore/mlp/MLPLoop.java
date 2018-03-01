@@ -1,9 +1,7 @@
 package com.transyslab.simcore.mlp;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Lane;
@@ -53,21 +51,31 @@ public class MLPLoop extends Loop{
 					veh.segment.endDSP - veh.newDis - veh.getLength() >= displacement) {
 				Double timeEnter = enterMap.get(veh.getId());
 				if (timeEnter == null) {
-					System.out.println("Error: no enter record.");
+					MLPLoop[] loops = (MLPLoop[]) getLink().getNetwork().getSurvStations()
+							.stream().filter(s -> ((MLPLoop) s).detName == this.detName).toArray();
+					for (MLPLoop l : loops) {
+						if (timeEnter == null)
+							timeEnter = l.enterMap.get(veh.getId());
+						else
+							System.out.println("Error duplicate enter record");
+					}
+					if (timeEnter==null) {
+						System.out.println("Error: no enter record.");
+						continue;
+					}
 				}
-				else {
+				else
 					enterMap.remove(veh.getId());
-					double recordSpd = timeNow == timeEnter ? veh.newSpeed : veh.getLength() / (timeNow-timeEnter);
-					records.add(new double[] {timeNow, recordSpd});
-					str +=  detName + "," +
-							timeStr + "," +
-							veh.getId() + "," +
-							veh.virtualType + "," +
-							recordSpd + "," +
-							((MLPLane) lane).getLnPosNum() + "," +
-							link.getId() + "," +
-							displacement + "\r\n";
-				}
+				double recordSpd = timeNow == timeEnter ? veh.newSpeed : veh.getLength() / (timeNow-timeEnter);
+				records.add(new double[] {timeNow, recordSpd});
+				str +=  detName + "," +
+						timeStr + "," +
+						veh.getId() + "," +
+						veh.virtualType + "," +
+						recordSpd + "," +
+						((MLPLane) lane).getLnPosNum() + "," +
+						link.getId() + "," +
+						displacement + "\r\n";
 			}
 		}
 		return str;
