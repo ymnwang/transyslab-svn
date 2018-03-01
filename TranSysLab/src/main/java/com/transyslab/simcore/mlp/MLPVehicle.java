@@ -324,7 +324,7 @@ public class MLPVehicle extends Vehicle{
 	
 	public void setNewState(double spd) {
 		//最大加速度平滑
-		spd = powerRate(spd);
+		//spd = powerRate(spd);
 		if (stopFlag) {
 			newSpeed = 0.0;
 			newDis = distance;

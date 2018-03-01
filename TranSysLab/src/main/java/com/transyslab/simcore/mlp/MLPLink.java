@@ -131,8 +131,8 @@ public class MLPLink extends Link {
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
 //				platoonhead = theveh.Displacement();
-				if (((MLPSegment) getEndSegment()).endDSP  == Double.NaN)
-					System.out.println("DEBUG");
+//				if (((MLPSegment) getEndSegment()).endDSP  == Double.NaN)
+//					System.out.println("DEBUG");
 				platoonhead = ((MLPSegment) getEndSegment()).endDSP;//getSegment(nSegments -1))
 				if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
 					System.out.println("DEBUG");
@@ -181,8 +181,8 @@ public class MLPLink extends Link {
 							//tarLane.RtCutinAllowed &&
 							veh.checkGapAccept(tarLane)) {
 						//ªªµ¿∏≈¬ º∆À„
-						if (veh.getId()==1794)
-							System.out.println("DEBUG");
+//						if (veh.getId()==1794)
+//							System.out.println("DEBUG");
 						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
 					}
 				}

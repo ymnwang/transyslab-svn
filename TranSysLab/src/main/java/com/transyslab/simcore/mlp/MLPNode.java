@@ -16,7 +16,10 @@ public class MLPNode extends Node{
 	public int serve(MLPVehicle veh) {
 		MLPLane lane_ = veh.lane;
 		MLPLink link_ = veh.link;
-		if (lane_.checkPass()) {//lane.checkPass()
+
+		//if (lane_.checkPass()) {//lane.checkPass()
+		// 无通行能力强控制
+		if(true){
 			//TODO 获取currentTime待优化
 			double currentTime = veh.link.getNetwork().getSimClock().getCurrentTime();
 			//passed output capacity checking
