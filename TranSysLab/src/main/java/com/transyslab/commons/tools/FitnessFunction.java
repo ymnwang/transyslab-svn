@@ -43,6 +43,18 @@ public class FitnessFunction {
 		else 
 			return 0.0;
 	}
+	public static double evaRMSE(double[] sim, double[] obs){
+		if (sim.length ==0 || sim.length != obs.length) {
+			System.out.print("Error:The length of two input arrays are not equal!");
+			return Double.NaN;
+		}
+		double sum = 0;
+		for(int i=0;i<sim.length;i++){
+			sum += (sim[i]-obs[i])*(sim[i]-obs[i]);
+		}
+		double result = sum/(double)sim.length;
+		return Math.sqrt(result);
+	}
 	public static double evaKSDistance(double[] sim, double[] obs){
 		Arrays.sort(sim);
 		Arrays.sort(obs);
