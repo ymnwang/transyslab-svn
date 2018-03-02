@@ -43,6 +43,11 @@ public class Dynamics {
 //				System.out.println("BUG CF函数输出异常");
 			return ans;
 		}
+		else if (ExpSwitch.CF_CURVE) {
+			double l = 200.0, vt = 33.3333;
+			double r = Math.min((gap-upperGap)/l,1.0);
+			return r*vt + (1.0-r)*linkCharacteristics[5];
+		}
 		else {
 			return linkCharacteristics[5];
 		}
@@ -64,12 +69,21 @@ public class Dynamics {
 						mlpParameter.CELL_RSP_UPPER ||
 				headVeh.segment.isTheEnd() != 0) {
 			//距离终点较远 或 处于endSegment(无限制)
-			return linkCharacteristics[0];
+			return linkCharacteristics[5];
 		}
 		else {
 			//准备处于Link Passing的头车
-			//TODO: 暂时不加限制，以后的版本此处与节点状态结合，综合考虑进入同一节点的其他link的状态给出headSpeed
-			return linkCharacteristics[0];
+			if (ExpSwitch.APPROACH_CTRL) {
+				//接近路口减速通过
+				double passingSpd = 60.0/3.6;
+				double gap = ((MLPSegment)headVeh.link.getEndSegment()).endDSP - headVeh.Displacement();
+				double upperGap = mlpParameter.CELL_RSP_UPPER;
+				double r = gap /upperGap;
+				return r * mlpParameter.maxSpeed(gap) + (1.0-r) * passingSpd;
+			}
+			else
+				return linkCharacteristics[5];
+
 		}
 	}
 

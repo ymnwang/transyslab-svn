@@ -324,7 +324,8 @@ public class MLPVehicle extends Vehicle{
 	
 	public void setNewState(double spd) {
 		//最大加速度平滑
-		//spd = powerRate(spd);
+		if (ExpSwitch.MAX_ACC_CTRL)
+			spd = powerRate(spd);
 		if (stopFlag) {
 			newSpeed = 0.0;
 			newDis = distance;
@@ -338,8 +339,10 @@ public class MLPVehicle extends Vehicle{
 		else {
 			newSpeed = spd;
 		}
-		//TODO: 考虑将过程看做匀加速过程，增加平滑度。
-		newDis = getDistance() - newSpeed * getMLPNetwork().getSimClock().getStepSize();
+		//将过程看做匀加速过程，增加平滑度。
+		newDis = ExpSwitch.ACC_SMOOTH ?
+					getDistance() - (currentSpeed + newSpeed) / 2.0 * getMLPNetwork().getSimClock().getStepSize() :
+					getDistance() - newSpeed * getMLPNetwork().getSimClock().getStepSize();
 	}
 	
 	public void clearMLPProperties() {
@@ -452,7 +455,7 @@ public class MLPVehicle extends Vehicle{
 	}
 	protected double powerRate(double spd) {
 		double maxAcc = 2.0;
-		double maxDecc = -9.0;
+		double maxDecc = -7.0;
 		double deltaT = getMLPNetwork().getSimClock().getStepSize();
 		return spd >= currentSpeed ? Math.min(spd, maxAcc*deltaT+currentSpeed) :
 				Math.max(spd, Math.max(0.0,maxDecc*deltaT+currentSpeed));

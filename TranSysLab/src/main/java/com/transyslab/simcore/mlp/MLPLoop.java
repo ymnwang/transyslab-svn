@@ -69,8 +69,9 @@ public class MLPLoop extends Loop{
 				else
 					enterMap.remove(veh.getId());
 				//Ë«ÏßÈ¦
-//				double recordSpd = timeNow == timeEnter ? veh.newSpeed : veh.getLength() / (timeNow-timeEnter);
-				double recordSpd = veh.newSpeed;
+				double recordSpd = ExpSwitch.DOUBLE_LOOP ?
+										(timeNow == timeEnter ? veh.newSpeed : veh.getLength() / (timeNow-timeEnter)) :
+										veh.newSpeed;
 				records.add(new double[] {timeNow, recordSpd});
 				str +=  detName + "," +
 						timeStr + "," +
