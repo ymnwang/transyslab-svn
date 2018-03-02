@@ -39,7 +39,7 @@ public class KSIdvdProblem extends MLPProblem {
                 public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
                     double[] var = simSolution.getInputVariables();
                     ((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
-                    ((MLPEngine) engine).getSimParameter().setLCDStepSize(2.0);
+                    ((MLPEngine) engine).getSimParameter().setLCDStepSize(0.0);
                     ((MLPEngine) engine).getSimParameter().setLCBuffTime(var[4]);
                 }
 

@@ -8,11 +8,14 @@ import com.transyslab.commons.tools.optimizer.DominanceComparator;
 import org.uma.jmetal.operator.impl.crossover.DifferentialEvolutionCrossover;
 import org.uma.jmetal.operator.impl.selection.DifferentialEvolutionSelection;
 import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
+import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 
 import java.util.Arrays;
 
 public class OptmKSProblemIdvd {
     public static void main(String[] args) {
+        //重现校准过程
+        //JMetalRandom.getInstance().setSeed(1806);
         int popSize = 20;
         int maxGeneration = 1000;
         double crossOver_cr = 0.5;
@@ -33,8 +36,7 @@ public class OptmKSProblemIdvd {
         SimSolution bestSolution = (SimSolution) algorithm.getResult();
         System.out.println("BestFitness: " + Arrays.toString(bestSolution.getObjectiveValues()));
         System.out.println("BestSolution: " + Arrays.toString(bestSolution.getInputVariables()));
-        System.out.println("BestSpeedSeries: "+ Arrays.toString((double[]) bestSolution.getAttribute("SimSpeed")));
-        System.out.println("BestSimSeed: "+ Arrays.toString((double[]) bestSolution.getAttribute("SimSeed")));
+        System.out.println("SimSeed: " + bestSolution.getAttribute("SimSeed"));
         problem.closeProblem();
     }
 }
