@@ -236,7 +236,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 	// Connects lane 'up' with lane 'dn'. Return -1 if error, 1 if these
 	// two upLanes are already connected, or 0 if success.
-	public int addLaneConnector(int up, int dn) {
+	public int addLaneConnector(int up, int dn, int successiveFlag) {
 
 		Lane ulane, dlane;
 		if ((ulane = findLane(up)) == null) {

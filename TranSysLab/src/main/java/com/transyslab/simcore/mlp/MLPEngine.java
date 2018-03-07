@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 
 import com.transyslab.commons.io.*;
+import jscl.math.function.Exp;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.csv.CSVRecord;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
+import org.encog.util.Stopwatch;
 
 
 public class MLPEngine extends SimulationEngine{
@@ -183,13 +185,13 @@ public class MLPEngine extends SimulationEngine{
 					mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
 			}
 			loadTime += loadTimeStep;
-//			System.out.println("day: " + now/3600/24 );
+			System.out.println("day: " + now/3600/24 );
 		}
 		
 		//读入发车表
 		mlpNetwork.loadEmtTable();
 		
-		//路网存在车辆的情况下才进行计算
+		//路网存在车辆的情况下才进行计算000
 		if (mlpNetwork.veh_list.size()>0) {
 			//车队识别
 			mlpNetwork.platoonRecognize();
@@ -260,6 +262,10 @@ public class MLPEngine extends SimulationEngine{
 								v.getCurrentSpeed() + "," +
 								LV + "," +
 								FV + "," +
+								v.resemblance + "," +
+								v.diMap.get(v.lane) + "," +
+								v.calMLC() + "," +
+								v.getPath().getDesNode().getId() +
 								/*Thread.currentThread().getName() + "_" + mod + "," +
 								LocalDateTime.now() +*/ "\r\n"
 					);
@@ -342,7 +348,7 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	private void readEmpData(String fileName) {
-		if (fileName==null || fileName.equals("")){
+		if (fileName==null || fileName.equals("") || fileName.substring(fileName.length()-1).equals("/")){
 			System.out.println("warning: have no empirical data read in");
 			return;
 		}
@@ -414,7 +420,7 @@ public class MLPEngine extends SimulationEngine{
 			trackWriter = /*new DBWriter("insert into simtrack(time, rvid, vid, virtualIdx, buff, lanePos, segment, link, displacement, speed, lead, trail, tag, create_time) " +
 					"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)")*/
 							new TXTUtils(runProperties.get("outputPath") + "/" + "track" + threadName + "_" + mod + ".csv");
-			trackWriter.write("TIME,RVID,VID,VIRTUALIDX,BUFF,LANEPOS,SEGMENT,LINK,DISPLACEMENT,SPEED,LEAD\r\n");
+			trackWriter.write("TIME,RVID,VID,VIRTUALIDX,BUFF,LANEPOS,SEGMENT,LINK,DISPLACEMENT,SPEED,LEAD,FOLLOWER,IN_PLATOON,DI,P_MLC,TNODE\r\n");
 		}
 		if (infoOn)
 			infoWriter = new TXTUtils(runProperties.get("outputPath") + "/" + "info" + threadName + "_" + mod + ".txt");
@@ -679,7 +685,7 @@ public class MLPEngine extends SimulationEngine{
         return status;
     }
 	/**
-	 * 应该只在MainWindow中调用，仅用于可视化debug.
+	 * 用于可视化debug与基本测试
 	 */
 	@Override
 	public void run() {
@@ -762,6 +768,26 @@ public class MLPEngine extends SimulationEngine{
 			this.emitSource = this.rootDir + sourceName;
 		else if (sourceType.equals("SQL"))
 			this.emitSource = sourceName;
+	}
+
+	public static void main(String[] args) {
+		if (args.length!=1)
+			System.err.println("检查输入参数");
+		String simMasterFileName = args[0];
+		System.out.println("using: " + simMasterFileName.substring(simMasterFileName.lastIndexOf('/') + 1));
+		Configuration config = ConfigUtils.createConfig(simMasterFileName);
+
+		ExpSwitch.CAP_CTRL = true;
+		ExpSwitch.MAX_ACC_CTRL = true;
+
+		MLPEngine engine = new MLPEngine(simMasterFileName);
+		engine.loadFiles();
+		Stopwatch stopwatch = new Stopwatch();
+		stopwatch.start();
+		engine.run();
+		stopwatch.stop();
+		System.out.println("time used: " + stopwatch.getElapsedMilliseconds());
+		engine.close();
 	}
 
 }

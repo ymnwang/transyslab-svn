@@ -131,41 +131,38 @@ public class MLPLink extends Link {
 				theveh = JLn.getFirstVeh();
 				platoon.add(theveh);
 //				platoonhead = theveh.Displacement();
-				if (((MLPSegment) getEndSegment()).endDSP  == Double.NaN)
-					System.out.println("DEBUG");
+//				if (((MLPSegment) getEndSegment()).endDSP  == Double.NaN)
+//					System.out.println("DEBUG: NaN Err");
 				platoonhead = ((MLPSegment) getEndSegment()).endDSP;//getSegment(nSegments -1))
-				if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
-					System.out.println("DEBUG");
+//				if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
+//					System.out.println("DEBUG: NaN Err");
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 				while (theveh.getUpStreamVeh() != null){
 					theveh = theveh.getUpStreamVeh();
 					if (theveh.resemblance) {						
 						platoon.add(theveh);
-						if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
-							System.out.println("DEBUG");
+//						if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
+//							System.out.println("DEBUG: NaN Err");
 						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 					else {
-//						platoontail = theveh.Displacement();//加尾 处理车队
 						dealLC(platoonhead,platoontail);
 						platoon.clear();
 						platoon.add(theveh);//新车队
-//						platoonhead = theveh.Displacement();//新头
 						platoonhead = platoontail;
-						if (Math.max(0.0, theveh.Displacement() - theveh.getLength()) == Double.NaN)
-							System.out.println("DEBUG");
+//						if (Math.max(0.0, theveh.Displacement() - theveh.getLength()) == Double.NaN)
+//							System.out.println("DEBUG: NaN Err");
 						platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
 					}
 				}
-//				platoontail = theveh.Displacement();//余下的尾 处理车队
 				dealLC(platoonhead,platoontail);
 			}
 		}
 	}
 	
 	public void dealLC(double headDsp, double tailDsp) {
-		if (headDsp == Double.NaN || tailDsp == Double.NaN)
-			System.out.println("DEBUG");
+//		if (headDsp == Double.NaN || tailDsp == Double.NaN)
+//			System.out.println("DEBUG: NaN Err");
 		Random r = network.getSysRand();
 		Collections.shuffle(platoon,r);
 		for (MLPVehicle veh: platoon){

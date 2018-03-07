@@ -4,7 +4,6 @@
 package com.transyslab.commons.io;
 
 import java.io.File;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
@@ -113,14 +112,17 @@ public class XmlParser {
 		}
 		//Ω‚ŒˆLaneConnector
 		if (node.getName() == "LC") {
+			int flag = -1;
 			for (Attribute attr : attrs) {
 				if (attr.getName() == "UpLane")
 					tmpUpId = Integer.parseInt(attr.getValue());
 				if (attr.getName() == "DnLane")
 					tmpDnId = Integer.parseInt(attr.getValue());
+				if (attr.getName() == "Successive")
+					flag = Integer.parseInt(attr.getValue());
 
 			}
-			network.addLaneConnector(tmpUpId,tmpDnId);
+			network.addLaneConnector(tmpUpId,tmpDnId,flag);
 		}
 		//Ω‚ŒˆBoundary
 		if (node.getName() == "Boundary") {

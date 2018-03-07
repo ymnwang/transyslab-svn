@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.transyslab.commons.io.*;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
@@ -22,6 +23,7 @@ public class MLPNetwork extends RoadNetwork {
 	protected LinkedList<MLPVehicle> vehPool;
 	BufferedReader bReader;
 //	public List<MLPLoop> sensors;
+//	PrintWriter printer;
 
 	//引擎输出变量
 	protected HashMap<MLPLink, List<MacroCharacter>> linkStatMap;
@@ -38,6 +40,12 @@ public class MLPNetwork extends RoadNetwork {
 		linkStatMap = new HashMap<>();
 		sectionStatMap = new HashMap<>();
 		laneSecMap = new HashMap<>();
+
+//		try {
+//			this.printer = new PrintWriter(new BufferedWriter( new FileWriter("E:/DEBUG_EMIT_INFO",true)));
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	@Override
@@ -170,6 +178,7 @@ public class MLPNetwork extends RoadNetwork {
 			MLPLink launchingLink = mlpLink(i);
 			while (launchingLink.checkFirstEmtTableRec()){
 				Inflow emitVeh = launchingLink.pollInflow();
+//				printer.println(emitVeh.time + "," + emitVeh.laneIdx + "," + emitVeh.realVID);
 //				System.out.println("DEBUG " + emitVeh.time + " " + emitVeh.laneIdx + " " + emitVeh.realVID);
 				MLPVehicle newVeh = generateVeh();
 				newVeh.initInfo(0,launchingLink,mlpLane(emitVeh.laneIdx).getSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
@@ -725,4 +734,15 @@ public class MLPNetwork extends RoadNetwork {
 		return statMap;
 	}
 
+	@Override
+	public int addLaneConnector(int up, int dn, int successiveFlag) {
+		int ans = super.addLaneConnector(up, dn, successiveFlag);
+		if (successiveFlag == Constants.SUCCESSIVE_LANE) {
+			MLPLane upLane = (MLPLane) findLane(up);
+			MLPLane dnLane = (MLPLane) findLane(dn);
+			upLane.successiveDnLanes.add(dnLane);
+			dnLane.successiveUpLanes.add(upLane);
+		}
+		return ans;
+	}
 }

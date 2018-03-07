@@ -54,7 +54,21 @@ public class MLPSegment extends Segment{
 			}
 		}
 	}
+
+	private boolean checkConnected(MLPSegment dnSeg) {
+		boolean ans = false;
+		for (int i = 0; i < nLanes() && (!ans); i++) {
+			for (int j = 0; j < dnSeg.nLanes() && (!ans); j++) {
+				ans |= getLane(i).successiveDnLanes.contains(dnSeg.getLane(j));
+			}
+		}
+		return ans;
+	}
+
 	private void dealSuccessive(MLPSegment dnSeg) {
+		//若xml中有此信息，则初始化过程已添加，不需要进行推断。要求将该seg所有lane关于dnSeg的successiveDnLane全部指定好。
+		if (checkConnected(dnSeg))
+			return;
 		int nLanes = nLanes();
 		if (nLanes == dnSeg.nLanes()) {
 			for (int i = 0; i < nLanes; i++) {

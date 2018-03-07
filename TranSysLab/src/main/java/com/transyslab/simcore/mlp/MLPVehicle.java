@@ -148,7 +148,7 @@ public class MLPVehicle extends Vehicle{
 		//DEBUG please delete later
 		//double [] answer = {0.0,0.0};
 		if(seg==null)
-		System.out.println("BUG");
+		System.out.println("DEBUG: no Seg");
 		if (f - seg.startDSP > -0.001)	{
 			if (t - seg.endDSP < 0.001) {
 				double [] answer = new double [2];
@@ -449,6 +449,7 @@ public class MLPVehicle extends Vehicle{
 		StringBuilder sb = new StringBuilder();
 //		if (lane != null && diMap.get(lane)==null)
 //			System.out.println("DEBUG MESSAGE");
+		sb.append("Time: " + getMLPNetwork().getSimClock().getCurrentTime());
 		sb.append("MLC\n" + String.format("%.2f",calMLC()));//(diMap.get(lane)==0 ? 0 : )
 		sb.append("\nÇ°³µ¾àÀë\n" + (leading==null ? "Inf" : String.format("%.2f",leading.Displacement() - Displacement())));
 		return sb.toString();
