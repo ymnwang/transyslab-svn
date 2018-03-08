@@ -44,7 +44,7 @@ public class Dynamics {
 			return ans;
 		}
 		else if (ExpSwitch.CF_CURVE) {
-			double l = 200.0, vt = 33.3333;
+			double l = ExpSwitch.CF_VT_END, vt = ExpSwitch.CF_VT;
 			double r = Math.min((gap-upperGap)/l,1.0);
 			return r*vt + (1.0-r)*linkCharacteristics[5];
 		}
@@ -75,7 +75,7 @@ public class Dynamics {
 			//准备处于Link Passing的头车
 			if (ExpSwitch.APPROACH_CTRL) {
 				//接近路口减速通过
-				double passingSpd = 60.0/3.6;
+				double passingSpd = ExpSwitch.APPROACH_SPD;
 				double gap = ((MLPSegment)headVeh.link.getEndSegment()).endDSP - headVeh.Displacement();
 				double upperGap = mlpParameter.CELL_RSP_UPPER;
 				double r = gap /upperGap;

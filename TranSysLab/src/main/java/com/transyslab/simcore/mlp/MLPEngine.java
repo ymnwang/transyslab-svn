@@ -777,9 +777,6 @@ public class MLPEngine extends SimulationEngine{
 		System.out.println("using: " + simMasterFileName.substring(simMasterFileName.lastIndexOf('/') + 1));
 		Configuration config = ConfigUtils.createConfig(simMasterFileName);
 
-		ExpSwitch.CAP_CTRL = true;
-		ExpSwitch.MAX_ACC_CTRL = true;
-
 		MLPEngine engine = new MLPEngine(simMasterFileName);
 		engine.loadFiles();
 		Stopwatch stopwatch = new Stopwatch();

@@ -23,7 +23,6 @@ public class MLPNetwork extends RoadNetwork {
 	protected LinkedList<MLPVehicle> vehPool;
 	BufferedReader bReader;
 //	public List<MLPLoop> sensors;
-//	PrintWriter printer;
 
 	//引擎输出变量
 	protected HashMap<MLPLink, List<MacroCharacter>> linkStatMap;
@@ -41,11 +40,6 @@ public class MLPNetwork extends RoadNetwork {
 		sectionStatMap = new HashMap<>();
 		laneSecMap = new HashMap<>();
 
-//		try {
-//			this.printer = new PrintWriter(new BufferedWriter( new FileWriter("E:/DEBUG_EMIT_INFO",true)));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	@Override
@@ -178,7 +172,6 @@ public class MLPNetwork extends RoadNetwork {
 			MLPLink launchingLink = mlpLink(i);
 			while (launchingLink.checkFirstEmtTableRec()){
 				Inflow emitVeh = launchingLink.pollInflow();
-//				printer.println(emitVeh.time + "," + emitVeh.laneIdx + "," + emitVeh.realVID);
 //				System.out.println("DEBUG " + emitVeh.time + " " + emitVeh.laneIdx + " " + emitVeh.realVID);
 				MLPVehicle newVeh = generateVeh();
 				newVeh.initInfo(0,launchingLink,mlpLane(emitVeh.laneIdx).getSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
@@ -189,6 +182,8 @@ public class MLPNetwork extends RoadNetwork {
 				newVeh.initNetworkEntrance(simClock.getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
 				//进入路网，初始化强制换道参考值di
 				newVeh.updateDi();
+				if (ExpSwitch.SPD_BUFFER)
+					newVeh.spdBuffer = ExpSwitch.SPD_BUFFER_VAL;
 				//newVeh.init(getNewVehID(), 1, MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) now);
 				mlpLane(emitVeh.laneIdx).appendVeh(newVeh);
 			}

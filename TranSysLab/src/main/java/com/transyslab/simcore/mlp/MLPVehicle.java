@@ -14,6 +14,7 @@ public class MLPVehicle extends Vehicle{
 	protected int platoonCode;
 	protected int virtualType;//0 for real veh; num>0 for virual veh with the connected vheID
 	protected int buffer;//lane changing cold down remain frames
+	protected int spdBuffer;//lane changing cold down remain frames
 	protected int speedLevel;
 	protected boolean cfState;
 	protected boolean resemblance;
@@ -118,10 +119,10 @@ public class MLPVehicle extends Vehicle{
 			}			
 			if (frontVeh != null) 
 				frontCheck = (frontVeh.Displacement() - frontVeh.getLength() - Displacement() >=
-										mlpParameter.minGap(currentSpeed));//getCurrentSpeed
+										mlpParameter.headwaySpeedSlope() * currentSpeed);//mlpParameter.minGap(currentSpeed)//getCurrentSpeed
 			if (backVeh!=null) 
 				backCheck = (Displacement() - length - backVeh.Displacement() >=
-										mlpParameter.minGap(backVeh.currentSpeed));//backVeh.getCurrentSpeed
+										mlpParameter.headwaySpeedSlope() * backVeh.currentSpeed);//mlpParameter.minGap(backVeh.currentSpeed)//backVeh.getCurrentSpeed
 			return (frontCheck && backCheck);
 		}
 	}
@@ -159,7 +160,9 @@ public class MLPVehicle extends Vehicle{
 				else {
 					answer[0] = count[0] + tarlane.countVehWhere(f, t);
 				}
-				answer[1] = count[1] + (t-f);
+				//very important
+				double[] expandedBound = tarlane.expandBound(f,t);
+				answer[1] = count[1] + (expandedBound[1]-expandedBound[0]);
 				return answer;
 			}
 			else {
@@ -195,7 +198,7 @@ public class MLPVehicle extends Vehicle{
 		if (getLink().length() <= 10.0)
 			return 1.0;
 		double L = Math.min(800.0, getLink().length()-10.0);//link前800m开始考虑强制换道
-		double p = Displacement() / L;
+		double p = Math.max(Displacement()-800.0, 0.0) / L;
 		return Math.min(p, 1.0);
 	}
 	
@@ -278,7 +281,7 @@ public class MLPVehicle extends Vehicle{
 			if (virtualType != 0) {
 				//虚车最多影响到Link末端
 				holdAtDnEnd();
-				return Constants.VEHICLE_NOT_RECYCLE;
+				return ExpSwitch.VIRTUAL_RELEASE ? Constants.VEHICLE_RECYCLE : Constants.VEHICLE_NOT_RECYCLE;
 			}
 			MLPNode server = (MLPNode) link.getDnNode();
 			return server.serve(this);
@@ -323,6 +326,10 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void setNewState(double spd) {
+		if (ExpSwitch.SPD_BUFFER) {
+			spd = currentSpeed;
+			spdBuffer = Math.max(0, spdBuffer-1);
+		}
 		//最大加速度平滑
 		if (ExpSwitch.MAX_ACC_CTRL)
 			spd = powerRate(spd);
@@ -355,6 +362,7 @@ public class MLPVehicle extends Vehicle{
 		platoonCode = 0;
 		virtualType = 0;
 		buffer = 0;
+		spdBuffer = 0;
 		speedLevel = 0;
 		cfState = false;
 		resemblance = false;
@@ -455,10 +463,10 @@ public class MLPVehicle extends Vehicle{
 		return sb.toString();
 	}
 	protected double powerRate(double spd) {
-		double maxAcc = 2.0;
-		double maxDecc = -7.0;
+		double maxAcc = ExpSwitch.MAX_ACC;
+		double maxDec = ExpSwitch.MAX_DEC;
 		double deltaT = getMLPNetwork().getSimClock().getStepSize();
 		return spd >= currentSpeed ? Math.min(spd, maxAcc*deltaT+currentSpeed) :
-				Math.max(spd, Math.max(0.0,maxDecc*deltaT+currentSpeed));
+				Math.max(spd, Math.max(0.0,maxDec*deltaT+currentSpeed));
 	}
 }
