@@ -14,13 +14,10 @@ public class InterConstraints {
 
 	/**
 	 * paras: [0]qm, [1]kj, [2]vf_CF, [3]vf_SD*/
-	public static NewtonFunction alphaUpperFunc = new NewtonFunction() {
-		@Override
-		public double calculate(double input, double[] paras) {
-			double qm = paras[0], kj = paras[1], vf_CF = paras[2], vf_SD = paras[3];
-			double beta = calBeta(input, kj, qm, vf_CF, vf_SD);
-			return kj / Math.pow(1+input*beta,1/input) - qm/vf_CF;
-		}
+	public static NewtonFunction alphaUpperFunc = (input, paras) -> {
+		double qm = paras[0], kj = paras[1], vf_CF = paras[2], vf_SD = paras[3];
+		double beta = calBeta(input, kj, qm, vf_CF, vf_SD);
+		return kj / Math.pow(1+input*beta,1/input) - qm/vf_CF;
 	};
 
 	public InterConstraints(){
@@ -103,8 +100,10 @@ public class InterConstraints {
 		return alphaUpperFunc.findRoot(0.05, new double[]{qm,kj_input,vf_CF,vf_SD});
 	}
 
+	//err
 	public static double calBeta(double alpha, double kj, double qm, double vf_CF, double vf_SD){
-		return Math.exp(vf_CF / vf_SD) / Math.exp(1-Math.pow(qm/vf_CF/kj,alpha));
+//		return Math.exp(vf_CF / vf_SD) / Math.exp(1-Math.pow(qm/vf_CF/kj,alpha));
+		return Math.log(vf_CF / vf_SD) / Math.log(1-Math.pow(qm/vf_CF/kj,alpha));
 	}
 
 	public static double calDeltaTUpper(double qm, double vf, double kj) {
