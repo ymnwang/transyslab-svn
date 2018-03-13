@@ -1,8 +1,0 @@
-<MesoTS>
-<SurvStations num="95">
-<station type="2" name="det2" interval="300" zone="5" segid = "8070" id = "5" pos = "0.75">
-<sensor id="-5" laneid = "-1"/>
-</station>
-
-</SurvStations>
-</MesoTS>
