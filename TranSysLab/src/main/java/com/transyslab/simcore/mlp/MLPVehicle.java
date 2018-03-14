@@ -281,7 +281,12 @@ public class MLPVehicle extends Vehicle{
 			if (virtualType != 0) {
 				//虚车最多影响到Link末端
 				holdAtDnEnd();
-				return ExpSwitch.VIRTUAL_RELEASE ? Constants.VEHICLE_RECYCLE : Constants.VEHICLE_NOT_RECYCLE;
+				if (ExpSwitch.VIRTUAL_RELEASE) {
+					lane.removeVeh(this, true);
+					return Constants.VEHICLE_RECYCLE;
+				}
+				else
+					return Constants.VEHICLE_NOT_RECYCLE;
 			}
 			MLPNode server = (MLPNode) link.getDnNode();
 			return server.serve(this);
