@@ -139,6 +139,24 @@ public class MLPNetwork extends RoadNetwork {
 		for (Link l: links){
 			//预留
 			((MLPLink) l).checkConnectivity();
+			//组织laneGraph
+			segments.forEach(segment -> {
+				lanes.forEach(lane -> {
+					((MLPLink) l).addLaneGraphVertex((MLPLane) lane);
+				});
+			});
+			for (Segment seg: segments) {
+				for (int i = 0; i < seg.nLanes(); i++) {
+					MLPLane mlpLane = (MLPLane) seg.getLane(i);
+					if (i<seg.nLanes()-1)//可叠加实线判断
+						((MLPLink)l).addLaneGraphEdge(mlpLane, (MLPLane) mlpLane.getRightLane(), 1.0);
+					if (i>0)//可叠加实线判断
+						((MLPLink)l).addLaneGraphEdge(mlpLane, (MLPLane) mlpLane.getLeftLane(),1.0);
+					if (!((MLPSegment) seg).isEndSeg())
+						mlpLane.successiveDnLanes.forEach(suDnLane ->
+								((MLPLink)l).addLaneGraphEdge(mlpLane, (MLPLane) suDnLane, 0.0));//可叠加封路判断
+				}
+			}
 			//将jointLane信息装入Link中
 			((MLPLink) l).addLnPosInfo();
 		}
@@ -405,7 +423,7 @@ public class MLPNetwork extends RoadNetwork {
 			GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
 			ODPair newPair = new ODPair(oriNode, desNode);
 			oriNode.setType(oriNode.getType() | Constants.NODE_TYPE_ORI);
-			desNode.setType(oriNode.getType() | Constants.NODE_TYPE_DES);
+			desNode.setType(desNode.getType() | Constants.NODE_TYPE_DES);
 			newPair.addPath(new Path(gpath));
 			odPairs.add(newPair);
 			return newPair;

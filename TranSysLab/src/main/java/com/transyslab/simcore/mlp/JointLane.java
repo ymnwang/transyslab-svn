@@ -50,4 +50,12 @@ public class JointLane {
 		}
 		return null;
 	}
+
+	public double getJointLaneEndDSP() {
+		return lanesCompose.get(0).getSegment().endDSP;
+	}
+
+	public double getJointLaneStartDSP() {
+		return lanesCompose.get(lanesCompose.size()-1).getSegment().endDSP;
+	}
 }

@@ -19,4 +19,5 @@ public class ExpSwitch {
 	public static int SPD_BUFFER_VAL = 5;
 	public static double CF_VT_END = 200.0;
 	public static double CF_VT = 120.0/3.6;
+	public static double LC_SENSITIVE = 0.5;
 }

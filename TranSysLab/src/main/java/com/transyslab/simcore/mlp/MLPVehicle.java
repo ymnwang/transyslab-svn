@@ -1,9 +1,11 @@
 package com.transyslab.simcore.mlp;
 
 import com.transyslab.roadnetwork.Constants;
+import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Vehicle;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class MLPVehicle extends Vehicle{
 	protected MLPVehicle trailing;// upstream vehicle
@@ -26,7 +28,7 @@ public class MLPVehicle extends Vehicle{
 	protected double dspLinkEntrance;
 	protected int rvId;
 	protected double time2Dispatch;
-	protected HashMap<MLPLane, Integer> diMap;
+	protected HashMap<MLPLane, Double> diMap;
 //	static public TXTUtils fout = new TXTUtils("src/main/resources/output/test.csv");
 //	protected double TimeExit;
 	//private boolean active_;
@@ -118,11 +120,9 @@ public class MLPVehicle extends Vehicle{
 				backVeh = backVeh.trailing;
 			}			
 			if (frontVeh != null) 
-				frontCheck = (frontVeh.Displacement() - frontVeh.getLength() - Displacement() >=
-										mlpParameter.headwaySpeedSlope() * currentSpeed);//mlpParameter.minGap(currentSpeed)//getCurrentSpeed
+				frontCheck = (frontVeh.Displacement() - frontVeh.getLength() - Displacement() >= mlpParameter.minLCAcceptedGap(currentSpeed,ExpSwitch.LC_SENSITIVE));//mlpParameter.headwaySpeedSlope() * currentSpeed);
 			if (backVeh!=null) 
-				backCheck = (Displacement() - length - backVeh.Displacement() >=
-										mlpParameter.headwaySpeedSlope() * backVeh.currentSpeed);//mlpParameter.minGap(backVeh.currentSpeed)//backVeh.getCurrentSpeed
+				backCheck = (Displacement() - length - backVeh.Displacement() >= mlpParameter.minLCAcceptedGap(backVeh.currentSpeed,ExpSwitch.LC_SENSITIVE));//mlpParameter.headwaySpeedSlope() * backVeh.currentSpeed);//mlpParameter.minGap(backVeh.currentSpeed)//backVeh.getCurrentSpeed
 			return (frontCheck && backCheck);
 		}
 	}
@@ -148,8 +148,6 @@ public class MLPVehicle extends Vehicle{
 			System.out.println("DEBUG: LC deadlock warning");
 		//DEBUG please delete later
 		//double [] answer = {0.0,0.0};
-		if(seg==null)
-		System.out.println("DEBUG: no Seg");
 		if (f - seg.startDSP > -0.001)	{
 			if (t - seg.endDSP < 0.001) {
 				double [] answer = new double [2];
@@ -161,7 +159,7 @@ public class MLPVehicle extends Vehicle{
 					answer[0] = count[0] + tarlane.countVehWhere(f, t);
 				}
 				//very important
-				double[] expandedBound = tarlane.expandBound(f,t);
+				double[] expandedBound = tarlane==null ? new double[]{f,t} : tarlane.expandBound(f,t);
 				answer[1] = count[1] + (expandedBound[1]-expandedBound[0]);
 				return answer;
 			}
@@ -184,29 +182,27 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	protected double calMLC(){
-		//TODO: very important 临时改动
-		/*为了解决过短的seg，临时改为以link为界的紧急性*/
-		/*double buff = mlpParameter.getSegLenBuff();
-		double len = segment.getLength();
-		if (len<=buff) {
-			return 1.0;
-		}
-		else{
-			return (Math.min(segment.getLength() -distance, len-buff))/(len-buff);
-		}*/
+		double effectedLength = 800.0;//m
+		double buff = mlpParameter.getSegLenBuff();
 
-		if (getLink().length() <= 10.0)
-			return 1.0;
-		double L = Math.min(800.0, getLink().length()-10.0);//link前800m开始考虑强制换道
-		double p = Math.max(Displacement()-800.0, 0.0) / L;
-		return Math.min(p, 1.0);
+		if (getLink().length() <= buff)
+			return 1.0;//link too short.
+
+		double L = Math.min(effectedLength, getLink().length()-buff);
+
+		//find out next MANDATORY LANE CHANGING POINT with distance less than effective length.
+		MLPLane mlpLane = lane;
+		while ((!(mlpLane.getSegment()).isEndSeg()) && !(diMap.get(mlpLane).isInfinite()) && mlpLane.successiveDnLanes.size()==1) {
+			mlpLane = mlpLane.successiveDnLanes.get(0);
+		}
+		return Math.max( L-Math.max(mlpLane.getSegment().endDSP-Displacement()-buff,0.0), 0.0) / L;
 	}
 	
 	private double calH(int turning){
 //		int h = lane.calDi(this) - lane.getAdjacent(turning).calDi(this);//旧方法 重复计算
-		int h = diMap.get(lane) - diMap.get(lane.getAdjacent(turning));
-		if (h==0){
-			return 0;
+		double h = diMap.get(lane) - diMap.get(lane.getAdjacent(turning));
+		if (h==0.0){
+			return 0.0;
 		}
 		else{
 			if (h>0){
@@ -223,7 +219,7 @@ public class MLPVehicle extends Vehicle{
 		double lambda1 = MLPParameter.LC_Lambda1;
 		double lambda2 = MLPParameter.LC_Lambda2;
 		double h = calH(turning);
-		double Umlc = calMLC();
+		double Umlc = h==0.0 ? 0.0 : calMLC();
 		double Udlc = calDLC(turning, fDSP, tDSP, PlatoonCount);
 		double W = gamma[0]*h*Umlc + gamma[1]*Udlc;// - (gamma[0] + gamma[1])*0.5
 		double U = lambda1*W + lambda2;
@@ -306,11 +302,11 @@ public class MLPVehicle extends Vehicle{
 			}*/
 			if (lane.connectedDnLane == null) {//has no successive lane
 				if (virtualType == 0){
-					System.err.println("Vehicle No. " + getId() +" has no successive lane to go");
+//					System.err.println("Vehicle No. " + getId() +" has no successive lane to go");
 					holdAtDnEnd();
 				}
 				else
-					lane.removeVeh(this, true);//如果虚车触发此条件（successive lane不可用），则消失
+					holdAtDnEnd();//lane.removeVeh(this, true);//如果虚车触发此条件（successive lane不可用），则消失
 				return Constants.VEHICLE_NOT_RECYCLE;
 			}
 			lane.passVeh2ConnDnLn(this);
@@ -318,8 +314,6 @@ public class MLPVehicle extends Vehicle{
 			if (newDis < 0.0) {
 				dealPassing();
 			}
-			//车辆移动至新的segment，更新强制换道参考值di
-			updateDi();
 			return Constants.VEHICLE_NOT_RECYCLE;
 		}
 	}
@@ -453,17 +447,19 @@ public class MLPVehicle extends Vehicle{
 	}*/
 	public void updateDi() {
 		diMap.clear();
-		for (int i = 0; i<segment.nLanes(); i++) {
-			MLPLane theLane = segment.getLane(i);
-			diMap.put(theLane, theLane.calDi(this));
-		}
+		List<MLPLane> target = link.validEndLanesFor(this);
+		link.getSegments().forEach(seg -> {
+			seg.getLanes().forEach(fLane -> {
+				diMap.put((MLPLane) fLane, link.getLCRouteWeight((MLPLane) fLane,target));
+			});
+		});
 	}
 	public String getInfo(){
 		StringBuilder sb = new StringBuilder();
 //		if (lane != null && diMap.get(lane)==null)
 //			System.out.println("DEBUG MESSAGE");
 		sb.append("Time: " + getMLPNetwork().getSimClock().getCurrentTime());
-		sb.append("MLC\n" + String.format("%.2f",calMLC()));//(diMap.get(lane)==0 ? 0 : )
+//		sb.append("MLC\n" + String.format("%.2f",calMLC()));//(diMap.get(lane)==0 ? 0 : )
 		sb.append("\n前车距离\n" + (leading==null ? "Inf" : String.format("%.2f",leading.Displacement() - Displacement())));
 		return sb.toString();
 	}
@@ -473,5 +469,8 @@ public class MLPVehicle extends Vehicle{
 		double deltaT = getMLPNetwork().getSimClock().getStepSize();
 		return spd >= currentSpeed ? Math.min(spd, maxAcc*deltaT+currentSpeed) :
 				Math.max(spd, Math.max(0.0,maxDec*deltaT+currentSpeed));
+	}
+	public boolean have2ChangeLane() {
+		return virtualType==0 && diMap.get(lane)==Double.POSITIVE_INFINITY;
 	}
 }

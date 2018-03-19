@@ -1,11 +1,13 @@
 package com.transyslab.simcore.mlp;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-import com.transyslab.roadnetwork.Lane;
-import com.transyslab.roadnetwork.Link;
-import com.transyslab.roadnetwork.Node;
-import com.transyslab.roadnetwork.RoadNetwork;
+import com.transyslab.roadnetwork.*;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 public class MLPLink extends Link {
 	private LinkedList<Inflow> inflowList;
@@ -14,6 +16,7 @@ public class MLPLink extends Link {
 	public Dynamics dynaFun;
 	public List<double[]> tripTime;//double[] {timeIn, DspIn, timeOut}
 	private int emitCount;
+	private SimpleDirectedWeightedGraph<MLPLane,DefaultWeightedEdge> laneGraph;
 //	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
 //	public double capacity;//unit: veh/s/lane
 //	private double releaseTime_;
@@ -26,6 +29,7 @@ public class MLPLink extends Link {
 		tripTime = new ArrayList<>();
 		emitCount = 0;
 //		capacity = MLPParameter.getInstance().capacity;
+		laneGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 	}
 
 	@Override
@@ -133,7 +137,7 @@ public class MLPLink extends Link {
 //				platoonhead = theveh.Displacement();
 //				if (((MLPSegment) getEndSegment()).endDSP  == Double.NaN)
 //					System.out.println("DEBUG: NaN Err");
-				platoonhead = ((MLPSegment) getEndSegment()).endDSP;//getSegment(nSegments -1))
+				platoonhead = JLn.getJointLaneEndDSP();//before: //((MLPSegment) getEndSegment()).endDSP;
 //				if (Math.max(0.0, theveh.Displacement() - theveh.getLength())==Double.NaN)
 //					System.out.println("DEBUG: NaN Err");
 				platoontail = Math.max(0.0, theveh.Displacement() - theveh.getLength());
@@ -208,7 +212,7 @@ public class MLPLink extends Link {
 				}
 			}
 			if ((!veh.lane.diEqualsZero(veh))){
-				if (veh.calMLC()>0.99)
+				if (veh.have2ChangeLane() && veh.calMLC()>0.99)
 					veh.stopFlag = true;
 //				if (veh.calMLC()>0.7)
 //					System.out.println("DEBUG: too late to LC");
@@ -362,4 +366,53 @@ public class MLPLink extends Link {
 	public static final int DSPIN_MASK = 1;
 
 	public static final int TIMEOUT_MASK = 2;
+
+	public GraphPath<MLPLane, DefaultWeightedEdge> findLCRoute(MLPLane fLane, MLPLane tLane) {
+		return DijkstraShortestPath.findPathBetween(laneGraph, fLane, tLane);
+	}
+
+	public double getLCRouteWeight(MLPLane fLane, MLPLane tLane) {
+		GraphPath path = findLCRoute(fLane, tLane);
+		return path==null ? Double.POSITIVE_INFINITY : path.getWeight();
+	}
+
+	public double getLCRouteWeight(MLPLane fLane, List<MLPLane> tLanes) {
+		double ans = Double.POSITIVE_INFINITY;
+		for (MLPLane tLane : tLanes)
+			ans	= Math.min(ans, getLCRouteWeight(fLane, tLane));
+		return ans;
+	}
+
+	public List<MLPLane> validEndLanesFor(MLPVehicle veh) {
+		List<MLPLane> ans = new ArrayList<>();
+		for (int i = 0; i < getEndSegment().nLanes(); i++) {
+			ans.add((MLPLane) getEndSegment().getLane(i));
+		}
+		MLPLink nextLink = (MLPLink) veh.getNextLink();
+
+		//on the last link
+		if (nextLink == null){
+			return ans;
+		}
+
+		List<Lane> dnStreamValidLanes = ((MLPSegment) nextLink.getStartSegment()).getValidLanes(veh);
+
+		//this lane connects with next link; find out if nextNode is an intersection
+		if (getDnNode().type(Constants.NODE_TYPE_INTERSECTION)!=0)
+			//next node is an intersection
+			return ans.stream().filter(l -> l.connect2DnLanes(dnStreamValidLanes)).collect(Collectors.toList());
+		else
+			//next node is NOT an intersection
+			return ans.stream().filter(l -> l.successivelyConnect2DnLanes(dnStreamValidLanes)).collect(Collectors.toList());
+	}
+
+	protected void addLaneGraphVertex(MLPLane mlpLane) {
+		laneGraph.addVertex(mlpLane);
+	}
+
+	protected void addLaneGraphEdge(MLPLane fLane, MLPLane tLane, double weight) {
+		DefaultWeightedEdge edge = new DefaultWeightedEdge();
+		laneGraph.addEdge(fLane, tLane, edge);
+		laneGraph.setEdgeWeight(edge,weight);
+	}
 }

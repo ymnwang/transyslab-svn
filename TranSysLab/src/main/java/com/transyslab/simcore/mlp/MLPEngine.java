@@ -185,7 +185,7 @@ public class MLPEngine extends SimulationEngine{
 					mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
 			}
 			loadTime += loadTimeStep;
-			System.out.println("day: " + now/3600/24 );
+//			System.out.println("day: " + now/3600/24 );
 		}
 		
 		//读入发车表

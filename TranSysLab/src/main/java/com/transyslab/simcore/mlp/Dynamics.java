@@ -78,7 +78,7 @@ public class Dynamics {
 				double passingSpd = ExpSwitch.APPROACH_SPD;
 				double gap = ((MLPSegment)headVeh.link.getEndSegment()).endDSP - headVeh.Displacement();
 				double upperGap = mlpParameter.CELL_RSP_UPPER;
-				double r = gap /upperGap;
+				double r = gap / upperGap;
 				return r * mlpParameter.maxSpeed(gap) + (1.0-r) * passingSpd;
 			}
 			else

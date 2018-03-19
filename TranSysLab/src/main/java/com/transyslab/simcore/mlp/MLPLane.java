@@ -299,9 +299,17 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		return new double[]{fBound, tBound};
 	}
 
-	private boolean connect2DnLanes(List<Lane> DnLanes) {
+	public boolean connect2DnLanes(List<Lane> DnLanes) {
 		for (Lane tmpLN: DnLanes){
 			if (((MLPLane) tmpLN).upLanes.contains(this))
+				return true;
+		}
+		return false;
+	}
+
+	public boolean successivelyConnect2DnLanes(List<Lane> DnLanes) {
+		for (Lane tmpLN: DnLanes){
+			if (((MLPLane) tmpLN).successiveUpLanes.contains(this))
 				return true;
 		}
 		return false;
@@ -316,24 +324,6 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	}
 	
 	public int calDi(MLPVehicle theVeh) {
-		//TODO: very important Ó²±àÂë ÁÙÊ±¸Ä¶¯
-		if (getLink().getId()==112 && theVeh.getNextLink()!=null) {
-			if (theVeh.getNextLink().getId()==25) {
-				switch (getId()%10) {
-					case 1: return 1;
-					default: return 0;
-				}
-			}
-			if (theVeh.getNextLink().getId()==26) {
-				switch (getId()%10) {
-					case 3: return 1;
-					default: return 0;
-				}
-			}
-		}
-		return 0;
-	}
-	/*{
 		//last seg of this link
 		if (((MLPSegment) segment).isEndSeg()) {
 			MLPLink nextLink = (MLPLink) theVeh.getNextLink();
@@ -414,7 +404,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		if (index + count2 > segment.getLeftLane().getIndex() + segment.nLanes() - 1)
 			count2 = Integer.MAX_VALUE;
 		return Math.min(count1, count2);
-	}*/
+	}
 
 	public boolean diEqualsZero(MLPVehicle theVeh){
 		if (((MLPSegment) segment).isEndSeg()) {//last seg of this link

@@ -81,6 +81,10 @@ public class MLPParameter extends Parameter {
 	public double minGap(double speed) {
 		return minHeadwayGap() + headwaySpeedSlope() * speed;
 	}
+
+	public double minLCAcceptedGap(double speed, double rate) {
+		return minHeadwayGap() + rate * headwaySpeedSlope() * speed;
+	}
 	
 	//This returns a maximum speed for a give gap, in specific MLPlane, provide for MLP model
 	public double maxSpeed(double gap) {
