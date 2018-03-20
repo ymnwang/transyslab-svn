@@ -5,6 +5,7 @@ import com.transyslab.commons.tools.adapter.SimProblem;
 import com.transyslab.commons.tools.adapter.SimSolution;
 import com.transyslab.commons.tools.optimizer.DifferentialEvolution;
 import com.transyslab.commons.tools.optimizer.DominanceComparator;
+import com.transyslab.simcore.mlp.ExpSwitch;
 import org.uma.jmetal.operator.impl.crossover.DifferentialEvolutionCrossover;
 import org.uma.jmetal.operator.impl.selection.DifferentialEvolutionSelection;
 import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
@@ -13,6 +14,9 @@ import java.util.Arrays;
 
 public class OptmRMSEProblem {
     public static void main(String[] args) {
+
+        ExpSwitch.APPROACH_CTRL = true;
+        ExpSwitch.MAX_ACC_CTRL = true;
         int popSize = 20;
         int maxGeneration = 1000;
         double crossOver_cr = 0.5;
@@ -27,7 +31,7 @@ public class OptmRMSEProblem {
 
         algorithm = new DifferentialEvolution(problem,maxGeneration*popSize,popSize,
                 crossover,selection,new SequentialSolutionListEvaluator<>());
-        algorithm.setComparator(new DominanceComparator<>());
+//        algorithm.setComparator(new DominanceComparator<>());
         algorithm.setSolutionWriter(new TXTUtils("src/main/resources/demo_neihuan/scenario2/rs(RMSE).csv"));
         algorithm.run();
         SimSolution bestSolution = (SimSolution) algorithm.getResult();

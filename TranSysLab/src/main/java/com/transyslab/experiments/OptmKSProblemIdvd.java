@@ -18,13 +18,12 @@ public class OptmKSProblemIdvd {
         //重现校准过程
         //JMetalRandom.getInstance().setSeed(1806);
         ExpSwitch.MAX_ACC_CTRL = true;
-        ExpSwitch.APPROACH_CTRL = true;
         int popSize = 20;
         int maxGeneration = 1000;
         double crossOver_cr = 0.5;
         double crossOver_f = 0.5;
         String crossOver_variant = "rand/1/bin";
-        String simMasterFileName = "E:\\master\\optmksidvd.properties";
+        String simMasterFileName = "D:\\java\\javacode\\forth\\optmksidvd.properties";
 
         SimProblem problem = new KSIdvdProblem(simMasterFileName);
         DifferentialEvolution algorithm;
@@ -33,8 +32,8 @@ public class OptmKSProblemIdvd {
 
         algorithm = new DifferentialEvolution(problem,maxGeneration*popSize,popSize,
                 crossover,selection,new SequentialSolutionListEvaluator<>());
-        algorithm.setComparator(new DominanceComparator<>());
-        algorithm.setSolutionWriter(new TXTUtils("E:\\master\\ksIdvd.csv"));
+//        algorithm.setComparator(new DominanceComparator<>());
+        algorithm.setSolutionWriter(new TXTUtils("D:\\java\\javacode\\forth\\ksIdvd.csv"));
         algorithm.run();
         SimSolution bestSolution = (SimSolution) algorithm.getResult();
         System.out.println("BestFitness: " + Arrays.toString(bestSolution.getObjectiveValues()));

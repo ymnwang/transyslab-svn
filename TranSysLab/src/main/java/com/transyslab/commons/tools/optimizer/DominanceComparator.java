@@ -15,6 +15,8 @@ import java.util.Comparator;
  */
 public class DominanceComparator<S extends Solution<?>> implements Comparator<S>, Serializable {
 	private ConstraintViolationComparator<S> constraintViolationComparator;
+	private double boundedValue;
+	private int slackObjIndex = -1;
 
 	/** Constructor */
 	public DominanceComparator() {
@@ -35,7 +37,12 @@ public class DominanceComparator<S extends Solution<?>> implements Comparator<S>
 	public DominanceComparator(ConstraintViolationComparator<S> constraintComparator, double epsilon) {
 		constraintViolationComparator = constraintComparator ;
 	}
-
+	/**判断约束条件**/
+	public DominanceComparator(int slackObjIndex,double boundedValue) {
+		this(new OverallConstraintViolationComparator<S>(), 0.0) ;
+		this.boundedValue = boundedValue;
+		this.slackObjIndex = slackObjIndex;
+	}
 	/**
 	 * Compares two solutions.
 	 *
@@ -72,6 +79,10 @@ public class DominanceComparator<S extends Solution<?>> implements Comparator<S>
 		int bestIsTwo = 0 ;
 		int result ;
 		for (int i = 0; i < solution1.getNumberOfObjectives(); i++) {
+			// 目标函数值小于boundedValue，则不进行比较
+			if(slackObjIndex == i && solution1.getObjective(i)<=boundedValue && solution2.getObjective(i)<=boundedValue){
+				continue;
+			}
 			double value1 = solution1.getObjective(i);
 			double value2 = solution2.getObjective(i);
 			if (value1 != value2) {
@@ -82,6 +93,8 @@ public class DominanceComparator<S extends Solution<?>> implements Comparator<S>
 					bestIsTwo = 1;
 				}
 			}
+
+
 		}
 		if (bestIsOne > bestIsTwo) {
 			result = -1;

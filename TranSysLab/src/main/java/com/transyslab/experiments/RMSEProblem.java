@@ -26,7 +26,7 @@ public class RMSEProblem extends MLPProblem {
     }
     public void initProblem(String masterFileDir){
         super.initProblem(masterFileDir);
-        setNumberOfObjectives(2);
+        //setNumberOfObjectives(2);
     }
     @Override
     protected EngThread createEngThread(String name, String masterFileDir) {
@@ -55,7 +55,7 @@ public class RMSEProblem extends MLPProblem {
                 public double[] evaluateFitness(SimulationEngine engine) {
                     MLPEngine mlpEngine = (MLPEngine) engine;
                     if(mlpEngine.getStatus() == Constants.STATE_ERROR_QUIT)
-                        return new double[]{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
+                        return new double[]{Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
                     Map<String, List<MacroCharacter>> simMap = engine.getSimMap();
                     Map<String, List<MacroCharacter>> empMap = engine.getEmpMap();
 
@@ -66,7 +66,7 @@ public class RMSEProblem extends MLPProblem {
                         List<MacroCharacter> empRecords = empMap.get("det2");
                         if(empRecords == null || empRecords.isEmpty()) {
                             System.out.println("Error: Can not find \"det2\"");
-                            return new double[]{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
+                            return new double[]{Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
                         }
                         List<MacroCharacter> simRecords = simMap.get("det2");
                         if (simRecords != null && !simRecords.isEmpty() ) {
@@ -75,17 +75,17 @@ public class RMSEProblem extends MLPProblem {
                             double[] empSpeed = MacroCharacter.select(empRecords, MacroCharacter.SELECT_SPEED);
 
                             double fitness = FitnessFunction.evaRMSE(simSpeed,empSpeed);
-                            MLPLink tmpLink = (MLPLink)engine.getNetwork().findLink(111);
-                            double vhcPropotion = tmpLink.countHoldingInflow()/(double)(tmpLink.getEmitNum()+tmpLink.countHoldingInflow());
+//                            MLPLink tmpLink = (MLPLink)engine.getNetwork().findLink(111);
+//                            double vhcPropotion = tmpLink.countHoldingInflow()/(double)(tmpLink.getEmitNum()+tmpLink.countHoldingInflow());
                             resultList.add(fitness);
                             // 发车数量
-                            resultList.add(vhcPropotion);
+//                            resultList.add(vhcPropotion);
 
                         }
                         double[] results = resultList.stream().mapToDouble(Double::doubleValue).toArray();
                         return results;
                     }
-                    return new double[] {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
+                    return new double[] {Double.POSITIVE_INFINITY};//, Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
                 }
                 @Override
                 public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {

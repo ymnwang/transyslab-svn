@@ -20,7 +20,7 @@ import java.util.Arrays;
 public class OptToolBox {
 	public static void main(String[] args) {
 		int popSize = 20;
-		int maxGeneration = 10;
+		int maxGeneration = 1000;
 		double crossOver_cr = 0.5;
 		double crossOver_f = 0.5;
 		String crossOver_variant = "rand/1/bin";

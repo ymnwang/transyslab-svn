@@ -24,7 +24,7 @@ public class KSIdvdProblem extends MLPProblem {
     protected void setProblemBoundary() {
         //设置问题规模
         setNumberOfVariables(6);
-        setNumberOfObjectives(2);
+        setNumberOfObjectives(1);
         setNumberOfConstraints(0);
 
         //设置边界值
@@ -62,7 +62,7 @@ public class KSIdvdProblem extends MLPProblem {
                 public double[] evaluateFitness(SimulationEngine engine) {
                     MLPEngine mlpEngine = (MLPEngine) engine;
                     if(mlpEngine.getStatus() == Constants.STATE_ERROR_QUIT)
-                        return new double[]{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
+                        return new double[]{Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
                     // TODO 父类重新设计
                     MLPNetwork mlpNetwork = mlpEngine.getNetwork();
                     LinkedList<double[]> simIdvdMap = new LinkedList<>();
@@ -81,7 +81,7 @@ public class KSIdvdProblem extends MLPProblem {
                         List<MicroCharacter> empRecords = empMicroMap.get("det2");
                         if(empRecords == null || empRecords.isEmpty()) {
                             System.out.println("Error: Can not find \"det2\"");
-                            return new double[]{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
+                            return new double[]{Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
                         }
                         //List<MicroCharacter> simRecords = simMap.get("det2");
                         if (!simIdvdMap.isEmpty() ) {
@@ -123,15 +123,15 @@ public class KSIdvdProblem extends MLPProblem {
                             // 平均分布差异
                             resultList.add(avgKSDist);
 
-                            MLPLink tmpLink = (MLPLink)engine.getNetwork().findLink(111);
-                            double vhcPropotion = tmpLink.countHoldingInflow()/(double)(tmpLink.getEmitNum()+tmpLink.countHoldingInflow());
-                            // 发车数量
-                            resultList.add(vhcPropotion);
+//                            MLPLink tmpLink = (MLPLink)engine.getNetwork().findLink(111);
+//                            double vhcPropotion = tmpLink.countHoldingInflow()/(double)(tmpLink.getEmitNum()+tmpLink.countHoldingInflow());
+//                            // 发车数量
+//                            resultList.add(vhcPropotion);
                         }
                         double[] results = resultList.stream().mapToDouble(Double::doubleValue).toArray();
                         return results;
                     }
-                    return new double[] {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
+                    return new double[] {Double.POSITIVE_INFINITY};//, Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
                 }
                 @Override
                 public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {

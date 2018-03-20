@@ -42,7 +42,7 @@ public class BaseEXP {
 //		}
 //		mlpEngine.close();
 
-		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/optmksidvd.properties");
+		MLPEngine mlpEngine = new MLPEngine("src/main/resources/demo_neihuan/scenario2/check.properties");
 		mlpEngine.loadFiles();
 		mlpEngine.run();
 		mlpEngine.close();
