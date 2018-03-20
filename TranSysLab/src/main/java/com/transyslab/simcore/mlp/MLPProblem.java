@@ -13,7 +13,7 @@ import java.util.Arrays;
 public abstract class MLPProblem extends SimProblem {
 	protected Configuration config;
 	InterConstraints interConstraints;
-	double[] ob_paras;
+	protected double[] ob_paras;
 	public MLPProblem(){ }
 	public MLPProblem(String masterFileName){
 		initProblem(masterFileName);
@@ -21,8 +21,13 @@ public abstract class MLPProblem extends SimProblem {
 
 	@Override
 	public void initProblem(String masterFileName) {
-		this.config = ConfigUtils.createConfig(masterFileName);
+		readFromProperties(masterFileName);
+		setProblemBoundary();
+		prepareEng(masterFileName,Integer.parseInt(config.getString("numOfEngines")));
+	}
 
+	protected void	readFromProperties(String master) {
+		this.config = ConfigUtils.createConfig(master);
 		//parsing
 		String obParaStr = config.getString("obParas");
 		String[] parasStrArray = obParaStr.split(",");
@@ -32,8 +37,9 @@ public abstract class MLPProblem extends SimProblem {
 		}
 
 		interConstraints = new InterConstraints(ob_paras[5],ob_paras[4],ob_paras[0],ob_paras[1],ob_paras[2]);
+	}
 
-
+	protected void setProblemBoundary() {
 		//设置问题规模
 		setNumberOfVariables(5);
 		setNumberOfObjectives(1);
@@ -44,8 +50,6 @@ public abstract class MLPProblem extends SimProblem {
 		double kjLower = ob_paras[4];
 		setLowerLimit(Arrays.asList(new Double[]{kjLower, 0.0025, 0.0, 0.0, 1.0}));
 		setUpperLimit(Arrays.asList(new Double[]{kjUpper, 40.0, 10.0, 10.0, 10.0}));
-
-		prepareEng(masterFileName,Integer.parseInt(config.getString("numOfEngines")));
 	}
 
 	@Override

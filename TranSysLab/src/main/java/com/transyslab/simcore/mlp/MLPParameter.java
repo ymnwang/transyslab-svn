@@ -32,6 +32,7 @@ public class MLPParameter extends Parameter {
 	final static double LC_Lambda2 = -9.2102;//换道logit模型常数项
 //	final static double PHYSICAL_SPD_LIM = 120/3.6; // meter/s
 	private double simStepSize;
+	private double lc_sensitivity;
 
 	//输出时间设置
 	protected double statWarmUp;
@@ -63,6 +64,7 @@ public class MLPParameter extends Parameter {
 //		queueParam[1] = (float) (25.0 * speedFactor);
 //		queueParam[2] = 100.0f;// seconds
 		simStepSize = 0.0;
+		lc_sensitivity = 1.0;
 	}
 	public double getUpdateStepSize() {
 		return updateStepSize_;
@@ -178,5 +180,14 @@ public class MLPParameter extends Parameter {
 		double g0 = Math.pow(lamda0,alpha) / gammaFunVal * Math.pow(headway, alpha-1) * Math.exp(-lamda0*headway);
 		double g1 = Math.pow(lamda1,alpha) / gammaFunVal * Math.pow(headway, alpha-1) * Math.exp(-lamda1*headway);
 		return (g0 > g1);
+	}
+
+	public double getLCSensitivity() {
+		return lc_sensitivity;
+	}
+
+	public void setLCSensitivity(double arg) {
+		if (arg*(arg-1.0)<0.0)
+			lc_sensitivity = arg;
 	}
 }

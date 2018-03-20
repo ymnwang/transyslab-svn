@@ -120,9 +120,9 @@ public class MLPVehicle extends Vehicle{
 				backVeh = backVeh.trailing;
 			}			
 			if (frontVeh != null) 
-				frontCheck = (frontVeh.Displacement() - frontVeh.getLength() - Displacement() >= mlpParameter.minLCAcceptedGap(currentSpeed,ExpSwitch.LC_SENSITIVE));//mlpParameter.headwaySpeedSlope() * currentSpeed);
+				frontCheck = (frontVeh.Displacement() - frontVeh.getLength() - Displacement() >= mlpParameter.minLCAcceptedGap(currentSpeed,mlpParameter.getLCSensitivity()));//mlpParameter.headwaySpeedSlope() * currentSpeed);
 			if (backVeh!=null) 
-				backCheck = (Displacement() - length - backVeh.Displacement() >= mlpParameter.minLCAcceptedGap(backVeh.currentSpeed,ExpSwitch.LC_SENSITIVE));//mlpParameter.headwaySpeedSlope() * backVeh.currentSpeed);//mlpParameter.minGap(backVeh.currentSpeed)//backVeh.getCurrentSpeed
+				backCheck = (Displacement() - length - backVeh.Displacement() >= mlpParameter.minLCAcceptedGap(backVeh.currentSpeed,mlpParameter.getLCSensitivity()));//mlpParameter.headwaySpeedSlope() * backVeh.currentSpeed);//mlpParameter.minGap(backVeh.currentSpeed)//backVeh.getCurrentSpeed
 			return (frontCheck && backCheck);
 		}
 	}

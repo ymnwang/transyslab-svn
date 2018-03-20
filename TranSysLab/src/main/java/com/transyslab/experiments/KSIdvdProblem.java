@@ -20,11 +20,20 @@ public class KSIdvdProblem extends MLPProblem {
         initProblem(masterFileDir);
     }
 
-    public void initProblem(String masterFileDir){
-        super.initProblem(masterFileDir);
+    @Override
+    protected void setProblemBoundary() {
+        //设置问题规模
+        setNumberOfVariables(6);
         setNumberOfObjectives(2);
+        setNumberOfConstraints(0);
 
+        //设置边界值
+        double kjUpper = ob_paras[5];
+        double kjLower = ob_paras[4];
+        setLowerLimit(Arrays.asList(new Double[]{kjLower, 0.0025, 0.0, 0.0, 1.0, 0.0}));
+        setUpperLimit(Arrays.asList(new Double[]{kjUpper, 40.0, 10.0, 10.0, 10.0, 2.0}));
     }
+
     @Override
     protected EngThread createEngThread(String name, String masterFileDir) {
         return  new EngThread(name,masterFileDir);
@@ -41,6 +50,7 @@ public class KSIdvdProblem extends MLPProblem {
                     ((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
                     ((MLPEngine) engine).getSimParameter().setLCDStepSize(0.0);
                     ((MLPEngine) engine).getSimParameter().setLCBuffTime(var[4]);
+                    ((MLPEngine) engine).getSimParameter().setLCSensitivity(var[5]);
                 }
 
                 @Override
