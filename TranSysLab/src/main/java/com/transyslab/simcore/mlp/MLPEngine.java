@@ -141,6 +141,7 @@ public class MLPEngine extends SimulationEngine{
 		//other parameters
 		runProperties.put("lcBufferTime",config.getString("lcBufferTime"));
 		runProperties.put("lcdStepSize",config.getString("lcdStepSize"));
+		runProperties.put("lcSensitivity",config.getString("lcSensitivity"));
 
 	}
 
@@ -409,6 +410,7 @@ public class MLPEngine extends SimulationEngine{
 		//applying
 		((MLPParameter) mlpNetwork.getSimParameter()).setLCDStepSize(Double.parseDouble(runProperties.get("lcdStepSize")));
 		((MLPParameter) mlpNetwork.getSimParameter()).setLCBuffTime(Double.parseDouble(runProperties.get("lcBufferTime")));
+		((MLPParameter) mlpNetwork.getSimParameter()).setLCSensitivity(Double.parseDouble(runProperties.get("lcSensitivity")));
 
 		//establish writers
 		String threadName = Thread.currentThread().getName();
