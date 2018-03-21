@@ -187,7 +187,6 @@ public class MLPParameter extends Parameter {
 	}
 
 	public void setLCSensitivity(double arg) {
-		if (arg*(arg-1.0)<0.0)
-			lc_sensitivity = arg;
+		lc_sensitivity = arg;
 	}
 }

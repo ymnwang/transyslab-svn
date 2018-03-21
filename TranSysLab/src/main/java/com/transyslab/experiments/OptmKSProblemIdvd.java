@@ -23,7 +23,7 @@ public class OptmKSProblemIdvd {
         double crossOver_cr = 0.5;
         double crossOver_f = 0.5;
         String crossOver_variant = "rand/1/bin";
-        String simMasterFileName = "D:\\java\\javacode\\forth\\optmksidvd.properties";
+        String simMasterFileName = "src/main/resources/optmksidvd.properties";
 
         SimProblem problem = new KSIdvdProblem(simMasterFileName);
         DifferentialEvolution algorithm;
@@ -33,12 +33,13 @@ public class OptmKSProblemIdvd {
         algorithm = new DifferentialEvolution(problem,maxGeneration*popSize,popSize,
                 crossover,selection,new SequentialSolutionListEvaluator<>());
 //        algorithm.setComparator(new DominanceComparator<>());
-        algorithm.setSolutionWriter(new TXTUtils("D:\\java\\javacode\\forth\\ksIdvd.csv"));
+        algorithm.setSolutionWriter(new TXTUtils("src/main/resources/ksIdvd.csv"));
         algorithm.run();
         SimSolution bestSolution = (SimSolution) algorithm.getResult();
         System.out.println("BestFitness: " + Arrays.toString(bestSolution.getObjectiveValues()));
         System.out.println("BestSolution: " + Arrays.toString(bestSolution.getInputVariables()));
         System.out.println("SimSeed: " + bestSolution.getAttribute("SimSeed"));
+        System.out.println("AlgSeed: " + JMetalRandom.getInstance().getSeed());
         problem.closeProblem();
     }
 }

@@ -23,7 +23,8 @@ public class TestCalledByExternalModel {
 
 		ToExternalModel simEngins = new ToExternalModel("E:/程序代码/Matlab程序/ExternalModel/optmks.properties");
 		simEngins.startSimEngines();
-		simEngins.dispatchTask(input);
+		// TODO 临时修改
+		simEngins.dispatchTask(input,0);
 		System.out.println(Arrays.toString(simEngins.getTaskResult(0,"SimSpeed")));
 		simEngins.closeSimEngines();
 	}

@@ -20,10 +20,13 @@ public class ToExternalModel implements TaskGiver{
 	private List<Task> taskList;
 	private TaskCenter taskCenter;
 	private String masterFileDir;
+	private String generalEngineName;
+
 	public ToExternalModel(String masterFileDir){
 		this.masterFileDir = masterFileDir;
 		taskList = new ArrayList<>();
 		taskCenter = new TaskCenter();
+		generalEngineName = "Engine";
 	}
 	public void startSimEngines(){
 		Configuration config = ConfigUtils.createConfig(masterFileDir);
@@ -36,8 +39,8 @@ public class ToExternalModel implements TaskGiver{
 			ob_paras[i] = Double.parseDouble(parasStrArray[i]);
 		}
 		for (int i = 0; i < numOfEngines; i++) {
-			//标准引擎的初始化与参数的设置
-			EngThread engThread = this.createEngThread("eng" + i, masterFileDir);
+			//±ê×??????????????????????è??
+			EngThread engThread = this.createEngThread(generalEngineName + i, masterFileDir);
 			engThread.assignTo(taskCenter);
 			engThread.start();
 		}
@@ -46,16 +49,27 @@ public class ToExternalModel implements TaskGiver{
 	public void closeSimEngines(){
 		dismissAllWorkingThreads();
 	}
-	public void dispatchTask(double[] params){
-		if(params.length!=5){
+	public void dispatchTask(double[] params, int i){
+		if(params.length!=7){
 			System.out.println("Check your length of params");
 			return;
 		}
-		taskList.add(dispatch(params,TaskWorker.ANY_WORKER));
+		taskList.add(dispatch(params,generalEngineName + i));
 	}
 	public double[] getTaskResult(int taskId, String resultName){
 		return (double[]) taskList.get(taskId).getAttribute(resultName);
 	}
+	public Object getTaskAttribution(int taskId, String resultName){
+		return  taskList.get(taskId).getAttribute(resultName);
+	}
+	public double[][] getAllObjectives(){
+		double[][] results = new double[taskList.size()][];
+		for(int i=0;i<results.length;i++){
+			results[i] = taskList.get(i).getObjectiveValues();
+		}
+		return results;
+	}
+
 	public void clearTaskList(){
 		taskList.clear();
 	}
@@ -63,7 +77,7 @@ public class ToExternalModel implements TaskGiver{
 	public TaskCenter getTaskCenter() {
 		return this.taskCenter;
 	}
-	private EngThread createEngThread(String name, String masterFileDir) {
+	public EngThread createEngThread(String name, String masterFileDir) {
 		return new EngThread(name,masterFileDir){
 			public double[] worksWith(Task task) {
 				MLPEngine engine = (MLPEngine) getEngine();
@@ -71,7 +85,7 @@ public class ToExternalModel implements TaskGiver{
 				engine.alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
 				engine.getSimParameter().setLCDStepSize(2.0);
 				engine.getSimParameter().setLCBuffTime(var[4]);
-				// 运行仿真
+				// ????·???
 				engine.repeatRun();
 				Map<String, List<MacroCharacter>> simMap = engine.getSimMap();
 				if(simMap !=null){

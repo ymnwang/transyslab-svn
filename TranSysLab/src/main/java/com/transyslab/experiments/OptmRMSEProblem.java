@@ -9,6 +9,7 @@ import com.transyslab.simcore.mlp.ExpSwitch;
 import org.uma.jmetal.operator.impl.crossover.DifferentialEvolutionCrossover;
 import org.uma.jmetal.operator.impl.selection.DifferentialEvolutionSelection;
 import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
+import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 
 import java.util.Arrays;
 
@@ -22,7 +23,7 @@ public class OptmRMSEProblem {
         double crossOver_cr = 0.5;
         double crossOver_f = 0.5;
         String crossOver_variant = "rand/1/bin";
-        String simMasterFileName = "src/main/resources/demo_neihuan/scenario2/optmrmse.properties";
+        String simMasterFileName = "src/main/resources/optmksidvd.properties";
 
         SimProblem problem = new RMSEProblem(simMasterFileName);
         DifferentialEvolution algorithm;
@@ -32,11 +33,12 @@ public class OptmRMSEProblem {
         algorithm = new DifferentialEvolution(problem,maxGeneration*popSize,popSize,
                 crossover,selection,new SequentialSolutionListEvaluator<>());
 //        algorithm.setComparator(new DominanceComparator<>());
-        algorithm.setSolutionWriter(new TXTUtils("src/main/resources/demo_neihuan/scenario2/rs(RMSE).csv"));
+        algorithm.setSolutionWriter(new TXTUtils("src/main/resources/rs(RMSE).csv"));
         algorithm.run();
         SimSolution bestSolution = (SimSolution) algorithm.getResult();
         System.out.println("BestFitness: " + Arrays.toString(bestSolution.getObjectiveValues()));
         System.out.println("BestSolution: " + Arrays.toString(bestSolution.getInputVariables()));
+        System.out.println("AlgSeed: " + JMetalRandom.getInstance().getSeed());
         problem.closeProblem();
 
     }
