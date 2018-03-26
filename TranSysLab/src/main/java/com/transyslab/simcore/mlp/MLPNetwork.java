@@ -274,32 +274,33 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void sectionStatistics(double fTime, double tTime, int avgMode) {
 		List<Double> spdRecords = new ArrayList<>();
-		laneSecMap.forEach((loop,r) -> {
-			spdRecords.addAll(loop.getPeriodSpds(fTime,tTime,false));
-			//cal flow
-			double flow = spdRecords.size();
-			//cal meanSpd
-			double meanSpd = flow <= 0 ? 0.0 :
-					avgMode == Constants.ARITHMETIC_MEAN ? spdRecords.stream().mapToDouble(d->d).sum() / flow :
-							avgMode == Constants.HARMONIC_MEAN ? flow / spdRecords.stream().mapToDouble(d -> 1/d).sum() :
-									0.0;
+		sectionStatMap.forEach((detName,aggRec) -> {
 			spdRecords.clear();
-			flow = flow / (tTime-fTime);
-			r.add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow / meanSpd, Double.NaN));
+			laneSecMap.forEach((loop,laneAggRec) -> {
+				if (loop.getName().equals(detName)) {
+					List<Double> laneRawRec = loop.getPeriodSpds(fTime,tTime,false);
+					spdRecords.addAll(laneRawRec);
+					//cal lane flow
+					double flow = laneRawRec.size();
+					//cal lane meanSpd
+					double meanSpd = flow <= 0 ? 0.0 :
+							avgMode == Constants.ARITHMETIC_MEAN ? laneRawRec.stream().mapToDouble(d->d).sum() / flow :
+									avgMode == Constants.HARMONIC_MEAN ? flow / laneRawRec.stream().mapToDouble(d -> 1/d).sum() :
+											0.0;
+					flow = flow / (tTime-fTime);
+					laneAggRec.add(new MacroCharacter(flow, meanSpd, flow <= 0 ? 0.0 : flow / meanSpd, Double.NaN));
+				}
+			});
+			//calculate section flow
+			double secVol = spdRecords.size();
+			//calculate section mean speed
+			double secMeanSpd = secVol <= 0 ? 0.0 :
+					avgMode == Constants.ARITHMETIC_MEAN ? spdRecords.stream().mapToDouble(d->d).sum() / secVol :
+							avgMode == Constants.HARMONIC_MEAN ? secVol / spdRecords.stream().mapToDouble(d -> 1/d).sum() :
+									0.0;
+			double secFlow = secVol / (tTime-fTime);
+			aggRec.add(new MacroCharacter(secFlow, secMeanSpd, secFlow<=0.0? 0.0 : secFlow/secMeanSpd, Double.NaN));
 		});
-		for (String detName : sectionStatMap.keySet()) {
-			List<MLPLoop> sec = laneSecMap.keySet().stream().filter(l->l.detName.equals(detName)).collect(Collectors.toList());
-			double tmpFlow = 0.0, tmpSpeed = 0.0, tmpDensity = 0.0;
-			for (MLPLoop l :sec) {
-				List<MacroCharacter> records = laneSecMap.get(l);
-				MacroCharacter lastRecord = records.get(records.size()-1);
-				tmpFlow += lastRecord.flow;
-				tmpSpeed += lastRecord.speed * lastRecord.flow;
-			}
-			tmpSpeed = tmpFlow <= 0.0 ? 0.0 : tmpSpeed / tmpFlow;
-			tmpDensity = tmpFlow <= 0.0 ? 0.0 : tmpFlow / tmpSpeed;
-			sectionStatMap.get(detName).add(new MacroCharacter(tmpFlow, tmpSpeed, tmpDensity, Double.NaN));
-		}
 	}
 
 	public void linkStatistics(double fTime, double tTime) {
