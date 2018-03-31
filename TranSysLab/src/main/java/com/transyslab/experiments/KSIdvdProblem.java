@@ -93,6 +93,8 @@ public class KSIdvdProblem extends MLPProblem {
 
                             // 计算所有15min内车速分布的ks距离
                             int horizon = 10 * 60;
+                            // 前15min预热
+                            int shifting = 900;
                             //int statStepSize = (int)((MLPEngine)engine).getSimParameter().getStatStepSize();
                             //int numOfDataInDistr = horizon/statStepSize;
                             // TODO 仿真时长/horizon
@@ -100,12 +102,9 @@ public class KSIdvdProblem extends MLPProblem {
                             double ksDists[] = new double[numOfDistr];
 
                             for(int i=0;i<numOfDistr;i++){
-                                // 前15min预热
-                                // 特定15min分布
-                                //if(i==6) {
-                                final int periodId = i + 1;
-                                double[] tmpSimSpeed = simIdvdMap.stream().filter(l -> l[0] >= periodId * horizon && l[0] <= (periodId + 1) * horizon).mapToDouble(e -> e[1]).toArray();
-                                double[] tmpEmpSpeed = empRecords.stream().filter(l -> l.getDetTime() >= periodId * horizon && l.getDetTime() <= (periodId + 1) * horizon).mapToDouble(e -> e.getSpeed()).toArray();
+                                final int periodId = i;
+                                double[] tmpSimSpeed = simIdvdMap.stream().filter(l -> l[0] >= shifting + periodId * horizon && l[0] <= shifting + (periodId + 1) * horizon).mapToDouble(e -> e[1]).toArray();
+                                double[] tmpEmpSpeed = empRecords.stream().filter(l -> l.getDetTime() >= shifting + periodId * horizon && l.getDetTime() <= shifting + (periodId + 1) * horizon).mapToDouble(e -> e.getSpeed()).toArray();
                                 double nVhc = tmpEmpSpeed.length;
                                 //double[] tmpSimFlow = Arrays.copyOfRange(simFlow,i*numOfDataInDistr,(i+1)*numOfDataInDistr+1);
                                 //double tSumSimFlow = Arrays.stream(tmpSimFlow).sum();
@@ -135,7 +134,7 @@ public class KSIdvdProblem extends MLPProblem {
                 }
                 @Override
                 public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {
-                    simSolution.setAttribute("SimSeed",new double[]{((MLPEngine)engine).runningSeed});
+                    simSolution.setAttribute("SimSeed",((MLPEngine)engine).runningSeed);
                 }
             };
         } catch (Exception e) {
