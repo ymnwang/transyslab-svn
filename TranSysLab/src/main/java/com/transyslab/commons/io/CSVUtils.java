@@ -22,26 +22,36 @@ public class CSVUtils {
      * @return CSVRecord 列表
      * @throws IOException **/
     public static List<CSVRecord> readCSV(String filePath,String[] headers) throws IOException{
-        
+
         //创建CSVFormat
     	CSVFormat formator;
     	if(headers==null)
     		//忽略表头
     		formator = CSVFormat.DEFAULT.withIgnoreHeaderCase();
-    	else 
+    	else
     		formator = CSVFormat.DEFAULT.withHeader(headers);
-        
+
         FileReader fileReader=new FileReader(filePath);
-        
+
         //创建CSVParser对象
         CSVParser parser=new CSVParser(fileReader,formator);
-        
+
         List<CSVRecord> records=parser.getRecords();
-        
+
         parser.close();
-       
-        return records;    
+
+        return records;
     }
+	public static double[][] readCSVData(String filePath,String[] headers) throws IOException{
+		List<CSVRecord> records = readCSV(filePath,headers);
+		double[][] ans = new double[records.get(0).size()][records.size()];
+		for (int i = 0; i < records.size(); i++) {
+			for (int j = 0; j < records.get(0).size(); j++) {
+				ans[j][i] = Double.parseDouble(records.get(i).get(j));
+			}
+		}
+		return ans;
+	}
     //TODO 增加参数判断是否为续写
     public static void writeCSV(String filePath,String[] header, double[] data) throws IOException{
     	FileUtils.createFile(filePath);

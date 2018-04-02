@@ -26,8 +26,6 @@ public class MLPEngine extends SimulationEngine{
 	protected double loadTime;
 	private boolean firstEntry; // simulationLoop中第一次循环的标记
 	protected boolean needRndETable; //needRndETable==true,随机生成发车表，needRndETable==false，从文件读入发车表
-	public boolean needEmpData;
-	public boolean needEmpMicroData;
 	protected TXTUtils loopRecWriter;
 	protected boolean rawRecOn;
 	protected TXTUtils trackWriter;
@@ -51,13 +49,15 @@ public class MLPEngine extends SimulationEngine{
 	private double timeStep;
 	//引擎运行参数
 	private int repeatTimes;
-	private double[] ob_paras;
-	private double[] free_paras;
+	protected double[] ob_paras;
+	protected double[] free_paras;
 
 	String rootDir;
 	String emitSource;
 
-	private int status;
+	private Configuration config;
+
+	protected int status;
 
 	public int getStatus() {
 		return status;
@@ -87,12 +87,15 @@ public class MLPEngine extends SimulationEngine{
 
 
 	private void parseProperties(String configFilePath) {
-		Configuration config = ConfigUtils.createConfig(configFilePath);
+		config = ConfigUtils.createConfig(configFilePath);
 
 		//input files
 		runProperties.put("roadNetworkPath", rootDir + config.getString("roadNetworkPath"));
 		runProperties.put("sensorPath", rootDir + config.getString("sensorPath"));
-		runProperties.put("empDataPath", rootDir + config.getString("empDataPath"));
+		String tmp = config.getString("empDataPath");
+		runProperties.put("empDataPath", tmp==null || tmp.equals("") ? null : rootDir + tmp);
+		tmp = config.getString("empMicroDataPath");
+		runProperties.put("empMicroDataPath", tmp==null || tmp.equals("") ? null : rootDir + tmp);
 		runProperties.put("outputPath", rootDir + config.getString("outputPath"));
 
 		runProperties.put("emitSourceType", config.getString("emitSourceType"));
@@ -100,7 +103,6 @@ public class MLPEngine extends SimulationEngine{
 			runProperties.put("emitSource", rootDir + config.getString("emitSource"));
 		else
 			runProperties.put("emitSource", config.getString("emitSource"));
-		runProperties.put("empMicroDataPath",rootDir + config.getString("empMicroDataPath"));
 
 		//time setting
 		timeStart = Double.parseDouble(config.getString("timeStart"));
@@ -109,7 +111,6 @@ public class MLPEngine extends SimulationEngine{
 
 		//the value will be false if config.getString() returns null
 		needRndETable = Boolean.parseBoolean(config.getString("needRndETable"));
-		needEmpMicroData = Boolean.parseBoolean(config.getString("needEmpMicroData"));
 		rawRecOn = Boolean.parseBoolean(config.getString("rawRecOn"));
 		trackOn = Boolean.parseBoolean(config.getString("trackOn"));
 		infoOn = Boolean.parseBoolean(config.getString("infoOn"));
@@ -143,6 +144,8 @@ public class MLPEngine extends SimulationEngine{
 		runProperties.put("lcdStepSize",config.getString("lcdStepSize"));
 		runProperties.put("lcSensitivity",config.getString("lcSensitivity"));
 
+		//average mode
+		runProperties.put("avgMode",config.getString("avgMode"));
 	}
 
 	@Override
@@ -167,7 +170,7 @@ public class MLPEngine extends SimulationEngine{
 
 		if (now >= statTime_){
 			double stepSize = ((MLPParameter) mlpNetwork.getSimParameter()).statStepSize;
-			mlpNetwork.sectionStatistics(statTime_ - stepSize, now, Constants.HARMONIC_MEAN);//车速使用调和均值
+			mlpNetwork.sectionStatistics(statTime_ - stepSize, now, config.getString("avgMode").equals("harmonic") ? Constants.HARMONIC_MEAN : Constants.ARITHMETIC_MEAN);//车速使用调和均值
 			mlpNetwork.linkStatistics(statTime_ - stepSize, now);
 			statTime_ = now + stepSize;
 		}
@@ -320,12 +323,8 @@ public class MLPEngine extends SimulationEngine{
 		//读入仿真文件
 		loadSimulationFiles();
 		//读入实测数据用于计算fitness
-
 		readEmpData(runProperties.get("empDataPath"));
-
-		if(needEmpMicroData){
-			readEmpMicroData(runProperties.get("empMicroDataPath"));
-		}
+		readEmpMicroData(runProperties.get("empMicroDataPath"));
 		//引擎初始化
 		initEngine();
 	}
@@ -349,8 +348,8 @@ public class MLPEngine extends SimulationEngine{
 	}
 
 	private void readEmpData(String fileName) {
-		if (fileName==null || fileName.equals("") || fileName.substring(fileName.length()-1).equals("/")){
-			System.out.println("warning: have no empirical data read in");
+		if (fileName==null){
+//			System.out.println("warning: have no empirical data read in");
 			return;
 		}
 		empMap = new HashMap<>();
@@ -378,6 +377,10 @@ public class MLPEngine extends SimulationEngine{
 		//readFromLoop(MLPSetup.getLoopData_fileName());
 	}
 	private void readEmpMicroData(String fileName) {
+		if (fileName==null){
+//			System.out.println("warning: have no empirical microscopic data read in");
+			return;
+		}
 		empMicroMap = new HashMap<>();
 		String[] headers = {"NAME","LANEID","DETTIME","SPEED","HEADWAY"};
 		List<CSVRecord> results = null;
@@ -464,7 +467,7 @@ public class MLPEngine extends SimulationEngine{
 		resetBeforeSimLoop();
 	}
 
-	private void setObservedParas (double qm, double vf_CF, double vf_SD, double vp, double kJLower, double kJUpper){
+	protected void setObservedParas (double qm, double vf_CF, double vf_SD, double vp, double kJLower, double kJUpper){
 		if (ob_paras.length != 6) {
 			System.err.println("ob_paras' length does not match");
 			return;
@@ -492,7 +495,7 @@ public class MLPEngine extends SimulationEngine{
 	 * 设置非观测参数，内部调用
 	 * 参数间存在依赖，不是完全独立的。详见@setParas
 	 */
-	private void setOptParas(double kJam, double ts, double xc, double alpha, double beta, double gamma1, double gamma2) {
+	protected void setOptParas(double kJam, double ts, double xc, double alpha, double beta, double gamma1, double gamma2) {
 
 		MLPParameter allParas = (MLPParameter) mlpNetwork.getSimParameter();
 		allParas.limitingParam_[1] = (float) ts;
@@ -691,12 +694,20 @@ public class MLPEngine extends SimulationEngine{
 	 */
 	@Override
 	public void run() {
-		setParas(ob_paras,free_paras);
-		if (violateConstraints(ob_paras,free_paras))
-			System.out.println("运行参数违反约束。");
-//		setObservedParas(0.46, 19, 21, 120.0/3.6, 0.14, 0.2);
-//		setOptParas(0.18857,1.6948,41.3043, 0.0513, 0.0434, 10, 7.869754413);
-//		getSimParameter().setLCBuffTime(1.116270002);
+//		setParas(ob_paras,free_paras);
+//		if (violateConstraints(ob_paras,free_paras))
+//			System.out.println("运行参数违反约束。");
+		//临时修改
+		ExpSwitch.MAX_ACC_CTRL = true;
+		ExpSwitch.APPROACH_CTRL = true;
+		double qm=0.5225, vf_cf=17.4178, vf_sd=21.0805,kj=0.1599,ts=0.4432,xc=33.3331,alpha=2.0846,beta=8.3574;
+		setObservedParas(qm,vf_cf,vf_sd,120.0/3.6,0.12,0.2);
+		setOptParas(kj,ts,xc,alpha,beta,free_paras[2],free_paras[3]);//gamma 另外输入
+		double[] var = new double[]{1.0,1.0,5.45,1.80};
+		getSimParameter().setLCPara(new double[]{var[0],var[1]});
+		getSimParameter().setLCDStepSize(0.0);
+		getSimParameter().setLCBuffTime(var[2]);
+		getSimParameter().setLCSensitivity(var[3]);
 		super.run();
 	}
 
@@ -772,21 +783,8 @@ public class MLPEngine extends SimulationEngine{
 			this.emitSource = sourceName;
 	}
 
-	public static void main(String[] args) {
-		if (args.length!=1)
-			System.err.println("检查输入参数");
-		String simMasterFileName = args[0];
-		System.out.println("using: " + simMasterFileName.substring(simMasterFileName.lastIndexOf('/') + 1));
-		Configuration config = ConfigUtils.createConfig(simMasterFileName);
-
-		MLPEngine engine = new MLPEngine(simMasterFileName);
-		engine.loadFiles();
-		Stopwatch stopwatch = new Stopwatch();
-		stopwatch.start();
-		engine.run();
-		stopwatch.stop();
-		System.out.println("time used: " + stopwatch.getElapsedMilliseconds());
-		engine.close();
+	protected void resetSimMap() {
+		simMap=null;
 	}
 
 }
