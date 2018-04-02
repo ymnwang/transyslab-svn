@@ -119,7 +119,7 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 		if(needOutput){
 			for (int i = 0; i < populationSize; i++) {
 				SimSolution solution = ((SimSolution)pop.get(i));
-				solutionWriter.writeNFlush(Arrays.toString(solution.getInputVariables())
+				solutionWriter.writeNFlush( evaluations/populationSize + "," + Arrays.toString(solution.getInputVariables())
 						.replace(" ","")
 						.replace("[","")
 						.replace("]","") + "," +

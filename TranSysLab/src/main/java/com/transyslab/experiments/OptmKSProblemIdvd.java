@@ -18,6 +18,7 @@ public class OptmKSProblemIdvd {
         //重现校准过程
         //JMetalRandom.getInstance().setSeed(1806);
         ExpSwitch.MAX_ACC_CTRL = true;
+        ExpSwitch.APPROACH_CTRL = true;
         int popSize = 20;
         int maxGeneration = 1000;
         double crossOver_cr = 0.5;
