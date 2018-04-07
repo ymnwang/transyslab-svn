@@ -56,6 +56,9 @@ public class FitnessFunction {
 		return Math.sqrt(result);
 	}
 	public static double evaKSDistance(double[] sim, double[] obs){
+		return evaKS(sim,obs,true);
+	}
+	public static double evaKS(double[] sim, double[] obs, boolean generalize){
 		Arrays.sort(sim);
 		Arrays.sort(obs);
 		int lenSim = sim.length;
@@ -66,12 +69,17 @@ public class FitnessFunction {
 		double maxDistance = 0.0;
 		// 二分查找dataAll在sim中位置
 		for(int i=0;i<dataAll.length;i++){
-			simECDF[i] = binarySearchIndex(sim, dataAll[i])*1.0/lenSim;
-			obsECDF[i] = binarySearchIndex(obs, dataAll[i])*1.0/lenObs;
+			simECDF[i] = binarySearchIndex(sim, dataAll[i]);
+			obsECDF[i] = binarySearchIndex(obs, dataAll[i]);
+			if (generalize) {
+				simECDF[i] = simECDF[i] * 1.0 / lenSim;
+				obsECDF[i] = obsECDF[i] *1.0 / lenObs;
+			}
 			maxDistance = Math.max(Math.abs(simECDF[i]-obsECDF[i]),maxDistance);
 		}
 		return maxDistance;
 	}
+
 	public static int binarySearchIndex(final double[] array,final double data){
 		int mid = 0,from = 0,to = array.length-1;
 		int tarid = 0;

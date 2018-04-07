@@ -131,6 +131,11 @@ public class MesoEngine extends SimulationEngine {
 		return null;
 	}
 
+	@Override
+	public int countRunTimes() {
+		return 0;
+	}
+
 	// 多次运行
 	public void run() {
 		//TODO 重构待改

@@ -7,10 +7,7 @@ import com.transyslab.commons.tools.adapter.SimSolution;
 import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.commons.tools.mutitask.SimulationConductor;
 import com.transyslab.simcore.SimulationEngine;
-import com.transyslab.simcore.mlp.MLPEngine;
-import com.transyslab.simcore.mlp.MLPParameter;
-import com.transyslab.simcore.mlp.MLPProblem;
-import com.transyslab.simcore.mlp.MacroCharacter;
+import com.transyslab.simcore.mlp.*;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -24,73 +21,55 @@ import java.util.List;
 public class FDProblem extends MLPProblem{
 
 	public FDProblem(){	}
+	public FDProblem(String masterFileName) {
+		super(masterFileName);
+	}
+
+	@Override
+	public void initProblem(String masterFileName) {
+		super.initProblem(masterFileName);
+		ExpSwitch.MAX_ACC_CTRL = true;
+		ExpSwitch.APPROACH_CTRL = true;
+	}
+
+	@Override
+	protected EngThread createEngThread(String name, String masterFileDir) {
+		return  new EngThread(name,masterFileDir){
+			@Override
+			public void initEngine(String modelType, String masterFileDir) {
+				setEngine(new MLPEngine(masterFileDir){
+					@Override
+					public void setParasRightBeforeRun() {
+						double qm=0.5225, vf_cf=17.4178, vf_sd=21.0805,kj=0.1599,ts=0.4432,xc=33.3331,alpha=2.0846,beta=8.3574;
+						setObservedParas(qm,vf_cf,vf_sd,120.0/3.6,0.12,0.2);
+						setOptParas(kj,ts,xc,alpha,beta,free_paras[2],free_paras[3]);//gamma 另外输入
+					}
+				});
+			}
+		};
+	}
+
+	@Override
+	public void setProblemBoundary() {
+		//设置问题规模
+		setNumberOfVariables(4);
+		setNumberOfObjectives(1);
+		setNumberOfConstraints(0);
+
+		//设置边界值
+		setLowerLimit(Arrays.asList(new Double[]{0.0, 0.0, 1.0, 0.0}));
+		setUpperLimit(Arrays.asList(new Double[]{10.0, 10.0, 10.0, 2.0}));
+	}
 
 	@Override
 	protected SimulationConductor createConductor() {
-		return new SimulationConductor() {
-			@Override
-			public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
-				double[] var = simSolution.getInputVariables();
-				((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
-				((MLPEngine) engine).getSimParameter().setLCDStepSize(2.0);
-				((MLPEngine) engine).getSimParameter().setLCBuffTime(var[4]);
-			}
-
-			@Override
-			public boolean checkStatusBeforeEvaluate(SimulationEngine engine) {
-				return true;
-			}
-
-			@Override
-			public double[] evaluateFitness(SimulationEngine engine) {
-				double binStart = 0.006;
-				double binStep = 0.0044;
-				double nBins = 36;
-
-				List<MacroCharacter> det2Sim = engine.getSimMap().get("det2");
-				List<double[]> simQList = new ArrayList<>();
-				for (double b = binStart; b <= binStart + binStep*(nBins-1); b += binStep) {
-					double lower = b - 0.5*binStep;
-					double upper = b + 0.5*binStep;
-					double[] qs = det2Sim.stream()
-									.filter(r -> r.getKmDensity()/1000.0 > lower && r.getKmDensity()/1000.0 <= upper)
-									.mapToDouble(r -> r.getHourFlow()/3600.0)
-									.toArray();
-					simQList.add(qs);
-				}
-
-				List<MacroCharacter> det2Emp = engine.getEmpMap().get("det2");
-				List<double[]> empQList = new ArrayList<>();
-				for (double b = binStart; b <= binStart + binStep*(nBins-1); b += binStep) {
-					double lower = b - 0.5*binStep;
-					double upper = b + 0.5*binStep;
-					double[] qs = det2Emp.stream()
-							.filter(r -> r.getKmDensity()/1000.0 > lower && r.getKmDensity()/1000.0 <= upper)
-							.mapToDouble(r -> r.getHourFlow()/3600.0)
-							.toArray();
-					empQList.add(qs);
-				}
-
-				double nSamples = empQList.stream().mapToDouble(a -> a.length).sum();
-				double fitness = 0.0;
-				for (int i = 0; i < nBins; i++) {
-					double[] simArry = simQList.get(i);
-					double[] empArry = empQList.get(i);
-					if (simArry.length == 0)
-						fitness += empArry.length / nSamples * 1.0;
-					else if (empArry.length == 0)
-						fitness += 0.0;
-					else
-						fitness += empArry.length / nSamples * FitnessFunction.evaKSDistance(simArry, empArry);
-				}
-				System.out.println(Thread.currentThread().getName() + " returned " + fitness);
-				return new double[] {fitness};
-			}
-
-			@Override
-			public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {
-
-			}
-		};
+		try {
+			return new FDConductor();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+			return null;
+		}
 	}
 }

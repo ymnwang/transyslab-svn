@@ -14,6 +14,7 @@ public class TXTUtils {
 			file.createNewFile();
 			writer = new BufferedWriter(new FileWriter(file));
 		} catch (Exception e) {
+			System.err.println("failed to create " + filepath);
 			e.getMessage();
 			e.getStackTrace();
 		}

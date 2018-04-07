@@ -49,7 +49,7 @@ public class OptToolBox {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 		algorithm.setSolutionWriter(new TXTUtils(new File(simMasterFileName).getParent() + "/" +
 				config.getString("outputPath") + "/" +
-				"AdvancedSolutionRecord_" + timeStamp+".csv"));
+				"AdvancedSolutionRecord_" + timeStamp + "_" + JMetalRandom.getInstance().getSeed() + ".csv"));
 		algorithm.run();
 		SimSolution bestSolution = (SimSolution) algorithm.getResult();
 		System.out.println("BestFitness: " + Arrays.toString(bestSolution.getObjectiveValues()));

@@ -97,6 +97,8 @@ public class MLPEngine extends SimulationEngine{
 		tmp = config.getString("empMicroDataPath");
 		runProperties.put("empMicroDataPath", tmp==null || tmp.equals("") ? null : rootDir + tmp);
 		runProperties.put("outputPath", rootDir + config.getString("outputPath"));
+		if (!new File(runProperties.get("outputPath")).exists())
+			System.err.println("output dir does NOT exist.");
 
 		runProperties.put("emitSourceType", config.getString("emitSourceType"));
 		if (runProperties.get("emitSourceType").equals("FILE"))
@@ -189,7 +191,7 @@ public class MLPEngine extends SimulationEngine{
 					mlpNetwork.loadInflowFromFile(runProperties.get("emitSource"), loadTime + loadTimeStep);
 			}
 			loadTime += loadTimeStep;
-//			System.out.println("day: " + now/3600/24 );
+//			System.out.println(Thread.currentThread().getName() + " loading day " + now/3600/24 );
 		}
 		
 		//读入发车表
@@ -659,9 +661,9 @@ public class MLPEngine extends SimulationEngine{
     public int repeatRun() {
 
         //simMap置空，重置状态。避免重复执行repeatRun()时出错。
-        simMap = null;
+        resetSimMap();
 
-        setParas(ob_paras,free_paras);
+		setParasRightBeforeRun();
 
         if (violateConstraints(ob_paras,free_paras))
             status = Constants.STATE_ERROR_QUIT;
@@ -689,6 +691,10 @@ public class MLPEngine extends SimulationEngine{
 
         return status;
     }
+
+    public void setParasRightBeforeRun() {
+		setParas(ob_paras,free_paras);
+	}
 	/**
 	 * 用于可视化debug与基本测试
 	 */

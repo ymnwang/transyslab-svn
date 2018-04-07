@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import com.transyslab.commons.io.*;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
@@ -757,6 +756,14 @@ public class MLPNetwork extends RoadNetwork {
 			upLane.successiveDnLanes.add(dnLane);
 			dnLane.successiveUpLanes.add(upLane);
 		}
+		return ans;
+	}
+
+	public List<Double> rawSectionDataFilter(String detName, double fTime, double tTime, int dataType) {
+		List<Double> ans = new ArrayList<>();
+		sensors.stream()
+				.filter(sensor -> sensor.getName().equals(detName))
+				.forEach(sensor -> ans.addAll(((MLPLoop)sensor).getPeriod(fTime,tTime,dataType)));
 		return ans;
 	}
 }

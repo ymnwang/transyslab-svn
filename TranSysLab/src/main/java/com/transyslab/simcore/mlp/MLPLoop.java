@@ -9,6 +9,9 @@ import com.transyslab.roadnetwork.Loop;
 import com.transyslab.roadnetwork.Sensor;
 
 public class MLPLoop extends Loop{
+	public static final int SPEED = 1;
+	public static final int PASSING_TIME = 2;
+	public static final int HEADWAY = 3;
 	String detName;
 	MLPSegment segment;
 	MLPLink link;
@@ -120,7 +123,7 @@ public class MLPLoop extends Loop{
 	}
 	public List<Double> getPeriodPassingTime(double fTime, double tTime) {
 		List<Double> ans = new ArrayList<>();
-		records.stream().filter(l -> l[0]>fTime && l[0]<=fTime)
+		records.stream().filter(l -> l[0]>fTime && l[0]<=tTime)
 				.sorted(new Comparator<double[]>() {
 					@Override
 					public int compare(double[] o1, double[] o2) {
@@ -139,6 +142,14 @@ public class MLPLoop extends Loop{
 			}
 		}
 		return ans;
+	}
+	public List<Double> getPeriod(double fTime, double tTime, int type) {
+		switch (type) {
+			case SPEED : return getPeriodSpds(fTime,tTime,false);
+			case PASSING_TIME : return getPeriodPassingTime(fTime,tTime);
+			case HEADWAY :return getPeriodHeadway(fTime,tTime);
+			default: return null;
+		}
 	}
 	public double countPeriodFlow(double ftime, double ttime){
 		/*double sum = 0.0;

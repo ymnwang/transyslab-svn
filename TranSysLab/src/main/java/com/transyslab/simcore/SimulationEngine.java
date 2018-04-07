@@ -86,4 +86,5 @@ public abstract class SimulationEngine {
 	public abstract HashMap<String, List<MacroCharacter>> getEmpMap();
 
 	public abstract HashMap<String, List<MacroCharacter>> getSimMap();
+	public abstract int countRunTimes();
 }

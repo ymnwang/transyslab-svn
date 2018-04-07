@@ -31,6 +31,18 @@ public class EngThread extends Thread implements TaskWorker{
 		Configuration config = ConfigUtils.createConfig(masterFileDir);
 
 		String modelType = config.getString("modelType");
+		initEngine(modelType, masterFileDir);
+
+		logOn = Boolean.parseBoolean(config.getString("positionLogOn"));
+		if (writer==null && logOn){
+			String rootDir = new File(masterFileDir).getParent() + "/";
+			String outputPath = rootDir + config.getString("outputPath");
+			writer = new TXTUtils(  outputPath + "/" +"solutions.csv");
+		}
+		taskSpecified = false;//默认为false
+	}
+
+	public void initEngine(String modelType, String masterFileDir) {
 		switch (modelType) {
 			case "MesoTS":
 				//TODO dir需要去掉文件名后缀
@@ -42,14 +54,6 @@ public class EngThread extends Thread implements TaskWorker{
 			default:
 				System.err.println("Unsupported model name");
 		}
-
-		logOn = Boolean.parseBoolean(config.getString("positionLogOn"));
-		if (writer==null && logOn){
-			String rootDir = new File(masterFileDir).getParent() + "/";
-			String outputPath = rootDir + config.getString("outputPath");
-			writer = new TXTUtils(  outputPath + "/" +"solutions.csv");
-		}
-		taskSpecified = false;//默认为false
 	}
 
 	@Override
@@ -74,16 +78,19 @@ public class EngThread extends Thread implements TaskWorker{
 		conductor.modifySolutionBeforeEnd(engine, (SimSolution) task);
 
 		//输出解的log
-		if (logOn)
+		if (logOn) {
+			System.out.println(getName() + "runtimes: " + engine.countRunTimes());
+			System.out.println("parameter: " + Arrays.toString(task.getInputVariables()) + "fitness: " + Arrays.toString(fitness));
 			writer.writeNFlush(Arrays.toString(task.getInputVariables())
-						.replace(" ","")
-						.replace("[","")
-						.replace("]","") + "," +
+					.replace(" ","")
+					.replace("[","")
+					.replace("]","") + "," +
 					Arrays.toString(fitness).replace(" ","")
-						.replace("[","")
-						.replace("]","") + "," +
-					(engine instanceof MLPEngine ? Thread.currentThread().getName() + "_" + ((MLPEngine)engine).countRunTimes() : "Default") /*若为MLP引擎则加上引擎号*/
+							.replace("[","")
+							.replace("]","") + "," +
+					Thread.currentThread().getName() + "_" + engine.countRunTimes()
 					+ "\r\n");
+		}
 
 		return fitness;
 	}
@@ -126,6 +133,10 @@ public class EngThread extends Thread implements TaskWorker{
 
 	protected SimulationEngine getEngine() {
 		return engine;
+	}
+
+	protected void setEngine(SimulationEngine engine) {
+		this.engine = engine;
 	}
 
 }

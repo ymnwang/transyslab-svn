@@ -26,7 +26,7 @@ public abstract class MLPProblem extends SimProblem {
 		prepareEng(masterFileName,Integer.parseInt(config.getString("numOfEngines")));
 	}
 
-	protected void	readFromProperties(String master) {
+	public void	readFromProperties(String master) {
 		this.config = ConfigUtils.createConfig(master);
 		//parsing
 		String obParaStr = config.getString("obParas");
@@ -39,7 +39,7 @@ public abstract class MLPProblem extends SimProblem {
 		interConstraints = new InterConstraints(ob_paras[5],ob_paras[4],ob_paras[0],ob_paras[1],ob_paras[2]);
 	}
 
-	protected void setProblemBoundary() {
+	public void setProblemBoundary() {
 		//设置问题规模
 		setNumberOfVariables(5);
 		setNumberOfObjectives(1);
