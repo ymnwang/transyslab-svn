@@ -62,7 +62,7 @@ public class MLPLoop extends Loop{
 						}
 					}
 					if (timeEnter==null) {
-						System.out.println("Error: no enter record.");
+//						System.out.println("Error: no enter record.");
 						continue;
 					}
 				}
@@ -116,6 +116,28 @@ public class MLPLoop extends Loop{
 		records.stream().filter(l -> l[0]>ftime && l[0]<=ttime).forEach(r -> ans.add(r[1]));
 		if (dumpAfter)
 			records.removeAll(ans);
+		return ans;
+	}
+	public List<Double> getPeriodPassingTime(double fTime, double tTime) {
+		List<Double> ans = new ArrayList<>();
+		records.stream().filter(l -> l[0]>fTime && l[0]<=fTime)
+				.sorted(new Comparator<double[]>() {
+					@Override
+					public int compare(double[] o1, double[] o2) {
+						return o1[0]>o2[0] ? 1 : (o1[0]<o2[0] ? -1 : 0);
+					}
+				})
+				.forEach(r -> ans.add(r[0]));
+		return ans;
+	}
+	public List<Double> getPeriodHeadway(double fTime, double tTime) {
+		List<Double> ans = new ArrayList<>();
+		List<Double> candidates = getPeriodPassingTime(fTime, tTime);
+		if (candidates.size()>1) {
+			for (int i = 0; i < candidates.size(); i++) {
+				ans.add(candidates.get(i+1) - candidates.get(i));
+			}
+		}
 		return ans;
 	}
 	public double countPeriodFlow(double ftime, double ttime){
