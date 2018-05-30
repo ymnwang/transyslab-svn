@@ -11,6 +11,7 @@ import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.lang.time.StopWatch;
 
 public class EngThread extends Thread implements TaskWorker{
 	private TaskCenter taskCenter;
@@ -19,6 +20,7 @@ public class EngThread extends Thread implements TaskWorker{
 	private boolean taskSpecified;
 	private SimulationConductor conductor;
 	private static TXTUtils writer;
+	private boolean broadcastNeeded;
 
 	public EngThread(String thread_name, String masterFileDir, TaskCenter taskCenter) {
 		this(thread_name,masterFileDir);
@@ -31,6 +33,7 @@ public class EngThread extends Thread implements TaskWorker{
 		Configuration config = ConfigUtils.createConfig(masterFileDir);
 
 		String modelType = config.getString("modelType");
+		broadcastNeeded = config.getBoolean("broadcast");
 		initEngine(modelType, masterFileDir);
 
 		logOn = Boolean.parseBoolean(config.getString("positionLogOn"));
@@ -58,12 +61,18 @@ public class EngThread extends Thread implements TaskWorker{
 
 	@Override
 	public double[] worksWith(Task task) {
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.reset();
+		stopWatch.start();
 
 		if (conductor == null)
 			System.err.println("Engine behavior not been determined");
 
 		//参数设置
 		conductor.modifyEngineBeforeStart(engine, (SimSolution) task);
+
+		if (engine instanceof MLPEngine)
+			((MLPEngine) engine).fileOutTag = Arrays.toString(task.getInputVariables());
 
 		//仿真过程
 		do {
@@ -79,8 +88,11 @@ public class EngThread extends Thread implements TaskWorker{
 
 		//输出解的log
 		if (logOn) {
-			System.out.println(getName() + "runtimes: " + engine.countRunTimes());
-			System.out.println("parameter: " + Arrays.toString(task.getInputVariables()) + "fitness: " + Arrays.toString(fitness));
+			stopWatch.stop();
+			if(broadcastNeeded) {
+				System.out.println(getName() + "runtimes: " + engine.countRunTimes() + " timer: " + stopWatch.getTime());
+				System.out.println("parameter: " + Arrays.toString(task.getInputVariables()) + "fitness: " + Arrays.toString(fitness));
+			}
 			writer.writeNFlush(Arrays.toString(task.getInputVariables())
 					.replace(" ","")
 					.replace("[","")
@@ -88,7 +100,7 @@ public class EngThread extends Thread implements TaskWorker{
 					Arrays.toString(fitness).replace(" ","")
 							.replace("[","")
 							.replace("]","") + "," +
-					Thread.currentThread().getName() + "_" + engine.countRunTimes()
+					Thread.currentThread().getName() + "_" + engine.countRunTimes() + "_" + Arrays.toString(task.getInputVariables())
 					+ "\r\n");
 		}
 
