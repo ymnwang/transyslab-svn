@@ -210,6 +210,7 @@ public class Constants {
 	//模型类别
 	public static final int MODEL_TYPE_MESO = 1;
 	public static final int MODEL_TYPE_MLP = 2;
+	public static final int MODEL_TYPE_RT = 3;
 	//连接车道
 	public static final	int SUCCESSIVE_LANE = 1;
 

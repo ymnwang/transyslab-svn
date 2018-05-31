@@ -40,50 +40,50 @@ public class XmlParser {
 		int tmpId = -1,tmpType = -1,tmpUpId = -1,tmpDnId = -1,gradient = -1,tmpSpeedLimit = -1;
 		List<Attribute> attrs = node.attributes();
 		// 解析Node
-		if (node.getName() == "N") {
+		if (node.getName().equals("N")) {
 			for (Attribute attr : attrs) {
-				if (attr.getName() == "id")
+				if (attr.getName().equals("id"))
 					tmpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "type")
+				if (attr.getName().equals("type"))
 					tmpType = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "name")
+				if (attr.getName().equals("name"))
 					tmpName = attr.getValue();
 
 			}
 			network.createNode(tmpId,tmpType,tmpName);
 		}
 		// 解析Link
-		if (node.getName() == "L") {
+		if (node.getName().equals("L")) {
 			for (Attribute attr : attrs) {
-				if (attr.getName() == "id")
+				if (attr.getName().equals("id"))
 					tmpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "type")
+				if (attr.getName().equals("type"))
 					tmpType = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "UpNode")
+				if (attr.getName().equals("UpNode"))
 					tmpUpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "DnNode")
+				if (attr.getName().equals("DnNode"))
 					tmpDnId = Integer.parseInt(attr.getValue());
 			}
 			network.createLink(tmpId,tmpType,tmpUpId,tmpDnId);
 		}
 		//解析Segment
-		if (node.getName() == "S") {
+		if (node.getName().equals("S")) {
 			for (Attribute attr : attrs) {
-				if (attr.getName() == "id")
+				if (attr.getName().equals("id"))
 					tmpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "speedLimit")
+				if (attr.getName().equals("speedLimit"))
 					tmpSpeedLimit = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "freeSpeed")
+				if (attr.getName().equals("freeSpeed"))
 					tmpFreeSpeed = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "gradient")
+				if (attr.getName().equals("gradient"))
 					gradient = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "beginX")
+				if (attr.getName().equals("beginX"))
 					beginX = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "beginY")
+				if (attr.getName().equals("beginY"))
 					beginY = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "endX")
+				if (attr.getName().equals("endX"))
 					endX = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "endY")
+				if (attr.getName().equals("endY"))
 					endY = Double.parseDouble(attr.getValue());
 
 			}
@@ -91,52 +91,54 @@ public class XmlParser {
 
 		}
 		//解析Lane
-		if (node.getName() == "LA") {
+		if (node.getName().equals("LA")) {
 
 			for (Attribute attr : attrs) {
-				if (attr.getName() == "LaneID")
+				if (attr.getName().equals("LaneID"))
 					tmpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "rule")
+				if (attr.getName().equals("rule"))
 					tmpType = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "beginX")
+				if (attr.getName().equals("beginX"))
 					beginX = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "beginY")
+				if (attr.getName().equals("beginY"))
 					beginY = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "endX")
+				if (attr.getName().equals("endX"))
 					endX = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "endY")
+				if (attr.getName().equals("endY"))
 					endY = Double.parseDouble(attr.getValue());
 
 			}
 			network.createLane(tmpId,tmpType,beginX,beginY,endX,endY);
 		}
 		//解析LaneConnector
-		if (node.getName() == "LC") {
+		if (node.getName().equals("LC")) {
 			int flag = -1;
 			for (Attribute attr : attrs) {
-				if (attr.getName() == "UpLane")
+				if (attr.getName().equals("UpLane"))
 					tmpUpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "DnLane")
+				if (attr.getName().equals("DnLane"))
 					tmpDnId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "Successive")
+				if (attr.getName().equals("Successive"))
 					flag = Integer.parseInt(attr.getValue());
 
 			}
+			// TODO 从外部组织几何连接
+			// 拓扑连接
 			network.addLaneConnector(tmpUpId,tmpDnId,flag);
 		}
 		//解析Boundary
-		if (node.getName() == "Boundary") {
+		if (node.getName().equals("Boundary")) {
 			for (Attribute attr : attrs) {
 
-				if (attr.getName() == "BoundaryID")
+				if (attr.getName().equals("BoundaryID"))
 					tmpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "BeginX")
+				if (attr.getName().equals("BeginX"))
 					beginX = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "BeginY")
+				if (attr.getName().equals("BeginY"))
 					beginY = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "EndX")
+				if (attr.getName().equals("EndX"))
 					endX = Double.parseDouble(attr.getValue());
-				if (attr.getName() == "EndY")
+				if (attr.getName().equals("EndY"))
 					endY = Double.parseDouble(attr.getValue());
 
 			}
@@ -197,22 +199,22 @@ public class XmlParser {
 		double interval = -1,zone = -1,pos = -1;
 		List<Attribute> list = node.attributes();
 		// 遍历属性节点
-		if (node.getName() == "station") {
+		if (node.getName().equals("station")) {
 			for (Attribute attr : list) {
-				if (attr.getName() == "type")
+				if (attr.getName().equals("type"))
 					tmpType = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "name") {
+				if (attr.getName().equals("name")) {
 					tmpName = attr.getValue();
 				}
-				if (attr.getName() == "interval")
+				if (attr.getName().equals("interval"))
 					interval = Float.parseFloat(attr.getValue());
-				if (attr.getName() == "zone")
+				if (attr.getName().equals("zone"))
 					zone = Float.parseFloat(attr.getValue());
-				if (attr.getName() == "segid")
+				if (attr.getName().equals("segid"))
 					tmpSegId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "id")
+				if (attr.getName().equals("id"))
 					tmpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "pos")
+				if (attr.getName().equals("pos"))
 					pos = Float.parseFloat(attr.getValue());
 
 			}
@@ -259,7 +261,7 @@ public class XmlParser {
 		for (Element tempe : rootchild) {
 			List<Attribute> list = tempe.attributes();
 			for (Attribute attr1 : list) {
-				if (attr1.getName() == "timeid" && tarid == Integer.parseInt(attr1.getValue()))
+				if (attr1.getName().equals("timeid") && tarid == Integer.parseInt(attr1.getValue()))
 					tare = tempe;
 			}
 		}
@@ -271,7 +273,7 @@ public class XmlParser {
 				// System.out.println(attr2.getText() + "-----" +
 				// attr2.getName()
 				// + "---" + attr2.getValue());
-				if (attr2.getName() == "sttime") {
+				if (attr2.getName().equals( "sttime")) {
 					String strDate = attr2.getValue();
 					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 					// LocalDateTime
@@ -286,11 +288,11 @@ public class XmlParser {
 						ODtime = Constants.INT_INF;
 					// System.out.println(ODtime+"-----");
 				}
-				if (attr2.getName() == "s") {
+				if (attr2.getName().equals("s")){
 					s = Integer.parseInt(attr2.getValue());
 					// System.out.println(s+"-----");
 				}
-				if (attr2.getName() == "u") {
+				if (attr2.getName().equals("u")) {
 					u = Integer.parseInt(attr2.getValue());
 					// System.out.println(u+"-----");
 				}
@@ -306,19 +308,19 @@ public class XmlParser {
 					// System.out.println(attr2.getText() + "-----" +
 					// attr2.getName()
 					// + "---" + attr2.getValue());
-					if (attr2.getName() == "o") {
+					if (attr2.getName().equals("o")) {
 						oid = Integer.parseInt(attr2.getValue());
 					}
-					if (attr2.getName() == "d") {
+					if (attr2.getName().equals("d")) {
 						did = Integer.parseInt(attr2.getValue());
 					}
-					if (attr2.getName() == "flow") {
+					if (attr2.getName().equals("flow")) {
 						flow = Integer.parseInt(attr2.getValue());
 					}
-					if (attr2.getName() == "c1") {
+					if (attr2.getName().equals("c1")) {
 						c1 = Integer.parseInt(attr2.getValue());
 					}
-					if (attr2.getName() == "c2") {
+					if (attr2.getName().equals("c2")) {
 						c2 = Integer.parseInt(attr2.getValue());
 					}
 
@@ -356,13 +358,13 @@ public class XmlParser {
 		int pid = -1,lkid = -1,oid = -1,did = -1;
 		List<Attribute> list = node.attributes();
 		// 遍历属性节点
-		if (node.getName() == "P") {
+		if (node.getName().equals("P")) {
 			for (Attribute attr : list) {
-				if (attr.getName() == "id")
+				if (attr.getName().equals("id"))
 					pid = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "o")
+				if (attr.getName().equals("o"))
 					oid = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "d")
+				if (attr.getName().equals("d"))
 					did = Integer.parseInt(attr.getValue());
 
 			}
@@ -373,7 +375,7 @@ public class XmlParser {
 				List<Attribute> listofl = lofp.attributes();
 				for (Attribute attrofl : listofl) {
 
-					if (attrofl.getName() == "id") {
+					if (attrofl.getName().equals("id")) {
 						lkid = Integer.parseInt(attrofl.getValue());
 						newPath.getLinks().add(network.findLink(lkid));
 					}
@@ -415,15 +417,15 @@ public class XmlParser {
 		for(Element vehicleobj : rootchild){
 			List<Attribute> vehiclearr = vehicleobj.attributes();
 			for(Attribute vehicle: vehiclearr){
-				if(vehicle.getName()=="vhcID")
+				if(vehicle.getName().equals("vhcID"))
 					vhcid = Integer.parseInt(vehicle.getValue());
-				if(vehicle.getName()=="length")
+				if(vehicle.getName().equals("length"))
 					length = Float.parseFloat(vehicle.getValue());
-				if(vehicle.getName()=="getDistance")
+				if(vehicle.getName().equals("getDistance"))
 					distance = Float.parseFloat(vehicle.getValue());
-				if(vehicle.getName()=="type")
+				if(vehicle.getName().equals("type"))
 					type = Integer.parseInt(vehicle.getValue());
-				if(vehicle.getName()=="departtime")
+				if(vehicle.getName().equals("departtime"))
 					departtime = Float.parseFloat(vehicle.getValue());
 			}
 			// TODO 待设计

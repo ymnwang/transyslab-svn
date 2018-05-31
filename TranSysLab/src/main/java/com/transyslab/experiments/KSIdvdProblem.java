@@ -21,7 +21,7 @@ public class KSIdvdProblem extends MLPProblem {
     }
 
     @Override
-    protected void setProblemBoundary() {
+    public void setProblemBoundary() {
         //设置问题规模
         setNumberOfVariables(6);
         setNumberOfObjectives(1);
@@ -81,9 +81,8 @@ public class KSIdvdProblem extends MLPProblem {
                         List<MicroCharacter> empRecords = empMicroMap.get("det2");
                         if(empRecords == null || empRecords.isEmpty()) {
                             System.out.println("Error: Can not find \"det2\"");
-                            return new double[]{Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
+                            return new double[]{Double.POSITIVE_INFINITY};
                         }
-                        //List<MicroCharacter> simRecords = simMap.get("det2");
                         if (!simIdvdMap.isEmpty() ) {
                             // 车速数据已按时间排序
                             //double[] simSpeed = simIdvdMap.stream().mapToDouble(e->e[1]).toArray();

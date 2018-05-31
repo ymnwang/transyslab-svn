@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.transyslab.commons.renderer.AnimationFrame;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.*;
@@ -111,6 +112,8 @@ public class MesoNetwork extends RoadNetwork {
 		newSurvStt.init(id,type, nSensors(),findSegment(segId),pos,zone,interval);
 		sensors.add(newSurvStt);
 	}
+
+
 	public MesoVehicle createVehicle(int id, int type, double length, double dis, double speed){
 		MesoVehicle newVehicle = this.recycleVhcList.recycle();
 		newVehicle.setPath(vhcTable.getPath());
@@ -557,35 +560,41 @@ public class MesoNetwork extends RoadNetwork {
 		MesoTrafficCell tc;
 		MesoVehicle vhc;
 		VehicleData vd;
+		AnimationFrame af;
 		//从对象池中获取frame对象
+		if(vhcCounter>0){
+			af = new AnimationFrame();
+			ListIterator<Segment> i = segments.listIterator();
+			//遍历segment
+			while (i.hasNext()) {
+				ps = (MesoSegment) i.next();
+				tc = ps.firstCell();
+				//遍历cell
 
-		ListIterator<Segment> i = segments.listIterator();
-		//遍历segment
-		while (i.hasNext()) {
-			ps = (MesoSegment) i.next();
-			tc = ps.firstCell();
-			//遍历cell
-			while (tc != null) {
-				vhc = tc.firstVehicle();
-				//遍历vehicle
-				while (vhc != null) {
-					//从对象池获取vehicledata对象
-					vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
-					//记录车辆信息
-					vd.init(vhc,true,0,null);
-					//将vehicledata插入frame
-					try {
-						FrameQueue.getInstance().offer(vd, vhcCounter);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+				while (tc != null) {
+					vhc = tc.firstVehicle();
+					//遍历vehicle
+					while (vhc != null) {
+						//从对象池获取vehicledata对象
+						vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
+						//记录车辆信息
+						vd.init(vhc,true,0,null);
+						//将vehicledata插入frame
+						af.addVehicleData(vd);
+						//下一辆车
+						vhc = vhc.trailing();
 					}
-					//下一辆车
-					vhc = vhc.trailing();
+					//下一个车队
+					tc = tc.trailing();
 				}
-				//下一个车队
-				tc = tc.trailing();
+			}
+			try {
+				FrameQueue.getInstance().offer(af);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
+
 	}
 
 }

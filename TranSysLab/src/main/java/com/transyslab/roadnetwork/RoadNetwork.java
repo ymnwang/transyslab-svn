@@ -33,6 +33,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	protected List<Signal> signals = new ArrayList<Signal>();
 	protected List<BusStop> busStops = new ArrayList<BusStop>();
 	protected List<Path> paths = new ArrayList<>();
+	protected List<Connector> connectors = new ArrayList<>();
 // protected List<SurvStation> survStations = new ArrayList<SurvStation>();
 
 //	protected List<Path> paths = new ArrayList<>();
@@ -78,6 +79,20 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public abstract void createLane(int id, int rule, double beginX, double beginY, double endX, double endY);
 
 	public abstract void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval );
+
+	public void createConnector(int id,List<GeoPoint> shapePoints,Lane upLane, Lane dnLane){
+		//TODO 使用外部读入的点坐标shapePoints
+		List<GeoPoint> tmp = new ArrayList<>();
+		tmp.add(upLane.getEndPnt());
+		tmp.add(dnLane.getStartPnt());
+		Connector newConnector = new Connector(id,tmp);
+		this.connectors.add(newConnector);
+	}
+	//TODO 使用外部读入的点坐标shapePoints
+	public void createConnector(Lane upLane, Lane dnLane){
+		Connector newConnector = new Connector(upLane,dnLane);
+		this.connectors.add(newConnector);
+	}
 
 //	public abstract void createVehicle(int id, int type, double length, double dis, double speed);
 
@@ -149,6 +164,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return this.boundaries.get(i);
 	}
 	public Sensor getSensor(int i){return this.sensors.get(i);}
+	public Connector getConnector(int i){
+		return this.connectors.get(i);
+	}
 	public int nLinks(){return links.size();}
 	public int nNodes(){
 		return nodes.size();
@@ -166,6 +184,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public int nBoundaries(){
 		return boundaries.size();
 	}
+	public int nConnectors() {return connectors.size();}
 	public Node findNode(int id) {
 		ListIterator<Node> i = nodes.listIterator();
 		while (i.hasNext()) {
@@ -237,7 +256,6 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	// Connects lane 'up' with lane 'dn'. Return -1 if error, 1 if these
 	// two upLanes are already connected, or 0 if success.
 	public int addLaneConnector(int up, int dn, int successiveFlag) {
-
 		Lane ulane, dlane;
 		if ((ulane = findLane(up)) == null) {
 			// cerr << "Error:: unknown upstream lane <" << up << ">. ";
@@ -266,6 +284,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 		nConnectors++;
 		return 0;
+
 	}
 	// Exclude turn movements from link 'up' to link "dn". Returns 0 if
 	// it success, -1 if error, or 1 if the turn is already excluded.

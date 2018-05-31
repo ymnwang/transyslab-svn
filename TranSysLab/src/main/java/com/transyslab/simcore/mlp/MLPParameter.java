@@ -5,7 +5,6 @@ import com.transyslab.roadnetwork.Parameter;
 import com.transyslab.simcore.mlp.Functions.FunsCombination1;
 import com.transyslab.simcore.mlp.Functions.FunsCombination2;
 import com.transyslab.simcore.mlp.Functions.TSFun;
-import com.transyslab.commons.tools.optimizer.DE;
 import org.apache.commons.math3.special.Gamma;
 
 public class MLPParameter extends Parameter {

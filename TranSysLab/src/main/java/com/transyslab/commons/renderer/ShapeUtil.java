@@ -61,7 +61,8 @@ public class ShapeUtil {
 			gl.glColor3f(1.0f, 1.0f, 0.0f);
 		gl.glBegin(GL2.GL_POLYGON);
 		for(GeoPoint p:points ){
-			gl.glVertex3d(p.getLocationX(), p.getLocationY(),0);
+			// TODO Õº≤„π‹¿Ì
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),0.0);
 		}
 		gl.glEnd();
 		
@@ -76,7 +77,14 @@ public class ShapeUtil {
 		}
 		gl.glEnd();
 	}
-	
+	public static void drawArrow(GL2 gl,GeoPoint fPoint, GeoPoint tPoint, final float[] color){
+		gl.glColor3f(color[0], color[1], color[2]);
+		gl.glBegin(GL2.GL_LINE);
+		/*for(GeoPoint p:points ){
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
+		}*/
+		gl.glEnd();
+	}
 	public static void drawCylinder(GL2 gl, GLU glu, final float[] spnt, final float[] epnt, final float[] color){
 		float[] dir = new float[3];
 		float[] up = new float[]{0.0f,1.0f,0.0f};

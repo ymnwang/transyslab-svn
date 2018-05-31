@@ -11,6 +11,7 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.*;
+import com.transyslab.simcore.mlp.MLPLoop;
 import jhplot.math.LinearAlgebra;
 
 
@@ -224,13 +225,32 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				ShapeUtil.drawPolygon(gl, tmpLane.getSurface().getKerbList(),Constants.COLOR_GREY, tmpLane.isSelected());
 			}
 		}
-
+		Sensor tmpSensor = null;
 		for(int i = 0; i< drawableNetwork.nSensors(); i++){
-			Sensor tmpSensor = drawableNetwork.getSensor(i);
+			tmpSensor = drawableNetwork.getSensor(i);
 			ShapeUtil.drawPolygon(gl, tmpSensor.getSurface().getKerbList(),Constants.COLOR_GREEN, tmpSensor.isSelected());
+		}
+		// 车道连接器
+		for(int i=0; i< drawableNetwork.nConnectors();i++){
+			Connector tmpConnector = drawableNetwork.getConnector(i);
+			ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f});
 		}
 		//暂停时不更新帧索引
 		curFrame =FrameQueue.getInstance().poll(isPause);
+		/* 显示检测器计数
+		// 检测器位置
+		GeoPoint text = tmpSensor.getSurface().getKerbList().get(1);
+		StringBuilder sBuilder = new StringBuilder();
+		sBuilder.append("Count:");
+		if (curFrame!=null )
+			sBuilder.append(curFrame.getInfo("Count"));
+		else
+			sBuilder.append(0);
+		textRenderer.begin3DRendering();
+		textRenderer.setColor(0.85f, 0.588f, 0.580f, 0.8f);
+		textRenderer.draw3D(sBuilder, (float)text.getLocationX()-30, (float)text.getLocationY(),(float)text.getLocationZ(),0.5f* cam.getEyeLocation()[2]/1000);
+		// ... more draw commands, color changes, etc.
+		textRenderer.end3DRendering();*/
 		//wym 暂定状态下读下一帧
 		if (isPause && needNextScene){
 			curFrame = FrameQueue.getInstance().poll(false);
@@ -251,17 +271,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				}
 
 			}
-			// TODO 窗口底部状态栏
-			/*
-			float[] infoPostion = calcRay(gl, 0.0f, 2, 10, 20);
-			StringBuilder sBuilder = new StringBuilder();
-			sBuilder.append("FrameID:");
-			sBuilder.append(FrameQueue.getInstance().getFrameCount());
-			textRenderer.begin3DRendering();
-				textRenderer.setColor(1.0f, 0.2f, 0.2f, 0.8f);
-				textRenderer.draw3D(sBuilder, infoPostion[0], infoPostion[1],infoPostion[2],0.5f* cam.getEyeLocation()[2]/1000);
-			    // ... more draw commands, color changes, etc.
-			textRenderer.end3DRendering();*/
+
 		}
 		else{
 			if(curFrame!=null){

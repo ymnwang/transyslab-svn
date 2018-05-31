@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.transyslab.commons.io.*;
+import com.transyslab.commons.renderer.AnimationFrame;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
 import org.apache.commons.csv.CSVRecord;
@@ -89,6 +90,7 @@ public class MLPNetwork extends RoadNetwork {
 			sensors.add(loop);
 		}
 	}
+
 
 
 	public MLPNode mlpNode(int i) {
@@ -383,7 +385,9 @@ public class MLPNetwork extends RoadNetwork {
 	
 	public void recordVehicleData(){
 		VehicleData vd;
+		AnimationFrame af;
 		if (!veh_list.isEmpty()) {
+			af = new AnimationFrame();
 			//遍历vehicle
 			for (MLPVehicle v : veh_list) {
 				//从对象池获取vehicledata对象
@@ -395,11 +399,19 @@ public class MLPNetwork extends RoadNetwork {
 						//String.valueOf(v.getNextLink()==null ? "NA" : v.lane.successiveDnLanes.get(0).getLink().getId()==v.getNextLink().getId())
 						v.getInfo());
 				//将vehicledata插入frame
-				try {
-					FrameQueue.getInstance().offer(vd, veh_list.size());
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				af.addVehicleData(vd);
+			}
+			//添加额外信息(过车数)
+			int count = 0;
+			for(int i = 0; i< nSensors(); i++){
+				MLPLoop tmpSensor = (MLPLoop) getSensor(i);
+				count = count + tmpSensor.getRecords().size();
+			}
+			af.setInfo("Count",count);
+			try {
+				FrameQueue.getInstance().offer(af);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -755,6 +767,7 @@ public class MLPNetwork extends RoadNetwork {
 			MLPLane dnLane = (MLPLane) findLane(dn);
 			upLane.successiveDnLanes.add(dnLane);
 			dnLane.successiveUpLanes.add(upLane);
+			createConnector(upLane,dnLane);
 		}
 		return ans;
 	}

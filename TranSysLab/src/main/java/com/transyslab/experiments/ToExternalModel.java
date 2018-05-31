@@ -57,7 +57,7 @@ public class ToExternalModel implements TaskGiver{
 		taskList.add(dispatch(params,generalEngineName + i));
 	}
 	public double[] getTaskResult(int taskId, String resultName){
-		return (double[]) taskList.get(taskId).getAttribute(resultName);
+		return (double[]) taskList.get(taskId).getObjectiveValues();
 	}
 	public Object getTaskAttribution(int taskId, String resultName){
 		return  taskList.get(taskId).getAttribute(resultName);

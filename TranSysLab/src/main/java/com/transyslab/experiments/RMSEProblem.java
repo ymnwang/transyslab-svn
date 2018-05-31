@@ -24,7 +24,7 @@ public class RMSEProblem extends MLPProblem {
     public RMSEProblem(String masterFileDir){
         initProblem(masterFileDir);
     }
-    protected void setProblemBoundary() {
+    public void setProblemBoundary() {
         //设置问题规模
         setNumberOfVariables(6);
         setNumberOfObjectives(1);

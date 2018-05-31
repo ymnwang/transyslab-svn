@@ -35,8 +35,7 @@ public class GeoSurface implements NetworkObject{
 
 	public void addKerbPoint(GeoPoint p){
 		kerbPoints.add(p);
-		//¾Ésurface
-//		RoadNetwork.getInstance().getWorldSpace().recordExtremePoints(p);
+
 	}
 	public void translateInWorldSpace(WorldSpace world_space) {
 		for(GeoPoint p: kerbPoints){

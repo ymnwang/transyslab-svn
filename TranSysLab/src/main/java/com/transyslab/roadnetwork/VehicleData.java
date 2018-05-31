@@ -26,7 +26,7 @@ public class VehicleData implements NetworkObject{
 	protected boolean isSelected;
 	public int getVehicleID(){
 		return vehicleID_;
-	}                      
+	}
 	public int getVehicleType(){
 		return vehicleType_;
 	}
@@ -93,44 +93,69 @@ public class VehicleData implements NetworkObject{
 			}
 		}
 		this.pathInfo = sb.toString();
-		//车头位置
-		double vhcHeadX, vhcHeadY;
-		//车尾位置
-		double vhcTrailX, vhcTrailY;
-		if(isSegBased){
-			Segment seg = vhc.getSegment();
-			double l = seg.getLength();
-			double s = l-vhc.getDistance();
-			vhcHeadX = seg.getStartPnt().getLocationX() + s * (seg.getEndPnt().getLocationX() - seg.getStartPnt().getLocationX()) / l;
-			vhcHeadY = seg.getStartPnt().getLocationY() + s * (seg.getEndPnt().getLocationY() - seg.getStartPnt().getLocationY()) / l;						
+		Object moveOn;
+		if(isSegBased)
+			moveOn = vhc.getSegment();
+		else
+			moveOn = vhc.getLane();
+		calcShapePoint(moveOn,vhc.getDistance(),false);
+	}
+	// distReverse 行驶距离是否以路段开端作为起点
+	public void calcShapePoint(Object moveOn, double distance, boolean distReverse){
+		double l, width;
+		GeoPoint startPnt, endPnt;
+		// 向两侧扩展
+		boolean bothSize;
+		if(moveOn instanceof Segment){
+			Segment seg = (Segment) moveOn;
+			l = seg.getLength();
+			startPnt = seg.getStartPnt();
+			endPnt = seg.getEndPnt();
 			//按车道数压缩
-			s = s - vehicleLength_/seg.nLanes();
-			vhcTrailX = seg.getStartPnt().getLocationX() + s * (seg.getEndPnt().getLocationX() - seg.getStartPnt().getLocationX()) / l;
-			vhcTrailY = seg.getStartPnt().getLocationY() + s * (seg.getEndPnt().getLocationY() - seg.getStartPnt().getLocationY()) / l;
-			// TODO 写死高度z
-			this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.5);
-			GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 0.5);
-			// TODO 检查路段宽度
-			this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, seg.nLanes() *Constants.LANE_WIDTH, false);
+			vehicleLength_ = vehicleLength_/seg.nLanes();
+			//车宽
+			width = seg.nLanes()*Constants.LANE_WIDTH;
+			//
+			bothSize = false;
+		}
+		else if(moveOn instanceof Lane){
+			Lane lane = (Lane) moveOn;
+			this.curLaneID = lane.getId();
+			l = lane.getLength();
+			startPnt = lane.getStartPnt();
+			endPnt = lane.getEndPnt();
+			// TODO 写死车宽
+			width = 1.25;
+			bothSize = true;
 		}
 		else{
-			Lane lane = vhc.getLane();
-			this.curLaneID = lane.getId();
-			double l = lane.getLength();
-			double s = l-vhc.getDistance();
-			vhcHeadX = lane.getStartPnt().getLocationX() + s * (lane.getEndPnt().getLocationX() - lane.getStartPnt().getLocationX()) / l;
-			vhcHeadY = lane.getStartPnt().getLocationY() + s * (lane.getEndPnt().getLocationY() - lane.getStartPnt().getLocationY()) / l;
-			s = s - vehicleLength_;
-			vhcTrailX = lane.getStartPnt().getLocationX() + s * (lane.getEndPnt().getLocationX() - lane.getStartPnt().getLocationX()) / l;
-			vhcTrailY = lane.getStartPnt().getLocationY() + s * (lane.getEndPnt().getLocationY() - lane.getStartPnt().getLocationY()) / l;
-			// TODO 写死高度z
-			this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.5);
-			GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 0.5);
-			// TODO 写死车宽
-			this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, 1.25, true); 
+			System.out.println("Error: Unknown class");
+			return;
 		}
-		
-		
+		double s = distance;
+		if(!distReverse)
+			s = l-distance;
+		//车头位置
+		double vhcHeadX = startPnt.getLocationX() + s * (endPnt.getLocationX() - startPnt.getLocationX()) / l;
+		double vhcHeadY = startPnt.getLocationY() + s * (endPnt.getLocationY() - startPnt.getLocationY()) / l;
+		s = s - vehicleLength_;
+		//车尾位置
+		double vhcTrailX = startPnt.getLocationX() + s * (endPnt.getLocationX() - startPnt.getLocationX()) / l;
+		double vhcTrailY = startPnt.getLocationY() + s * (endPnt.getLocationY() - startPnt.getLocationY()) / l;
+		// TODO 写死高度z
+		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.5);
+		GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 0.5);
+		// 注意：对象更替频繁
+		this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, width,bothSize);
+	}
+	public void init(int id,Object moveOn,double vhcLength,double distance,boolean distReverse){
+		this.vehicleID_ = id;
+		this.vehicleLength_ = vhcLength;
+		if(moveOn == null) {
+			System.out.println("Error: Could not find the Lane");
+			return;
+		}
+		calcShapePoint(moveOn,distance,distReverse);
 	}
 	public void clean(){
 		vehicleID_ = vehicleType_ = 0;

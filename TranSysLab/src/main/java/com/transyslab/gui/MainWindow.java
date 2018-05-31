@@ -1,25 +1,21 @@
 package com.transyslab.gui;
 
 import com.jogamp.opengl.util.FPSAnimator;
-import com.transyslab.commons.io.JdbcUtils;
 import com.transyslab.commons.renderer.Camera;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.commons.renderer.JOGLCanvas;
 import com.transyslab.commons.renderer.OrbitCamera;
-import com.transyslab.commons.tools.DataVisualization;
-import com.transyslab.commons.tools.Worker;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
 import com.transyslab.simcore.mlp.MLPParameter;
+import com.transyslab.simcore.rts.RTEngine;
 import info.monitorenter.gui.chart.traces.Trace2DSimple;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.ColumnListHandler;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -27,7 +23,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.sql.SQLException;
 import java.time.LocalTime;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -50,7 +45,7 @@ public class MainWindow {
     private JOGLCanvas canvas;
     private FPSAnimator animator;
     private SubWindow subWindow;
-    private SimulationEngine[] engines;
+    private SimulationEngine engine;
     private Trace2DSimple traceRT;
     public boolean needRTPlot;
     public MainWindow(){
@@ -264,9 +259,13 @@ public class MainWindow {
                                 AppSetup.timeStep = simStep;
                                 AppSetup.modelType = Constants.MODEL_TYPE_MESO;
                             }
-                            else {
+                            else if(modelType.equals("MLP")){
                                 AppSetup.setupParameter.put("输入文件路径", fileChooser.getSelectedFile().getPath());//解释过程放在MLPEngine中
                                 AppSetup.modelType = Constants.MODEL_TYPE_MLP;
+                            }
+                            else if(modelType.equals("RT")){
+                                AppSetup.setupParameter.put("输入文件路径", fileChooser.getSelectedFile().getPath());
+                                AppSetup.modelType = Constants.MODEL_TYPE_RT;
                             }
                             initSimEngines();
                         }
@@ -307,7 +306,7 @@ public class MainWindow {
                     }
                     //第一次播放
                     else if(!canvas.isRendering){
-                        new Thread(()->engines[0].run()).start();
+                        new Thread(()->engine.run()).start();
                         canvas.isRendering = true;
                     }
                 }
@@ -514,40 +513,43 @@ public class MainWindow {
     }
     public void initSimEngines(){
         FrameQueue.getInstance().initFrameQueue();
-        engines = new SimulationEngine[1];
         switch (AppSetup.modelType) {
             case Constants.MODEL_TYPE_MESO:
-                engines[0] = new MesoEngine(0,"E:\\test\\");
+                engine = new MesoEngine(0,"E:\\test\\");
                 break;
             case Constants.MODEL_TYPE_MLP:
-                engines[0] = new MLPEngine(AppSetup.setupParameter.get("输入文件路径"));
-                ((MLPEngine)engines[0]).displayOn = true;
+                engine = new MLPEngine(AppSetup.setupParameter.get("输入文件路径"));
+                ((MLPEngine)engine).displayOn = true;
+                break;
+            case Constants.MODEL_TYPE_RT:
+                engine = new RTEngine(AppSetup.setupParameter.get("输入文件路径"));
                 break;
             default:
                 break;
         }
-        engines[0].loadFiles();
+        engine.loadFiles();
 
         // Network is ready for simulation
         canvas.setFirstRender(true);
-        canvas.setDrawableNetwork(engines[0].getNetwork());
+        canvas.setDrawableNetwork(engine.getNetwork());
         canvas.requestFocusInWindow();
     }
     public void launchEngineWithParas(double[] paras, long seed){
         switch (AppSetup.modelType) {
             case Constants.MODEL_TYPE_MESO:
                 //TODO 待设计传入参数运行
-                ((MesoEngine)engines[0]).run();
+                ((MesoEngine)engine).run();
                 break;
             case Constants.MODEL_TYPE_MLP:
                 if (seed>=0) {
-                    ((MLPEngine)engines[0]).seedFixed = true;
-                    ((MLPEngine)engines[0]).runningSeed = seed;
+                    ((MLPEngine)engine).seedFixed = true;
+                    ((MLPEngine)engine).runningSeed = seed;
                 }
                 else
-                    ((MLPEngine)engines[0]).seedFixed = false;
-                    new Thread(() -> ((MLPEngine)engines[0]).runWithPara(paras==null ? MLPParameter.DEFAULT_PARAMETERS : paras)).start();
+                    ((MLPEngine)engine).seedFixed = false;
+                    new Thread(() -> ((MLPEngine)engine).runWithPara(paras==null ? MLPParameter.DEFAULT_PARAMETERS : paras)).start();
                 break;
+
             default:
                 break;
         }

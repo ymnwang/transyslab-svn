@@ -142,7 +142,7 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 	}
 
 	@Override public String getName() {
-		return "DE" ;
+		return "DEAlgorithm" ;
 	}
 
 	@Override public String getDescription() {

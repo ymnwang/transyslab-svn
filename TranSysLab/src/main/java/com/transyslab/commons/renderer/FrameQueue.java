@@ -124,53 +124,24 @@ public class FrameQueue {
 
     public void offer(AnimationFrame e) throws InterruptedException 
     {  
-        if(e == null)  
-        {  
-            throw new NullPointerException();  
-        }  
-    
-        writeLock_.lock();  
-        try  
-        {  
-            if(writeCount_ < writeArray_.length)  
-            {  
-                insert(e);    
+        if(e != null) {
+            writeLock_.lock();
+            try {
+                //当队列已满，阻塞仿真线程
+                if(writeCount_ < writeArray_.length) {
+                    insert(e);
+                }
+                else
+                    //仿真线程阻塞在此处等待渲染线程signal
+                    notFull_.await();
             }
-            else
-            	notFull_.await();           	
-        }  
-        finally  
-        {  
-            writeLock_.unlock();  
-        }  
+            finally {
+                writeLock_.unlock();
+            }
+        }
     }
-    //向每一帧frame插入VehicleData，vhcnum为在网车辆数，确保写完每一帧的车辆位置信息
-    public void offer(VehicleData vd, int vhcnum) throws InterruptedException 
-    {
-    	//仿真线程获取写锁
-        writeLock_.lock();  
-        try  
-        {  
-        	//当队列已满，阻塞仿真线程
-            if(writeCount_ == writeArray_.length)
-            	//仿真线程阻塞在此处等待渲染线程signal
-            	notFull_.await();
-            //插入数据
-        	writeArray_[writeArrayTP_].addVehicleData(vd);
-        	//确保写完每一帧所有车辆的位置信息
-        	if(writeArray_[writeArrayTP_].getVhcDataQueue().size() == vhcnum){
-        		frameCount ++;
-        		//索引跳到下一帧
-                ++writeArrayTP_;
-                ++writeCount_; 
-        	}            	           	
-        }  
-        finally  
-        {  
-        	//仿真线程释放写锁
-        	writeLock_.unlock();  
-        }  
-    }
+
+
     public AnimationFrame poll(boolean isPause){
     	//先判断可读队列是否为空
         if(readCount_<=0)  
