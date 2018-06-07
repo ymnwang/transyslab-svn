@@ -534,7 +534,7 @@ public class MainWindow {
         canvas.setDrawableNetwork(engine.getNetwork());
         canvas.requestFocusInWindow();
     }
-    public void launchEngineWithParas(double[] paras, long seed){
+    /*public void launchEngineWithParas(double[] paras, long seed){
         switch (AppSetup.modelType) {
             case Constants.MODEL_TYPE_MESO:
                 //TODO 待设计传入参数运行
@@ -553,7 +553,7 @@ public class MainWindow {
             default:
                 break;
         }
-    }
+    }*/
     public String getCurLayerName(){
         return curLayerName;
     }

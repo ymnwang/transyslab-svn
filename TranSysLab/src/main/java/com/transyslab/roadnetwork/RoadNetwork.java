@@ -728,5 +728,8 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public Parameter getSimParameter() {
 		return simParameter;
 	}
+	public void	renewSysRandSeed() {
+		sysRand.setSeed(sysRand.nextLong());
+	}
 
 }

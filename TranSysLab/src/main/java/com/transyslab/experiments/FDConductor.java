@@ -17,16 +17,10 @@ import java.util.List;
 public class FDConductor implements SimulationConductor {
 	@Override
 	public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
-		double[] var = simSolution.getInputVariables();
-		((MLPEngine) engine).getSimParameter().setLCPara(new double[]{var[0],var[1]});
-		((MLPEngine) engine).getSimParameter().setLCDStepSize(0.0);
-		((MLPEngine) engine).getSimParameter().setLCBuffTime(var[2]);
-		((MLPEngine) engine).getSimParameter().setLCSensitivity(var[3]);
-	}
-
-	@Override
-	public boolean checkStatusBeforeEvaluate(SimulationEngine engine) {
-		return true;
+		((MLPEngine) engine).setParameter("gamma1", simSolution.getVariableValue(0));
+		((MLPEngine) engine).setParameter("gamma2", simSolution.getVariableValue(1));
+		((MLPEngine) engine).setParameter("lcBufferTime", simSolution.getVariableValue(2));
+		((MLPEngine) engine).setParameter("lcSensitivity", simSolution.getVariableValue(3));
 	}
 
 	@Override
@@ -75,10 +69,5 @@ public class FDConductor implements SimulationConductor {
 		}
 		System.out.println(Thread.currentThread().getName() + " returned " + fitness);
 		return new double[] {fitness};
-	}
-
-	@Override
-	public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {
-
 	}
 }

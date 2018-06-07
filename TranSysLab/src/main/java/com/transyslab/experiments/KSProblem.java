@@ -2,18 +2,15 @@ package com.transyslab.experiments;
 
 import com.mathworks.toolbox.javabuilder.MWException;
 import com.mathworks.toolbox.javabuilder.MWNumericArray;
-import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.tools.ADFullerTest;
 import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.adapter.SimSolution;
-import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.commons.tools.mutitask.SimulationConductor;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mlp.*;
 import matlabfunctions.MatlabFunctions;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.lang3.ArrayUtils;
+
 import java.util.*;
 
 /**
@@ -38,13 +35,13 @@ public class KSProblem extends MLPProblem {
 				@Override
 				public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
 					double[] var = simSolution.getInputVariables();
-					((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
+					((MLPEngine)engine).setShortTermParas(Arrays.copyOfRange(var,0,4));
 					((MLPEngine) engine).getSimParameter().setLCDStepSize(2.0);
 					((MLPEngine) engine).getSimParameter().setLCBuffTime(var[4]);
 				}
 
 				@Override
-				public boolean checkStatusBeforeEvaluate(SimulationEngine engine)  {
+				public boolean needRerun(SimulationEngine engine)  {
 					List<MacroCharacter> simRecords = engine.getSimMap().get("det2");
 					double[] simSpeed = MacroCharacter.select(simRecords, MacroCharacter.SELECT_SPEED);
 					MWNumericArray mlInput = new MWNumericArray(simSpeed);
@@ -57,14 +54,14 @@ public class KSProblem extends MLPProblem {
 						if(result[0] ==1 || checkFailTimes>= Constants.REPEAT_TEST_TIMES) {
 							if (result[0] == 1)
 								checkPassFlag = true;
-							return true;
+							return false;
 						}
 						else
-							return false;
+							return true;
 					} catch (MWException e) {
 						e.printStackTrace();
 						System.exit(1);
-						return false;
+						return true;
 					}
 				}
 

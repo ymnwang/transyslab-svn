@@ -545,7 +545,7 @@ public class SubWindow {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         windowFrame.setVisible(false);
-                        //解析文本
+                        /*//解析文本
                         String parasStr = textField1.getText();
                         double[] runningParas = null;
                         if (!parasStr.equals("")) {
@@ -564,7 +564,10 @@ public class SubWindow {
 
                         //清空填写内容
                         textField1.setText("");
-                        textField2.setText("");
+                        textField2.setText("");*/
+                        //该功能已废弃
+                        textField1.setText("abandoned method check source code");
+                        textField2.setText("abandoned method check source code");
                     }
                 });
 

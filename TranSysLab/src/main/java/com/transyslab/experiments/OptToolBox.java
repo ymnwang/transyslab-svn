@@ -9,6 +9,7 @@ import com.transyslab.commons.tools.optimizer.DominanceComparator;
 import org.apache.commons.configuration2.Configuration;
 import org.uma.jmetal.operator.impl.crossover.DifferentialEvolutionCrossover;
 import org.uma.jmetal.operator.impl.selection.DifferentialEvolutionSelection;
+import org.uma.jmetal.problem.DoubleProblem;
 import org.uma.jmetal.solution.DoubleSolution;
 import org.uma.jmetal.util.ProblemUtils;
 import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
@@ -38,8 +39,9 @@ public class OptToolBox {
 
 		String problemName = config.getString("problemName");
 		System.out.println("problem name: " + problemName);
-		SimProblem problem = (SimProblem) ProblemUtils.<DoubleSolution> loadProblem(problemName);
-		problem.initProblem(simMasterFileName);
+		DoubleProblem problem = (DoubleProblem) ProblemUtils.<DoubleSolution> loadProblem(problemName);
+		if (problem instanceof SimProblem)
+			((SimProblem)problem).initProblem(simMasterFileName);
 		DifferentialEvolution algorithm;
 		DifferentialEvolutionSelection selection = new DifferentialEvolutionSelection();
 		DifferentialEvolutionCrossover crossover = new DifferentialEvolutionCrossover(crossOver_cr, crossOver_f, crossOver_variant) ;
@@ -56,7 +58,8 @@ public class OptToolBox {
 		System.out.println("BestSolution: " + Arrays.toString(bestSolution.getInputVariables()));
 		System.out.println("SimSeed: " + bestSolution.getAttribute("SimSeed"));
 		System.out.println("AlgSeed: " + JMetalRandom.getInstance().getSeed());
-		problem.closeProblem();
+		if (problem instanceof SimProblem)
+			((SimProblem)problem).closeProblem();
 
 	}
 }

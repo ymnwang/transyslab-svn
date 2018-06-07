@@ -1,12 +1,8 @@
 package com.transyslab.experiments;
 
 import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.tools.ADFullerTest;
 import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.mutitask.Task;
-import com.transyslab.commons.tools.mutitask.TaskCenter;
-import com.transyslab.commons.tools.mutitask.TaskWorker;
-import com.transyslab.commons.tools.mutitask.SchedulerThread;
 import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.simcore.mlp.*;
 import org.apache.commons.csv.CSVPrinter;
@@ -42,7 +38,7 @@ public class SAEvaluation {
 						MLPEngine engine = (MLPEngine) getEngine();
 						double[] var = task.getInputVariables();
 
-						engine.alterEngineFreeParas(Arrays.copyOfRange(var, 0, 4));
+						engine.setShortTermParas(Arrays.copyOfRange(var, 0, 4));
 						engine.getSimParameter().setLCDStepSize(0.0);
 						engine.getSimParameter().setLCBuffTime(var[4]);
 						engine.getSimParameter().setLCSensitivity(var[5]);

@@ -29,8 +29,8 @@ public class QuickFDProblem extends FDProblem {
 							.mapToDouble(MicroCharacter::getSpeed).toArray();
 					double[] sim = ((MLPNetwork)engine.getNetwork()).rawSectionDataFilter("det2",ft,tt,MLPLoop.SPEED)
 							.stream().mapToDouble(Double::doubleValue).toArray();
-					if (real!=null) {
-						if (sim!=null)
+					if (real!=null && real.length>0) {
+						if (sim!=null && sim.length>0)
 							ans += GENERALIZE ?
 									((double) real.length)/((double) realSPD.size()) * FitnessFunction.evaKS(sim,real,true) :
 									FitnessFunction.evaKS(sim,real,false);

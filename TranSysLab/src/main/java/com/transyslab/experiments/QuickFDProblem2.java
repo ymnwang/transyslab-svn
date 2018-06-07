@@ -16,16 +16,7 @@ import java.util.List;
  * Created by WangYimin on 2018/3/28.
  */
 public class QuickFDProblem2 extends FDProblem{
-	static boolean GENERALIZE = true;
-	@Override
-	public void setProblemBoundary() {
-		setNumberOfVariables(2);
-		setNumberOfObjectives(1);
-		setNumberOfConstraints(0);
-
-		setLowerLimit(Arrays.asList(new Double[]{0.2, 0.0}));
-		setUpperLimit(Arrays.asList(new Double[]{10.0, 2.0}));
-	}
+	static final boolean GENERALIZE = true;
 
 	@Override
 	protected SimulationConductor createConductor() {
@@ -48,8 +39,8 @@ public class QuickFDProblem2 extends FDProblem{
 							.mapToDouble(MicroCharacter::getSpeed).toArray();
 					double[] sim = ((MLPNetwork)engine.getNetwork()).rawSectionDataFilter("det2",ft,tt, MLPLoop.SPEED)
 							.stream().mapToDouble(Double::doubleValue).toArray();
-					if (real!=null) {
-						if (sim!=null)
+					if (real!=null && real.length>0) {
+						if (sim!=null && sim.length>0)
 							ans += GENERALIZE ?
 									((double) real.length)/((double) realSPD.size()) * FitnessFunction.evaKS(sim,real,true) :
 									FitnessFunction.evaKS(sim,real,false);

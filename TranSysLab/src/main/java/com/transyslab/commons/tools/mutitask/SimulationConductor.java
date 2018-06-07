@@ -8,7 +8,8 @@ import com.transyslab.simcore.SimulationEngine;
  */
 public interface SimulationConductor {
 	void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution);
-	boolean checkStatusBeforeEvaluate(SimulationEngine engine);
+	default boolean violateConstraints(SimulationEngine engine){return false;}
+	default boolean needRerun(SimulationEngine engine){ return false;}
 	double[] evaluateFitness(SimulationEngine engine);
-	void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution);
+	default void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution){}
 }

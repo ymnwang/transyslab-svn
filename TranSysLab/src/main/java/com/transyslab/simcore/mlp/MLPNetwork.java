@@ -120,9 +120,6 @@ public class MLPNetwork extends RoadNetwork {
 		for (Lane l: lanes){
 			((MLPLane) l).calLnPos();
 		}
-		for (Lane l: lanes){
-			((MLPLane) l).checkConectedLane();
-		}
 		
 		for (Segment seg: segments){
 			Segment tmpseg = seg;
@@ -135,6 +132,10 @@ public class MLPNetwork extends RoadNetwork {
 
 		for (Segment seg: segments) {
 			((MLPSegment) seg).setSucessiveLanes();
+		}
+
+		for (Lane l: lanes){
+			((MLPLane) l).checkConectedLane();
 		}
 
 		for (Link l: links){

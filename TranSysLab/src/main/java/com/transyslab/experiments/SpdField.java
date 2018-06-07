@@ -29,7 +29,6 @@ public class SpdField {
         mlpEngine.loadFiles();
 
         //运行参数设置
-        double[] fullParas = MLPParameter.DEFAULT_PARAMETERS;
         mlpEngine.seedFixed = true;//强制
         mlpEngine.runningSeed = 1500613842660l;
 
@@ -45,7 +44,7 @@ public class SpdField {
         timer.start();
 
         //仿真运行
-        mlpEngine.runWithPara(fullParas);
+        mlpEngine.repeatRun();
 
         //统计发车
         System.out.println("未发车辆数：" + mlpEngine.countOnHoldVeh() + "辆");

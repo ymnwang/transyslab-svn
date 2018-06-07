@@ -26,42 +26,6 @@ public class FDProblem extends MLPProblem{
 	}
 
 	@Override
-	public void initProblem(String masterFileName) {
-		super.initProblem(masterFileName);
-		ExpSwitch.MAX_ACC_CTRL = true;
-		ExpSwitch.APPROACH_CTRL = true;
-	}
-
-	@Override
-	protected EngThread createEngThread(String name, String masterFileDir) {
-		return  new EngThread(name,masterFileDir){
-			@Override
-			public void initEngine(String modelType, String masterFileDir) {
-				setEngine(new MLPEngine(masterFileDir){
-					@Override
-					public void setParasRightBeforeRun() {
-						double qm=0.5225, vf_cf=17.4178, vf_sd=21.0805,kj=0.1599,ts=0.4432,xc=33.3331,alpha=2.0846,beta=8.3574;
-						setObservedParas(qm,vf_cf,vf_sd,120.0/3.6,0.12,0.2);
-						setOptParas(kj,ts,xc,alpha,beta,free_paras[2],free_paras[3]);//gamma 另外输入
-					}
-				});
-			}
-		};
-	}
-
-	@Override
-	public void setProblemBoundary() {
-		//设置问题规模
-		setNumberOfVariables(4);
-		setNumberOfObjectives(1);
-		setNumberOfConstraints(0);
-
-		//设置边界值
-		setLowerLimit(Arrays.asList(new Double[]{0.0, 0.0, 1.0, 0.0}));
-		setUpperLimit(Arrays.asList(new Double[]{10.0, 10.0, 10.0, 2.0}));
-	}
-
-	@Override
 	protected SimulationConductor createConductor() {
 		try {
 			return new FDConductor();

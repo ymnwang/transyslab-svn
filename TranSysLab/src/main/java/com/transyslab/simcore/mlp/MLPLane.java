@@ -253,10 +253,15 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		}
 		
 	}
-	
+
+	//新逻辑 connectedUplane, connectedDnlane新赋值逻辑如successiveUplanes, successiveDnlanes.
 	public void checkConectedLane() {
-		connectedUpLane = getSamePosLane(segment.getUpSegment());
-		connectedDnLane = getSamePosLane(segment.getDnSegment());
+//		connectedUpLane = getSamePosLane(segment.getUpSegment());
+//		connectedDnLane = getSamePosLane(segment.getDnSegment());
+		if (successiveUpLanes.size()==1)
+			connectedUpLane = successiveUpLanes.get(0);
+		if (successiveDnLanes.size()==1)
+			connectedDnLane = successiveDnLanes.get(0);
 	}
 	public MLPLane getSamePosLane(Segment seg) {
 		if (seg != null && seg.nLanes()>=lnPosNum_) {

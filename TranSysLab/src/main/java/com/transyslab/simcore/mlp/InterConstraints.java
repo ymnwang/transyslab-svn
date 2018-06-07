@@ -106,6 +106,20 @@ public class InterConstraints {
 		return Math.log(vf_CF / vf_SD) / Math.log(1-Math.pow(qm/vf_CF/kj,alpha));
 	}
 
+	//只在qm约束下求beta
+	public static double calBeta(double r, double kj, double qm, double vf_SD) {
+		return Math.log(qm/kj/vf_SD) / (Math.log(r/(r+1)) - Math.pow(r,-1.0)*Math.log(r+1));
+	}
+
+	public static double calXc(double qm, double vf_CF) {
+		return vf_CF/qm;
+	}
+
+	public static double calTs(double kj, double vf_CF, double deltaT, double xc) {
+		double phi = (xc - 1/kj) / vf_CF;
+		return phi - deltaT;
+	}
+
 	public static double calDeltaTUpper(double qm, double vf, double kj) {
 		return 1.0/qm - 1.0/vf/kj;
 	}

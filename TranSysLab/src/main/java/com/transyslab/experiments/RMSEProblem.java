@@ -1,19 +1,11 @@
 package com.transyslab.experiments;
 
-import com.mathworks.toolbox.javabuilder.MWException;
-import com.mathworks.toolbox.javabuilder.MWNumericArray;
-import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.tools.FitnessFunction;
-import com.transyslab.commons.tools.adapter.SimProblem;
 import com.transyslab.commons.tools.adapter.SimSolution;
-import com.transyslab.commons.tools.mutitask.EngThread;
 import com.transyslab.commons.tools.mutitask.SimulationConductor;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mlp.*;
-import matlabfunctions.MatlabFunctions;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,24 +13,9 @@ import java.util.List;
 import java.util.Map;
 
 public class RMSEProblem extends MLPProblem {
+    public RMSEProblem() { }
     public RMSEProblem(String masterFileDir){
         initProblem(masterFileDir);
-    }
-    public void setProblemBoundary() {
-        //设置问题规模
-        setNumberOfVariables(6);
-        setNumberOfObjectives(1);
-        setNumberOfConstraints(0);
-
-        //设置边界值
-        double kjUpper = ob_paras[5];
-        double kjLower = ob_paras[4];
-        setLowerLimit(Arrays.asList(new Double[]{kjLower, 0.0025, 0.0, 0.0, 1.0, 0.0}));
-        setUpperLimit(Arrays.asList(new Double[]{kjUpper, 40.0, 10.0, 10.0, 10.0, 2.0}));
-    }
-    @Override
-    protected EngThread createEngThread(String name, String masterFileDir) {
-        return  new EngThread(name,masterFileDir);
     }
 
     @Override
@@ -49,15 +26,10 @@ public class RMSEProblem extends MLPProblem {
                 @Override
                 public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {
                     double[] var = simSolution.getInputVariables();
-                    ((MLPEngine)engine).alterEngineFreeParas(Arrays.copyOfRange(var,0,4));
+                    ((MLPEngine)engine).setShortTermParas(Arrays.copyOfRange(var,0,4));
                     ((MLPEngine) engine).getSimParameter().setLCDStepSize(0.0);
                     ((MLPEngine) engine).getSimParameter().setLCBuffTime(var[4]);
                     ((MLPEngine) engine).getSimParameter().setLCSensitivity(var[5]);
-                }
-
-                @Override
-                public boolean checkStatusBeforeEvaluate(SimulationEngine engine)  {
-                    return true;
                 }
 
                 @Override
@@ -95,10 +67,6 @@ public class RMSEProblem extends MLPProblem {
                         return results;
                     }
                     return new double[] {Double.POSITIVE_INFINITY};//, Double.POSITIVE_INFINITY};//,Double.POSITIVE_INFINITY};
-                }
-                @Override
-                public void modifySolutionBeforeEnd(SimulationEngine engine, SimSolution simSolution) {
-
                 }
             };
         } catch (Exception e) {

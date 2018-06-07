@@ -75,10 +75,12 @@ public class EngThread extends Thread implements TaskWorker{
 			((MLPEngine) engine).fileOutTag = Arrays.toString(task.getInputVariables());
 
 		//仿真过程
-		do {
-			engine.repeatRun();
+		if (!conductor.violateConstraints(engine)) {
+			do {
+				engine.repeatRun();
+			}
+			while (conductor.needRerun(engine));
 		}
-		while (!conductor.checkStatusBeforeEvaluate(engine));
 
 		//结果评价
 		double[] fitness = conductor.evaluateFitness(engine);
@@ -145,10 +147,6 @@ public class EngThread extends Thread implements TaskWorker{
 
 	protected SimulationEngine getEngine() {
 		return engine;
-	}
-
-	protected void setEngine(SimulationEngine engine) {
-		this.engine = engine;
 	}
 
 }
