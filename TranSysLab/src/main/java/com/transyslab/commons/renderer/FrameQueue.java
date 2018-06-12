@@ -36,11 +36,12 @@ public class FrameQueue {
     }
     //main线程调用，初始化数组内元素
     public void initFrameQueue(){
-    	frameCount = 0;
+
+    	/*
     	for(int i=0;i<capacity_;i++){
     		writeArray_[i] = new AnimationFrame();
     		readArray_[i] = new AnimationFrame();
-    	}
+    	}*/
     }
     public int getFrameCount(){
     	return frameCount;
@@ -50,8 +51,8 @@ public class FrameQueue {
         if(capacity<=0)  
         {  
             throw new IllegalArgumentException("Queue initial capacity can't less than 0!");  
-        }  
-          
+        }
+        frameCount = 0;
         readArray_ = new AnimationFrame[capacity];  
         writeArray_ = new AnimationFrame[capacity];  
         
@@ -156,5 +157,10 @@ public class FrameQueue {
         if(readCount_>0) 
         	return extract(isPause);
         return null;
+    }
+    public void clear(){
+        frameCount = 0;
+        writeArray_ = new AnimationFrame[capacity_];
+        readArray_ = new AnimationFrame[capacity_];
     }
 }

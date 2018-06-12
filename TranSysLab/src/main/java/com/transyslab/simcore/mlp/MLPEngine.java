@@ -293,7 +293,7 @@ public class MLPEngine extends SimulationEngine{
         if (stopSignal) {
         	forceResetEngine();
         	stopSignal = false;
-        	return (state_ = Constants.STATE_ERROR_QUIT);
+        	return (state_ = Constants.STATE_QUIT);
 		}
 		if (now > clock.getStopTime() + epsilon) {
 			if (infoOn)
@@ -859,7 +859,7 @@ public class MLPEngine extends SimulationEngine{
 		}
 	}
 
-	public void stopEngine(){
+	public void stop(){
 		stopSignal = true;
 	}
 

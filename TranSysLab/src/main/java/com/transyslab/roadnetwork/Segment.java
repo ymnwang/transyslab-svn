@@ -3,6 +3,8 @@
  */
 package com.transyslab.roadnetwork;
 
+import com.transyslab.commons.tools.GeoUtil;
+
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +31,7 @@ public class Segment implements NetworkObject {
 	protected Link link; // pointer to link
 	protected double grade; // grade of the segment
 
-//	protected int leftLaneIndex; // index to the left lane
+	//	protected int leftLaneIndex; // index to the left lane
 	protected int speedLimit; // default speed limit
 	protected double freeSpeed; // free flow speed
 	protected double distance; // getDistance from dn node
@@ -44,12 +46,14 @@ public class Segment implements NetworkObject {
 	protected GeoPoint startPnt;
 	protected GeoPoint endPnt;
 	protected double bulge;
+	protected GeoSurface surface;
 
 	protected double startAngle;
 	protected double endAngle;
 
 	protected double length;
 	protected boolean isSelected;
+
 	public Segment() {
 		distance = 0.0;
 		localType = 0;
@@ -135,7 +139,9 @@ public class Segment implements NetworkObject {
 		// a straight line.
 		return endAngle;
 	}
-
+	public GeoSurface getSurface(){
+		return surface;
+	}
 	// Segment iterators in a link
 	// Returns the upstream segment in the same link
 	public Segment getUpSegment() {
@@ -274,8 +280,13 @@ public class Segment implements NetworkObject {
 				localType |= 0x0010;
 			}
 		}
+		// 创建路段面
+		createSurface();
 	}
-
+	// 路网世界坐标平移后再调用
+	public void createSurface(){
+		surface = GeoUtil.lineToRectangle(startPnt, endPnt, lanes.size()* Constants.LANE_WIDTH, false);
+	}
 	public double calcDensity() {
 		return 0;
 	}

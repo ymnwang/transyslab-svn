@@ -37,12 +37,14 @@ public class RTEngine extends SimulationEngine{
 	private CSVParser frameParser;
 	private int curFrameId;
 	private boolean firstEntry;
+	private boolean isStop;
 
 	public RTEngine(){
 		curFrameId = -1;
 		rtNetwork = new RTNetwork();
 		runProperties = new HashMap<>();
 		firstEntry = true;
+		isStop = false;
 	}
 	public RTEngine(String masterFilePath) {
 		this();
@@ -66,6 +68,9 @@ public class RTEngine extends SimulationEngine{
 	}
 	@Override
 	public int simulationLoop() {
+		return 0;
+	}
+	public void run(){
 		// frameid, vhcid, distance, laneid
 		// 数据已按帧号排序
 		CSVRecord curRecord;
@@ -83,6 +88,12 @@ public class RTEngine extends SimulationEngine{
 			vd.init(vhcid,rtNetwork.findLane(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,true);
 			if(curFrameId != frameid){//新的一帧
 				if(!vds.isEmpty()){
+					if (isStop) {
+						forceReset();
+						isStop = false;
+						// 跳出循环
+						break;
+					}
 					rtNetwork.renderVehicle(vds);
 					vds.clear();
 				}
@@ -90,9 +101,8 @@ public class RTEngine extends SimulationEngine{
 			}
 			vds.add(vd);
 		}
-		return 0;
-	}
 
+	}
 	@Override
 	public void loadFiles() {
 		loadSimulationFiles();
@@ -131,6 +141,20 @@ public class RTEngine extends SimulationEngine{
 		}
 	}
 
+	@Override
+	public void stop() {
+		isStop = true;
+	}
+	public void forceReset(){
+		this.firstEntry = true;
+		this.curFrameId = -1;
+		try {
+			this.frameParser.close();
+			this.frameParser = CSVUtils.getCSVParser(runProperties.get("extVhcPath"),true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	@Override
 	public HashMap<String, List<MacroCharacter>> getEmpMap() {
 		return null;

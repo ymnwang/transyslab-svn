@@ -122,6 +122,11 @@ public class MesoEngine extends SimulationEngine {
 	}
 
 	@Override
+	public void stop() {
+		// TODO ´ý²¹³ä
+	}
+
+	@Override
 	public HashMap<String, List<MacroCharacter>> getEmpMap() {
 		return null;
 	}

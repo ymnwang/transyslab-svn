@@ -48,6 +48,7 @@ public class MainWindow {
     private SimulationEngine engine;
     private Trace2DSimple traceRT;
     public boolean needRTPlot;
+    private ClbrtForm clbrtForm;
     public MainWindow(){
 
         try
@@ -294,20 +295,22 @@ public class MainWindow {
             button4.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-
-                    /*
-				if(!canvas_.isNetworkReady()){
-					JOptionPane.showMessageDialog(null, "请先加载路网");
-					return;
-				}*/
-                    //从暂停到播放
-                    if(canvas.isPause){
-                        canvas.isPause = false;
+                    if(!canvas.isNetworkReady()){
+                        JOptionPane.showMessageDialog(null, "请先加载路网");
+                        return;
                     }
-                    //第一次播放
-                    else if(!canvas.isRendering){
-                        new Thread(()->engine.run()).start();
-                        canvas.isRendering = true;
+                    else{
+                        switch (canvas.getStatus()){
+                            case JOGLCanvas.ANIMATOR_PAUSE:
+                                canvas.setStatus(JOGLCanvas.ANIMATOR_PLAYING);
+                                break;
+                            case JOGLCanvas.ANIMATOR_STOP:
+                                canvas.setStatus(JOGLCanvas.ANIMATOR_PLAYING);
+                                new Thread(()->engine.run()).start();
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
             });
@@ -320,7 +323,8 @@ public class MainWindow {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    canvas.isPause = true;
+                    if(canvas.getStatus()==JOGLCanvas.ANIMATOR_PLAYING)
+                        canvas.setStatus(JOGLCanvas.ANIMATOR_PAUSE);
                 }
             });
             toolBar1.add(button5);
@@ -331,7 +335,11 @@ public class MainWindow {
             button7.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    animator.stop();
+                    if(canvas.getStatus() == JOGLCanvas.ANIMATOR_PAUSE || canvas.getStatus() == JOGLCanvas.ANIMATOR_PLAYING){
+                        canvas.setStatus(JOGLCanvas.ANIMATOR_STOP);
+                        engine.stop();
+                        FrameQueue.getInstance().clear();
+                    }
                 }
             });
             toolBar1.add(button7);
@@ -342,14 +350,20 @@ public class MainWindow {
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
             toolBar1.add(button8);
 
-            //---- 按键：车速统计 ----
+            //---- 按键：参数校准 ----
             button9.setIcon(new ImageIcon(loadImage("icon/new/chart.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
-            //TODO 限制多次点击
             button9.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    subWindow.showPanel("calibration");
+                    if(clbrtForm == null) {
+                        clbrtForm = new ClbrtForm();
+                    }
+                    else if(!clbrtForm.isShowing()){
+                        clbrtForm.clear();
+                        clbrtForm.setVisible(true);
+                        clbrtForm.requestFocusInWindow();
+                    }
                 }
             });
             toolBar1.add(button9);
@@ -360,8 +374,8 @@ public class MainWindow {
             button10.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (canvas.isPause) {
-                        canvas.needNextScene = true;
+                    if (canvas.getStatus()==JOGLCanvas.ANIMATOR_PAUSE) {
+                        canvas.setMode(JOGLCanvas.ANIMATOR_FRAME_ADVANCE);
                     }
                 }
             });
@@ -512,7 +526,7 @@ public class MainWindow {
 
     }
     public void initSimEngines(){
-        FrameQueue.getInstance().initFrameQueue();
+        //FrameQueue.getInstance().initFrameQueue();
         switch (AppSetup.modelType) {
             case Constants.MODEL_TYPE_MESO:
                 engine = new MesoEngine(0,"E:\\test\\");

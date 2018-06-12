@@ -25,7 +25,7 @@ public class SubWindow {
     private JFrame windowFrame;
     private ProjectPanel projectPanel;
     private CasePanel casePanel;
-    private ClbrtPanel clbrtPanel;
+//    private ClbrtPanel clbrtPanel;
     private CardLayout cardLayout;
     // TODO 单例
     private MainWindow mainWindow;
@@ -60,7 +60,7 @@ public class SubWindow {
         windowFrame = new JFrame();
         projectPanel = new ProjectPanel();
         casePanel = new CasePanel();
-        clbrtPanel = new ClbrtPanel();
+       // clbrtPanel = new ClbrtPanel();
         cardLayout = new CardLayout();
         //======== panel name ========
         //panels.put(panelNames[0],projectPanel);
@@ -72,7 +72,7 @@ public class SubWindow {
         contentPane.setLayout(cardLayout);
         contentPane.add(projectPanel,"project");
         contentPane.add(casePanel,"case");
-        contentPane.add(clbrtPanel,"calibration");
+       // contentPane.add(clbrtPanel,"calibration");
         windowFrame.pack();
         windowFrame.setLocationRelativeTo(windowFrame.getOwner());
     }
@@ -475,120 +475,5 @@ public class SubWindow {
             }
         }
     }
-    public class ClbrtPanel extends JPanel{
 
-        private JTextField textField1;//运动参数
-        private JTextField textField2;//随机种子
-        public ClbrtPanel() {
-            initComponents();
-        }
-        private void initComponents() {
-
-            JLabel label1 = new JLabel();
-            textField1 = new JTextField();
-            JLabel label2 = new JLabel();
-            textField2 = new JTextField();
-            JPanel panel2 = new JPanel();
-            JButton button4 = new JButton();
-            JButton button5 = new JButton();
-
-            //======== this ========
-
-            setMinimumSize(new Dimension(306, 381));
-            setPreferredSize(new Dimension(306, 381));
-
-            setLayout(new GridBagLayout());
-            ((GridBagLayout)getLayout()).columnWidths = new int[] {15, 91, 63, 56, 63, 25, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {45, 35, 32, 35, 32, 35, 32, 35, 35, 32, 30, 0};
-            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
-
-
-            //---- label1 ----
-            label1.setText("\u8fd0\u52a8\u53c2\u6570\uff1a");
-            label1.setHorizontalAlignment(SwingConstants.CENTER);
-            label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 16));
-            add(label1, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 5), 0, 0));
-            add(textField1, new GridBagConstraints(2, 2, 3, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 5), 0, 0));
-
-            //---- label2 ----
-            label2.setText("\u968f\u673a\u79cd\u5b50\uff1a");
-            label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 16));
-            label2.setHorizontalAlignment(SwingConstants.CENTER);
-            add(label2, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 5), 0, 0));
-            add(textField2, new GridBagConstraints(2, 4, 3, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 5), 0, 0));
-
-            //======== panel2 ========
-            {
-                panel2.setLayout(new GridBagLayout());
-                ((GridBagLayout)panel2.getLayout()).columnWidths = new int[] {15, 71, 31, 68, 0};
-                ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {27, 0};
-                ((GridBagLayout)panel2.getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 0.0, 1.0E-4};
-                ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
-
-                //---- 确认参数 ----
-                button4.setText("\u786e\u5b9a");
-                button4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
-                button4.setMargin(new Insets(2, 8, 2, 8));
-                panel2.add(button4, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
-                button4.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        windowFrame.setVisible(false);
-                        /*//解析文本
-                        String parasStr = textField1.getText();
-                        double[] runningParas = null;
-                        if (!parasStr.equals("")) {
-                            String[] parasStrArray = parasStr.split(", ");
-                            runningParas = new double[parasStrArray.length];
-                            for (int i = 0; i<parasStrArray.length; i++) {
-                                runningParas[i] = Double.parseDouble(parasStrArray[i]);
-                            }
-                        }
-
-                        String runningSeedStr = textField2.getText();
-                        long runningSeed = runningSeedStr.equals("") ? -1 : Long.parseLong(runningSeedStr);
-                        //参数传入engine
-                        mainWindow.launchEngineWithParas(runningParas,runningSeed);
-
-
-                        //清空填写内容
-                        textField1.setText("");
-                        textField2.setText("");*/
-                        //该功能已废弃
-                        textField1.setText("abandoned method check source code");
-                        textField2.setText("abandoned method check source code");
-                    }
-                });
-
-                //---- 取消退出 ----
-                button5.setText("\u53d6\u6d88");
-                button5.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
-                button5.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        windowFrame.setVisible(false);
-                        textField2.setText("");
-                        textField1.setText("");
-                    }
-                });
-                panel2.add(button5, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 0), 0, 0));
-            }
-            add(panel2, new GridBagConstraints(2, 9, 3, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 5), 0, 0));
-        }
-    }
 }

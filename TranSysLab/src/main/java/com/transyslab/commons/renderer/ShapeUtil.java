@@ -65,7 +65,6 @@ public class ShapeUtil {
 			gl.glVertex3d(p.getLocationX(), p.getLocationY(),0.0);
 		}
 		gl.glEnd();
-		
 	}
 	public static void drawPolygon(GL2 gl,List<GeoPoint>points, final float[] color, final boolean isSelected, double height){
 		gl.glColor3f(color[0], color[1], color[2]);
@@ -74,6 +73,17 @@ public class ShapeUtil {
 		gl.glBegin(GL2.GL_POLYGON);
 		for(GeoPoint p:points ){
 			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
+		}
+		gl.glEnd();
+	}
+	public static void drawPolygon(GL2 gl,List<GeoPoint> points, final float[] fcolor, final float[] tcolor){
+
+		//gl.glColor3f(color[0], color[1], color[2]);
+		gl.glColor3f(1.0f, 1.0f, 0.0f);
+		gl.glBegin(GL2.GL_POLYGON);
+		for(GeoPoint p:points ){
+			// TODO Õº≤„π‹¿Ì
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),0.0);
 		}
 		gl.glEnd();
 	}

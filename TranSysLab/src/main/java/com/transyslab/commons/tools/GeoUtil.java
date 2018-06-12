@@ -44,8 +44,15 @@ public class GeoUtil {
 			distance = width;
 		double[] translation = new double[3];
 		if(vecDir[0] == 0.0){
-			// coods.Y
-			translation[1] = distance;
+			if(vecDir[1]!=0.0){
+				// coods.X
+				translation[0] = distance;
+				// coods.Y
+				translation[1] = 0.0;
+			}
+			else{
+				System.out.println("Error: Can't not expand");
+			}
 		}
 		else{
 			// coods.Y
@@ -64,7 +71,6 @@ public class GeoUtil {
 		if(bothSide){
 			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
 			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
-			
 			sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(tPoint.getLocCoods(),translation)));
 			sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
 		}

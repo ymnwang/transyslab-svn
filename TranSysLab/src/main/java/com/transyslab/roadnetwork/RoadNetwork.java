@@ -122,6 +122,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public void createODPair(Node oriNode, Node desNode){
 		ODPair newodPair = new ODPair(oriNode,desNode);
 		this.odPairs.add(newodPair);
+
 	}
 	public void createSurface(){
 

@@ -33,9 +33,12 @@ public class AnimationFrame{
 		//从尾部插入对象
 		vhcDataQueue_.offerLast(vd);
 	}
-	public VehicleData getVehicleData(){
-		//从头部移除对象
-		return vhcDataQueue_.pollFirst();
+	public VehicleData getVehicleData(boolean needRetain){
+
+		if(needRetain)//返回头部对象，不做移除
+			return vhcDataQueue_.peekFirst();
+		else//从头部移除对象
+			return vhcDataQueue_.pollFirst();
 	}
 
 	public void clean(){
