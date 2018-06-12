@@ -82,7 +82,7 @@ public abstract class SimulationEngine {
 	public abstract int repeatRun();
 
 	public abstract void close();
-
+	public abstract void stop();
 	public abstract HashMap<String, List<MacroCharacter>> getEmpMap();
 
 	public abstract HashMap<String, List<MacroCharacter>> getSimMap();
