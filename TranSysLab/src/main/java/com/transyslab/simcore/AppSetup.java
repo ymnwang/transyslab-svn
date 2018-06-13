@@ -11,4 +11,5 @@ public class AppSetup {
 	public static double endTime;
 	public static double timeStep;
 	public static int simMode;
+	public static boolean displayOn;
 }

@@ -1,6 +1,11 @@
 package com.transyslab.gui;
 
 import com.jogamp.opengl.util.FPSAnimator;
+import com.transyslab.commons.renderer.Camera;
+import com.transyslab.commons.renderer.FrameQueue;
+import com.transyslab.commons.renderer.JOGLCanvas;
+import com.transyslab.commons.renderer.OrbitCamera;
+import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.renderer.*;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
@@ -59,6 +64,11 @@ public class MainWindow {
     private void initComponents(){
         windowFrame = new JFrame();
         progressBar1 = new JProgressBar();
+        progressBar1.setOrientation(JProgressBar.HORIZONTAL);
+        progressBar1.setMinimum(0);
+        progressBar1.setMaximum(100);
+        progressBar1.setValue(0);
+        progressBar1.setStringPainted(true);
         label5 = new JLabel();
         label8 = new JLabel();
         label9 = new JLabel();
@@ -235,6 +245,29 @@ public class MainWindow {
 
                             String modelType = config.getString("modelType");
 
+                            String root = file.getParent() + "/";
+                            textArea3.append("优化问题：" + config.getString("problemName") + "\n");
+                            textArea3.append("引擎线程：" + config.getString("numOfEngines") + " 条\n");
+                            textArea3.append("仿真模型：" + config.getString("modelType") + "\n\n");
+
+                            textArea3.append("引擎状态播报：" + (config.getBoolean("engineBroadcast")?"是":"否") + "\n");
+                            textArea3.append("可视化运行：" + (config.getBoolean("displayOn")?"是":"否") + "\n\n");
+
+                            textArea3.append("输出路径" + root + config.getString("outputPath") + "\n");
+                            textArea3.append("断面个体记录输出：" + (config.getBoolean("rawRecOn")?"是":"否") + "\n");
+                            textArea3.append("轨迹记录输出：" + (config.getBoolean("trackOn")?"是":"否") + "\n");
+                            textArea3.append("线圈记录输出：" + (config.getBoolean("statRecordOn")?"是":"否") + "\n");
+                            textArea3.append("统计方式：" + config.getString("avgMode") + "\n");
+                            textArea3.append("统计间隔：" + config.getString("statTimeStep") + "秒\n");
+
+                            textArea3.append("路网输入：" + root + config.getString("roadNetworkPath") + "\n");
+                            textArea3.append("实测数据输入：" + root + config.getString("empDataPath") + "\n\n");
+
+                            textArea3.append("仿真时间(开始:步长:结束)：" +
+                                    config.getString("timeStart") + " : " +
+                                    config.getString("timeStep") + " : " +
+                                    config.getString("timeEnd") + "\n");
+
                             if(modelType.equals("MesoTS")) {
                                 //TODO: 由于properties解释过程不统一，避免报错，将meso properties的解释放在此分支之下 wym
                                 String projectName = config.getString("projectName");
@@ -259,12 +292,34 @@ public class MainWindow {
                             else if(modelType.equals("MLP")){
                                 AppSetup.setupParameter.put("输入文件路径", fileChooser.getSelectedFile().getPath());//解释过程放在MLPEngine中
                                 AppSetup.modelType = Constants.MODEL_TYPE_MLP;
+                                AppSetup.displayOn = config.getBoolean("displayOn");
                             }
                             else if(modelType.equals("RT")){
                                 AppSetup.setupParameter.put("输入文件路径", fileChooser.getSelectedFile().getPath());
                                 AppSetup.modelType = Constants.MODEL_TYPE_RT;
                             }
                             initSimEngines();
+                            engine.addActionLisener(new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    if (e.getSource() == engine) {
+                                        switch (e.getID()) {
+                                            case EngineEvent.UPDATE: {
+                                                SimulationClock clock = engine.getNetwork().getSimClock();
+                                                double progress = (clock.getCurrentTime() - clock.getStartTime()) / clock.getDuration();
+                                                progressBar1.setValue((int)(progress*100));
+                                            }
+                                                break;
+                                            case EngineEvent.BROADCAST: {
+                                                textArea2.setText(((EngineEvent)e).getMsg());
+                                            }
+                                                break;
+                                            default:
+                                                System.out.println("Unknown information from engine.");
+                                        }
+                                    }
+                                }
+                            });
                         }
                         catch(ConfigurationException cex)
                         {
@@ -538,8 +593,6 @@ public class MainWindow {
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 2), 0, 0));
 
-            //---- label9 ----
-            label9.setText("(0%)");
             panel8.add(label9, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 2), 0, 0));
@@ -565,7 +618,7 @@ public class MainWindow {
                 break;
             case Constants.MODEL_TYPE_MLP:
                 engine = new MLPEngine(AppSetup.setupParameter.get("输入文件路径"));
-                ((MLPEngine)engine).displayOn = true;
+                ((MLPEngine)engine).displayOn = AppSetup.displayOn;
                 break;
             case Constants.MODEL_TYPE_RT:
                 engine = new RTEngine(AppSetup.setupParameter.get("输入文件路径"));

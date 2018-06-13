@@ -448,6 +448,8 @@ public class MLPVehicle extends Vehicle{
 	public MLPVehicle getLaterallTrailing(){	
 	}*/
 	public void updateDi() {
+//		if (getId()==2)
+//			System.out.println("DEBUG");
 		diMap.clear();
 		List<MLPLane> target = link.validEndLanesFor(this);
 		link.getSegments().forEach(seg -> {
