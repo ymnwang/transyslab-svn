@@ -763,12 +763,13 @@ public class MLPNetwork extends RoadNetwork {
 	@Override
 	public int addLaneConnector(int up, int dn, int successiveFlag) {
 		int ans = super.addLaneConnector(up, dn, successiveFlag);
+		MLPLane upLane = (MLPLane) findLane(up);
+		MLPLane dnLane = (MLPLane) findLane(dn);
+		if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0)
+			createConnector(upLane,dnLane);
 		if (successiveFlag == Constants.SUCCESSIVE_LANE) {
-			MLPLane upLane = (MLPLane) findLane(up);
-			MLPLane dnLane = (MLPLane) findLane(dn);
 			upLane.successiveDnLanes.add(dnLane);
 			dnLane.successiveUpLanes.add(upLane);
-			createConnector(upLane,dnLane);
 		}
 		return ans;
 	}

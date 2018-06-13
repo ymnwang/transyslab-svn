@@ -4,6 +4,8 @@ import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.RoadNetwork;
 import com.transyslab.simcore.mlp.MacroCharacter;
 
+import javax.swing.event.EventListenerList;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,6 +18,7 @@ public abstract class SimulationEngine {
 	protected int nextBreakPoint_;
 	protected double beginTime_; // start time for this run
 	protected double endTime_; // end time for this run
+	protected EventListenerList listenerList;
 
 	public SimulationEngine() {
 		master_ = null;
@@ -23,6 +26,8 @@ public abstract class SimulationEngine {
 		mode_ = 0;
 		breakPoints_ = null;
 		nextBreakPoint_ = 0;
+
+		listenerList = new EventListenerList();
 	}
 
 	public void setState(int s) {
@@ -87,4 +92,12 @@ public abstract class SimulationEngine {
 
 	public abstract HashMap<String, List<MacroCharacter>> getSimMap();
 	public abstract int countRunTimes();
+
+	public void addActionLisener(ActionListener listener) {
+		listenerList.add(ActionListener.class, listener);
+	}
+
+	public void removeActionLisener(ActionListener listener) {
+		listenerList.remove(ActionListener.class, listener);
+	}
 }

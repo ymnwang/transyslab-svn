@@ -33,8 +33,7 @@ public class MLPNode extends Node{
 			//if this is an intersection, deal with inner movements
 			if (type(Constants.NODE_TYPE_INTERSECTION)!=0) {				
 				//movement in an intersection not available for now
-				lane_.scheduleNextEmitTime();//passed upstream lane
-				return Constants.VEHICLE_NOT_RECYCLE;
+
 			}
 			//deal with non-intersection nodes
 //			List<MLPLane> candidates = lane.selectDnLane(veh.getNextLink().getStartSegment());//不以successiveDnLane运行

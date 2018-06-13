@@ -1,9 +1,12 @@
 package com.transyslab.simcore.mlp;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.*;
 
 import com.transyslab.commons.io.*;
+import com.transyslab.gui.EngineEvent;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.csv.CSVRecord;
 import java.io.IOException;
@@ -11,7 +14,8 @@ import java.io.IOException;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
-import org.apache.commons.lang3.time.StopWatch;
+
+import javax.swing.event.EventListenerList;
 
 
 public class MLPEngine extends SimulationEngine{
@@ -37,7 +41,6 @@ public class MLPEngine extends SimulationEngine{
 	private HashMap<String, List<MacroCharacter>> simMap;
 	private int mod;//总计运行次数，在输出结束仿真信号时自增
 	private boolean stopSignal;
-	private double vehOnNetwork;
 
 	//引用路网结构
 	private MLPNetwork mlpNetwork;
@@ -50,7 +53,6 @@ public class MLPEngine extends SimulationEngine{
 	private double timeStep;
 	//引擎运行参数
 	private int repeatTimes;
-	protected double[] free_paras;
 
 	String rootDir;
 	String emitSource;
@@ -82,7 +84,6 @@ public class MLPEngine extends SimulationEngine{
 		fileOutTag = "";
 
 		stopSignal = false;
-		vehOnNetwork = 0;
 	}
 
 	public MLPEngine(String masterFilePath) {
@@ -159,6 +160,7 @@ public class MLPEngine extends SimulationEngine{
 	@Override
 	public int simulationLoop() {
 		final double epsilon = 1.0E-3;
+		long t1 = System.currentTimeMillis();
 
 		if (firstEntry) {
 			// This block is called only once just before the simulation gets started.
@@ -176,6 +178,8 @@ public class MLPEngine extends SimulationEngine{
 			mlpNetwork.renewSysRandSeed();
 			mlpNetwork.resetReleaseTime();
 			updateTime_ = now + ((MLPParameter) mlpNetwork.getSimParameter()).updateStepSize_;
+			//update event
+			informEngineListeners(new EngineEvent(this, EngineEvent.UPDATE));
 		}
 
 		if (now >= statTime_){
@@ -671,13 +675,34 @@ public class MLPEngine extends SimulationEngine{
 	 */
 	@Override
 	public void run() {
-		vehOnNetwork = 0.0;
-		double count = 0.0;
-		while (simulationLoop()>=0) {
-			vehOnNetwork += mlpNetwork.veh_list.stream().filter(veh->veh.virtualType==0).count();
-			count++;
+		if (config.getBoolean("engineBroadcast")) {
+			double vehOnNetwork = 0.0;
+			double count = 0.0;
+			long t0 = System.currentTimeMillis();
+
+			EngineEvent engineEvent = new EngineEvent(this, EngineEvent.BROADCAST);
+
+			while (simulationLoop()>=0) {
+				vehOnNetwork += mlpNetwork.veh_list.stream().filter(veh->veh.virtualType==0).count();
+				count++;
+//				System.out.println("sim time: " + getSimClock().getCurrentTime() + " s.");
+				engineEvent.setMsg("sim time: " + getSimClock().getCurrentTime() + " s.");
+				informEngineListeners(engineEvent);
+			}
+
+			vehOnNetwork = vehOnNetwork / count;
+			String msg = "avg of vehicle enroute: " + vehOnNetwork + " veh/s." + "\n" +
+					"runtime: " + (System.currentTimeMillis()-t0) + " ms." + "\n" +
+					"sim rate: " + String.format("%.2f",((double)count)/((double)System.currentTimeMillis()-t0)) + " kHz.";
+			System.out.println(msg);
+			engineEvent.setMsg(msg);
+			informEngineListeners(engineEvent);
+//			System.out.println("avg of vehicle enroute: " + vehOnNetwork + " veh/s.");
+//			System.out.println("runtime = " + (System.currentTimeMillis()-t0) + " ms.");
+//			System.out.println("sim rate: " + String.format("%.2f",((double)count)/((double)System.currentTimeMillis()-t0)) + " kHz.");
 		}
-		vehOnNetwork = vehOnNetwork / count;
+		else
+			while (simulationLoop()>=0);
 	}
 
 	@Override
@@ -863,8 +888,10 @@ public class MLPEngine extends SimulationEngine{
 		stopSignal = true;
 	}
 
-	public double getVehOnNetwork() {
-		return vehOnNetwork;
+	public void informEngineListeners(EngineEvent e) {
+		Object actionListeners[] = listenerList.getListeners(ActionListener.class);
+		for (Object listener : actionListeners) {
+			((ActionListener) listener).actionPerformed(e);
+		}
 	}
-
 }
