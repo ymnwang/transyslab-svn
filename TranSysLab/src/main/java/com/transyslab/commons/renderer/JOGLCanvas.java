@@ -54,12 +54,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	// 临时记录已选择的对象
 	private NetworkObject preObject;
 	private AnimationFrame curFrame;
-	//
-	private boolean isPause;
-	//
-	private boolean isRendering;
-	//wym
-	public boolean needNextScene;
 	private int status;
 	private int mode;
 
@@ -104,6 +98,9 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	}
 	public void setMode(int mode){
 		this.mode = mode;
+	}
+	public AnimationFrame getCurFrame(){
+		return this.curFrame;
 	}
 	// ------ Implement methods declared in GLEventListener ------
 
@@ -362,7 +359,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				break;
 			case "Vehicle":
 				//选择车辆
-				if(isPause && curFrame!=null) {
+				if(status==ANIMATOR_PAUSE && curFrame!=null) {
 					for (VehicleData vd : curFrame.getVhcDataQueue()) {
 						if (GeoUtil.isIntersect(pickRay, vd.getVhcShape())) {
 							//被选中对象用黄色渲染

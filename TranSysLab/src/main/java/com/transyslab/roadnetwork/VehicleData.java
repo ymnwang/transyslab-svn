@@ -24,6 +24,7 @@ public class VehicleData implements NetworkObject{
 	protected double curSpeed;
 	protected int curLaneID;
 	protected boolean isSelected;
+	protected double distance;
 	public int getVehicleID(){
 		return vehicleID_;
 	}
@@ -75,6 +76,9 @@ public class VehicleData implements NetworkObject{
 	public String getVhcInfo(){
 		return this.info;
 	}
+	public double getDistance(){
+		return this.distance;
+	}
 	public void init(Vehicle vhc, boolean isSegBased, int specialflag, String info){
 		this.vehicleID_ = vhc.id;
 		this.vehicleType_ = vhc.getType();
@@ -106,6 +110,8 @@ public class VehicleData implements NetworkObject{
 		GeoPoint startPnt, endPnt;
 		// 向两侧扩展
 		boolean bothSize;
+		// TODO 换至初始化函数中
+		this.distance = distance;
 		if(moveOn instanceof Segment){
 			Segment seg = (Segment) moveOn;
 			l = seg.getLength();

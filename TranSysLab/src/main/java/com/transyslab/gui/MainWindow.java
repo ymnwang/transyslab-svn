@@ -1,10 +1,7 @@
 package com.transyslab.gui;
 
 import com.jogamp.opengl.util.FPSAnimator;
-import com.transyslab.commons.renderer.Camera;
-import com.transyslab.commons.renderer.FrameQueue;
-import com.transyslab.commons.renderer.JOGLCanvas;
-import com.transyslab.commons.renderer.OrbitCamera;
+import com.transyslab.commons.renderer.*;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
@@ -47,7 +44,6 @@ public class MainWindow {
     private SubWindow subWindow;
     private SimulationEngine engine;
     private Trace2DSimple traceRT;
-    public boolean needRTPlot;
     private ClbrtForm clbrtForm;
     public MainWindow(){
 
@@ -225,7 +221,7 @@ public class MainWindow {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    JFileChooser fileChooser = new JFileChooser("src/main/resources");
+                    JFileChooser fileChooser = new JFileChooser();
                     fileChooser.setDialogTitle("选择项目文件");
                     fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                     fileChooser.setFileFilter(new FileNameExtensionFilter("配置文件","properties"));
@@ -338,6 +334,7 @@ public class MainWindow {
                     if(canvas.getStatus() == JOGLCanvas.ANIMATOR_PAUSE || canvas.getStatus() == JOGLCanvas.ANIMATOR_PLAYING){
                         canvas.setStatus(JOGLCanvas.ANIMATOR_STOP);
                         engine.stop();
+                        AnimationFrame.resetCounter();
                         FrameQueue.getInstance().clear();
                     }
                 }
@@ -348,6 +345,34 @@ public class MainWindow {
             //---- 按键：数据库连接 ----
             button8.setIcon(new ImageIcon(loadImage("icon/new/database.png")
                     .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            button8.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if(canvas.getStatus()==JOGLCanvas.ANIMATOR_PAUSE){
+                        // TODO 暂定为快照帧保存
+                        // 路径选择器
+                        JFileChooser fileChooser = new JFileChooser();
+                        fileChooser.setDialogTitle("选择快照保存路径");
+                        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                        int state = fileChooser.showOpenDialog(null);
+                        if(state == JFileChooser.APPROVE_OPTION){
+                            String filePath = fileChooser.getSelectedFile().getPath();
+                            AnimationFrame frame = canvas.getCurFrame();
+                            if(frame!=null){
+                                frame.toCSV(filePath);
+                            }
+                        }
+                    }
+                    else if(canvas.getStatus()==JOGLCanvas.ANIMATOR_STOP){
+                        JOptionPane.showMessageDialog(null, "请先开始播放动画！");
+                        return;
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(null, "请先暂停动画！");
+                        return;
+                    }
+                }
+            });
             toolBar1.add(button8);
 
             //---- 按键：参数校准 ----
