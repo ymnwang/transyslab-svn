@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -66,14 +68,22 @@ public class ClbrtForm extends JFrame{
 		label8 = new JLabel();
 		label9 = new JLabel();
 		textField1 = new JTextField();
+		// TODO 默认取值
+		textField1.setText("0.5");
 		label10 = new JLabel();
+		// TODO 默认取值
 		textField2 = new JTextField();
+		textField2.setText("0.5");
 		label11 = new JLabel();
 		label12 = new JLabel();
 		comboBox5 = new JComboBox<>();
 		textField3 = new JTextField();
+		// TODO 默认取值
+		textField3.setText("0.35");
 		label13 = new JLabel();
+		// TODO 默认取值
 		textField4 = new JTextField();
+		textField4.setText("1000");
 		panel5 = new JPanel();
 		button1 = new JButton();
 		button2 = new JButton();
@@ -290,21 +300,29 @@ public class ClbrtForm extends JFrame{
 				((GridBagLayout)panel5.getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 1.0E-4};
 				((GridBagLayout)panel5.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
 
-				//---- button1 ----
+				//---- button1 开始 ----
 				button1.setText("\u5f00\u59cb");
 				button1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
 				panel5.add(button1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
 						GridBagConstraints.CENTER, GridBagConstraints.BOTH,
 						new Insets(5, 5, 5, 10), 0, 0));
+				button1.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
 
-				//---- button2 ----
+					}
+				});
+
+				//---- button2 暂停 ----
 				button2.setText("\u6682\u505c");
 				button2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
 				panel5.add(button2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
 						GridBagConstraints.CENTER, GridBagConstraints.BOTH,
 						new Insets(5, 5, 5, 10), 0, 0));
+				// TODO 暂时取消
+				button2.setVisible(false);
 
-				//---- button3 ----
+				//---- button3 终止 ----
 				button3.setText("\u7ed3\u675f");
 				button3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 14));
 				panel5.add(button3, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0,

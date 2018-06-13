@@ -381,14 +381,21 @@ public class MainWindow {
             button9.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if(clbrtForm == null) {
-                        clbrtForm = new ClbrtForm();
+                    if(!canvas.isNetworkReady()){
+                        JOptionPane.showMessageDialog(null, "«Îœ»º”‘ÿ¬∑Õ¯");
+                        return;
                     }
-                    else if(!clbrtForm.isShowing()){
-                        clbrtForm.clear();
-                        clbrtForm.setVisible(true);
-                        clbrtForm.requestFocusInWindow();
+                    else{
+                        if(clbrtForm == null) {
+                            clbrtForm = new ClbrtForm();
+                        }
+                        else if(!clbrtForm.isShowing()){
+                            clbrtForm.clear();
+                            clbrtForm.setVisible(true);
+                            clbrtForm.requestFocusInWindow();
+                        }
                     }
+
                 }
             });
             toolBar1.add(button9);

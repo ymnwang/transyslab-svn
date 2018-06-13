@@ -265,10 +265,9 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					else //非虚拟车
 						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(),0.2);
 				}
-				//回收vehicledata
-				if(!isPause)
-					VehicleDataPool.getVehicleDataPool().recycleVehicleData(vd);
+
 			}
+			//回收vehicledata
 			if(!isPause)
 				curFrame.clean();
 		}
