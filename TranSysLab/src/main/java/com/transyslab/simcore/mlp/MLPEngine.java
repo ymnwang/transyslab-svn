@@ -676,30 +676,23 @@ public class MLPEngine extends SimulationEngine{
 	@Override
 	public void run() {
 		if (config.getBoolean("engineBroadcast")) {
-			double vehOnNetwork = 0.0;
 			double count = 0.0;
 			long t0 = System.currentTimeMillis();
 
 			EngineEvent engineEvent = new EngineEvent(this, EngineEvent.BROADCAST);
 
 			while (simulationLoop()>=0) {
-				vehOnNetwork += mlpNetwork.veh_list.stream().filter(veh->veh.virtualType==0).count();
 				count++;
-//				System.out.println("sim time: " + getSimClock().getCurrentTime() + " s.");
 				engineEvent.setMsg("sim time: " + getSimClock().getCurrentTime() + " s.");
 				informEngineListeners(engineEvent);
 			}
 
-			vehOnNetwork = vehOnNetwork / count;
-			String msg = "avg of vehicle enroute: " + vehOnNetwork + " veh/s." + "\n" +
-					"runtime: " + (System.currentTimeMillis()-t0) + " ms." + "\n" +
-					"sim rate: " + String.format("%.2f",((double)count)/((double)System.currentTimeMillis()-t0)) + " kHz.";
+			String msg = "runtime: " + (System.currentTimeMillis()-t0) + " ms." + "\n" +
+					"sim rate: " + String.format("%.2f",count/((double)System.currentTimeMillis()-t0)) + " kHz.";
+
 			System.out.println(msg);
 			engineEvent.setMsg(msg);
 			informEngineListeners(engineEvent);
-//			System.out.println("avg of vehicle enroute: " + vehOnNetwork + " veh/s.");
-//			System.out.println("runtime = " + (System.currentTimeMillis()-t0) + " ms.");
-//			System.out.println("sim rate: " + String.format("%.2f",((double)count)/((double)System.currentTimeMillis()-t0)) + " kHz.");
 		}
 		else
 			while (simulationLoop()>=0);

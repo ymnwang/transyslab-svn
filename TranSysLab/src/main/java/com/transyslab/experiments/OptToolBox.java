@@ -15,19 +15,38 @@ import org.uma.jmetal.util.ProblemUtils;
 import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
 import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Scanner;
 
 /**
  * Created by ITSA405-35 on 2017/12/12.
  */
 public class OptToolBox {
 	public static void main(String[] args) {
+		DifferentialEvolution alg = createAlgorithm(args);
+		Thread algThread = new Thread(alg);
+		algThread.start();
+		Scanner scanner = new Scanner(System.in);
+		while (algThread.isAlive()) {
+			if (scanner.hasNextLine()){
+				switch (scanner.nextLine()) {
+					case "q": {
+						System.out.println("progress is shutting down, please wait......");
+						alg.shutdown();
+					}break;
+				}
+			}
+		}
+		System.out.println(alg.getStopInfo());
+	}
 
-		String simMasterFileName = args.length>0 ? args[0]
-												 : "/home/wym/master/QuickFD.properties";
+	public static DifferentialEvolution createAlgorithm(String[] args) {
+		String simMasterFileName = args[0];
 		System.out.println("using: " + simMasterFileName.substring(simMasterFileName.lastIndexOf('/') + 1));
 		Configuration config = ConfigUtils.createConfig(simMasterFileName);
 
@@ -42,24 +61,16 @@ public class OptToolBox {
 		DoubleProblem problem = (DoubleProblem) ProblemUtils.<DoubleSolution> loadProblem(problemName);
 		if (problem instanceof SimProblem)
 			((SimProblem)problem).initProblem(simMasterFileName);
-		DifferentialEvolution algorithm;
 		DifferentialEvolutionSelection selection = new DifferentialEvolutionSelection();
 		DifferentialEvolutionCrossover crossover = new DifferentialEvolutionCrossover(crossOver_cr, crossOver_f, crossOver_variant) ;
 
-		algorithm = new DifferentialEvolution(problem,maxGeneration*popSize,popSize,
+		DifferentialEvolution algorithm = new DifferentialEvolution(problem,maxGeneration*popSize,popSize,
 				crossover,selection,new SequentialSolutionListEvaluator<>());
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 		algorithm.setSolutionWriter(new TXTUtils(new File(simMasterFileName).getParent() + "/" +
 				config.getString("outputPath") + "/" +
 				"AdvancedSolutionRecord_" + timeStamp + "_" + JMetalRandom.getInstance().getSeed() + ".csv"));
-		algorithm.run();
-		SimSolution bestSolution = (SimSolution) algorithm.getResult();
-		System.out.println("BestFitness: " + Arrays.toString(bestSolution.getObjectiveValues()));
-		System.out.println("BestSolution: " + Arrays.toString(bestSolution.getInputVariables()));
-		System.out.println("SimSeed: " + bestSolution.getAttribute("SimSeed"));
-		System.out.println("AlgSeed: " + JMetalRandom.getInstance().getSeed());
-		if (problem instanceof SimProblem)
-			((SimProblem)problem).closeProblem();
 
+		return algorithm;
 	}
 }

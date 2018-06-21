@@ -12,4 +12,5 @@ public class AppSetup {
 	public static double timeStep;
 	public static int simMode;
 	public static boolean displayOn;
+	public static String masterFileName;
 }

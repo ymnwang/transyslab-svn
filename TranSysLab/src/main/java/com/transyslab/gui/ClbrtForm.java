@@ -1,5 +1,11 @@
 package com.transyslab.gui;
 
+import com.transyslab.commons.tools.optimizer.DifferentialEvolution;
+import com.transyslab.experiments.OptToolBox;
+import com.transyslab.simcore.AppSetup;
+import org.apache.commons.configuration2.Configuration;
+import org.uma.jmetal.util.pseudorandom.JMetalRandom;
+
 import javax.swing.*;
 import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.TitledBorder;
@@ -49,6 +55,7 @@ public class ClbrtForm extends JFrame{
 	private JScrollPane scrollPane1;
 	private JTextArea textArea1;// 显示迭代过程的中间结果和最优结果
 	private MainWindow mainWindow;
+	private DifferentialEvolution algorithm;
 	public ClbrtForm() {
 		initComponents();
 	}
@@ -309,7 +316,24 @@ public class ClbrtForm extends JFrame{
 				button1.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-
+						textArea1.setText("");//clear
+						textField5.setText("");//clear
+						algorithm = OptToolBox.createAlgorithm(new String[] {AppSetup.masterFileName});
+						JMetalRandom.getInstance().setSeed(1528339627088L);//测试，固定算法种子
+						new Thread(algorithm).start();
+						algorithm.addAlgListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								if (e.getSource()==algorithm) {
+									if (e.getID()==DifferentialEvolution.BROADCAST) {
+										textArea1.append(e.getActionCommand());
+										textField5.setText(e.getActionCommand().split(",")[0]);
+									}
+									if (e.getID()==DifferentialEvolution.END)
+										textArea1.append(((DifferentialEvolution)e.getSource()).getStopInfo());
+								}
+							}
+						});
 					}
 				});
 
@@ -328,6 +352,15 @@ public class ClbrtForm extends JFrame{
 				panel5.add(button3, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0,
 						GridBagConstraints.CENTER, GridBagConstraints.BOTH,
 						new Insets(5, 5, 5, 0), 0, 0));
+				button3.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						if (e.getSource()==button3) {
+							textArea1.append("Stopping...\n");
+							algorithm.shutdown();
+						}
+					}
+				});
 			}
 			panel1.add(panel5, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
 					GridBagConstraints.CENTER, GridBagConstraints.BOTH,
@@ -372,7 +405,13 @@ public class ClbrtForm extends JFrame{
 			panel6.add(button4, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0,
 					GridBagConstraints.CENTER, GridBagConstraints.BOTH,
 					new Insets(5, 0, 10, 5), 0, 0));
-
+			button4.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (e.getSource()==button4)
+						textArea1.setText("");
+				}
+			});
 			//======== scrollPane1 ========
 			{
 

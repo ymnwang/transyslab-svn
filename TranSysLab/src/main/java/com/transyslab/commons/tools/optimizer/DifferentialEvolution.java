@@ -1,6 +1,7 @@
 package com.transyslab.commons.tools.optimizer;
 
 import com.transyslab.commons.io.TXTUtils;
+import com.transyslab.commons.tools.adapter.SimProblem;
 import com.transyslab.commons.tools.adapter.SimSolution;
 import org.uma.jmetal.algorithm.impl.AbstractDifferentialEvolution;
 import org.uma.jmetal.operator.impl.crossover.DifferentialEvolutionCrossover;
@@ -9,7 +10,11 @@ import org.uma.jmetal.problem.DoubleProblem;
 import org.uma.jmetal.solution.DoubleSolution;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
+import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 
+import javax.swing.event.EventListenerList;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
 
 /**
@@ -17,7 +22,9 @@ import java.util.*;
  * 重写DE算法的选择操作，应对单目标函数（KS）多解的问题
  * 当目标函数取值相同时，根据其他约束或目标评价当前解是否更优（帕累托支配）
  */
-public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleSolution> {
+public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleSolution> implements Runnable{
+	public static final int BROADCAST = 0;
+	public static final int END = 1;
 	private int populationSize;
 	private int maxEvaluations;
 	private SolutionListEvaluator<DoubleSolution> evaluator;
@@ -25,6 +32,8 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 	private int evaluations;
 	private TXTUtils solutionWriter;
 	private boolean needOutput;
+	private boolean stopSignal;
+	private EventListenerList listenerList;
 	/**
 	 * Constructor
 	 *
@@ -43,6 +52,7 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 		this.selectionOperator = selectionOperator;
 		this.evaluator = evaluator;
 		comparator = new ObjectiveComparator<DoubleSolution>(0);
+		listenerList = new EventListenerList();
 	}
 	public void setComparator(Comparator<DoubleSolution> comparator){
 		this.comparator = comparator;
@@ -67,7 +77,7 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 	}
 
 	@Override protected boolean isStoppingConditionReached() {
-		return evaluations >= maxEvaluations;
+		return (evaluations >= maxEvaluations || stopSignal);
 	}
 
 	@Override protected List<DoubleSolution> createInitialPopulation() {
@@ -119,13 +129,15 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 		if(needOutput){
 			for (int i = 0; i < populationSize; i++) {
 				SimSolution solution = ((SimSolution)pop.get(i));
-				solutionWriter.writeNFlush( evaluations/populationSize + "," + Arrays.toString(solution.getInputVariables())
+				String str = evaluations/populationSize + "," + Arrays.toString(solution.getInputVariables())
 						.replace(" ","")
 						.replace("[","")
 						.replace("]","") + "," +
 						Arrays.toString(solution.getObjectiveValues()).replace(" ","")
 								.replace("[","")
-								.replace("]","")+ "\r\n");
+								.replace("]","")+ "\r\n";
+				solutionWriter.writeNFlush(str);
+				informListeners(new ActionEvent(this,BROADCAST,str));
 			}
 
 		}
@@ -147,5 +159,42 @@ public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleS
 
 	@Override public String getDescription() {
 		return "Differential Evolution Algorithm" ;
+	}
+
+	public void shutdown() {
+		stopSignal = true;
+	}
+
+	public String getStopInfo() {
+		SimSolution bestSolution = (SimSolution) getResult();
+		String ans = "";
+		ans += "BestFitness: " + Arrays.toString(bestSolution.getObjectiveValues()) + "\n";
+		ans += "BestSolution: " + Arrays.toString(bestSolution.getInputVariables()) + "\n";
+		ans += "SimSeed: " + bestSolution.getAttribute("SimSeed") + "\n";
+		ans += "AlgSeed: " + JMetalRandom.getInstance().getSeed();
+		return ans;
+	}
+
+	@Override
+	public void run() {
+		super.run();
+		if (problem instanceof SimProblem)
+			((SimProblem)problem).closeProblem();
+		informListeners(new ActionEvent(this,END,""));
+	}
+
+	public void addAlgListener(ActionListener listener) {
+		listenerList.add(ActionListener.class, listener);
+	}
+
+	public void removeAlgListener(ActionListener listener) {
+		listenerList.remove(ActionListener.class, listener);
+	}
+
+	public void informListeners(ActionEvent e) {
+		Object actionListeners[] = listenerList.getListeners(ActionListener.class);
+		for (Object listener : actionListeners) {
+			((ActionListener) listener).actionPerformed(e);
+		}
 	}
 }

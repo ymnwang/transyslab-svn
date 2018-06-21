@@ -340,7 +340,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 						//被选中对象用黄色渲染
 						tmpSegment.setSelected(true);
 						// TODO 临时添加
-						//ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, tmpSegment.isSelected());
+						ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, tmpSegment.isSelected());
 						pickedObjects.add(tmpSegment);
 					}
 				}
