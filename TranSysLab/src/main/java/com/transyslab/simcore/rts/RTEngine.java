@@ -38,6 +38,7 @@ public class RTEngine extends SimulationEngine{
 	private int curFrameId;
 	private boolean firstEntry;
 	private boolean isStop;
+	public static boolean isState;
 
 	public RTEngine(){
 		curFrameId = -1;
@@ -45,6 +46,7 @@ public class RTEngine extends SimulationEngine{
 		runProperties = new HashMap<>();
 		firstEntry = true;
 		isStop = false;
+		isState = true;
 	}
 	public RTEngine(String masterFilePath) {
 		this();
@@ -75,6 +77,7 @@ public class RTEngine extends SimulationEngine{
 		// 数据已按帧号排序
 		CSVRecord curRecord;
 		List<VehicleData> vds = new ArrayList<>();
+		int frameConter = 1;
 		while((curRecord = frameParser.iterator().next())!=null){
 			int frameid = Integer.parseInt(curRecord.get(0));
 			if(firstEntry) {
@@ -84,8 +87,14 @@ public class RTEngine extends SimulationEngine{
 			int vhcid = Integer.parseInt(curRecord.get(1));
 			double distance = Double.parseDouble(curRecord.get(2));
 			int laneid = Integer.parseInt(curRecord.get(3));
+			int flag = Integer.parseInt(curRecord.get(4));
+			boolean queueFlag = false;
+			if(flag == 1)
+				queueFlag = true;
+			int tarLaneid = Integer.parseInt(curRecord.get(6));
+			double speed = Double.parseDouble(curRecord.get(5));
 			VehicleData vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
-			vd.init(vhcid,rtNetwork.findLane(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,true);
+			vd.init(vhcid,rtNetwork.findLane(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,speed,tarLaneid,queueFlag,true);
 			if(curFrameId != frameid){//新的一帧
 				if(!vds.isEmpty()){
 					if (isStop) {
@@ -94,9 +103,17 @@ public class RTEngine extends SimulationEngine{
 						// 跳出循环
 						break;
 					}
-					rtNetwork.renderVehicle(vds);
+					if(!isState) {
+						rtNetwork.renderVehicle(vds);
+					}
+					else{
+						if(frameConter%30 == 0)
+							rtNetwork.renderState(vds);
+					}
+
 					vds.clear();
 				}
+				frameConter ++;
 				curFrameId = frameid;
 			}
 			vds.add(vd);

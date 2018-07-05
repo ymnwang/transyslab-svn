@@ -1,5 +1,8 @@
 package com.transyslab.simcore.rts;
 
+import com.transyslab.commons.tools.GeoUtil;
+import com.transyslab.roadnetwork.GeoPoint;
+import com.transyslab.roadnetwork.GeoSurface;
 import com.transyslab.roadnetwork.Lane;
 import com.transyslab.roadnetwork.Segment;
 
@@ -29,6 +32,10 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 	//	public int di;//ÆúÓÃ
 	protected List<RTLane> successiveDnLanes;
 	protected List<RTLane> successiveUpLanes;
+	protected double queueLength;
+	protected GeoPoint queuePostion;
+	protected double avgSpeed;
+	protected GeoSurface state;
 
 	public RTLane(){
 		lnPosNum_ = 0;
@@ -39,10 +46,21 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 		successiveDnLanes = new ArrayList<>();
 		successiveUpLanes = new ArrayList<>();
 	}
+	public GeoSurface getState(){
+		return this.state;
+	}
+	public void calState(double queueLength){
+		this.queueLength = queueLength;
+		GeoPoint quePosition = endPnt.intermediate(startPnt, queueLength/getLength());
+		state = GeoUtil.lineToRectangle(startPnt,quePosition,width, true);
+	}
 
-
-
-
+	public void setAvgSpeed(double avgSpeed){
+		this.avgSpeed = avgSpeed;
+	}
+	public double getAvgSpeed(){
+		return this.avgSpeed;
+	}
 	public void calLnPos() {
 		lnPosNum_ = getId()%10;
 	}

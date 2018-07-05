@@ -398,8 +398,8 @@ public class LayerPanel {
             textField3.setText(segmentID);
             textArea4.setText(
                     "SegID " + theLane.getSegment().getId() + "\n" +
-                    "LnkID " + theLane.getLink().getId() + "\n" +
-                    ((MLPLane) theLane).getSDnLnInfo());
+                    "LnkID " + theLane.getLink().getId() + "\n" );
+//                    ((MLPLane) theLane).getSDnLnInfo());
         }
         private void initComponents() {
 

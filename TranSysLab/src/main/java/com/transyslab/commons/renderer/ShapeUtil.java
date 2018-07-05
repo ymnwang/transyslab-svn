@@ -13,6 +13,7 @@ import jhplot.math.LinearAlgebra;
 
 import static com.jogamp.opengl.GL.*;// GL constants
 
+import java.awt.*;
 import java.util.List;
 import java.util.Vector;
 
@@ -63,6 +64,14 @@ public class ShapeUtil {
 		for(GeoPoint p:points ){
 			// TODO Õº≤„π‹¿Ì
 			gl.glVertex3d(p.getLocationX(), p.getLocationY(),0.0);
+		}
+		gl.glEnd();
+	}
+	public static void drawPolygon(GL2 gl, List<GeoPoint>points, Color color, double height){
+		gl.glColor3d(color.getRed()/255.0, color.getGreen()/255.0, color.getBlue()/255.0);
+		gl.glBegin(GL2.GL_POLYGON);
+		for(GeoPoint p:points ){
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
 		}
 		gl.glEnd();
 	}

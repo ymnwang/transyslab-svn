@@ -14,9 +14,7 @@ import java.util.*;
  * Created by WangYimin on 2017/9/18.
  */
 public class BaseEXP {
-	public static void main(String[] args) throws IOException {
-		ExpSwitch.APPROACH_CTRL = true;
-		ExpSwitch.MAX_ACC_CTRL = true;
+	public static void main(String[] args) {
 		String fitnessType = "RMSE";
 		for(int k=0;k<1;k++){
 			MLPEngine mlpEngine = new MLPEngine("src/main/resources/validation.properties");

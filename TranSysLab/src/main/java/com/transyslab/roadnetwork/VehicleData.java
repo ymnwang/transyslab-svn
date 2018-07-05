@@ -25,6 +25,14 @@ public class VehicleData implements NetworkObject{
 	protected int curLaneID;
 	protected boolean isSelected;
 	protected double distance;
+	protected int tarLaneID;// TODO ffff
+	protected boolean queueFlag;
+	public boolean isQueue(){
+		return this.queueFlag;
+	}
+	public int getTarLaneID(){
+		return this.tarLaneID;
+	}
 	public int getVehicleID(){
 		return vehicleID_;
 	}
@@ -131,7 +139,7 @@ public class VehicleData implements NetworkObject{
 			startPnt = lane.getStartPnt();
 			endPnt = lane.getEndPnt();
 			// TODO 写死车宽
-			width = 1.25;
+			width = 1.8;
 			bothSize = true;
 		}
 		else{
@@ -149,14 +157,17 @@ public class VehicleData implements NetworkObject{
 		double vhcTrailX = startPnt.getLocationX() + s * (endPnt.getLocationX() - startPnt.getLocationX()) / l;
 		double vhcTrailY = startPnt.getLocationY() + s * (endPnt.getLocationY() - startPnt.getLocationY()) / l;
 		// TODO 写死高度z
-		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.5);
-		GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 0.5);
+		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 1.0);
+		GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 1.0);
 		// 注意：对象更替频繁
 		this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, width,bothSize);
 	}
-	public void init(int id,Object moveOn,double vhcLength,double distance,boolean distReverse){
+	public void init(int id,Object moveOn,double vhcLength,double distance,double speed,int tarLaneID,boolean queueFlag,boolean distReverse){
 		this.vehicleID_ = id;
+		this.tarLaneID = tarLaneID;
 		this.vehicleLength_ = vhcLength;
+		this.curSpeed = speed;
+		this.queueFlag = queueFlag;
 		if(moveOn == null) {
 			System.out.println("Error: Could not find the Lane");
 			return;
