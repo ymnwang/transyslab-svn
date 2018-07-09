@@ -3,7 +3,7 @@ package com.transyslab.roadnetwork;
 import com.transyslab.commons.tools.GeoUtil;
 
 //车辆轨迹数据
-public class VehicleData implements NetworkObject{
+public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	//车辆id
 	protected int vehicleID_;
 	//车辆类型
@@ -181,5 +181,15 @@ public class VehicleData implements NetworkObject{
 	//wym
 	public GeoPoint getHeadPosition(){
 		return headPosition;
+	}
+
+	@Override
+	public int compareTo(VehicleData vd) {
+		if(this.distance > vd.distance)
+			return 1;
+		else if(this.distance < vd.distance)
+			return -1;
+		else
+			return 0;
 	}
 }

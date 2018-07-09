@@ -1,13 +1,11 @@
 package com.transyslab.simcore.rts;
 
 import com.transyslab.commons.tools.GeoUtil;
-import com.transyslab.roadnetwork.GeoPoint;
-import com.transyslab.roadnetwork.GeoSurface;
-import com.transyslab.roadnetwork.Lane;
-import com.transyslab.roadnetwork.Segment;
+import com.transyslab.roadnetwork.*;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -33,9 +31,11 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 	protected List<RTLane> successiveDnLanes;
 	protected List<RTLane> successiveUpLanes;
 	protected double queueLength;
-	protected GeoPoint queuePostion;
+	protected List<VehicleData> vhcOnLn;
+	protected List<VehicleData> queueVehicles;
+	protected GeoPoint queuePosition;
 	protected double avgSpeed;
-	protected GeoSurface state;
+	protected GeoSurface stateSurface;
 
 	public RTLane(){
 		lnPosNum_ = 0;
@@ -45,14 +45,39 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 		enterAllowed = true;
 		successiveDnLanes = new ArrayList<>();
 		successiveUpLanes = new ArrayList<>();
+		vhcOnLn = new ArrayList<>();
+		queueVehicles = new ArrayList<>();
 	}
-	public GeoSurface getState(){
-		return this.state;
+	public void addVehicleData(VehicleData vd){
+		this.vhcOnLn.add(vd);
 	}
-	public void calState(double queueLength){
-		this.queueLength = queueLength;
-		GeoPoint quePosition = endPnt.intermediate(startPnt, queueLength/getLength());
-		state = GeoUtil.lineToRectangle(startPnt,quePosition,width, true);
+	public void addQueueVD(VehicleData vd){
+		this.queueVehicles.add(vd);
+	}
+	public List<VehicleData> getVDList(){
+		return this.vhcOnLn;
+	}
+	public List<VehicleData> getQVDList(){
+		return this.queueVehicles;
+	}
+	public GeoSurface getStateSurface(){
+		return this.stateSurface;
+	}
+	public void calcState(){
+		if(!vhcOnLn.isEmpty()){
+			avgSpeed = 0;
+			queueLength = getLength();
+			// ∞¥Œª÷√…˝–Ú≈≈–Ú£¨’“≥ˆ≈≈∂”Œª÷√
+			if(!queueVehicles.isEmpty()) {
+				Collections.sort(queueVehicles);
+				queueLength = getLength() - queueVehicles.get(0).getDistance();
+			}
+			this.queuePosition = endPnt.intermediate(startPnt, queueLength/getLength());
+			stateSurface = GeoUtil.lineToRectangle(startPnt,queuePosition,width, true);
+			avgSpeed = vhcOnLn.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble();
+			queueVehicles.clear();
+			vhcOnLn.clear();
+		}
 	}
 
 	public void setAvgSpeed(double avgSpeed){
@@ -113,8 +138,6 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 			return null;
 		}
 	}
-
-
 
 	public boolean connect2DnLanes(List<Lane> DnLanes) {
 		for (Lane tmpLN: DnLanes){

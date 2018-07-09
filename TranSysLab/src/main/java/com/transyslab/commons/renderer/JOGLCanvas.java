@@ -248,16 +248,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			Connector tmpConnector = drawableNetwork.getConnector(i);
 			ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f});
 		}
-		// 显示车道状态
-		if(RTEngine.isState ){
-			for(int i=0;i< drawableNetwork.nLanes();i++){
-				RTLane rtLane = (RTLane) drawableNetwork.getLane(i);
-				GeoSurface state = rtLane.getState();
-				Color color = ColorBar.valueToColor(0,15,rtLane.getAvgSpeed(),250);
-				if(state !=null && color!=null)
-					ShapeUtil.drawPolygon(gl,state.getKerbList(),color,0.9);
-			}
-		}
+
 		boolean isPause = (status == ANIMATOR_PAUSE);
 		//暂停时不更新帧索引
 		curFrame =FrameQueue.getInstance().poll(isPause);
@@ -268,14 +259,35 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		}
 		if(curFrame !=null){
 			for(VehicleData vd:curFrame.getVhcDataQueue()){
-				switch (vd.getTarLaneID()){
-					case 4 : ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),new float[]{0.384f,0.094f,0.529f}, vd.isSelected(),0.2);break;
-					case 5 : ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),new float[]{0.114f,0.125f,0.537f}, vd.isSelected(),0.2);break;
-					case 6 : ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),new float[]{0.008f,0.404f,0.725f}, vd.isSelected(),0.2);break;
-					default: break;
+				if(vd.getId() == 654) {
+					switch (vd.getTarLaneID()) {
+						// 左转
+						case 4:
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), new float[]{0.384f, 0.094f, 0.529f}, vd.isSelected(), 1);
+							break;
+						// 直行
+						case 5:
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), new float[]{0.114f, 0.125f, 0.537f}, vd.isSelected(), 1);
+							break;
+						// 右转
+						case 6:
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), new float[]{0.008f, 0.404f, 0.725f}, vd.isSelected(), 1);
+							break;
+						default:
+							break;
+					}
 				}
-
-
+			}
+			// 显示车道状态
+			if(RTEngine.isState ){
+				if(!curFrame.getVhcDataQueue().isEmpty()){
+					System.out.println("");
+				}
+				for(StateData sd:curFrame.getStateDataQueue()){
+					Color color = ColorBar.valueToColor(0,15,sd.getAvgSpeed(),250);
+					if(color!=null)
+						ShapeUtil.drawPolygon(gl,sd.getSurface().getKerbList(),color,0.9);
+				}
 			}
 			//回收vehicledata
 			if(!isPause)

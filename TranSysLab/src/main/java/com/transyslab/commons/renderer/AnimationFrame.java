@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import com.transyslab.commons.io.CSVUtils;
+import com.transyslab.roadnetwork.StateData;
 import com.transyslab.roadnetwork.VehicleData;
 import com.transyslab.roadnetwork.VehicleDataPool;
 import org.apache.commons.csv.CSVPrinter;
@@ -12,12 +13,14 @@ import org.apache.commons.csv.CSVPrinter;
 public class AnimationFrame{
 	private int frameID_;
 	private LinkedList<VehicleData> vhcDataQueue_;
+	private LinkedList<StateData> stateDataQueue;
 	// 除车辆状态信息外，动画帧的其它信息
 	private HashMap info;
 	private static int counter = 0;
 
 	public AnimationFrame(){
-		vhcDataQueue_ = new LinkedList<VehicleData>();
+		vhcDataQueue_ = new LinkedList<>();
+		stateDataQueue = new LinkedList<>();
 		info = new HashMap<String, Object>();
 		counter++;
 		frameID_ = counter;
@@ -25,6 +28,7 @@ public class AnimationFrame{
 	public LinkedList<VehicleData> getVhcDataQueue(){
 		return vhcDataQueue_;
 	}
+	public LinkedList<StateData> getStateDataQueue(){return stateDataQueue;}
 	public void setInfo(String key,Object data){
 		info.put(key,data);
 	}
@@ -40,6 +44,9 @@ public class AnimationFrame{
 	public void addVehicleData(VehicleData vd){
 		//从尾部插入对象
 		vhcDataQueue_.offerLast(vd);
+	}
+	public void addStateData(StateData sd){
+		stateDataQueue.offerLast(sd);
 	}
 	public VehicleData getVehicleData(boolean needRetain){
 		if(needRetain)//返回头部对象，不做移除
@@ -63,7 +70,6 @@ public class AnimationFrame{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 	public static void resetCounter(){
 		counter = 0;
@@ -73,5 +79,6 @@ public class AnimationFrame{
 		while(!vhcDataQueue_.isEmpty()){
 			VehicleDataPool.getVehicleDataPool().recycleVehicleData(vhcDataQueue_.pollFirst());
 		}
+		stateDataQueue.clear();
 	}
 }

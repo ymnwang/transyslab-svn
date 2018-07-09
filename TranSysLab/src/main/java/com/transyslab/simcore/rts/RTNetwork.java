@@ -157,6 +157,27 @@ public class RTNetwork extends RoadNetwork{
 	}
 	public void renderState(List<VehicleData> vds ){
 		AnimationFrame af = new AnimationFrame();
+		//数据分装
+		for(VehicleData vd:vds){
+			RTLane rtLane = (RTLane) findLane(vd.getCurLaneID());
+			if(vd.isQueue()){
+				// 排队车辆
+				rtLane.addQueueVD(vd);
+				// 保存数据
+				af.addVehicleData(vd);
+			}
+			else
+				// 非排队车辆
+				rtLane.addVehicleData(vd);
+		}
+		for(int i=0;i<nLanes();i++){
+			RTLane rtLane = (RTLane) getLane(i);
+			// 根据行驶距离排序，找出队尾
+			rtLane.calcState();
+			StateData sd = new StateData(rtLane,rtLane.stateSurface,rtLane.queuePosition,rtLane.avgSpeed);
+			af.addStateData(sd);
+		}
+		/*
 		double avgSpeed = 0;
 		double[] queuePostion = new double[]{380,380,380,380,380};
 		List<VehicleData> vds1 = new ArrayList<>();
@@ -269,7 +290,7 @@ public class RTNetwork extends RoadNetwork{
 				default:
 					break;
 			}
-		}
+		}*/
 		try {
 			FrameQueue.getInstance().offer(af);
 		} catch (InterruptedException e) {
@@ -293,7 +314,6 @@ public class RTNetwork extends RoadNetwork{
 						v.toString());
 				//将vehicledata插入frame
 				af.addVehicleData(vd);
-
 
 			}
 			//添加额外信息(帧号)

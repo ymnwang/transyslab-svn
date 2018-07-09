@@ -46,7 +46,7 @@ public class RTEngine extends SimulationEngine{
 		runProperties = new HashMap<>();
 		firstEntry = true;
 		isStop = false;
-		isState = true;
+		isState = false;
 	}
 	public RTEngine(String masterFilePath) {
 		this();
@@ -107,7 +107,7 @@ public class RTEngine extends SimulationEngine{
 						rtNetwork.renderVehicle(vds);
 					}
 					else{
-						if(frameConter%30 == 0)
+						//if(frameConter%30 == 0)
 							rtNetwork.renderState(vds);
 					}
 
@@ -118,7 +118,6 @@ public class RTEngine extends SimulationEngine{
 			}
 			vds.add(vd);
 		}
-
 	}
 	@Override
 	public void loadFiles() {
