@@ -8,6 +8,7 @@ import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.*;
@@ -237,7 +238,26 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, tmpSegment.isSelected());
 			}
 		}
-		//
+
+		//显示路段打断的填补面
+		/*
+		for(GeoSurface connectSurface: drawableNetwork.getConnectSegments()){
+			int pCounter = 1;
+			String[] sCouter = new String[connectSurface.getKerbList().size()];
+			for(int i=0;i<sCouter.length;i++){
+				sCouter[i] = String.valueOf(pCounter);
+				pCounter++;
+			}
+//			ShapeUtil.drawPolygon(gl,connectSurface.getKerbList(),Constants.COLOR_WHITE,false,0.7);
+//			ShapeUtil.drawTriangles(gl,connectSurface.getKerbList(),Constants.COLOR_WHITE,0.7);
+//			for(GeoPoint p:connectSurface.getKerbList()){
+//			//ShapeUtil.drawPoint(gl,p,10,Constants.COLOR_GREEN);
+//
+//				//pCounter++;
+//			}
+			ShapeUtil.drawText(textRenderer,sCouter,0.5f* cam.getEyeLocation()[2]/1000,connectSurface.getKerbList(),Constants.COLOR_GREEN);
+
+		}*/
 		Sensor tmpSensor = null;
 		for(int i = 0; i< drawableNetwork.nSensors(); i++){
 			tmpSensor = drawableNetwork.getSensor(i);
@@ -259,23 +279,21 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		}
 		if(curFrame !=null){
 			for(VehicleData vd:curFrame.getVhcDataQueue()){
-				if(vd.getId() == 654) {
-					switch (vd.getTarLaneID()) {
-						// 左转
-						case 4:
-							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), new float[]{0.384f, 0.094f, 0.529f}, vd.isSelected(), 1);
-							break;
-						// 直行
-						case 5:
-							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), new float[]{0.114f, 0.125f, 0.537f}, vd.isSelected(), 1);
-							break;
-						// 右转
-						case 6:
-							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), new float[]{0.008f, 0.404f, 0.725f}, vd.isSelected(), 1);
-							break;
-						default:
-							break;
-					}
+				switch (vd.getTarLaneID()) {
+					// 左转
+					case 4:
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
+						break;
+					// 直行
+					case 5:
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),Constants.COLOR_BLUE, vd.isSelected(), 1);
+						break;
+					// 右转
+					case 6:
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
+						break;
+					default:
+						break;
 				}
 			}
 			// 显示车道状态

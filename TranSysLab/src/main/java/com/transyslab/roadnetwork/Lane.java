@@ -34,6 +34,10 @@ public class Lane implements NetworkObject {
 	protected Lane leftLane;
 	protected Lane rightLane;
 	protected boolean isSelected;
+	// 左右车道边界（Boundary）的id
+	protected int lbId;
+	protected int rbId;
+	protected double geoLength;
 	public Lane() {
 		segment = null;
 		type = 0;
@@ -68,7 +72,9 @@ public class Lane implements NetworkObject {
 	public Segment getSegment() {
 		return segment;
 	}
-
+	public double getGeoLength(){
+		return this.geoLength;
+	}
 	public Link getLink() {
 		return segment.getLink();
 	}
@@ -266,11 +272,11 @@ public class Lane implements NetworkObject {
 	}
 
 
-	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg) {
+	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg, int lbId,int rbId) {
 
 		startPnt =new GeoPoint(beginx,beginy);
 		endPnt =new GeoPoint(endx,endy);
-
+		this.geoLength = startPnt.distance(endPnt);
 		if (this.segment != null) {
 			System.out.print("Can't not init segment twice");
 			return ;
@@ -282,6 +288,8 @@ public class Lane implements NetworkObject {
 		this.rules = r;
 		this.index = index;
 		this.segment.addLane(this);
+		this.lbId = lbId;
+		this.rbId = rbId;
 	}
 	// 路网世界坐标平移后再调用
 	public void createLaneSurface(){

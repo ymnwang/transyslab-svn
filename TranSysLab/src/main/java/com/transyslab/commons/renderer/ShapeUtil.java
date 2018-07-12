@@ -6,6 +6,7 @@ import com.jogamp.opengl.glu.GLUquadric;
 import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.math.Matrix4;
 import com.jogamp.opengl.math.VectorUtil;
+import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.roadnetwork.GeoPoint;
 
 import jhplot.math.DoubleArray;
@@ -85,6 +86,14 @@ public class ShapeUtil {
 		}
 		gl.glEnd();
 	}
+	public static void drawTriangles(GL2 gl, List<GeoPoint> points, final float[] color, double height){
+		gl.glColor3f(color[0], color[1], color[2]);
+		gl.glBegin(GL2.GL_TRIANGLE_STRIP);
+		for(GeoPoint p:points ){
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
+		}
+		gl.glEnd();
+	}
 	public static void drawPolygon(GL2 gl,List<GeoPoint> points, final float[] fcolor, final float[] tcolor){
 
 		//gl.glColor3f(color[0], color[1], color[2]);
@@ -128,5 +137,19 @@ public class ShapeUtil {
 		gl.glMultMatrixf(matrix, 0);
 		glu.gluCylinder(quad, 2, 2, length, 8, 3);
 		gl.glPopMatrix();
+	}
+	public static void drawText(TextRenderer tr, String[] texts,float scaleFactor,List<GeoPoint> locations,float[] color){
+		if(texts.length != locations.size()) {
+			System.out.println("can not draw the text");
+			return;
+		}
+		tr.begin3DRendering();
+		tr.setColor(0.85f, 0.588f, 0.580f, 0.8f);
+		int i = 0;
+		for(GeoPoint point:locations){
+			tr.draw3D(texts[i], (float)point.getLocationX(),(float)point.getLocationY(),(float)point.getLocationZ(), scaleFactor);
+			i++;
+		}
+		tr.end3DRendering();
 	}
 }

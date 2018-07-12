@@ -9,9 +9,11 @@ import com.transyslab.roadnetwork.GeoPoint;
 import com.transyslab.roadnetwork.GeoSurface;
 
 import jhplot.math.LinearAlgebra;
-import math.geom3d.Vector3D;
+import org.apache.commons.math3.geometry.Vector;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 public class GeoUtil {
+	public static final double EPSILON = 0.000001;
 	public static GeoPoint intersect(Boundary upBound, Boundary dnBound) {
 		double[][] coef = new double[][] { upBound.getDelta(), LinearAlgebra.times(dnBound.getDelta(), -1)};
 		coef = LinearAlgebra.transpose(coef);
@@ -178,5 +180,54 @@ public class GeoUtil {
 
 		return Intersect;
 	}
-	
+	// 判断空间直线是否有交点，有则返回交点，否则返回null
+	public static GeoPoint calcLineLineIntersection(GeoPoint l1p1, GeoPoint l1p2, GeoPoint l2p1, GeoPoint l2p2){
+		// Paul Bourke at http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline3d/
+		//GeoPoint rstp1 = new GeoPoint();
+		//GeoPoint rstp2 = new GeoPoint();
+		Vector3D p1 = new Vector3D(l1p1.getLocCoods());
+		Vector3D p2 = new Vector3D(l1p2.getLocCoods());
+		Vector3D p3 = new Vector3D(l2p1.getLocCoods());
+		Vector3D p4 = new Vector3D(l2p2.getLocCoods());
+		Vector3D p13 = p1.subtract(p3);
+		Vector3D p43 = p4.subtract(p3);
+		// 非平行或共线
+		if ( p13.getNormSq()< EPSILON) {
+			return null;
+		}
+		Vector3D p21 = p2.subtract(p1);
+		if (p21.getNormSq() < EPSILON) {
+			return null;
+		}
+
+		double d1343 = p13.getX() * p43.getX() + p13.getY() * p43.getY() + p13.getZ() * p43.getZ();
+		double d4321 = p43.getX() * p21.getX() + p43.getY() * p21.getY() + p43.getZ() * p21.getZ();
+		double d1321 = p13.getX() * p21.getX() + p13.getY() * p21.getY() + p13.getZ() * p21.getZ();
+		double d4343 = p43.getX() * p43.getX() + p43.getY() * p43.getY() + p43.getZ() * p43.getZ();
+		double d2121 = p21.getX() * p21.getX() + p21.getY() * p21.getY() + p21.getZ() * p21.getZ();
+
+		double denom = d2121 * d4343 - d4321 * d4321;
+		if (Math.abs(denom) < EPSILON) {
+			return null;
+		}
+		double numer = d1343 * d4321 - d1321 * d4343;
+
+		double mua = numer / denom;
+		double mub = (d1343 + d4321 * (mua)) / d4343;
+
+		//构成两直线最短距离的点，若相交则两点重合
+		Vector3D v1 = p3.add(p43.scalarMultiply(mub));
+		Vector3D v2 = p1.add(p21.scalarMultiply(mua));
+		double distance = (v1.subtract(v2)).getNorm();
+		if(distance<EPSILON){
+			//交点在线段1末端和线段2始端之间的
+			if(mua>1 && mub<0)
+				return new GeoPoint(v1.getX(),v1.getY(),v1.getZ());
+			else
+				return null;
+		}
+		return null;
+		//rstp1.setLocCoods(p1.getX()+mua * p21.getX(),p1.getY() + mua * p21.getY(),p1.getZ() + mua * p21.getZ());
+		//rstp2.setLocCoods(p3.getX()+mub * p43.getX(),p3.getY() + mub * p43.getY(),p3.getZ() + mub * p43.getZ());
+	}
 }

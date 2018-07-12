@@ -38,6 +38,7 @@ public class XmlParser {
 		String tmpName = "";
 		double beginX = -1,beginY = -1,endX = -1,endY = -1,tmpFreeSpeed = -1;
 		int tmpId = -1,tmpType = -1,tmpUpId = -1,tmpDnId = -1,gradient = -1,tmpSpeedLimit = -1;
+		int tmpLtId = -1, tmpRtId = -1;
 		List<Attribute> attrs = node.attributes();
 		// Ω‚ŒˆNode
 		if (node.getName().equals("N")) {
@@ -106,9 +107,13 @@ public class XmlParser {
 					endX = Double.parseDouble(attr.getValue());
 				if (attr.getName().equals("endY"))
 					endY = Double.parseDouble(attr.getValue());
+				if(attr.getName().equals("LeftBoundaryID"))
+					tmpLtId = Integer.parseInt(attr.getValue());
+				if(attr.getName().equals("RightBoundaryID"))
+					tmpRtId = Integer.parseInt(attr.getValue());
 
 			}
-			network.createLane(tmpId,tmpType,beginX,beginY,endX,endY);
+			network.createLane(tmpId,tmpType,beginX,beginY,endX,endY,tmpLtId,tmpRtId);
 		}
 		//Ω‚ŒˆLaneConnector
 		if (node.getName().equals("LC")) {

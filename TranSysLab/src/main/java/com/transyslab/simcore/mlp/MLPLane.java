@@ -43,8 +43,8 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	}
 
 	@Override
-	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg) {
-		super.init(id, r, index, beginx, beginy, endx, endy, seg);
+	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg, int lbId,int rbId) {
+		super.init(id, r, index, beginx, beginy, endx, endy, seg,lbId,rbId);
 		capacity_ = ((MLPParameter) getNetwork().getSimParameter()).capacity;
 	}
 

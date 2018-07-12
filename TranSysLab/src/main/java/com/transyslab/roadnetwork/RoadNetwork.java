@@ -5,7 +5,9 @@ package com.transyslab.roadnetwork;
 
 import java.util.*;
 
+import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.commons.tools.SimulationClock;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
@@ -27,8 +29,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	protected List<Link> links = new ArrayList<Link>();
 	protected List<Segment> segments = new ArrayList<Segment>();
 	protected List<Lane> lanes = new ArrayList<Lane>();
+	// 路段打断处的衔接路面
+	//protected List<GeoSurface> connectSegments = new ArrayList<>();
 	protected List<Boundary> boundaries = new ArrayList<Boundary>();
-
 	protected List<Sensor> sensors = new ArrayList<Sensor>();
 	protected List<Signal> signals = new ArrayList<Signal>();
 	protected List<BusStop> busStops = new ArrayList<BusStop>();
@@ -76,7 +79,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public abstract void createSegment(int id, int speedLimit, double freeSpeed, double grd, double beginX,
 									   double beginY, double b, double endX, double endY);
 
-	public abstract void createLane(int id, int rule, double beginX, double beginY, double endX, double endY);
+	public abstract void createLane(int id, int rule, double beginX, double beginY, double endX, double endY,int lbId, int rtId);
 
 	public abstract void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval );
 
@@ -92,6 +95,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public void createConnector(Lane upLane, Lane dnLane){
 		Connector newConnector = new Connector(upLane,dnLane);
 		this.connectors.add(newConnector);
+	}
+	public void createConnectSegment(){
+
 	}
 
 //	public abstract void createVehicle(int id, int type, double length, double dis, double speed);
@@ -186,6 +192,10 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return boundaries.size();
 	}
 	public int nConnectors() {return connectors.size();}
+//	public List<GeoSurface> getConnectSegments() {
+//		return connectSegments;
+//	}
+
 	public Node findNode(int id) {
 		ListIterator<Node> i = nodes.listIterator();
 		while (i.hasNext()) {
@@ -226,7 +236,13 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		}
 		return null;
 	}
-
+	public Boundary findBoundary(int id){
+		for(Boundary boundary:boundaries){
+			if(boundary.id == id)
+				return boundary;
+		}
+		return null;
+	}
 	public ODPair findODPair(int id){
 		for(ODPair odPair:odPairs){
 			if(odPair.id == id)
@@ -702,9 +718,141 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (Lane itrLane:lanes) {
 			itrLane.calcStaticInfo(this.worldSpace);
 		}
+		// 填补路段打断处的路面
+		/*
+		for(Link itrLink:links){
+			int nSegment = itrLink.nSegments();
+			if(nSegment>1){
+				Segment itrSegment = itrLink.getStartSegment();
+				if(itrSegment.getId()==2671) {
+					while (itrSegment.getDnSegment() != null) {
+						GeoSurface connectSurface = null;
+						//确定车流方向
+						Vector3D dir = new Vector3D(itrSegment.endPnt.getLocationX() - itrSegment.startPnt.getLocationX(),
+								itrSegment.endPnt.getLocationY() - itrSegment.startPnt.getLocationY(),
+								itrSegment.endPnt.getLocationZ() - itrSegment.endPnt.getLocationZ());
+						Vector3D normDir = new Vector3D(0, 1, 0);
+						normDir = normDir.crossProduct(dir);
+						// ↑
+						if (normDir.getZ() > 0) {
+							connectSurface = storeConnectSegmentPoint(itrSegment, true);
+						} else if (normDir.getZ() < 0) {// ↓
+							connectSurface = storeConnectSegmentPoint(itrSegment, false);
+						} else {
+							if (normDir.getNorm() == 0) {
+								if (dir.getY() > 0) {
+									connectSurface = storeConnectSegmentPoint(itrSegment, false);
+								} else {
+									connectSurface = storeConnectSegmentPoint(itrSegment, true);
+								}
+							}
+						}
+						if (connectSurface != null)
+							this.connectSegments.add(connectSurface);
+						itrSegment = itrSegment.getDnSegment();
+					}
+				}
+			}
+		}*/
 
 	}
+	private GeoSurface storeConnectSegmentPoint(Segment segment, boolean isDirSame){
+		boolean isLengthEqual = false;
+		// TODO  待确认gist 打断长度为5米
+		double shiftLength = 0;
+		if(segment.getLength() - segment.getLeftLane().getGeoLength()<0.000001)
+			isLengthEqual = true;
+		Boundary rb = findBoundary(segment.getRightLane().rbId);
+		GeoPoint lbEndPoint1;
 
+		if(isLengthEqual) {
+			lbEndPoint1 = segment.endPnt;
+			isLengthEqual = false;
+		}
+		else{
+			shiftLength = segment.getLength() - 5;
+			// line1
+			lbEndPoint1 = segment.startPnt.intermediate(segment.endPnt,1-shiftLength/segment.getLength());
+		}
+
+		GeoPoint rbEndPoint1 = rb.endPnt;
+		GeoPoint lbStartPoint1 = segment.startPnt;
+		GeoPoint rbStartPoint1 = rb.startPnt;
+		// 下游Segment
+		segment = segment.getDnSegment();
+		if(segment.getLength() - segment.getLeftLane().getGeoLength()<0.000001)
+			isLengthEqual = true;
+		rb = findBoundary(segment.getRightLane().rbId);
+		GeoPoint lbStartPoint2;
+		if(isLengthEqual)
+			lbStartPoint2 = segment.startPnt;
+		else{
+			shiftLength = 5;
+			lbStartPoint2 = segment.startPnt.intermediate(segment.endPnt,1-shiftLength/segment.getLength());
+		}
+
+		GeoPoint lbEndPoint2 = segment.endPnt;
+		GeoPoint rbStartPoint2 = rb.startPnt;
+		GeoPoint rbEndPoint2 = rb.endPnt;
+		GeoSurface connectSurface = new GeoSurface();
+		GeoPoint intersectPoint;
+		intersectPoint = GeoUtil.calcLineLineIntersection(rbStartPoint1,rbEndPoint1,rbStartPoint2,rbEndPoint2);
+		if(isDirSame){
+			connectSurface.addKerbPoint(lbEndPoint1);
+			connectSurface.addKerbPoint(rbEndPoint1);
+			connectSurface.addKerbPoint(segment.startPnt);
+
+			if(intersectPoint!=null){
+				connectSurface.addKerbPoint(intersectPoint);
+				connectSurface.addKerbPoint(lbStartPoint2);
+				connectSurface.addKerbPoint(rbStartPoint2);
+			}
+			else {
+				connectSurface.addKerbPoint(rbStartPoint2);
+				connectSurface.addKerbPoint(lbStartPoint2);
+			}
+			/*
+			if(intersectPoint1!=null) {
+				connectSurface.addKerbPoint(intersectPoint1);
+				if(intersectPoint2!=null) {
+					connectSurface.addKerbPoint(intersectPoint2);
+					connectSurface.addKerbPoint(lbStartPoint2);
+					connectSurface.addKerbPoint(rbStartPoint2);
+				}
+				else{
+					connectSurface.addKerbPoint(rbStartPoint2);
+					connectSurface.addKerbPoint(lbStartPoint2);
+				}
+
+			}
+			else{
+				connectSurface.addKerbPoint(lbStartPoint2);
+				if(intersectPoint2!=null)
+					connectSurface.addKerbPoint(intersectPoint2);
+				connectSurface.addKerbPoint(rbStartPoint2);
+			}*/
+
+		}
+		else{
+			//
+			connectSurface.addKerbPoint(rbStartPoint2);
+			connectSurface.addKerbPoint(lbStartPoint2);
+
+			if(intersectPoint!=null) {
+				connectSurface.addKerbPoint(intersectPoint);
+				connectSurface.addKerbPoint(segment.startPnt);
+				connectSurface.addKerbPoint(rbEndPoint1);
+				connectSurface.addKerbPoint(lbEndPoint1);
+			}
+			else{
+				connectSurface.addKerbPoint(rbEndPoint1);
+				connectSurface.addKerbPoint(segment.startPnt);
+				connectSurface.addKerbPoint(lbEndPoint1);
+			}
+
+		}
+		return connectSurface;
+	}
 	public void initializeLinkStatistics() {
 		for (int i = 0; i < links.size(); i++) {
 			getLink(i).initializeStatistics(linkTimes.infoPeriods);
