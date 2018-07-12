@@ -334,11 +334,12 @@ public class Lane implements NetworkObject {
 		if(isEntranceToIntersection){
 			for(Lane dnLane:dnLanes){
 				// TODO 判断有哪几类转向,new signalArrows,然后加入signalArrows
+				// 写死类型
+				signalArrows.add(new SignalArrow(0,SignalArrow.STRAIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+//				signalArrows.add(new SignalArrow(0,SignalArrow.LEFTARROW,this));
+//				signalArrows.add(new SignalArrow(0,SignalArrow.RIGHTARROW,this));
 			}
-			// 写死类型
-			signalArrows.add(new SignalArrow(0,SignalArrow.STRAIGHTARROW,this));
-			signalArrows.add(new SignalArrow(0,SignalArrow.LEFTARROW,this));
-			signalArrows.add(new SignalArrow(0,SignalArrow.RIGHTARROW,this));
+
 			if(signalArrows.size()>1) {
 				Collections.sort(signalArrows);
 				Vector3D translate = new Vector3D(surface.getKerbList().get(0).getLocationX() - startPnt.getLocationX(),

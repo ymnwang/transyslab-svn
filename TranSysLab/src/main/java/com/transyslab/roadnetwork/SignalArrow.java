@@ -20,8 +20,10 @@ public class SignalArrow implements Comparable<SignalArrow>{
     protected GeoPoint[] polyline;
     protected GeoPoint[] arrowTip;// 三角形
     protected float[] color = Constants.COLOR_GREEN;
+    protected int fLinkId;
+    protected int tLinkId;
 
-    public SignalArrow(int id, int type ,Lane entrance){
+    public SignalArrow(int id, int type,int fLinkId, int tLinkId,Lane entrance){
         this.id = id;
         this.entrance = entrance;
         this.type = type;
@@ -40,6 +42,12 @@ public class SignalArrow implements Comparable<SignalArrow>{
     }
     public float[] getColor(){
         return this.color;
+    }
+    public int getFLinkId(){
+        return this.fLinkId;
+    }
+    public int getTLinkId(){
+        return this.tLinkId;
     }
     private void initialize(){
         double r = (entrance.getGeoLength()+1)/entrance.getGeoLength();// 起点偏移1m
