@@ -6,6 +6,7 @@ package com.transyslab.roadnetwork;
 import java.util.*;
 
 import com.transyslab.commons.tools.GeoUtil;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 /**
  * Lane
@@ -27,13 +28,17 @@ public class Lane implements NetworkObject {
 	protected List<Lane> dnLanes;
 	protected GeoPoint startPnt;
 	protected GeoPoint endPnt;
+	protected double geoLength;
 	protected GeoSurface surface;
+	protected List<SignalArrow> signalArrows;
 	protected int type;
 	protected int state;
 	protected int cmarker;// connection marker
 	protected Lane leftLane;
 	protected Lane rightLane;
 	protected boolean isSelected;
+	protected boolean isEntranceToIntersection;//TODO 并入type
+	protected int turnType;
 	public Lane() {
 		segment = null;
 		type = 0;
@@ -41,6 +46,7 @@ public class Lane implements NetworkObject {
 		cmarker = 0;
 		upLanes = new ArrayList<>();
 		dnLanes = new ArrayList<>();
+		signalArrows = new ArrayList<>();
 	}
 	public int getId(){
 		return this.id;
@@ -64,7 +70,9 @@ public class Lane implements NetworkObject {
 	public void unsetState(int s) {
 		state &= ~s;
 	}
-
+	public List<SignalArrow> getSignalArrows(){
+		return this.signalArrows;
+	}
 	public Segment getSegment() {
 		return segment;
 	}
@@ -86,6 +94,13 @@ public class Lane implements NetworkObject {
 	 * --------------------------------------------------------------------
 	 */
 	public void setLaneType() {
+		// 检查是否为交叉口进口道
+		for(Lane dnLane: dnLanes){
+			if(this.getLink().getId() != dnLane.getLink().getId()){
+				isEntranceToIntersection = true;
+				break;
+			}
+		}
 		/*
 		 * check if this lane is a shoulder lane
 		 */
@@ -192,7 +207,9 @@ public class Lane implements NetworkObject {
 	public double getLength() {
 		return segment.getLength();
 	}
-
+	public double getGeoLength(){
+		return this.geoLength;
+	}
 	public Lane getRightLane() {
 		return rightLane;
 	}
@@ -270,7 +287,7 @@ public class Lane implements NetworkObject {
 
 		startPnt =new GeoPoint(beginx,beginy);
 		endPnt =new GeoPoint(endx,endy);
-
+		geoLength = startPnt.distance(endPnt);
 		if (this.segment != null) {
 			System.out.print("Can't not init segment twice");
 			return ;
@@ -313,6 +330,36 @@ public class Lane implements NetworkObject {
 		endPnt = worldSpace.worldSpacePoint(endPnt);
 		//生成车道面
 		createLaneSurface();
+		//信控标识
+		if(isEntranceToIntersection){
+			for(Lane dnLane:dnLanes){
+				// TODO 判断有哪几类转向,new signalArrows,然后加入signalArrows
+			}
+			// 写死类型
+			signalArrows.add(new SignalArrow(0,SignalArrow.STRAIGHTARROW,this));
+			signalArrows.add(new SignalArrow(0,SignalArrow.LEFTARROW,this));
+			signalArrows.add(new SignalArrow(0,SignalArrow.RIGHTARROW,this));
+			if(signalArrows.size()>1) {
+				Collections.sort(signalArrows);
+				Vector3D translate = new Vector3D(surface.getKerbList().get(0).getLocationX() - startPnt.getLocationX(),
+						surface.getKerbList().get(0).getLocationY() - startPnt.getLocationY(),
+						surface.getKerbList().get(0).getLocationZ() - startPnt.getLocationZ());//←
+				translate = translate.normalize();
+				if(signalArrows.size()==2){
+					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.3));
+					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.3));
+					GeoUtil.calcTranslation(signalArrows.get(1).getArrowTip(),translate.scalarMultiply(-0.3));
+					GeoUtil.calcTranslation(signalArrows.get(1).getPolyline(),translate.scalarMultiply(-0.3));
+				}
+				else{
+					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.6));
+					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.6));
+					GeoUtil.calcTranslation(signalArrows.get(2).getArrowTip(),translate.scalarMultiply(-0.6));
+					GeoUtil.calcTranslation(signalArrows.get(2).getPolyline(),translate.scalarMultiply(-0.6));
+				}
+			}
+
+		}
 	}
 	/*
 	 * --------------------------------------------------------------------

@@ -702,6 +702,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (Lane itrLane:lanes) {
 			itrLane.calcStaticInfo(this.worldSpace);
 		}
+		// 添加信控指示箭头
 
 	}
 
