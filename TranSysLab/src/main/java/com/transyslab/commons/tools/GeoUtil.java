@@ -5,11 +5,13 @@ import java.util.List;
 import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.transyslab.roadnetwork.Boundary;
+import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.GeoPoint;
 import com.transyslab.roadnetwork.GeoSurface;
 
 import jhplot.math.LinearAlgebra;
-import math.geom3d.Vector3D;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 
 public class GeoUtil {
 	public static GeoPoint intersect(Boundary upBound, Boundary dnBound) {
@@ -82,7 +84,34 @@ public class GeoUtil {
 		}
 		return sf;
 	}
+	public static GeoPoint calcRotation(GeoPoint fPoint, GeoPoint tPoint, double theta, Vector3D rotateDir){
+		// 四元数法计算旋转矩阵，旋转角为theta,绕轴rotateDir（单位向量）旋转
+		if(rotateDir.getNorm() - 1.0 > Constants.RATE_EPSILON)
+			rotateDir = rotateDir.normalize();
+		double q0 = Math.cos(theta/2.0);
+		double q1 = rotateDir.getX()*Math.sin(theta/2.0);
+		double q2 = rotateDir.getY()*Math.sin(theta/2.0);
+		double q3 = rotateDir.getZ()*Math.sin(theta/2.0);
+		Array2DRowRealMatrix rotateMatrix = new Array2DRowRealMatrix(new double[][]{{1-2*q2*q2-2*q3*q3, 2*q1*q2-2*q3*q0,   2*q1*q3+2*q2*q0},
+				{2*q1*q2+2*q3*q0,   1-2*q1*q1-2*q3*q3, 2*q2*q3-2*q1*q0},
+				{2*q1*q3-2*q2*q0,   2*q2*q3+2*q1*q0,   1-2*q1*q1-2*q2*q2}});
+		Array2DRowRealMatrix vecMatirx = new Array2DRowRealMatrix(new double[]{tPoint.getLocationX() - fPoint.getLocationX(),
+				tPoint.getLocationY() - fPoint.getLocationY(),
+				tPoint.getLocationZ() - fPoint.getLocationZ()});
+		double[] result;
+		// 左乘
+		vecMatirx = rotateMatrix.multiply(vecMatirx);
+		result = LinearAlgebra.plus(vecMatirx.getColumn(0),fPoint.getLocCoods());
+		return new GeoPoint(result);
 
+	}
+	public static void calcTranslation(GeoPoint[] points,Vector3D dir){
+		for(int i=0;i<points.length;i++){
+			points[i].setLocCoods(points[i].getLocationX() + dir.getX(),
+					points[i].getLocationY() + dir.getY(),
+					points[i].getLocationZ() + dir.getZ());
+		}
+	}
 	public static boolean isIntersect(Ray ray, GeoSurface surf) {
 		
 		boolean Intersect = true;

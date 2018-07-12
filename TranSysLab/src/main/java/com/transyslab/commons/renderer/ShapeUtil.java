@@ -41,6 +41,15 @@ public class ShapeUtil {
 		gl.glVertex3d(tcoods[0], tcoods[1], tcoods[2]);
 		gl.glEnd();
 	}
+	public static void drawPolyline(GL2 gl, GeoPoint[] points, float linewidth, float[] color, double height){
+		gl.glColor3f(color[0], color[1], color[2]);
+		gl.glLineWidth(linewidth);
+		gl.glBegin(GL_LINE_STRIP);
+		for(int i=0;i<points.length;i++){
+			gl.glVertex3d(points[i].getLocationX(),points[i].getLocationY(),height);
+		}
+		gl.glEnd();
+	}
 	public static void drawPoint(GL2 gl, GeoPoint pos, int radius, float[] color) {
 		gl.glColor3f(color[0], color[1], color[2]);
 		gl.glPointSize(radius);
@@ -67,6 +76,16 @@ public class ShapeUtil {
 		gl.glEnd();
 	}
 	public static void drawPolygon(GL2 gl,List<GeoPoint>points, final float[] color, final boolean isSelected, double height){
+		gl.glColor3f(color[0], color[1], color[2]);
+		if(isSelected)
+			gl.glColor3f(1.0f, 1.0f, 0.0f);
+		gl.glBegin(GL2.GL_POLYGON);
+		for(GeoPoint p:points ){
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
+		}
+		gl.glEnd();
+	}
+	public static void drawPolygon(GL2 gl,GeoPoint[] points, final float[] color, final boolean isSelected, double height){
 		gl.glColor3f(color[0], color[1], color[2]);
 		if(isSelected)
 			gl.glColor3f(1.0f, 1.0f, 0.0f);
@@ -120,4 +139,5 @@ public class ShapeUtil {
 		glu.gluCylinder(quad, 2, 2, length, 8, 3);
 		gl.glPopMatrix();
 	}
+
 }
