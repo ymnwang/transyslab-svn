@@ -366,6 +366,18 @@ public class MLPEngine extends SimulationEngine{
 		return 0;
 	}
 
+	public void readSignalPlan(String fileName) {
+		String[] headers = {"NODEID","PLANID","STAGEID","FLID","TLID","FTIME","TTIME"};
+		try {
+			List<CSVRecord> results = CSVUtils.readCSV(fileName,headers);
+			for (int i = 0; i < results.size(); i++) {
+				//todo: read plans.
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void readEmpData(String fileName) {
 		if (fileName==null){
 //			System.out.println("warning: have no empirical data read in");
