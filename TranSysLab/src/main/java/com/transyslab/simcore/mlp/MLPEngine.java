@@ -7,6 +7,8 @@ import java.util.*;
 
 import com.transyslab.commons.io.*;
 import com.transyslab.gui.EngineEvent;
+import com.transyslab.roadnetwork.SignalPlan;
+import com.transyslab.roadnetwork.SignalStage;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.csv.CSVRecord;
 import java.io.IOException;
@@ -254,6 +256,7 @@ public class MLPEngine extends SimulationEngine{
 		int tmp = (int) Math.floor(clock.getCurrentTime()*clock.getStepSize());
         if (displayOn) { // && (tmp%10)==0
             mlpNetwork.recordVehicleData();
+            mlpNetwork.setArrowColor();
 		}
 		
 		//输出轨迹
@@ -357,6 +360,8 @@ public class MLPEngine extends SimulationEngine{
 		XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkPath"));
 		// 读入路网数据后组织路网不同要素的关系
 		mlpNetwork.calcStaticInfo();
+		//读入配时方案
+		readSignalPlan("E:/signal.csv");
 		// 读入检测器数据
 		if (!runProperties.get("sensorPath").equals(""))
 			XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorPath"));
@@ -370,8 +375,43 @@ public class MLPEngine extends SimulationEngine{
 		String[] headers = {"NODEID","PLANID","STAGEID","FLID","TLID","FTIME","TTIME"};
 		try {
 			List<CSVRecord> results = CSVUtils.readCSV(fileName,headers);
-			for (int i = 0; i < results.size(); i++) {
-				//todo: read plans.
+			MLPNode sNode = null;
+			SignalPlan plan = null;
+			SignalStage stage = null;
+			boolean newDirNeeded = false;
+			for (int i = 1; i < results.size(); i++) {
+				int nodeId = Integer.parseInt(results.get(i).get("NODEID"));
+				int planId = Integer.parseInt(results.get(i).get("PLANID"));
+				int stageId = Integer.parseInt(results.get(i).get("STAGEID"));
+				int flid = Integer.parseInt(results.get(i).get("FLID"));
+				int tlid = Integer.parseInt(results.get(i).get("TLID"));
+				double ft = Double.parseDouble(results.get(i).get("FTIME"));
+				double tt = Double.parseDouble(results.get(i).get("TTIME"));
+				if (sNode == null || sNode.getId() != nodeId) {
+					sNode = (MLPNode) mlpNetwork.findNode(nodeId);
+					plan = null;
+				}
+				if (plan == null || plan.getId() != planId) {
+					plan = new SignalPlan(planId);
+					plan.setFTime(ft);
+					sNode.addSignalPlan(plan);
+					stage = null;
+				}
+				if (stage == null || stage.getId() != stageId) {
+					plan.setTTime(tt);
+					plan.addSignalRow(stageId,ft,tt);
+					stage = plan.findStage(stageId);
+					if (stage == null) {
+						stage = new SignalStage(stageId);
+						plan.addStage(stage);
+						newDirNeeded  = true;
+					}
+					else
+						newDirNeeded = false;
+				}
+				if (newDirNeeded) {
+					stage.addLIDPair(flid, tlid);
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

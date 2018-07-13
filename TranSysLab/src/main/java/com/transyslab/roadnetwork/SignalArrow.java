@@ -29,6 +29,8 @@ public class SignalArrow implements Comparable<SignalArrow>{
         this.type = type;
         this.arrowTip = new GeoPoint[3];
         this.polyline = new GeoPoint[3];
+        this.fLinkId = fLinkId;
+        this.tLinkId = tLinkId;
         initialize();
     }
     public GeoPoint[] getPolyline(){

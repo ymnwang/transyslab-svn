@@ -331,13 +331,27 @@ public class Lane implements NetworkObject {
 		//生成车道面
 		createLaneSurface();
 		//信控标识
+		List<Integer> aList = new ArrayList<>();
 		if(isEntranceToIntersection){
 			for(Lane dnLane:dnLanes){
-				// TODO 判断有哪几类转向,new signalArrows,然后加入signalArrows
-				// 写死类型
-				signalArrows.add(new SignalArrow(0,SignalArrow.STRAIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
-//				signalArrows.add(new SignalArrow(0,SignalArrow.LEFTARROW,this));
-//				signalArrows.add(new SignalArrow(0,SignalArrow.RIGHTARROW,this));
+				if (!aList.contains(dnLane.getLink().getId())) {
+					aList.add(dnLane.getLink().getId());
+					double tol = 0.1;
+					double x1 = getEndPnt().getLocationX() - getStartPnt().getLocationX();
+					double y1 = getEndPnt().getLocationY() - getStartPnt().getLocationY();
+					double dis1 = getEndPnt().distance(getStartPnt());
+					double x2 = dnLane.getEndPnt().getLocationX() - dnLane.getStartPnt().getLocationX();
+					double y2 = dnLane.getEndPnt().getLocationY() - dnLane.getStartPnt().getLocationY();
+					double dis2 = dnLane.getEndPnt().distance(dnLane.getStartPnt());
+					double crossProduct = x1*y2 - x2*y1;
+					double a = crossProduct/dis1/dis2;
+					if (a > tol)
+						signalArrows.add(new SignalArrow(getId()*10+1,SignalArrow.LEFTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+					else if (a < -tol)
+						signalArrows.add(new SignalArrow(getId()*10+3,SignalArrow.RIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+					else
+						signalArrows.add(new SignalArrow(getId()*10+2,SignalArrow.STRAIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+				}
 			}
 
 			if(signalArrows.size()>1) {

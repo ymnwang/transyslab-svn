@@ -6,14 +6,13 @@ import java.util.List;
 public class SignalPlan {
 	protected int id;
 	private List<SignalStage> stages;
-	private List<Double> timeSeries;
+	private List<double[]> signalTable;
 	private double fTime;
 	private double tTime;
-	private int pointer;
 
 	public SignalPlan(int id) {
 		stages = new ArrayList<>();
-		pointer = 0;
+		signalTable = new ArrayList<>();
 		this.id = id;
 	}
 
@@ -29,33 +28,34 @@ public class SignalPlan {
 		stages.add(stage);
 	}
 
-	public void setTime(double ft, double tt, List<Double> ts) {
+	public void setFTime(double ft) {
 		this.fTime = ft;
+	}
+
+	public void setTTime(double tt) {
 		this.tTime = tt;
-		this.timeSeries = ts;
-		pointer = 0;
 	}
 
 	public boolean check(double t, int fLID, int tLID) {
-		while (timeSeries.get(pointer) > t)
-			pointer ++;
-		return stages.get(Math.floorMod(pointer,stages.size())).checkDir(fLID,tLID);
+		SignalStage stage = findStage(t);
+		return (stage!=null && stage.checkDir(fLID,tLID));
+	}
+
+	public boolean beingApplied(double now) {
+		return (fTime <= now && now < tTime);
 	}
 
 	public SignalStage findStage(int stageId) {
 		return stages.stream().filter(s->s.getId()==stageId).findFirst().orElse(null);
 	}
 
-	public void addDir(int stageId, int fLID, int tLID) {
-		SignalStage target = findStage(stageId);
-		if (target!=null)
-			target.addLIDPair(fLID,tLID);
+	private int findSID(double time) {
+		double[] tmp = signalTable.stream().filter(r -> r[1]<=time && r[2]>time).findFirst().orElse(null);
+		return (tmp==null ? -1 : (int)tmp[0]);
 	}
 
-	public void deleteDir(int stageId, int fLID, int tLID) {
-		SignalStage target = findStage(stageId);
-		if (target!=null)
-			target.deleteLIDPairs(fLID,tLID);
+	public SignalStage findStage(double time) {
+		return findStage(findSID(time));
 	}
 
 	public void addStage(int stageId) {
@@ -64,6 +64,10 @@ public class SignalPlan {
 
 	public void deleteStage(int stageId) {
 		stages.removeIf(s -> s.getId() == stageId);
+	}
+
+	public void addSignalRow(int sid, double ft, double tt) {
+		signalTable.add(new double[] {sid, ft, tt});
 	}
 
 }

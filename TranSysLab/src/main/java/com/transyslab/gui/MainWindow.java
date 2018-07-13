@@ -250,27 +250,27 @@ public class MainWindow {
                             String modelType = config.getString("modelType");
 
                             String root = file.getParent() + "/";
-                            textArea3.append("优化问题：" + config.getString("problemName") + "\n");
-                            textArea3.append("引擎线程：" + config.getString("numOfEngines") + " 条\n");
-                            textArea3.append("仿真模型：" + config.getString("modelType") + "\n\n");
-
-                            textArea3.append("引擎状态播报：" + (Boolean.parseBoolean(config.getString("engineBroadcast"))?"是":"否") + "\n");
-                            textArea3.append("可视化运行：" + (Boolean.parseBoolean(config.getString("displayOn"))?"是":"否") + "\n\n");
-
-                            textArea3.append("输出路径" + root + config.getString("outputPath") + "\n");
-                            textArea3.append("断面个体记录输出：" + (Boolean.parseBoolean(config.getString("rawRecOn"))?"是":"否") + "\n");
-                            textArea3.append("轨迹记录输出：" + (Boolean.parseBoolean(config.getString("trackOn"))?"是":"否") + "\n");
-                            textArea3.append("线圈记录输出：" + (Boolean.parseBoolean(config.getString("statRecordOn"))?"是":"否") + "\n");
-                            textArea3.append("统计方式：" + config.getString("avgMode") + "\n");
-                            textArea3.append("统计间隔：" + config.getString("statTimeStep") + "秒\n");
-
-                            textArea3.append("路网输入：" + root + config.getString("roadNetworkPath") + "\n");
-                            textArea3.append("实测数据输入：" + root + config.getString("empDataPath") + "\n\n");
-
-                            textArea3.append("仿真时间(开始:步长:结束)：" +
-                                    config.getString("timeStart") + " : " +
-                                    config.getString("timeStep") + " : " +
-                                    config.getString("timeEnd") + "\n");
+//                            textArea3.append("优化问题：" + config.getString("problemName") + "\n");
+//                            textArea3.append("引擎线程：" + config.getString("numOfEngines") + " 条\n");
+//                            textArea3.append("仿真模型：" + config.getString("modelType") + "\n\n");
+//
+//                            textArea3.append("引擎状态播报：" + (Boolean.parseBoolean(config.getString("engineBroadcast"))?"是":"否") + "\n");
+//                            textArea3.append("可视化运行：" + (Boolean.parseBoolean(config.getString("displayOn"))?"是":"否") + "\n\n");
+//
+//                            textArea3.append("输出路径" + root + config.getString("outputPath") + "\n");
+//                            textArea3.append("断面个体记录输出：" + (Boolean.parseBoolean(config.getString("rawRecOn"))?"是":"否") + "\n");
+//                            textArea3.append("轨迹记录输出：" + (Boolean.parseBoolean(config.getString("trackOn"))?"是":"否") + "\n");
+//                            textArea3.append("线圈记录输出：" + (Boolean.parseBoolean(config.getString("statRecordOn"))?"是":"否") + "\n");
+//                            textArea3.append("统计方式：" + config.getString("avgMode") + "\n");
+//                            textArea3.append("统计间隔：" + config.getString("statTimeStep") + "秒\n");
+//
+//                            textArea3.append("路网输入：" + root + config.getString("roadNetworkPath") + "\n");
+//                            textArea3.append("实测数据输入：" + root + config.getString("empDataPath") + "\n\n");
+//
+//                            textArea3.append("仿真时间(开始:步长:结束)：" +
+//                                    config.getString("timeStart") + " : " +
+//                                    config.getString("timeStep") + " : " +
+//                                    config.getString("timeEnd") + "\n");
                             double sTime = Double.parseDouble(config.getString("timeStart"));
                             updateSlider((long)sTime);
 
