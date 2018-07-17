@@ -242,10 +242,10 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			ShapeUtil.drawPolygon(gl, tmpSensor.getSurface().getKerbList(),Constants.COLOR_GREEN, tmpSensor.isSelected());
 		}
 		// 车道连接器
-		for(int i=0; i< drawableNetwork.nConnectors();i++){
-			Connector tmpConnector = drawableNetwork.getConnector(i);
-			ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f});
-		}
+//		for(int i=0; i< drawableNetwork.nConnectors();i++){
+//			Connector tmpConnector = drawableNetwork.getConnector(i);
+//			ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f});
+//		}
 		// 信控指示箭头
 		for(int i=0; i< drawableNetwork.nLanes();i++){
 			Lane itrLane = drawableNetwork.getLane(i);
