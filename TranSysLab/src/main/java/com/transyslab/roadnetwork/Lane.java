@@ -37,7 +37,6 @@ public class Lane implements NetworkObject {
 	protected Lane leftLane;
 	protected Lane rightLane;
 	protected boolean isSelected;
-	protected boolean isEntranceToIntersection;//TODO 并入type
 	protected int turnType;
 	public Lane() {
 		segment = null;
@@ -95,11 +94,8 @@ public class Lane implements NetworkObject {
 	 */
 	public void setLaneType() {
 		// 检查是否为交叉口进口道
-		for(Lane dnLane: dnLanes){
-			if(this.getLink().getId() != dnLane.getLink().getId()){
-				isEntranceToIntersection = true;
-				break;
-			}
+		if (getSegment().getId()==getLink().getEndSegment().getId() && (getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION)!=0) {
+			type |= Constants.LANE_TYPE_SIGNAL_ARROW;
 		}
 		/*
 		 * check if this lane is a shoulder lane
@@ -332,7 +328,7 @@ public class Lane implements NetworkObject {
 		createLaneSurface();
 		//信控标识
 		List<Integer> aList = new ArrayList<>();
-		if(isEntranceToIntersection){
+		if(laneType(Constants.LANE_TYPE_SIGNAL_ARROW) != 0){
 			for(Lane dnLane:dnLanes){
 				if (!aList.contains(dnLane.getLink().getId())) {
 					aList.add(dnLane.getLink().getId());
