@@ -13,7 +13,7 @@ import java.util.List;
  * Created by ITSA405-35 on 2018/5/28.
  */
 public class RTLane extends Lane implements Comparator<RTLane> {
-
+	public static final double FREESPEED = 15;//54km/h
 	private int lnPosNum_;
 	//	private MLPVehicle head_;
 //	private MLPVehicle tail_;
@@ -27,15 +27,10 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 	public boolean enterAllowed;	//true=允许（后方）车道车辆驶入;false=不允许车道车辆驶入(等于道路封闭)
 	public RTLane connectedDnLane;
 	public RTLane connectedUpLane;
-	//	public int di;//弃用
 	protected List<RTLane> successiveDnLanes;
 	protected List<RTLane> successiveUpLanes;
 	protected double queueLength;
-	protected List<VehicleData> vhcOnLn;
-	protected List<VehicleData> queueVehicles;
-	protected GeoPoint queuePosition;
 	protected double avgSpeed;
-	protected GeoSurface stateSurface;
 
 	public RTLane(){
 		lnPosNum_ = 0;
@@ -45,39 +40,26 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 		enterAllowed = true;
 		successiveDnLanes = new ArrayList<>();
 		successiveUpLanes = new ArrayList<>();
-		vhcOnLn = new ArrayList<>();
-		queueVehicles = new ArrayList<>();
+
 	}
-	public void addVehicleData(VehicleData vd){
-		this.vhcOnLn.add(vd);
-	}
-	public void addQueueVD(VehicleData vd){
-		this.queueVehicles.add(vd);
-	}
-	public List<VehicleData> getVDList(){
-		return this.vhcOnLn;
-	}
-	public List<VehicleData> getQVDList(){
-		return this.queueVehicles;
-	}
-	public GeoSurface getStateSurface(){
-		return this.stateSurface;
-	}
-	public void calcState(){
-		if(!vhcOnLn.isEmpty()){
-			avgSpeed = 0;
-			queueLength = getLength();
+
+	public void calcState(List<VehicleData> queueVehicles, List<VehicleData> movingVehicles){
+		queueLength = 0;
+		avgSpeed = FREESPEED;
+		if(queueVehicles!=null) {// 有车排队
 			// 按位置升序排序，找出排队位置
-			if(!queueVehicles.isEmpty()) {
-				Collections.sort(queueVehicles);
-				queueLength = getLength() - queueVehicles.get(0).getDistance();
-			}
-			this.queuePosition = endPnt.intermediate(startPnt, queueLength/getLength());
-			stateSurface = GeoUtil.lineToRectangle(startPnt,queuePosition,width, true);
-			avgSpeed = vhcOnLn.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble();
-			queueVehicles.clear();
-			vhcOnLn.clear();
+			Collections.sort(queueVehicles);
+			queueLength = getGeoLength() - queueVehicles.get(0).getDistance() + Constants.DEFAULT_VEHICLE_LENGTH;// 车长
 		}
+		if(movingVehicles!=null)// 有车在畅行区
+			avgSpeed = movingVehicles.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble();
+		/*
+		this.queuePosition = startPnt.intermediate(endPnt, queueLength/getGeoLength());
+		stateSurface = GeoUtil.lineToRectangle(startPnt,queuePosition,width, true);
+		if(!vhcOnLn.isEmpty()){// 有车在畅行区
+			avgSpeed = vhcOnLn.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble();
+			vhcOnLn.clear();
+		}*/
 	}
 
 	public void setAvgSpeed(double avgSpeed){
@@ -85,6 +67,9 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 	}
 	public double getAvgSpeed(){
 		return this.avgSpeed;
+	}
+	public double getQueueLength(){
+		return this.queueLength;
 	}
 	public void calLnPos() {
 		lnPosNum_ = getId()%10;

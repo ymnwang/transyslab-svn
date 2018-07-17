@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static java.util.stream.Collectors.groupingBy;
+
 
 /**
  * Created by ITSA405-35 on 2018/5/28.
@@ -155,28 +157,30 @@ public class RTNetwork extends RoadNetwork{
 		vhcList.remove(vehicle);
 		vhcPool.offer(vehicle);
 	}
-	public void renderState(List<VehicleData> vds ){
+	public void renderState(List<VehicleData> vds){
+
 		AnimationFrame af = new AnimationFrame();
-		//数据分装
+		List<VehicleData> queueVehicles = new ArrayList<>();
+		List<VehicleData> movingVehicles = new ArrayList<>();
+		// 按车道id分组
 		for(VehicleData vd:vds){
-			RTLane rtLane = (RTLane) findLane(vd.getCurLaneID());
-			if(vd.isQueue()){
-				// 排队车辆
-				rtLane.addQueueVD(vd);
-				// 保存数据
-				af.addVehicleData(vd);
+			if(vd.isQueue()) {
+				queueVehicles.add(vd);
+				af.addVehicleData(vd);// 渲染车辆
 			}
 			else
-				// 非排队车辆
-				rtLane.addVehicleData(vd);
+				movingVehicles.add(vd);
 		}
+		Map<Integer,List<VehicleData>> qvdsByLane = queueVehicles.stream().collect(groupingBy(VehicleData::getCurLaneID));
+		Map<Integer,List<VehicleData>> mvdsByLane = movingVehicles.stream().collect(groupingBy(VehicleData::getCurLaneID));
 		for(int i=0;i<nLanes();i++){
 			RTLane rtLane = (RTLane) getLane(i);
-			// 根据行驶距离排序，找出队尾
-			rtLane.calcState();
-			StateData sd = new StateData(rtLane,rtLane.stateSurface,rtLane.queuePosition,rtLane.avgSpeed);
+			int key = rtLane.getId();
+			rtLane.calcState(qvdsByLane.get(key),mvdsByLane.get(key));
+			StateData sd = new StateData(rtLane);
 			af.addStateData(sd);
 		}
+
 		/*
 		double avgSpeed = 0;
 		double[] queuePostion = new double[]{380,380,380,380,380};
@@ -305,7 +309,7 @@ public class RTNetwork extends RoadNetwork{
 			//遍历vehicle
 			for (RTVehicle v : vhcList) {
 				//从对象池获取vehicledata对象
-				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
+				vd = VehicleDataPool.getInstance().newData();
 				//记录车辆信息
 				vd.init(v,
 						false,

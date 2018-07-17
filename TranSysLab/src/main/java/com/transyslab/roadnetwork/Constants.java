@@ -158,7 +158,6 @@ public class Constants {
 															// rapid transit bus
 	public static final int VEHICLE_EMERGENCY = 0x00000400; // 1024 // Dan - not
 															// used (4/9/02)
-
 	public static final int VEHICLE_GUIDED = 0x00000800; // 2048
 	public static final int VEHICLE_FIXEDPATH = 0x00001000; // 4096
 	public static final int VEHICLE_PROBE = 0x00002000; // 8192

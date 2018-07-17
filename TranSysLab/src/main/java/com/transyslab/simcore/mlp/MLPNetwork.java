@@ -392,7 +392,7 @@ public class MLPNetwork extends RoadNetwork {
 			//遍历vehicle
 			for (MLPVehicle v : veh_list) {
 				//从对象池获取vehicledata对象
-				vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
+				vd = VehicleDataPool.getInstance().newData();
 				//记录车辆信息
 				vd.init(v,
 						false,

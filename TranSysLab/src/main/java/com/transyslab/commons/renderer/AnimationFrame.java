@@ -77,8 +77,9 @@ public class AnimationFrame{
 	public void clean(){
 		frameID_ = 0;
 		while(!vhcDataQueue_.isEmpty()){
-			VehicleDataPool.getVehicleDataPool().recycleVehicleData(vhcDataQueue_.pollFirst());
+			VehicleDataPool.getInstance().recycle(vhcDataQueue_.pollFirst());
 		}
+		vhcDataQueue_.clear();
 		stateDataQueue.clear();
 	}
 }

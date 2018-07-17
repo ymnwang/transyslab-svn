@@ -15,8 +15,11 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -28,6 +31,7 @@ public class RTEngine extends SimulationEngine{
 
 	//引擎运行输入文件配置
 	private HashMap<String,String> runProperties;
+	//
 	//引擎运行时间设置信息
 	private double timeStart;
 	private double timeEnd;
@@ -36,6 +40,7 @@ public class RTEngine extends SimulationEngine{
 	private Configuration config;
 	private CSVParser frameParser;
 	private int curFrameId;
+	private LocalTime frameTime;
 	private boolean firstEntry;
 	private boolean isStop;
 	public static boolean isState;
@@ -46,7 +51,7 @@ public class RTEngine extends SimulationEngine{
 		runProperties = new HashMap<>();
 		firstEntry = true;
 		isStop = false;
-		isState = false;
+		isState = true;
 	}
 	public RTEngine(String masterFilePath) {
 		this();
@@ -78,24 +83,32 @@ public class RTEngine extends SimulationEngine{
 		CSVRecord curRecord;
 		List<VehicleData> vds = new ArrayList<>();
 		int frameConter = 1;
-		while((curRecord = frameParser.iterator().next())!=null){
-			int frameid = Integer.parseInt(curRecord.get(0));
+		Iterator<CSVRecord> frameIterator = frameParser.iterator();
+		while(frameIterator.hasNext()){
+			curRecord =  frameIterator.next();
+			//int frameid = Integer.parseInt(curRecord.get(0));
+			LocalTime time = LocalTime.parse(curRecord.get(3),DateTimeFormatter.ofPattern("YYYY-MM-DD HH:mm:ss.SSS"));
 			if(firstEntry) {
-				curFrameId = frameid;
+				frameTime = time;
 				firstEntry = false;
 			}
-			int vhcid = Integer.parseInt(curRecord.get(1));
-			double distance = Double.parseDouble(curRecord.get(2));
-			int laneid = Integer.parseInt(curRecord.get(3));
-			int flag = Integer.parseInt(curRecord.get(4));
+			//int vhcid = Integer.parseInt(curRecord.get(1));
+			String vhcId = curRecord.get(0);
+			//double distance = Double.parseDouble(curRecord.get(2));
+			double distance = Double.parseDouble(curRecord.get(5));
+			//int laneid = Integer.parseInt(curRecord.get(3));
+			int laneid = Integer.parseInt(curRecord.get(4));
+			//int flag = Integer.parseInt(curRecord.get(4));
+			int flag = Integer.parseInt(curRecord.get(6));
 			boolean queueFlag = false;
 			if(flag == 1)
 				queueFlag = true;
-			int tarLaneid = Integer.parseInt(curRecord.get(6));
-			double speed = Double.parseDouble(curRecord.get(5));
-			VehicleData vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
-			vd.init(vhcid,rtNetwork.findLane(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,speed,tarLaneid,queueFlag,true);
-			if(curFrameId != frameid){//新的一帧
+			//int tarLaneid = Integer.parseInt(curRecord.get(6));
+			String turn = curRecord.get(8);
+			double speed = Double.parseDouble(curRecord.get(7));
+			VehicleData vd = new VehicleData();
+			vd.init(vhcId,rtNetwork.findLane(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,speed,turn,queueFlag,true);
+			if(frameTime.compareTo(time)!=0){//新的一帧
 				if(!vds.isEmpty()){
 					if (isStop) {
 						forceReset();
@@ -108,13 +121,13 @@ public class RTEngine extends SimulationEngine{
 					}
 					else{
 						//if(frameConter%30 == 0)
-							rtNetwork.renderState(vds);
+						rtNetwork.renderState(vds);
 					}
 
 					vds.clear();
 				}
 				frameConter ++;
-				curFrameId = frameid;
+				frameTime = time;
 			}
 			vds.add(vd);
 		}

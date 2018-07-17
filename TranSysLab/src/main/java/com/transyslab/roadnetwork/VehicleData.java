@@ -6,6 +6,7 @@ import com.transyslab.commons.tools.GeoUtil;
 public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	//车辆id
 	protected int vehicleID_;
+	protected String vhcID;
 	//车辆类型
 	protected int vehicleType_;
 	//车辆特殊渲染的标记,0:无标记；1:MLP模型虚拟车
@@ -26,6 +27,7 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	protected boolean isSelected;
 	protected double distance;
 	protected int tarLaneID;// TODO ffff
+	protected String turn;
 	protected boolean queueFlag;
 	public boolean isQueue(){
 		return this.queueFlag;
@@ -35,6 +37,9 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	}
 	public int getVehicleID(){
 		return vehicleID_;
+	}
+	public String getTurnInfo(){
+		return this.turn;
 	}
 	public int getVehicleType(){
 		return vehicleType_;
@@ -135,7 +140,7 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		else if(moveOn instanceof Lane){
 			Lane lane = (Lane) moveOn;
 			this.curLaneID = lane.getId();
-			l = lane.getLength();
+			l = lane.getGeoLength();
 			startPnt = lane.getStartPnt();
 			endPnt = lane.getEndPnt();
 			// TODO 写死车宽
@@ -157,8 +162,8 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		double vhcTrailX = startPnt.getLocationX() + s * (endPnt.getLocationX() - startPnt.getLocationX()) / l;
 		double vhcTrailY = startPnt.getLocationY() + s * (endPnt.getLocationY() - startPnt.getLocationY()) / l;
 		// TODO 写死高度z
-		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 1.0);
-		GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 1.0);
+		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.0);
+		GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 0.0);
 		// 注意：对象更替频繁
 		this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, width,bothSize);
 	}
@@ -174,9 +179,23 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		}
 		calcShapePoint(moveOn,distance,distReverse);
 	}
+	public void init(String id, Object moveOn, double vhcLength, double distance, double speed,String turn, boolean queueFlag, boolean distReverse){
+		this.vhcID = id;
+		this.turn = turn;
+		this.vehicleLength_ = vhcLength;
+		this.curSpeed = speed;
+		this.queueFlag = queueFlag;
+
+		if(moveOn == null) {
+			System.out.println("Error: Could not find the Lane");
+			return;
+		}
+		calcShapePoint(moveOn,distance,distReverse);
+	}
 	public void clean(){
 		vehicleID_ = vehicleType_ = 0;
 		vehicleLength_ = 0;
+		queueFlag = true;
 	}
 	//wym
 	public GeoPoint getHeadPosition(){

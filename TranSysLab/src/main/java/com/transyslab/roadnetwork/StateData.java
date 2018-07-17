@@ -1,15 +1,25 @@
 package com.transyslab.roadnetwork;
 
+import com.transyslab.commons.tools.GeoUtil;
+import com.transyslab.simcore.rts.RTLane;
+
 public class StateData implements NetworkObject{
     protected NetworkObject stateOn;// Segment or Lane
     protected GeoSurface surface;
     protected double avgSpeed;
-    protected GeoPoint queuePostion;
-    public StateData(NetworkObject stateOn, GeoSurface surface,GeoPoint queuePostion ,double avgSpeed){
+    protected double queueLength;
+    public StateData(NetworkObject stateOn){
         this.stateOn = stateOn;
-        this.surface = surface;
-        this.queuePostion = queuePostion;
-        this.avgSpeed = avgSpeed;
+        initialize();
+    }
+    private void initialize(){
+        if(stateOn instanceof RTLane){
+            RTLane curLane = (RTLane) stateOn;
+            this.avgSpeed = curLane.getAvgSpeed();
+            this.queueLength = curLane.getQueueLength();//
+            GeoPoint queuePosition = curLane.getStartPnt().intermediate(curLane.getEndPnt(),queueLength/curLane.getGeoLength());
+            this.surface = GeoUtil.lineToRectangle(curLane.getStartPnt(),queuePosition,Constants.LANE_WIDTH,true);
+        }
     }
     public GeoSurface getSurface(){
         return this.surface;

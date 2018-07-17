@@ -24,9 +24,9 @@ public class ColorBar {
     public final static Color[] GRADIENT_RED_TO_GREEN = createGradient(Color.RED, Color.GREEN, 500);
 
     /**
-     * ÂÌ, »Æ, éÙ, ºì
+     * ºì, éÙ£¬»Æ£¬ÂÌ
      */
-    public final static Color[] GRADIENT_GREEN_YELLOW_ORANGE_RED = createMultiGradient(new Color[]{Color.green, Color.yellow, Color.orange, Color.red}, 500);
+    public final static Color[] GRADIENT_GREEN_YELLOW_ORANGE_RED = createMultiGradient(new Color[]{Color.red, Color.yellow, Color.green}, 250);
 
     /**
      * ²Êºç

@@ -279,7 +279,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		}
 		if(curFrame !=null){
 			for(VehicleData vd:curFrame.getVhcDataQueue()){
-				switch (vd.getTarLaneID()) {
+				/*switch (vd.getTarLaneID()) {
 					// 左转
 					case 4:
 						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
@@ -294,13 +294,26 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 						break;
 					default:
 						break;
+				}*/
+				switch (vd.getTurnInfo()) {
+					// 左转
+					case "L":
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
+						break;
+					// 直行
+					case "S":
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),Constants.COLOR_BLUE, vd.isSelected(), 1);
+						break;
+					// 右转
+					case "R":
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
+						break;
+					default:
+						break;
 				}
 			}
 			// 显示车道状态
 			if(RTEngine.isState ){
-				if(!curFrame.getVhcDataQueue().isEmpty()){
-					System.out.println("");
-				}
 				for(StateData sd:curFrame.getStateDataQueue()){
 					Color color = ColorBar.valueToColor(0,15,sd.getAvgSpeed(),250);
 					if(color!=null)

@@ -576,7 +576,7 @@ public class MesoNetwork extends RoadNetwork {
 					//遍历vehicle
 					while (vhc != null) {
 						//从对象池获取vehicledata对象
-						vd = VehicleDataPool.getVehicleDataPool().getVehicleData();
+						vd = VehicleDataPool.getInstance().newData();
 						//记录车辆信息
 						vd.init(vhc,true,0,null);
 						//将vehicledata插入frame
