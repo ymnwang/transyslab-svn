@@ -6,6 +6,7 @@ package com.transyslab.commons.io;
 import java.io.File;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -36,8 +37,9 @@ public class XmlParser {
 	}
 	private static void parseNetworkObjects(Element node,RoadNetwork network){
 		String tmpName = "";
-		double beginX = -1,beginY = -1,endX = -1,endY = -1,tmpFreeSpeed = -1;
+		double beginX = -1,beginY = -1,endX = -1,endY = -1,tmpFreeSpeed = -1,kerbx = -1,kerby =-1;
 		int tmpId = -1,tmpType = -1,tmpUpId = -1,tmpDnId = -1,gradient = -1,tmpSpeedLimit = -1;
+		int tmpSegId = -1;
 		List<Attribute> attrs = node.attributes();
 		// 解析Node
 		if (node.getName().equals("N")) {
@@ -146,18 +148,16 @@ public class XmlParser {
 			network.createBoundary(tmpId, beginX, beginY, endX, endY);
 		}
 		//解析Surface
-		/*if(node.getName() == "Surface"){
-			for (Attribute attr : list) {
-
-				if (attr.getName() == "id")
+		if(node.getName() == "Surface"){
+			for (Attribute attr : attrs) {
+				if (attr.getName() == "SurfaceID")
 					tmpId = Integer.parseInt(attr.getValue());
-				if (attr.getName() == "arcid")
-					arcid = Integer.parseInt(attr.getValue());
+				if (attr.getName() == "ArcID")
+					tmpSegId = Integer.parseInt(attr.getValue());
 
 			}
 			//创建Surface对象，用于绘制路面，与仿真模型无关
-			GeoSurface surface = new GeoSurface();
-			surface.init(tmpsurface, arcid);
+			List<GeoPoint> kerbPoint = new ArrayList<>();
 			List<Element> kerblist = node.elements();
 			for(Element p : kerblist){
 				List<Attribute> pattr = p.attributes();
@@ -167,10 +167,10 @@ public class XmlParser {
 					if(attr.getName()=="KerbY")
 						kerby = Double.parseDouble(attr.getValue());
 				}
-				surface.addKerbPoint(new GeoPoint(kerbx,kerby));
+				kerbPoint.add(new GeoPoint(kerbx,kerby));
 			}
-
-		}*/
+			network.createSurface(tmpId,tmpSegId,kerbPoint);
+		}
 		// 当前节点下面子节点迭代器
 		Iterator<Element> it = node.elementIterator();
 		// 遍历

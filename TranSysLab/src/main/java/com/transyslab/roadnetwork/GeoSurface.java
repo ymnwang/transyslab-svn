@@ -45,5 +45,8 @@ public class GeoSurface implements NetworkObject{
 	public List<GeoPoint> getKerbList(){
 		return kerbPoints;
 	}
-	
+	public void setKerbList(List<GeoPoint> kerbList){
+		kerbPoints = kerbList;
+	}
+
 }

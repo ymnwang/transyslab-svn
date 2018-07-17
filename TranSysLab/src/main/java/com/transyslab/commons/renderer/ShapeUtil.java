@@ -23,94 +23,65 @@ import org.apache.commons.math3.util.MathUtils;
 
 public class ShapeUtil {
 
-	public static void drawSolidLine(GL2 gl, GeoPoint spnt, GeoPoint epnt, float linewidth, float[] color) {
+	public static void drawSolidLine(GL2 gl, GeoPoint spnt, GeoPoint epnt, float linewidth, float[] color, double shiftZ) {
 		gl.glColor3f(color[0], color[1], color[2]);
-//		gl.glLineWidth(linewidth);
-		//虚线
-//		gl.glLineStipple(2, (short) 0x5555);
+		gl.glLineWidth(linewidth);
+		gl.glBegin(GL_LINES);
+		gl.glVertex3d(spnt.getLocationX(), spnt.getLocationY(), spnt.getLocationZ()+shiftZ);
+		gl.glVertex3d(epnt.getLocationX(), epnt.getLocationY(), epnt.getLocationZ()+shiftZ);
+		gl.glEnd();
+	}
 
-//		gl.glLineStipple (1, (short) 0x0F0F);  
-		gl.glBegin(GL_LINES);
-		gl.glVertex3d(spnt.getLocationX(), spnt.getLocationY(), spnt.getLocationZ()+1);
-		gl.glVertex3d(epnt.getLocationX(), epnt.getLocationY(), epnt.getLocationZ()+1);
-		gl.glEnd();
-	}
-	public static void drawSolidLine(GL2 gl,float[] fcoods, float[] tcoods, float linewidth,float[] color){
-		gl.glBegin(GL_LINES);
-		gl.glVertex3d(fcoods[0], fcoods[1], fcoods[2]);
-		gl.glVertex3d(tcoods[0], tcoods[1], tcoods[2]);
-		gl.glEnd();
-	}
-	public static void drawPolyline(GL2 gl, GeoPoint[] points, float linewidth, float[] color, double height){
+	public static void drawPolyline(GL2 gl, GeoPoint[] points, float linewidth, float[] color, double shiftZ){
 		gl.glColor3f(color[0], color[1], color[2]);
 		gl.glLineWidth(linewidth);
 		gl.glBegin(GL_LINE_STRIP);
 		for(int i=0;i<points.length;i++){
-			gl.glVertex3d(points[i].getLocationX(),points[i].getLocationY(),height);
+			gl.glVertex3d(points[i].getLocationX(),points[i].getLocationY(),points[i].getLocationZ()+shiftZ);
 		}
 		gl.glEnd();
 	}
-	public static void drawPoint(GL2 gl, GeoPoint pos, int radius, float[] color) {
+	public static void drawPoint(GL2 gl, GeoPoint pos, int radius, float[] color, double shiftZ) {
 		gl.glColor3f(color[0], color[1], color[2]);
 		gl.glPointSize(radius);
 		gl.glBegin(GL_POINTS);
-		gl.glVertex3d(pos.getLocationX(), pos.getLocationY(), pos.getLocationZ()+1);
+		gl.glVertex3d(pos.getLocationX(), pos.getLocationY(), pos.getLocationZ()+shiftZ);
 		gl.glEnd();
 	}
-	public static void drawPoint(GL2 gl, double x, double y, double z, int radius, float[] color) {
+	public static void drawPoint(GL2 gl, double x, double y, double z, int radius, float[] color,  double shiftZ) {
 		gl.glColor3f(color[0], color[1], color[2]);
 		gl.glPointSize(radius);
 		gl.glBegin(GL_POINTS);
-		gl.glVertex3d(x, y, 2);
+		gl.glVertex3d(x, y, z + shiftZ);
 		gl.glEnd();
 	}
-	public static void drawPolygon(GL2 gl,List<GeoPoint> points, final float[] color, final boolean isSelected){
-		gl.glColor3f(color[0], color[1], color[2]);
-		if(isSelected)
-			gl.glColor3f(1.0f, 1.0f, 0.0f);
-		gl.glBegin(GL2.GL_POLYGON);
-		for(GeoPoint p:points ){
-			// TODO 图层管理
-			gl.glVertex3d(p.getLocationX(), p.getLocationY(),0.0);
-		}
-		gl.glEnd();
-	}
-	public static void drawPolygon(GL2 gl,List<GeoPoint>points, final float[] color, final boolean isSelected, double height){
-		gl.glColor3f(color[0], color[1], color[2]);
-		if(isSelected)
-			gl.glColor3f(1.0f, 1.0f, 0.0f);
-		gl.glBegin(GL2.GL_POLYGON);
-		for(GeoPoint p:points ){
-			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
-		}
-		gl.glEnd();
-	}
-	public static void drawPolygon(GL2 gl,GeoPoint[] points, final float[] color, final boolean isSelected, double height){
-		gl.glColor3f(color[0], color[1], color[2]);
-		if(isSelected)
-			gl.glColor3f(1.0f, 1.0f, 0.0f);
-		gl.glBegin(GL2.GL_POLYGON);
-		for(GeoPoint p:points ){
-			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
-		}
-		gl.glEnd();
-	}
-	public static void drawPolygon(GL2 gl,List<GeoPoint> points, final float[] fcolor, final float[] tcolor){
 
-		//gl.glColor3f(color[0], color[1], color[2]);
-		gl.glColor3f(1.0f, 1.0f, 0.0f);
+	public static void drawPolygon(GL2 gl,List<GeoPoint>points, final float[] color, final boolean isSelected, double shiftZ){
+		gl.glColor3f(color[0], color[1], color[2]);
+		if(isSelected)
+			gl.glColor3f(1.0f, 1.0f, 0.0f);
 		gl.glBegin(GL2.GL_POLYGON);
 		for(GeoPoint p:points ){
-			// TODO 图层管理
-			gl.glVertex3d(p.getLocationX(), p.getLocationY(),0.0);
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),p.getLocationZ()+shiftZ);
 		}
 		gl.glEnd();
 	}
-	public static void drawArrow(GL2 gl,GeoPoint fPoint, GeoPoint tPoint, final float[] color){
+	public static void drawPolygon(GL2 gl,GeoPoint[] points, final float[] color, final boolean isSelected, double shiftZ){
+		gl.glColor3f(color[0], color[1], color[2]);
+		if(isSelected)
+			gl.glColor3f(1.0f, 1.0f, 0.0f);
+		gl.glBegin(GL2.GL_POLYGON);
+		for(GeoPoint p:points ){
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),p.getLocationZ()+ shiftZ);
+		}
+		gl.glEnd();
+	}
+
+	public static void drawArrow(GL2 gl,GeoPoint fPoint, GeoPoint tPoint, final float[] color, double shiftZ){
 		gl.glColor3f(color[0], color[1], color[2]);
 		gl.glBegin(GL2.GL_LINE);
 		/*for(GeoPoint p:points ){
-			gl.glVertex3d(p.getLocationX(), p.getLocationY(),height);
+			gl.glVertex3d(p.getLocationX(), p.getLocationY(),p.getLocationZ()+shiftZ);
 		}*/
 		gl.glEnd();
 	}

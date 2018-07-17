@@ -9,6 +9,7 @@ import com.transyslab.commons.tools.SimulationClock;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
+import sun.java2d.Surface;
 
 
 /**
@@ -34,6 +35,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	protected List<BusStop> busStops = new ArrayList<BusStop>();
 	protected List<Path> paths = new ArrayList<>();
 	protected List<Connector> connectors = new ArrayList<>();
+	protected List<GeoSurface> surfaces = new ArrayList<>();
 // protected List<SurvStation> survStations = new ArrayList<SurvStation>();
 
 //	protected List<Path> paths = new ArrayList<>();
@@ -93,6 +95,12 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		Connector newConnector = new Connector(upLane,dnLane);
 		this.connectors.add(newConnector);
 	}
+	public void createSurface(int id, int segId, List<GeoPoint> kerbList){
+		GeoSurface surface = new GeoSurface();
+		surface.init(id, segId);
+		surface.setKerbList(kerbList);
+		surfaces.add(surface);
+	}
 
 //	public abstract void createVehicle(int id, int type, double length, double dis, double speed);
 
@@ -122,9 +130,6 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public void createODPair(Node oriNode, Node desNode){
 		ODPair newodPair = new ODPair(oriNode,desNode);
 		this.odPairs.add(newodPair);
-
-	}
-	public void createSurface(){
 
 	}
 	public void createBoundary(int id, double beginx, double beginy, double endx, double endy){
@@ -168,6 +173,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public Connector getConnector(int i){
 		return this.connectors.get(i);
 	}
+	public GeoSurface getSurface(int i){
+		return this.surfaces.get(i);
+	}
 	public int nLinks(){return links.size();}
 	public int nNodes(){
 		return nodes.size();
@@ -186,6 +194,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		return boundaries.size();
 	}
 	public int nConnectors() {return connectors.size();}
+	public int nSurfaces(){
+		return surfaces.size();
+	}
 	public Node findNode(int id) {
 		ListIterator<Node> i = nodes.listIterator();
 		while (i.hasNext()) {
@@ -702,8 +713,10 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (Lane itrLane:lanes) {
 			itrLane.calcStaticInfo(this.worldSpace);
 		}
-		// 添加信控指示箭头
-
+		// Surface 位置平移
+		for (GeoSurface surface:surfaces) {
+			surface.translateInWorldSpace(worldSpace);
+		}
 	}
 
 	public void initializeLinkStatistics() {
