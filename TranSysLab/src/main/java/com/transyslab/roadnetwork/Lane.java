@@ -6,6 +6,7 @@ package com.transyslab.roadnetwork;
 import java.util.*;
 
 import com.transyslab.commons.tools.GeoUtil;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 /**
  * Lane
@@ -27,17 +28,16 @@ public class Lane implements NetworkObject {
 	protected List<Lane> dnLanes;
 	protected GeoPoint startPnt;
 	protected GeoPoint endPnt;
+	protected double geoLength;
 	protected GeoSurface surface;
+	protected List<SignalArrow> signalArrows;
 	protected int type;
 	protected int state;
 	protected int cmarker;// connection marker
 	protected Lane leftLane;
 	protected Lane rightLane;
 	protected boolean isSelected;
-	// 左右车道边界（Boundary）的id
-	protected int lbId;
-	protected int rbId;
-	protected double geoLength;
+	protected int turnType;
 	public Lane() {
 		segment = null;
 		type = 0;
@@ -45,6 +45,7 @@ public class Lane implements NetworkObject {
 		cmarker = 0;
 		upLanes = new ArrayList<>();
 		dnLanes = new ArrayList<>();
+		signalArrows = new ArrayList<>();
 	}
 	public int getId(){
 		return this.id;
@@ -68,7 +69,9 @@ public class Lane implements NetworkObject {
 	public void unsetState(int s) {
 		state &= ~s;
 	}
-
+	public List<SignalArrow> getSignalArrows(){
+		return this.signalArrows;
+	}
 	public Segment getSegment() {
 		return segment;
 	}
@@ -92,6 +95,10 @@ public class Lane implements NetworkObject {
 	 * --------------------------------------------------------------------
 	 */
 	public void setLaneType() {
+		// 检查是否为交叉口进口道
+		if (getSegment().getId()==getLink().getEndSegment().getId() && (getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION)!=0) {
+			type |= Constants.LANE_TYPE_SIGNAL_ARROW;
+		}
 		/*
 		 * check if this lane is a shoulder lane
 		 */
@@ -272,11 +279,11 @@ public class Lane implements NetworkObject {
 	}
 
 
-	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg, int lbId,int rbId) {
+	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg) {
 
 		startPnt =new GeoPoint(beginx,beginy);
 		endPnt =new GeoPoint(endx,endy);
-		this.geoLength = startPnt.distance(endPnt);
+		geoLength = startPnt.distance(endPnt);
 		if (this.segment != null) {
 			System.out.print("Can't not init segment twice");
 			return ;
@@ -288,8 +295,6 @@ public class Lane implements NetworkObject {
 		this.rules = r;
 		this.index = index;
 		this.segment.addLane(this);
-		this.lbId = lbId;
-		this.rbId = rbId;
 	}
 	// 路网世界坐标平移后再调用
 	public void createLaneSurface(){
@@ -321,6 +326,51 @@ public class Lane implements NetworkObject {
 		endPnt = worldSpace.worldSpacePoint(endPnt);
 		//生成车道面
 		createLaneSurface();
+		//信控标识
+		List<Integer> aList = new ArrayList<>();
+		if(laneType(Constants.LANE_TYPE_SIGNAL_ARROW) != 0){
+			for(Lane dnLane:dnLanes){
+				if (!aList.contains(dnLane.getLink().getId())) {
+					aList.add(dnLane.getLink().getId());
+					double tol = 0.1;
+					double x1 = getEndPnt().getLocationX() - getStartPnt().getLocationX();
+					double y1 = getEndPnt().getLocationY() - getStartPnt().getLocationY();
+					double dis1 = getEndPnt().distance(getStartPnt());
+					double x2 = dnLane.getEndPnt().getLocationX() - dnLane.getStartPnt().getLocationX();
+					double y2 = dnLane.getEndPnt().getLocationY() - dnLane.getStartPnt().getLocationY();
+					double dis2 = dnLane.getEndPnt().distance(dnLane.getStartPnt());
+					double crossProduct = x1*y2 - x2*y1;
+					double a = crossProduct/dis1/dis2;
+					if (a > tol)
+						signalArrows.add(new SignalArrow(getId()*10+1,SignalArrow.LEFTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+					else if (a < -tol)
+						signalArrows.add(new SignalArrow(getId()*10+3,SignalArrow.RIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+					else
+						signalArrows.add(new SignalArrow(getId()*10+2,SignalArrow.STRAIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+				}
+			}
+
+			if(signalArrows.size()>1) {
+				Collections.sort(signalArrows);
+				Vector3D translate = new Vector3D(surface.getKerbList().get(0).getLocationX() - startPnt.getLocationX(),
+						surface.getKerbList().get(0).getLocationY() - startPnt.getLocationY(),
+						surface.getKerbList().get(0).getLocationZ() - startPnt.getLocationZ());//←
+				translate = translate.normalize();
+				if(signalArrows.size()==2){
+					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.3));
+					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.3));
+					GeoUtil.calcTranslation(signalArrows.get(1).getArrowTip(),translate.scalarMultiply(-0.3));
+					GeoUtil.calcTranslation(signalArrows.get(1).getPolyline(),translate.scalarMultiply(-0.3));
+				}
+				else{
+					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.6));
+					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.6));
+					GeoUtil.calcTranslation(signalArrows.get(2).getArrowTip(),translate.scalarMultiply(-0.6));
+					GeoUtil.calcTranslation(signalArrows.get(2).getPolyline(),translate.scalarMultiply(-0.6));
+				}
+			}
+
+		}
 	}
 	/*
 	 * --------------------------------------------------------------------

@@ -8,7 +8,6 @@ import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.*;
@@ -38,12 +37,23 @@ import java.util.List;
 
 public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener, MouseListener,
 		MouseWheelListener, MouseMotionListener {
-	//status
+	// status
 	public static final int ANIMATOR_STOP = 0;
 	public static final int ANIMATOR_PLAYING = 1;
 	public static final int ANIMATOR_PAUSE = 2;
-	//mode
+	// mode
 	public static final int ANIMATOR_FRAME_ADVANCE = 1;
+	// 图层
+    public static final double LAYER_SURFACE = 0.0;
+    public static final double LAYER_NODE = 0.5;
+    public static final double LAYER_LINK = 0.5;
+    public static final double LAYER_SEGMENT = 0.1;
+    public static final double LAYER_LANE = 0.1;
+    public static final double LAYER_BOUNDARY = 0.4;
+    public static final double LAYER_CONNECTOR = 0.4;
+    public static final double LAYER_VEHICLE = 0.5;
+    public static final double LAYER_SENSOR = 0.4;
+    public static final double LAYER_SIGNALARROW = 0.4;
 	private MainWindow mainWindow;
 	private GLU glu; // for the GL Utility
 	private RoadNetwork drawableNetwork;
@@ -124,7 +134,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		// YYL end
 		gl.glClearDepth(1.0f); // set clear depth value to farthest
 		gl.glEnable(GL_DEPTH_TEST); // enables depth testing
-		gl.glDepthFunc(GL_LEQUAL); // the type of depth test to do
+		gl.glDepthFunc(GL_LESS); // the type of depth test to do
 		gl.glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // best
 		// perspective
 		// correction
@@ -205,125 +215,85 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	public void scene(GL2 gl) {
 		float camHeight =  cam.getEyeLocation()[2];
 		Segment tmpsegment;
-
+        // Boundary 线
 		for (int i = 0; i< drawableNetwork.nBoundaries(); i++) {
 			Boundary tmpboundary = drawableNetwork.getBoundary(i);
 			ShapeUtil.drawSolidLine(gl, tmpboundary.getStartPnt(), tmpboundary.getEndPnt(), 2,
-					Constants.COLOR_WHITE);
+					Constants.COLOR_WHITE, LAYER_BOUNDARY);
 		}
+		// Segment 线
 		for(int i = 0; i< drawableNetwork.nSegments(); i++){
 			tmpsegment = drawableNetwork.getSegment(i);
 			ShapeUtil.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 2,
-					Constants.COLOR_WHITE);
-			if(camHeight>=200){
-				/*
-				double width = tmpsegment.nLanes()*Constants.LANE_WIDTH;
-				double offset = Math.max(width, 0.0008*camHeight*width);
-				GeoSurface tmpSurface = GeoUtil.lineToRectangle(tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), offset, false);
-				ShapeUtil.drawPolygon(gl, tmpSurface.getKerbList(), Constants.COLOR_GREY, false);*/
-			}
+					Constants.COLOR_WHITE,LAYER_BOUNDARY);
 		}
 
-		// 显示车道面
-		if(camHeight<200){
-			for(int i = 0; i< drawableNetwork.nLanes(); i++){
-				Lane tmpLane = drawableNetwork.getLane(i);
-				ShapeUtil.drawPolygon(gl, tmpLane.getSurface().getKerbList(),Constants.COLOR_GREY, tmpLane.isSelected());
-			}
-		}
-		//显示路段面
-		else if(camHeight < 1000){
-			for(int i = 0; i< drawableNetwork.nSegments(); i++){
-				Segment tmpSegment = drawableNetwork.getSegment(i);
-				ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, tmpSegment.isSelected());
-			}
-		}
+        // Connector 线
+        for(int i=0; i< drawableNetwork.nConnectors();i++){
+            Connector tmpConnector = drawableNetwork.getConnector(i);
+            ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f}, LAYER_CONNECTOR);
+        }
 
-		//显示路段打断的填补面
-		/*
-		for(GeoSurface connectSurface: drawableNetwork.getConnectSegments()){
-			int pCounter = 1;
-			String[] sCouter = new String[connectSurface.getKerbList().size()];
-			for(int i=0;i<sCouter.length;i++){
-				sCouter[i] = String.valueOf(pCounter);
-				pCounter++;
-			}
-//			ShapeUtil.drawPolygon(gl,connectSurface.getKerbList(),Constants.COLOR_WHITE,false,0.7);
-//			ShapeUtil.drawTriangles(gl,connectSurface.getKerbList(),Constants.COLOR_WHITE,0.7);
-//			for(GeoPoint p:connectSurface.getKerbList()){
-//			//ShapeUtil.drawPoint(gl,p,10,Constants.COLOR_GREEN);
-//
-//				//pCounter++;
-//			}
-			ShapeUtil.drawText(textRenderer,sCouter,0.5f* cam.getEyeLocation()[2]/1000,connectSurface.getKerbList(),Constants.COLOR_GREEN);
+        // SignalArrow 箭头
+        for(int i=0; i< drawableNetwork.nLanes();i++){
+            Lane itrLane = drawableNetwork.getLane(i);
+            for(SignalArrow sa:itrLane.getSignalArrows()){
+                ShapeUtil.drawPolyline(gl,sa.getPolyline(),2,sa.getColor(),LAYER_SIGNALARROW);
+                ShapeUtil.drawPolygon(gl,sa.getArrowTip(),sa.getColor(),false,LAYER_SIGNALARROW);
+            }
+        }
+        boolean isPause = (status == ANIMATOR_PAUSE);
+        //暂停时不更新帧索引
+        curFrame =FrameQueue.getInstance().poll(isPause);
+        //暂停状态下读下一帧
+        if (isPause && mode == ANIMATOR_FRAME_ADVANCE){
+            curFrame = FrameQueue.getInstance().poll(false);
+            mode = 0;
+        }
+        if(curFrame !=null){
+            for(VehicleData vd:curFrame.getVhcDataQueue()){
+                if ((vd.getSpecialFlag()&Constants.FOLLOWING) == 0){
+                    ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(),LAYER_VEHICLE);
+                }
+                else {
+                    if((vd.getSpecialFlag()&Constants.VIRTUAL_VEHICLE) != 0)//虚拟车
+                        ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected(),LAYER_VEHICLE);
+                    else //非虚拟车
+                        ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(),LAYER_VEHICLE);
+                }
 
-		}*/
-		Sensor tmpSensor = null;
+            }
+            //回收vehicledata
+            if(!isPause)
+                curFrame.clean();
+        }
+
+        switch (mainWindow.getCurLayerName()){
+		    case "Segment": //Segment 面
+                for(int i = 0; i< drawableNetwork.nSegments(); i++){
+                    Segment tmpSegment = drawableNetwork.getSegment(i);
+                    ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, tmpSegment.isSelected(), LAYER_SEGMENT);
+                }
+                break;
+            case "Lane":// Lane 面
+                for(int i = 0; i< drawableNetwork.nLanes(); i++){
+                    Lane tmpLane = drawableNetwork.getLane(i);
+                    ShapeUtil.drawPolygon(gl, tmpLane.getSurface().getKerbList(),Constants.COLOR_GREY, tmpLane.isSelected(), LAYER_LANE);
+                }
+                break;
+        }
+
+		// Sensor 面
 		for(int i = 0; i< drawableNetwork.nSensors(); i++){
-			tmpSensor = drawableNetwork.getSensor(i);
-			ShapeUtil.drawPolygon(gl, tmpSensor.getSurface().getKerbList(),Constants.COLOR_GREEN, tmpSensor.isSelected());
-		}
-		// 车道连接器
-		for(int i=0; i< drawableNetwork.nConnectors();i++){
-			Connector tmpConnector = drawableNetwork.getConnector(i);
-			ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f});
+            Sensor tmpSensor = drawableNetwork.getSensor(i);
+			ShapeUtil.drawPolygon(gl, tmpSensor.getSurface().getKerbList(),Constants.COLOR_GREEN, tmpSensor.isSelected(),LAYER_SENSOR);
 		}
 
-		boolean isPause = (status == ANIMATOR_PAUSE);
-		//暂停时不更新帧索引
-		curFrame =FrameQueue.getInstance().poll(isPause);
-		//暂停状态下读下一帧
-		if (isPause && mode == ANIMATOR_FRAME_ADVANCE){
-			curFrame = FrameQueue.getInstance().poll(false);
-			mode = 0;
-		}
-		if(curFrame !=null){
-			for(VehicleData vd:curFrame.getVhcDataQueue()){
-				/*switch (vd.getTarLaneID()) {
-					// 左转
-					case 4:
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
-						break;
-					// 直行
-					case 5:
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),Constants.COLOR_BLUE, vd.isSelected(), 1);
-						break;
-					// 右转
-					case 6:
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
-						break;
-					default:
-						break;
-				}*/
-				switch (vd.getTurnInfo()) {
-					// 左转
-					case "L":
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
-						break;
-					// 直行
-					case "S":
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),Constants.COLOR_BLUE, vd.isSelected(), 1);
-						break;
-					// 右转
-					case "R":
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
-						break;
-					default:
-						break;
-				}
-			}
-			// 显示车道状态
-			if(RTEngine.isState ){
-				for(StateData sd:curFrame.getStateDataQueue()){
-					Color color = ColorBar.valueToColor(0,15,sd.getAvgSpeed(),250);
-					if(color!=null)
-						ShapeUtil.drawPolygon(gl,sd.getSurface().getKerbList(),color,0.9);
-				}
-			}
-			//回收vehicledata
-			if(!isPause)
-				curFrame.clean();
-		}
+        // Surface 面
+        for(int i=0;i<drawableNetwork.nSurfaces();i++){
+            GeoSurface surface = drawableNetwork.getSurface(i);
+            ShapeUtil.drawPolygon(gl,surface.getKerbList(),Constants.COLOR_GREY,false,LAYER_SURFACE);
+        }
 
 	}
 	//计算拾取射线与x/y/z = intersectPlane 平面的交点
@@ -392,8 +362,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					if(GeoUtil.isIntersect(pickRay,tmpSegment.getSurface())){
 						//被选中对象用黄色渲染
 						tmpSegment.setSelected(true);
-						// TODO 临时添加
-						ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, tmpSegment.isSelected());
 						pickedObjects.add(tmpSegment);
 					}
 				}

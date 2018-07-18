@@ -50,6 +50,15 @@ public class GeoPoint {
 		locCoods[1] = y;
 		locCoods[2] = z;
 	}
+	public void setLocCoods(double[] xyz){
+		if(xyz.length>3){
+			System.out.println("Error: check the length of array");
+			return;
+		}
+		locCoods[0] = xyz[0];
+		locCoods[1] = xyz[1];
+		locCoods[2] = xyz[2];
+	}
 
 	/*
 	 * Interpolate a point between this and p with ratio r. Notice that r
@@ -61,6 +70,7 @@ public class GeoPoint {
 						 r * this.locCoods[1] + (1.0 - r) * p.locCoods[1], 
 				         r * this.locCoods[2] + (1.0 - r) * p.locCoods[2]);
 	}
+
 	public double getLocationX() {
 		return locCoods[0];
 	}

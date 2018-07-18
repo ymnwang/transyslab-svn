@@ -1,15 +1,25 @@
 package com.transyslab.simcore.mlp;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
+import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.Node;
+import com.transyslab.roadnetwork.*;
+import jhplot.io.csv.CSVReader;
+import org.apache.commons.csv.CSVRecord;
 
 public class MLPNode extends Node{
+	private List<SignalPlan> signalPlans;
 	private LinkedList<MLPVehicle> statedVehs;
 	public int stopCount;
 	public MLPNode() {
+		signalPlans = new ArrayList<>();
 		statedVehs = new LinkedList<>();
 		stopCount = 0;
 	}
@@ -33,6 +43,15 @@ public class MLPNode extends Node{
 			//if this is an intersection, deal with inner movements
 			if (type(Constants.NODE_TYPE_INTERSECTION)!=0) {				
 				//movement in an intersection not available for now
+				//пе╨ееп╤о
+				if (type(Constants.NODE_TYPE_SIGNALIZED_INTERSECTION)!=0 &&
+						(!findPlan(currentTime).check(currentTime,
+						veh.getLink().getId(),
+						veh.getNextLink().getId()))) {
+					//red light
+					veh.holdAtDnEnd();
+					return Constants.VEHICLE_NOT_RECYCLE;
+				}
 
 			}
 			//deal with non-intersection nodes
@@ -158,5 +177,24 @@ public class MLPNode extends Node{
 	protected void clearStatedVehs() {
 		statedVehs.clear();
 		stopCount = 0;
+	}
+	protected void addSignalPlan(int planId) {
+		signalPlans.add(new SignalPlan(planId));
+	}
+	protected void addSignalPlan(SignalPlan plan) {
+		signalPlans.add(plan);
+	}
+	protected SignalPlan findPlan(int planID) {
+		return signalPlans.stream().filter(s->s.getId()==planID).findFirst().orElse(null);
+	}
+	protected SignalPlan findPlan(double now) {
+		return signalPlans.stream().filter(s->s.beingApplied(now)).findFirst().orElse(null);
+	}
+	public List<int[]> greenLightLIDPairs(double now) {
+		SignalStage stage = findPlan(now).findStage(now);
+		if (stage != null)
+			return stage.getLinkIDPairs();
+		else
+			return null;
 	}
 }

@@ -55,6 +55,8 @@ public class Constants {
 
 	public final static int LANE_TYPE_BOUNDARY = 0x00000200;
 	public final static int LANE_TYPE_DROPPED = 0x00000100;
+
+	public final static int LANE_TYPE_SIGNAL_ARROW = 0x00001000;
 	// ³µµÀ¿í¶È
 	public static float LANE_WIDTH = 3.75f;
 	public static int LINK_TYPE_FREEWAY = 1;
