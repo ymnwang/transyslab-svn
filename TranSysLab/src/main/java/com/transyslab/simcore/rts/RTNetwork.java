@@ -335,11 +335,12 @@ public class RTNetwork extends RoadNetwork{
 			}
 		}
 	}
-	public void renderVehicle(List<VehicleData> extVd){
+	public void renderVehicle(List<VehicleData> extVd, double secondOfDay){
 		AnimationFrame af = new AnimationFrame();
 		for(VehicleData vd:extVd){
 			af.addVehicleData(vd);
 		}
+		setArrowColor(secondOfDay, af.getSignalColors());
 		try {
 			FrameQueue.getInstance().offer(af);
 		} catch (InterruptedException e) {

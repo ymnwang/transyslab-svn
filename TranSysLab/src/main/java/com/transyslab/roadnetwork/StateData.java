@@ -3,6 +3,7 @@ package com.transyslab.roadnetwork;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.simcore.rts.RTLane;
 
+
 public class StateData implements NetworkObject{
     protected NetworkObject stateOn;// Segment or Lane
     protected GeoSurface surface;
@@ -21,6 +22,7 @@ public class StateData implements NetworkObject{
             this.surface = GeoUtil.lineToRectangle(curLane.getStartPnt(),queuePosition,Constants.LANE_WIDTH,true);
         }
     }
+
     public GeoSurface getSurface(){
         return this.surface;
     }

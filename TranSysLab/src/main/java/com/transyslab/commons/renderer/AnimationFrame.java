@@ -6,9 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.roadnetwork.StateData;
-import com.transyslab.roadnetwork.VehicleData;
-import com.transyslab.roadnetwork.VehicleDataPool;
+import com.transyslab.roadnetwork.*;
 import org.apache.commons.csv.CSVPrinter;
 
 public class AnimationFrame{
@@ -20,6 +18,7 @@ public class AnimationFrame{
 	private static int counter = 0;
 	//private LocalTime simTime;
     private double simTimeInSeconds;
+    private HashMap<SignalArrow, float[]> signalColors;
 
 	public AnimationFrame(){
 		vhcDataQueue_ = new LinkedList<>();
@@ -27,6 +26,7 @@ public class AnimationFrame{
 		info = new HashMap<String, Object>();
 		counter++;
 		frameID_ = counter;
+		signalColors = new HashMap<>();
 	}
 	public LinkedList<VehicleData> getVhcDataQueue(){
 		return vhcDataQueue_;
@@ -37,6 +37,18 @@ public class AnimationFrame{
 	}
 	public Object getInfo(String key){
 		return info.get(key);
+	}
+	public HashMap<SignalArrow, float[]> getSignalColors(){
+		return this.signalColors;
+	}
+	public void setSimTimeInSeconds(double seconds){
+		this.simTimeInSeconds = seconds;
+	}
+	public double getSimTimeInSeconds(){
+		return this.simTimeInSeconds;
+	}
+	public void addSignalColor(SignalArrow sa, float[] color){
+		this.signalColors.put(sa,color);
 	}
 	public void setFrameID(int id){
 		frameID_ = id;
@@ -82,7 +94,7 @@ public class AnimationFrame{
 		while(!vhcDataQueue_.isEmpty()){
 			VehicleDataPool.getInstance().recycle(vhcDataQueue_.pollFirst());
 		}
-		vhcDataQueue_.clear();
 		stateDataQueue.clear();
+		signalColors.clear();
 	}
 }

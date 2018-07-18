@@ -410,7 +410,9 @@ public class MLPNetwork extends RoadNetwork {
 			}
 			af.setInfo("Count",count);
 			//添加时间信息
-			af.setInfo("Time",(Double) getSimClock().getCurrentTime());
+			af.setSimTimeInSeconds(getSimClock().getCurrentTime());
+			//记录信控灯色
+			setArrowColor(getSimClock().getCurrentTime(), af.getSignalColors());
 			try {
 				FrameQueue.getInstance().offer(af);
 			} catch (InterruptedException e) {

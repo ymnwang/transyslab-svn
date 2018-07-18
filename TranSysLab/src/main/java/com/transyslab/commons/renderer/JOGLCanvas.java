@@ -13,7 +13,10 @@ import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.*;
 
 import java.awt.*;
+
+import com.transyslab.simcore.mlp.MLPNetwork;
 import com.transyslab.simcore.rts.RTEngine;
+import com.transyslab.simcore.rts.RTNetwork;
 import jhplot.math.LinearAlgebra;
 
 
@@ -42,7 +45,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	public static final int ANIMATOR_PAUSE = 2;
 	//mode
 	public static final int ANIMATOR_FRAME_ADVANCE = 1;
-	// 图层
+	//图层
     public static final double LAYER_SURFACE = 0.0;
     public static final double LAYER_NODE = 0.5;
     public static final double LAYER_LINK = 0.5;
@@ -240,48 +243,51 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
             curFrame = FrameQueue.getInstance().poll(false);
             mode = 0;
         }
-        // 信控指示箭头
-        if (curFrame == null)
-            drawableNetwork.setArrowColor();
-        else
-            drawableNetwork.setArrowColor((Double)curFrame.getInfo("Time"));
+
         // SignalArrow 箭头
         for(int i=0; i< drawableNetwork.nLanes();i++){
+			float[] saColor;
             Lane itrLane = drawableNetwork.getLane(i);
             for(SignalArrow sa:itrLane.getSignalArrows()){
-                ShapeUtil.drawPolyline(gl,sa.getPolyline(),2,sa.getColor(),LAYER_SIGNALARROW);
-                ShapeUtil.drawPolygon(gl,sa.getArrowTip(),sa.getColor(),false,LAYER_SIGNALARROW);
+				if(curFrame ==null || (saColor = curFrame.getSignalColors().get(sa))==null)
+					saColor = Constants.COLOR_WHITE;
+                ShapeUtil.drawPolyline(gl,sa.getPolyline(),2, saColor,LAYER_SIGNALARROW);
+                ShapeUtil.drawPolygon(gl,sa.getArrowTip(),saColor,false,LAYER_SIGNALARROW);
             }
         }
 
         if(curFrame !=null){
             for(VehicleData vd:curFrame.getVhcDataQueue()){
-                if ((vd.getSpecialFlag()&Constants.FOLLOWING) == 0){
-                    ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(),LAYER_VEHICLE);
-                }
-                else {
-                    if((vd.getSpecialFlag()&Constants.VIRTUAL_VEHICLE) != 0)//虚拟车
-                        ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected(),LAYER_VEHICLE);
-                    else //非虚拟车
-                        ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(),LAYER_VEHICLE);
-                }
-                /*
-				switch (vd.getTurnInfo()) {
-					// 左转
-					case "L":
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
-						break;
-					// 直行
-					case "S":
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),Constants.COLOR_BLUE, vd.isSelected(), 1);
-						break;
-					// 右转
-					case "R":
-						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
-						break;
-					default:
-						break;
-				}*/
+            	if(drawableNetwork instanceof MLPNetwork){
+					if ((vd.getSpecialFlag()&Constants.FOLLOWING) == 0){
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(),LAYER_VEHICLE);
+					}
+					else {
+						if((vd.getSpecialFlag()&Constants.VIRTUAL_VEHICLE) != 0)//虚拟车
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_LITEBLUE, vd.isSelected(),LAYER_VEHICLE);
+						else //非虚拟车
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(),LAYER_VEHICLE);
+					}
+				}
+				else if(drawableNetwork instanceof RTNetwork){
+					switch (vd.getTurnInfo()) {
+						// 左转
+						case "L":
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
+							break;
+						// 直行
+						case "S":
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(), 1);
+							break;
+						// 右转
+						case "R":
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
+							break;
+						default:
+							break;
+					}
+				}
+
             }
 			// 显示车道状态
 			if(RTEngine.isState ){

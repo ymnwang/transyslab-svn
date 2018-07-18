@@ -110,7 +110,7 @@ public class RTEngine extends SimulationEngine{
 						break;
 					}
 					if(!isState) {
-						rtNetwork.renderVehicle(vds);
+						rtNetwork.renderVehicle(vds,frameTime.toSecondOfDay());
 					}
 					else{
 						//if(frameConter%30 == 0)

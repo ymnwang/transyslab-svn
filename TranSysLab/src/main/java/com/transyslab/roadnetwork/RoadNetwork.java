@@ -751,7 +751,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public void	renewSysRandSeed() {
 		sysRand.setSeed(sysRand.nextLong());
 	}
-	public void setArrowColor(double now) {
+	public void setArrowColor(double now, HashMap<SignalArrow, float[]> signalColor) {
 		{
 //			double now = getSimClock().getCurrentTime();
 			nodes.stream().
@@ -762,7 +762,8 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 							for (int j = 0; j < seg.nLanes(); j++) {
 								Lane lane = seg.getLane(j);
 								lane.getSignalArrows().stream().forEach(a->{
-									a.setColor(Constants.COLOR_RED);
+									//a.setColor(Constants.COLOR_RED);
+									signalColor.put(a,Constants.COLOR_RED);
 								});
 							}
 						}
@@ -777,10 +778,12 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 									seg.getLane(i).getSignalArrows().forEach(a->{
 										if (a.getTLinkId()==p[1]) {
 											if (plan.isAmber(now)) {
-												a.setColor(Constants.COLOR_AMBER);
+												//a.setColor(Constants.COLOR_AMBER);
+												signalColor.put(a,Constants.COLOR_AMBER);
 											}
 											else {
-												a.setColor(Constants.COLOR_GREEN);
+												//a.setColor(Constants.COLOR_GREEN);
+												signalColor.put(a,Constants.COLOR_GREEN);
 											}
 										}
 									});
