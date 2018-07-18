@@ -546,10 +546,7 @@ public class MainWindow {
             slider1.setMinorTickSpacing(5);
             slider1.setPaintTicks(true);
             slider1.setPaintLabels(true);
-            Hashtable position = new Hashtable();
             LocalTime now = LocalTime.now();
-            int hour = now.getHour();
-            LocalTime time = LocalTime.of(hour,0,0);
             updateSlider(now.toSecondOfDay());
 
 

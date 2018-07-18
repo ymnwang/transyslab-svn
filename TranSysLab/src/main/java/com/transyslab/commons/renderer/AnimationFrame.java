@@ -1,6 +1,7 @@
 package com.transyslab.commons.renderer;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -17,6 +18,8 @@ public class AnimationFrame{
 	// 除车辆状态信息外，动画帧的其它信息
 	private HashMap info;
 	private static int counter = 0;
+	//private LocalTime simTime;
+    private double simTimeInSeconds;
 
 	public AnimationFrame(){
 		vhcDataQueue_ = new LinkedList<>();

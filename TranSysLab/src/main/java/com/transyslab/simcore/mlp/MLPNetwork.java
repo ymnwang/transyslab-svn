@@ -71,9 +71,9 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	@Override
-	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY,int lbId,int rbId) {
+	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY) {
 		MLPLane newLane = new MLPLane();
-		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1),lbId,rbId);
+		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
 		worldSpace.recordExtremePoints(newLane.getStartPnt());
 		worldSpace.recordExtremePoints(newLane.getEndPnt());
 		lanes.add(newLane);

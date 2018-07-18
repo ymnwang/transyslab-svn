@@ -65,9 +65,9 @@ public class RTNetwork extends RoadNetwork{
 	}
 
 	@Override
-	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY, int lbid, int rbid) {
+	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY) {
 		RTLane newLane = new RTLane();
-		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1),lbid,rbid);
+		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
 		worldSpace.recordExtremePoints(newLane.getStartPnt());
 		worldSpace.recordExtremePoints(newLane.getEndPnt());
 		lanes.add(newLane);

@@ -3,10 +3,7 @@ package com.transyslab.simcore.rts;
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.io.XmlParser;
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.RoadNetwork;
-import com.transyslab.roadnetwork.VehicleData;
-import com.transyslab.roadnetwork.VehicleDataPool;
+import com.transyslab.roadnetwork.*;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mlp.MacroCharacter;
 import org.apache.commons.configuration2.Configuration;
@@ -68,10 +65,11 @@ public class RTEngine extends SimulationEngine{
 		runProperties.put("extVhcPath", tmp==null || tmp.equals("") ? null : rootDir + tmp);
 
 		//time setting
-		timeStart = Double.parseDouble(config.getString("timeStart"));
-		timeEnd = Double.parseDouble(config.getString("timeEnd"));
+		LocalTime stime = LocalTime.parse(config.getString("timeStart"));
+		LocalTime etime = LocalTime.parse(config.getString("timeEnd"));
+		timeStart = stime.toSecondOfDay();
+		timeEnd = etime.toSecondOfDay();
 		timeStep = Double.parseDouble(config.getString("timeStep"));
-
 	}
 	@Override
 	public int simulationLoop() {
@@ -92,18 +90,13 @@ public class RTEngine extends SimulationEngine{
 				frameTime = time;
 				firstEntry = false;
 			}
-			//int vhcid = Integer.parseInt(curRecord.get(1));
 			String vhcId = curRecord.get(0);
-			//double distance = Double.parseDouble(curRecord.get(2));
 			double distance = Double.parseDouble(curRecord.get(5));
-			//int laneid = Integer.parseInt(curRecord.get(3));
 			int laneid = Integer.parseInt(curRecord.get(4));
-			//int flag = Integer.parseInt(curRecord.get(4));
 			int flag = Integer.parseInt(curRecord.get(6));
 			boolean queueFlag = false;
 			if(flag == 1)
 				queueFlag = true;
-			//int tarLaneid = Integer.parseInt(curRecord.get(6));
 			String turn = curRecord.get(8);
 			double speed = Double.parseDouble(curRecord.get(7));
 			VehicleData vd = new VehicleData();
@@ -131,6 +124,7 @@ public class RTEngine extends SimulationEngine{
 			}
 			vds.add(vd);
 		}
+		//mlpNetwork.setArrowColor();
 	}
 	@Override
 	public void loadFiles() {
@@ -148,6 +142,9 @@ public class RTEngine extends SimulationEngine{
 		// 读入路网数据后组织路网不同要素的关系
 		rtNetwork.calcStaticInfo();
 		// TODO 检测器
+		//读入配时方案
+		if (!(config.getString("signalPlan")==null||config.getString("signalPlan").equals("")))
+			readSignalPlan(runProperties.get("signalPlan"));
 	}
 	@Override
 	public RoadNetwork getNetwork() {
@@ -197,5 +194,54 @@ public class RTEngine extends SimulationEngine{
 	@Override
 	public int countRunTimes() {
 		return 0;
+	}
+
+	public void readSignalPlan(String fileName) {
+		String[] headers = {"NODEID","PLANID","STAGEID","FLID","TLID","FTIME","TTIME"};
+		try {
+			List<CSVRecord> results = CSVUtils.readCSV(fileName,headers);
+			RTNode sNode = null;
+			SignalPlan plan = null;
+			SignalStage stage = null;
+			boolean newDirNeeded = false;
+			for (int i = 1; i < results.size(); i++) {
+				int nodeId = Integer.parseInt(results.get(i).get("NODEID"));
+				int planId = Integer.parseInt(results.get(i).get("PLANID"));
+				int stageId = Integer.parseInt(results.get(i).get("STAGEID"));
+				int flid = Integer.parseInt(results.get(i).get("FLID"));
+				int tlid = Integer.parseInt(results.get(i).get("TLID"));
+				LocalTime stime = LocalTime.parse(config.getString("timeStart"));
+				LocalTime etime = LocalTime.parse(config.getString("timeEnd"));
+				double ft = stime.toSecondOfDay();
+				double tt = etime.toSecondOfDay();
+				if (sNode == null || sNode.getId() != nodeId) {
+					sNode = (RTNode) rtNetwork.findNode(nodeId);
+					plan = null;
+				}
+				if (plan == null || plan.getId() != planId) {
+					plan = new SignalPlan(planId);
+					plan.setFTime(ft);
+					sNode.addSignalPlan(plan);
+					stage = null;
+				}
+				if (stage == null || stage.getId() != stageId) {
+					plan.setTTime(tt);
+					plan.addSignalRow(stageId,ft,tt);
+					stage = plan.findStage(stageId);
+					if (stage == null) {
+						stage = new SignalStage(stageId);
+						plan.addStage(stage);
+						newDirNeeded  = true;
+					}
+					else
+						newDirNeeded = false;
+				}
+				if (newDirNeeded) {
+					stage.addLIDPair(flid, tlid);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

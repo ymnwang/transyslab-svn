@@ -96,9 +96,9 @@ public class MesoNetwork extends RoadNetwork {
 		segments.add(newSegment);
 	}
 
-	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY, int lbId,int rbId){
+	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY){
 		MesoLane newLane = new MesoLane();
-		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1),lbId,rbId);
+		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
 		// TODO 暂无车道坐标和车道边界关联
 		/*
 		worldSpace.recordExtremePoints(newLane.getStartPnt());

@@ -11,9 +11,9 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.roadnetwork.*;
-import com.transyslab.simcore.mlp.MLPLoop;
+
+import java.awt.*;
 import com.transyslab.simcore.rts.RTEngine;
-import com.transyslab.simcore.rts.RTLane;
 import jhplot.math.LinearAlgebra;
 
 
@@ -23,7 +23,6 @@ import static com.jogamp.opengl.fixedfunc.GLLightingFunc.GL_SMOOTH;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_MODELVIEW;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_PROJECTION;
 
-import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -213,8 +212,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	public void dispose(GLAutoDrawable drawable) {
 	}
 	public void scene(GL2 gl) {
-		float camHeight =  cam.getEyeLocation()[2];
-		Segment tmpsegment;
+
         // Boundary 线
 		for (int i = 0; i< drawableNetwork.nBoundaries(); i++) {
 			Boundary tmpboundary = drawableNetwork.getBoundary(i);
@@ -223,7 +221,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		}
 		// Segment 线
 		for(int i = 0; i< drawableNetwork.nSegments(); i++){
-			tmpsegment = drawableNetwork.getSegment(i);
+			Segment tmpsegment = drawableNetwork.getSegment(i);
 			ShapeUtil.drawSolidLine(gl, tmpsegment.getStartPnt(), tmpsegment.getEndPnt(), 2,
 					Constants.COLOR_WHITE,LAYER_BOUNDARY);
 		}
@@ -234,14 +232,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
             ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f}, LAYER_CONNECTOR);
         }
 
-        // SignalArrow 箭头
-        for(int i=0; i< drawableNetwork.nLanes();i++){
-            Lane itrLane = drawableNetwork.getLane(i);
-            for(SignalArrow sa:itrLane.getSignalArrows()){
-                ShapeUtil.drawPolyline(gl,sa.getPolyline(),2,sa.getColor(),LAYER_SIGNALARROW);
-                ShapeUtil.drawPolygon(gl,sa.getArrowTip(),sa.getColor(),false,LAYER_SIGNALARROW);
-            }
-        }
         boolean isPause = (status == ANIMATOR_PAUSE);
         //暂停时不更新帧索引
         curFrame =FrameQueue.getInstance().poll(isPause);
@@ -250,6 +240,20 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
             curFrame = FrameQueue.getInstance().poll(false);
             mode = 0;
         }
+        // 信控指示箭头
+        if (curFrame == null)
+            drawableNetwork.setArrowColor();
+        else
+            drawableNetwork.setArrowColor((Double)curFrame.getInfo("Time"));
+        // SignalArrow 箭头
+        for(int i=0; i< drawableNetwork.nLanes();i++){
+            Lane itrLane = drawableNetwork.getLane(i);
+            for(SignalArrow sa:itrLane.getSignalArrows()){
+                ShapeUtil.drawPolyline(gl,sa.getPolyline(),2,sa.getColor(),LAYER_SIGNALARROW);
+                ShapeUtil.drawPolygon(gl,sa.getArrowTip(),sa.getColor(),false,LAYER_SIGNALARROW);
+            }
+        }
+
         if(curFrame !=null){
             for(VehicleData vd:curFrame.getVhcDataQueue()){
                 if ((vd.getSpecialFlag()&Constants.FOLLOWING) == 0){
@@ -261,12 +265,44 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
                     else //非虚拟车
                         ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_BLUE, vd.isSelected(),LAYER_VEHICLE);
                 }
-
+                /*
+				switch (vd.getTurnInfo()) {
+					// 左转
+					case "L":
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_RED, vd.isSelected(), 1);
+						break;
+					// 直行
+					case "S":
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(),Constants.COLOR_BLUE, vd.isSelected(), 1);
+						break;
+					// 右转
+					case "R":
+						ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
+						break;
+					default:
+						break;
+				}*/
             }
+			// 显示车道状态
+			if(RTEngine.isState ){
+				for(StateData sd:curFrame.getStateDataQueue()) {
+					Color color = ColorBar.valueToColor(0, 15, sd.getAvgSpeed(), 250);
+					if (color != null) {
+						float[] colorf = new float[]{color.getRed()/255.0f,color.getGreen()/255.0f,color.getBlue()/255.0f};
+						ShapeUtil.drawPolygon(gl, sd.getSurface().getKerbList(), colorf, false, 0.9);
+					}
+				}
+			}
             //回收vehicledata
             if(!isPause)
                 curFrame.clean();
         }
+
+		// Sensor 面
+		for(int i = 0; i< drawableNetwork.nSensors(); i++){
+			Sensor tmpSensor = drawableNetwork.getSensor(i);
+			ShapeUtil.drawPolygon(gl, tmpSensor.getSurface().getKerbList(),Constants.COLOR_GREEN, tmpSensor.isSelected(),LAYER_SENSOR);
+		}
 
         switch (mainWindow.getCurLayerName()){
 		    case "Segment": //Segment 面
@@ -282,12 +318,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
                 }
                 break;
         }
-
-		// Sensor 面
-		for(int i = 0; i< drawableNetwork.nSensors(); i++){
-            Sensor tmpSensor = drawableNetwork.getSensor(i);
-			ShapeUtil.drawPolygon(gl, tmpSensor.getSurface().getKerbList(),Constants.COLOR_GREEN, tmpSensor.isSelected(),LAYER_SENSOR);
-		}
 
         // Surface 面
         for(int i=0;i<drawableNetwork.nSurfaces();i++){

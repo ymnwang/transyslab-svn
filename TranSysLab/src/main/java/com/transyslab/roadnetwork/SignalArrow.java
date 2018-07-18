@@ -19,7 +19,7 @@ public class SignalArrow implements Comparable<SignalArrow>{
     protected Lane entrance;
     protected GeoPoint[] polyline;
     protected GeoPoint[] arrowTip;// Èý½ÇÐÎ
-    protected float[] color = Constants.COLOR_GREEN;
+    protected float[] color = Constants.COLOR_WHITE;
     protected int fLinkId;
     protected int tLinkId;
 
