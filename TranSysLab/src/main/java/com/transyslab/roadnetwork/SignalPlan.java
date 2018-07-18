@@ -1,6 +1,7 @@
 package com.transyslab.roadnetwork;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SignalPlan {
@@ -9,11 +10,13 @@ public class SignalPlan {
 	private List<double[]> signalTable;
 	private double fTime;
 	private double tTime;
+	private double amberTime;
 
 	public SignalPlan(int id) {
 		stages = new ArrayList<>();
 		signalTable = new ArrayList<>();
 		this.id = id;
+		this.amberTime = 3.0;
 	}
 
 	public int getId(){
@@ -58,6 +61,16 @@ public class SignalPlan {
 		return findStage(findSID(time));
 	}
 
+	public double[] getStageTimeTable(double time) {
+		double[] tmp = signalTable.stream().filter(r -> r[1]<=time && r[2]>time).findFirst().orElse(null);
+		return tmp;
+	}
+
+	public boolean isAmber(double time) {
+		double[] tmp = signalTable.stream().filter(r -> r[1]<=time && r[2]>time).findFirst().orElse(null);
+		return (tmp!=null && tmp[2]-time<=amberTime);
+	}
+
 	public void addStage(int stageId) {
 		stages.add(new SignalStage(stageId));
 	}
@@ -68,6 +81,14 @@ public class SignalPlan {
 
 	public void addSignalRow(int sid, double ft, double tt) {
 		signalTable.add(new double[] {sid, ft, tt});
+	}
+
+	public double getAmberTime() {
+		return amberTime;
+	}
+
+	public void setAmberTime(double amberTime) {
+		this.amberTime = amberTime;
 	}
 
 }

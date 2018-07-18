@@ -409,6 +409,8 @@ public class MLPNetwork extends RoadNetwork {
 				count = count + tmpSensor.getRecords().size();
 			}
 			af.setInfo("Count",count);
+			//添加时间信息
+			af.setInfo("Time",(Double) getSimClock().getCurrentTime());
 			try {
 				FrameQueue.getInstance().offer(af);
 			} catch (InterruptedException e) {
@@ -782,33 +784,4 @@ public class MLPNetwork extends RoadNetwork {
 		return ans;
 	}
 
-	public void setArrowColor() {
-		double now = getSimClock().getCurrentTime();
-		nodes.stream().
-				filter(n->(n.getType()&Constants.NODE_TYPE_SIGNALIZED_INTERSECTION)!=0).
-				forEach(n-> {
-					for (int i = 0; i < n.nUpLinks(); i++) {
-						MLPSegment seg = (MLPSegment) n.getUpLink(i).getEndSegment();
-						for (int j = 0; j < seg.nLanes(); j++) {
-							MLPLane lane = seg.getLane(j);
-							lane.getSignalArrows().stream().forEach(a->{
-								a.setColor(Constants.COLOR_RED);
-							});
-						}
-					}
-					SignalStage stage = ((MLPNode)n).findPlan(now).findStage(now);
-					if (stage!=null) {
-						stage.getLinkIDPairs().forEach(p->{
-							MLPSegment seg = (MLPSegment) findLink(p[0]).getEndSegment();
-							for (int i = 0; i < seg.nLanes(); i++) {
-								seg.getLane(i).getSignalArrows().forEach(a->{
-									if (a.getTLinkId()==p[1])
-										a.setColor(Constants.COLOR_GREEN);
-								});
-							}
-						});
-					}
-
-				});
-	}
 }

@@ -15,11 +15,9 @@ import jhplot.io.csv.CSVReader;
 import org.apache.commons.csv.CSVRecord;
 
 public class MLPNode extends Node{
-	private List<SignalPlan> signalPlans;
 	private LinkedList<MLPVehicle> statedVehs;
 	public int stopCount;
 	public MLPNode() {
-		signalPlans = new ArrayList<>();
 		statedVehs = new LinkedList<>();
 		stopCount = 0;
 	}
@@ -177,24 +175,5 @@ public class MLPNode extends Node{
 	protected void clearStatedVehs() {
 		statedVehs.clear();
 		stopCount = 0;
-	}
-	protected void addSignalPlan(int planId) {
-		signalPlans.add(new SignalPlan(planId));
-	}
-	protected void addSignalPlan(SignalPlan plan) {
-		signalPlans.add(plan);
-	}
-	protected SignalPlan findPlan(int planID) {
-		return signalPlans.stream().filter(s->s.getId()==planID).findFirst().orElse(null);
-	}
-	protected SignalPlan findPlan(double now) {
-		return signalPlans.stream().filter(s->s.beingApplied(now)).findFirst().orElse(null);
-	}
-	public List<int[]> greenLightLIDPairs(double now) {
-		SignalStage stage = findPlan(now).findStage(now);
-		if (stage != null)
-			return stage.getLinkIDPairs();
-		else
-			return null;
 	}
 }
