@@ -5,9 +5,7 @@ package com.transyslab.roadnetwork;
 
 import java.util.*;
 
-import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.commons.tools.SimulationClock;
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
@@ -752,6 +750,67 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	}
 	public void	renewSysRandSeed() {
 		sysRand.setSeed(sysRand.nextLong());
+	}
+	public void setArrowColor(double now) {
+		{
+//			double now = getSimClock().getCurrentTime();
+			nodes.stream().
+					filter(n->(n.getType()&Constants.NODE_TYPE_SIGNALIZED_INTERSECTION)!=0).
+					forEach(n-> {
+						for (int i = 0; i < n.nUpLinks(); i++) {
+							Segment seg = n.getUpLink(i).getEndSegment();
+							for (int j = 0; j < seg.nLanes(); j++) {
+								Lane lane = seg.getLane(j);
+								lane.getSignalArrows().stream().forEach(a->{
+									a.setColor(Constants.COLOR_RED);
+								});
+							}
+						}
+						SignalPlan plan = n.findPlan(now);
+						SignalStage stage = plan.findStage(now);
+						if (stage!=null) {
+							stage.getLinkIDPairs().forEach(p->{
+								Segment seg = findLink(p[0]).getEndSegment();
+								Link l1 = null;
+								Link L2 = null;
+								for (int i = 0; i < seg.nLanes(); i++) {
+									seg.getLane(i).getSignalArrows().forEach(a->{
+										if (a.getTLinkId()==p[1]) {
+											if (plan.isAmber(now)) {
+												a.setColor(Constants.COLOR_AMBER);
+											}
+											else {
+												a.setColor(Constants.COLOR_GREEN);
+											}
+										}
+									});
+								}
+							});
+						}
+
+					});
+		}
+	}
+	public void setArrowColor() {
+		{
+			{
+//			double now = getSimClock().getCurrentTime();
+				nodes.stream().
+						filter(n->(n.getType()&Constants.NODE_TYPE_SIGNALIZED_INTERSECTION)!=0).
+						forEach(n-> {
+							for (int i = 0; i < n.nUpLinks(); i++) {
+								Segment seg = n.getUpLink(i).getEndSegment();
+								for (int j = 0; j < seg.nLanes(); j++) {
+									Lane lane = seg.getLane(j);
+									lane.getSignalArrows().stream().forEach(a->{
+										a.setColor(Constants.COLOR_GREY);
+									});
+								}
+							}
+
+						});
+			}
+		}
 	}
 
 }

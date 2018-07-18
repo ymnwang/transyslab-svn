@@ -23,7 +23,7 @@ import static com.jogamp.opengl.fixedfunc.GLLightingFunc.GL_SMOOTH;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_MODELVIEW;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_PROJECTION;
 
-import java.awt.*;
+import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -37,11 +37,11 @@ import java.util.List;
 
 public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener, MouseListener,
 		MouseWheelListener, MouseMotionListener {
-	// status
+	//status
 	public static final int ANIMATOR_STOP = 0;
 	public static final int ANIMATOR_PLAYING = 1;
 	public static final int ANIMATOR_PAUSE = 2;
-	// mode
+	//mode
 	public static final int ANIMATOR_FRAME_ADVANCE = 1;
 	// Í¼²ã
     public static final double LAYER_SURFACE = 0.0;

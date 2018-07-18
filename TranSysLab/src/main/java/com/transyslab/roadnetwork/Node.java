@@ -36,11 +36,14 @@ public class Node implements NetworkObject {
 
 	protected boolean isSelected;
 
+	private List<SignalPlan> signalPlans;
+
 	public Node() {
 		this.interS = null;
 		this.state = 0;
 		this.upLinks = new ArrayList<Link>();
 		this.dnLinks = new ArrayList<Link>();
+		signalPlans = new ArrayList<>();
 	}
 
 	public int type(int flag) {
@@ -171,6 +174,25 @@ public class Node implements NetworkObject {
 	}
 	public int getDestIndex() {
 		return destIndex;
+	}
+	public void addSignalPlan(int planId) {
+		signalPlans.add(new SignalPlan(planId));
+	}
+	public void addSignalPlan(SignalPlan plan) {
+		signalPlans.add(plan);
+	}
+	public SignalPlan findPlan(int planID) {
+		return signalPlans.stream().filter(s->s.getId()==planID).findFirst().orElse(null);
+	}
+	public SignalPlan findPlan(double now) {
+		return signalPlans.stream().filter(s->s.beingApplied(now)).findFirst().orElse(null);
+	}
+	public List<int[]> greenLightLIDPairs(double now) {
+		SignalStage stage = findPlan(now).findStage(now);
+		if (stage != null)
+			return stage.getLinkIDPairs();
+		else
+			return null;
 	}
 
 	

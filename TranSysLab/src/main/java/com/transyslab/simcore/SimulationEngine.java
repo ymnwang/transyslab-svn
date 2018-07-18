@@ -1,11 +1,13 @@
 package com.transyslab.simcore;
 
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.RoadNetwork;
+import com.transyslab.commons.io.CSVUtils;
+import com.transyslab.roadnetwork.*;
 import com.transyslab.simcore.mlp.MacroCharacter;
+import org.apache.commons.csv.CSVRecord;
 
 import javax.swing.event.EventListenerList;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -99,5 +101,52 @@ public abstract class SimulationEngine {
 
 	public void removeActionLisener(ActionListener listener) {
 		listenerList.remove(ActionListener.class, listener);
+	}
+
+	public void readSignalPlan(String fileName) {
+		String[] headers = {"NODEID","PLANID","STAGEID","FLID","TLID","FTIME","TTIME"};
+		try {
+			List<CSVRecord> results = CSVUtils.readCSV(fileName,headers);
+			Node sNode = null;
+			SignalPlan plan = null;
+			SignalStage stage = null;
+			boolean newDirNeeded = false;
+			for (int i = 1; i < results.size(); i++) {
+				int nodeId = Integer.parseInt(results.get(i).get("NODEID"));
+				int planId = Integer.parseInt(results.get(i).get("PLANID"));
+				int stageId = Integer.parseInt(results.get(i).get("STAGEID"));
+				int flid = Integer.parseInt(results.get(i).get("FLID"));
+				int tlid = Integer.parseInt(results.get(i).get("TLID"));
+				double ft = Double.parseDouble(results.get(i).get("FTIME"));
+				double tt = Double.parseDouble(results.get(i).get("TTIME"));
+				if (sNode == null || sNode.getId() != nodeId) {
+					sNode = getNetwork().findNode(nodeId);
+					plan = null;
+				}
+				if (plan == null || plan.getId() != planId) {
+					plan = new SignalPlan(planId);
+					plan.setFTime(ft);
+					sNode.addSignalPlan(plan);
+					stage = null;
+				}
+				if (stage == null || stage.getId() != stageId) {
+					plan.setTTime(tt);
+					plan.addSignalRow(stageId,ft,tt);
+					stage = plan.findStage(stageId);
+					if (stage == null) {
+						stage = new SignalStage(stageId);
+						plan.addStage(stage);
+						newDirNeeded  = true;
+					}
+					else
+						newDirNeeded = false;
+				}
+				if (newDirNeeded) {
+					stage.addLIDPair(flid, tlid);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
