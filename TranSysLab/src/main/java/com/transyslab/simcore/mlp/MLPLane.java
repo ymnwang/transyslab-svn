@@ -320,7 +320,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		return false;
 	}
 
-	protected MLPLane successiveDnLaneInLink(MLPLink arg) {
+	public MLPLane successiveDnLaneInLink(MLPLink arg) {
 		for (MLPLane ln : successiveDnLanes) {
 			if (ln.getLink().getId() == arg.getId())
 				return ln;

@@ -1,6 +1,8 @@
 package com.transyslab.roadnetwork;
 
 import com.transyslab.commons.tools.GeoUtil;
+import com.transyslab.simcore.mlp.MLPLane;
+import com.transyslab.simcore.mlp.MLPVehicle;
 
 //车辆轨迹数据
 public class VehicleData implements NetworkObject,Comparable<VehicleData>{
@@ -111,12 +113,48 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 			}
 		}
 		this.pathInfo = sb.toString();
-		Object moveOn;
-		if(isSegBased)
-			moveOn = vhc.getSegment();
+//		Object moveOn;
+//		if(isSegBased)
+//			moveOn = vhc.getSegment();
+//		else
+//			moveOn = vhc.getLane();
+//		calcShapePoint(moveOn,vhc.getDistance(),false);
+		double simLength = vhc.getLane().getLength();//仿真计算中的行程
+		double rate = 1.0 - vhc.getDistance() / simLength;// linear reference
+		GeoPoint startPnt=null, endPnt=null;
+		double projectSegLen;
+		if (vhc instanceof MLPVehicle) {
+			MLPLane successiveDnLane = ((MLPLane)vhc.getLane()).successiveDnLaneInLink(((MLPVehicle) vhc).getLink());
+			double l1 = vhc.getLane().getStartPnt().distance(vhc.getLane().getEndPnt());//mlp模型，真实lane长度从几何信息求得。
+			if (successiveDnLane!=null) {
+				double l2 = successiveDnLane.getStartPnt().distance(vhc.getLane().getEndPnt());
+				projectSegLen = l1 + l2;//非交叉口上游，投影到lane + laneConnector
+				if (rate > l1/projectSegLen) {//project to lane connector
+					startPnt = vhc.getLane().getEndPnt();
+					endPnt = successiveDnLane.getStartPnt();
+					rate = (rate*projectSegLen - l1) / l2;
+				}
+			}
+			else
+				projectSegLen = l1;//交叉口上游路段，投影到lane
+		}
 		else
-			moveOn = vhc.getLane();
-		calcShapePoint(moveOn,vhc.getDistance(),false);
+			projectSegLen = vhc.getLane().getLength(); // 非mlp模型，投影长度从getLength()获得。
+		if (startPnt == null && endPnt == null) {//project to lane
+			startPnt = vhc.getLane().getStartPnt();
+			endPnt = vhc.getLane().getEndPnt();
+		}
+
+		//车头位置
+		double vhcHeadX = startPnt.getLocationX() + rate * (endPnt.getLocationX() - startPnt.getLocationX());
+		double vhcHeadY = startPnt.getLocationY() + rate * (endPnt.getLocationY() - startPnt.getLocationY());
+		//车尾位置
+		double scaledLength = vhc.getLength() * projectSegLen / simLength;
+		double vhcTailX = vhcHeadX - scaledLength * (endPnt.getLocationX() - startPnt.getLocationX()) / (endPnt.distance(startPnt));
+		double vhcTailY = vhcHeadY - scaledLength * (endPnt.getLocationY() - startPnt.getLocationY()) / (endPnt.distance(startPnt));
+		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.0);
+		GeoPoint tailPosition = new GeoPoint(vhcTailX, vhcTailY, 0.0);
+		this.rectangle = GeoUtil.lineToRectangle(tailPosition, headPosition, 1.8, true);
 	}
 	// distReverse 行驶距离是否以路段开端作为起点
 	public void calcShapePoint(Object moveOn, double distance, boolean distReverse){

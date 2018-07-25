@@ -232,11 +232,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					Constants.COLOR_WHITE,LAYER_BOUNDARY);
 		}
 
-        // Connector 线
-        for(int i=0; i< drawableNetwork.nConnectors();i++){
-            Connector tmpConnector = drawableNetwork.getConnector(i);
-            ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f}, LAYER_CONNECTOR);
-        }
+//        // Connector 线
+//        for(int i=0; i< drawableNetwork.nConnectors();i++){
+//            Connector tmpConnector = drawableNetwork.getConnector(i);
+//            ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f}, LAYER_CONNECTOR);
+//        }
 
         boolean isPause = (status == ANIMATOR_PAUSE);
         //暂停时不更新帧索引
