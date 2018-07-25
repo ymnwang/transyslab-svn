@@ -10,6 +10,7 @@ import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
+import com.transyslab.gui.SignalStagePanel;
 import com.transyslab.roadnetwork.*;
 
 import java.awt.*;
@@ -19,6 +20,8 @@ import com.transyslab.simcore.rts.RTEngine;
 import com.transyslab.simcore.rts.RTNetwork;
 import jhplot.math.LinearAlgebra;
 
+
+import javax.swing.*;
 
 import static com.jogamp.opengl.GL.*; // GL constants
 import static com.jogamp.opengl.GL2ES1.GL_PERSPECTIVE_CORRECTION_HINT;
@@ -299,6 +302,12 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					}
 				}
 			}
+			JSlider slider = mainWindow.getSlider();
+			slider.setValue((int)Math.floor((curFrame.getSimTimeInSeconds() - drawableNetwork.getSimClock().getStartTime())/60.0));
+			if(slider.getValue()>=120) {// 大于120分钟(超出时间条长度)
+				mainWindow.updateSlider((long)drawableNetwork.getSimClock().getCurrentTime());
+				mainWindow.updateSignalPanel();
+			}
             //回收vehicledata
             if(!isPause)
                 curFrame.clean();
@@ -330,6 +339,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
             GeoSurface surface = drawableNetwork.getSurface(i);
             ShapeUtil.drawPolygon(gl,surface.getKerbList(),Constants.COLOR_GREY,false,LAYER_SURFACE);
         }
+
 
 	}
 	//计算拾取射线与x/y/z = intersectPlane 平面的交点

@@ -157,7 +157,7 @@ public class RTNetwork extends RoadNetwork{
 		vhcList.remove(vehicle);
 		vhcPool.offer(vehicle);
 	}
-	public void renderState(List<VehicleData> vds){
+	public void renderState(List<VehicleData> vds,double secondOfDay){
 
 		AnimationFrame af = new AnimationFrame();
 		List<VehicleData> queueVehicles = new ArrayList<>();
@@ -180,121 +180,8 @@ public class RTNetwork extends RoadNetwork{
 			StateData sd = new StateData(rtLane);
 			af.addStateData(sd);
 		}
-
-		/*
-		double avgSpeed = 0;
-		double[] queuePostion = new double[]{380,380,380,380,380};
-		List<VehicleData> vds1 = new ArrayList<>();
-		List<VehicleData> vds2 = new ArrayList<>();
-		List<VehicleData> vds3 = new ArrayList<>();
-		List<VehicleData> vds4 = new ArrayList<>();
-		List<VehicleData> vds5 = new ArrayList<>();
-		List<Integer> queueLaneIds = new ArrayList<>();
-
-		for(VehicleData vd:vds) {
-			double l = findLane(vd.getCurLaneID()).getLength();
-			double tail = l-vd.getDistance();
-			switch (vd.getCurLaneID()) {
-				case 1:
-					vds1.add(vd);
-					if(vd.isQueue()) {
-						if (queuePostion[0] > l-vd.getDistance()) {
-							queuePostion[0] = l-vd.getDistance();
-						}
-						af.addVehicleData(vd);
-					}
-					break;
-				case 2:
-					vds2.add(vd);
-					if(vd.isQueue()) {
-						if (queuePostion[1] > l-vd.getDistance()) {
-							queuePostion[1] = l-vd.getDistance();
-						}
-						af.addVehicleData(vd);
-					}
-					break;
-				case 4:
-					vds3.add(vd);
-					if(vd.isQueue()) {
-						if (queuePostion[2] > l-vd.getDistance()) {
-							queuePostion[2] = l-vd.getDistance();
-						}
-						af.addVehicleData(vd);
-					}
-					break;
-				case 5:
-					vds4.add(vd);
-					if(vd.isQueue()) {
-						if (queuePostion[3] > l-vd.getDistance()) {
-							queuePostion[3] = l-vd.getDistance();
-						}
-						af.addVehicleData(vd);
-					}
-					break;
-				case 6:
-					vds5.add(vd);
-					if(vd.isQueue()) {
-						if (queuePostion[4] > l-vd.getDistance()) {
-							queuePostion[4] = l-vd.getDistance();
-						}
-						af.addVehicleData(vd);
-					}
-					break;
-				default:
-					break;
-			}
-
-		}
-
-		//ºı»•≥§∂» queuePostion = queuePostion-Constants.DEFAULT_VEHICLE_LENGTH;
-		for (Lane lane : lanes) {
-			RTLane rtLane = (RTLane) lane;
-
-			switch (lane.getId()) {
-				case 1:
-					if(!vds1.isEmpty()) {
-						if(queuePostion[0] == 380)
-							queuePostion[0] = lane.getLength();
-						rtLane.calState(queuePostion[0]);
-						rtLane.setAvgSpeed(vds1.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble());
-					}
-					break;
-				case 2:
-					if(!vds2.isEmpty()) {
-						if(queuePostion[1] == 380)
-							queuePostion[1] = lane.getLength();
-						rtLane.calState(queuePostion[1]);
-						rtLane.setAvgSpeed(vds2.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble());
-					}
-					break;
-				case 4:
-					if(!vds3.isEmpty()) {
-						if(queuePostion[2] == 380)
-							queuePostion[2] = lane.getLength();
-						rtLane.calState(queuePostion[2]);
-						rtLane.setAvgSpeed(vds3.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble());
-					}
-					break;
-				case 5:
-					if(!vds4.isEmpty()) {
-						if(queuePostion[3] == 380)
-							queuePostion[3] = lane.getLength();
-						rtLane.calState(queuePostion[3]);
-						rtLane.setAvgSpeed(vds4.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble());
-					}
-					break;
-				case 6:
-					if(!vds5.isEmpty()) {
-						if(queuePostion[4] == 380)
-							queuePostion[4] = lane.getLength();
-						rtLane.calState(queuePostion[4]);
-						rtLane.setAvgSpeed(vds5.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble());
-					}
-					break;
-				default:
-					break;
-			}
-		}*/
+		setArrowColor(secondOfDay, af.getSignalColors());
+		af.setSimTimeInSeconds(secondOfDay);
 		try {
 			FrameQueue.getInstance().offer(af);
 		} catch (InterruptedException e) {
@@ -341,6 +228,7 @@ public class RTNetwork extends RoadNetwork{
 			af.addVehicleData(vd);
 		}
 		setArrowColor(secondOfDay, af.getSignalColors());
+		af.setSimTimeInSeconds(secondOfDay);
 		try {
 			FrameQueue.getInstance().offer(af);
 		} catch (InterruptedException e) {

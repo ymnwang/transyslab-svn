@@ -28,9 +28,15 @@ public class SignalPlan {
 	}
 
 	public void addStage(SignalStage stage) {
+		stage.setPlanId(this.id);
 		stages.add(stage);
 	}
-
+	public List<double[]> getSignalTable(){
+		return this.signalTable;
+	}
+	public List<SignalStage> getStages(){
+		return stages;
+	}
 	public void setFTime(double ft) {
 		this.fTime = ft;
 	}
@@ -38,7 +44,12 @@ public class SignalPlan {
 	public void setTTime(double tt) {
 		this.tTime = tt;
 	}
-
+	public double getFTime(){
+		return this.fTime;
+	}
+	public double getTime(){
+		return this.tTime;
+	}
 	public boolean check(double t, int fLID, int tLID) {
 		SignalStage stage = findStage(t);
 		return (stage!=null && stage.checkDir(fLID,tLID));

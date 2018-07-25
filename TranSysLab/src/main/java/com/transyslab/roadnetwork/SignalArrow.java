@@ -61,11 +61,10 @@ public class SignalArrow implements Comparable<SignalArrow>{
         polyline[1] = rectgEP.intermediate(polyline[0],(LINELENGTH - TURNLENGTH)/6.0);
         polyline[2] = rectgEP.intermediate(polyline[1],TURNLENGTH/6.0);
         arrowTip[0] = rectgEP.intermediate(polyline[2], TIPLENGTH/6.0);
-        GeoSurface rectangle2 = GeoUtil.lineToRectangle(polyline[2],arrowTip[0],1.0 / Math.tan(Math.PI/3.0),true);
+        GeoSurface rectangle2 = GeoUtil.lineToRectangle(polyline[2],arrowTip[0], TIPLENGTH / Math.tan(Math.PI/3.0),true);
         arrowTip[1] = rectangle2.getKerbList().get(0);
         arrowTip[2] = rectangle2.getKerbList().get(1);
         if(type!=STRAIGHTARROW){
-
             // ¼ÆËãÐý×ªÖá
             Vector3D dir1 = new Vector3D(polyline[1].getLocationX() - polyline[0].getLocationX(),
                                 polyline[1].getLocationY() - polyline[0].getLocationY(),

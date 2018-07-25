@@ -38,14 +38,18 @@ public class Node implements NetworkObject {
 
 	private List<SignalPlan> signalPlans;
 
+	private GeoSurface boundBox;
+
 	public Node() {
 		this.interS = null;
 		this.state = 0;
-		this.upLinks = new ArrayList<Link>();
-		this.dnLinks = new ArrayList<Link>();
+		this.upLinks = new ArrayList<>();
+		this.dnLinks = new ArrayList<>();
 		signalPlans = new ArrayList<>();
 	}
-
+	public List<SignalPlan> getSignalPlans(){
+		return this.signalPlans;
+	}
 	public int type(int flag) {
 		return type & flag;
 	}

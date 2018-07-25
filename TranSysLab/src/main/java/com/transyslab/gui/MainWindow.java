@@ -43,6 +43,7 @@ public class MainWindow {
     private JLabel label8;//任务状态信息
     private JLabel label9;//进度条进度值
     private JSlider slider1;
+    private JPanel panel9;
     private final String[] layerNames = {"Node","Link","Segment","Lane","Sensor","Vehicle"};
     private String curLayerName = "Node";
     private LayerPanel layerPanel;
@@ -105,6 +106,7 @@ public class MainWindow {
         JPanel panel7 = new JPanel();
         JPanel panel2 = new JPanel();
         JPanel panel8 = new JPanel();
+        panel9 = new SignalStagePanel(slider1); // 相位图
         JComboBox<String> comboBox1 = new JComboBox<>();
         JTabbedPane tabbedPane1 = new JTabbedPane();
         JPanel panel1 = new JPanel();
@@ -119,10 +121,10 @@ public class MainWindow {
         windowFrame.setTitle("TranSysLab");
         Container contentPane = windowFrame.getContentPane();
         contentPane.setLayout(new GridBagLayout());
-        ((GridBagLayout)contentPane.getLayout()).columnWidths = new int[] {409, 206, 0};
-        ((GridBagLayout)contentPane.getLayout()).rowHeights = new int[] {0, 0, 0, 132, 20, 0};
+        ((GridBagLayout)contentPane.getLayout()).columnWidths = new int[] {407, 206, 0};
+        ((GridBagLayout)contentPane.getLayout()).rowHeights = new int[] {0, 431, 43, 0, 132, 20, 0};
         ((GridBagLayout)contentPane.getLayout()).columnWeights = new double[] {1.0, 0.0, 1.0E-4};
-        ((GridBagLayout)contentPane.getLayout()).rowWeights = new double[] {0.0, 1.0, 0.0, 0.0, 0.0, 1.0E-4};
+        ((GridBagLayout)contentPane.getLayout()).rowWeights = new double[] {0.0, 1.0, 0.0, 0.0, 0.0, 0.0,1.0E-4};
         windowFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -271,7 +273,8 @@ public class MainWindow {
 //                                    config.getString("timeStart") + " : " +
 //                                    config.getString("timeStep") + " : " +
 //                                    config.getString("timeEnd") + "\n");
-                            double sTime = Double.parseDouble(config.getString("timeStart"));
+
+                            double sTime = LocalTime.parse(config.getString("timeStart"),DateTimeFormatter.ofPattern("YYYY-MM-DD HH:mm:ss")).toSecondOfDay();
                             updateSlider((long)sTime);
 
                             if(modelType.equals("MesoTS")) {
@@ -306,6 +309,10 @@ public class MainWindow {
                                 AppSetup.modelType = Constants.MODEL_TYPE_RT;
                             }
                             initSimEngines();
+                            // TODO warning
+                            ((SignalStagePanel) panel9).setCurNode(engine.getNetwork().findNode(184));
+                            double stime = engine.getNetwork().getSimClock().getStartTime();
+                            ((SignalStagePanel) panel9).updateTime(stime,stime+120);
                             engine.addActionLisener(new ActionListener() {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
@@ -315,10 +322,12 @@ public class MainWindow {
                                                 SimulationClock clock = engine.getNetwork().getSimClock();
                                                 double progress = (clock.getCurrentTime() - clock.getStartTime()) / clock.getDuration();
                                                 progressBar1.setValue((int)(progress*100));
-                                                int minutes = (int)Math.floor((clock.getCurrentTime() - clock.getStartTime())/60);
-                                                slider1.setValue(minutes);
+                                                //int minutes = (int)Math.floor((clock.getCurrentTime() - clock.getStartTime())/60);
+                                                int seconds = (int)Math.floor(clock.getCurrentTime() - clock.getStartTime());
+                                                slider1.setValue(seconds);
                                                 if(slider1.getValue()>=120) {// 大于120分钟(超出时间条长度)
                                                     updateSlider((long)clock.getCurrentTime());
+                                                    updateSignalPanel();
                                                 }
                                             }
                                                 break;
@@ -536,9 +545,19 @@ public class MainWindow {
                     GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL,
                     new Insets(0, 3, 0, 3), 0, 0));
         }
-        contentPane.add(panel2, new GridBagConstraints(1, 1, 1, 2, 0.0, 0.0,
+        contentPane.add(panel2, new GridBagConstraints(1, 1, 1, 3, 0.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                 new Insets(0, 0, 1, 0), 0, 0));
+        //======== 相位显示 ========
+        {
+            //panel9.setLayout(new CardLayout());
+
+
+        }
+        contentPane.add(panel9, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 1, 5), 0, 0));
+
         //======== 时间进度条 ========
         {
             //slider1.setUI(new colo)
@@ -546,12 +565,13 @@ public class MainWindow {
             slider1.setMinorTickSpacing(5);
             slider1.setPaintTicks(true);
             slider1.setPaintLabels(true);
+            slider1.setPaintTrack(true);
             LocalTime now = LocalTime.now();
             updateSlider(now.toSecondOfDay());
 
 
         }
-        contentPane.add(slider1, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+        contentPane.add(slider1, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                 new Insets(0, 0, 1, 5), 0, 0));
         //======== 底部信息框 ========
@@ -596,10 +616,10 @@ public class MainWindow {
             }
             tabbedPane1.addTab("\u65b9\u6848", panel3);
         }
-        contentPane.add(tabbedPane1, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
+        contentPane.add(tabbedPane1, new GridBagConstraints(0, 4, 2, 1, 0.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                 new Insets(0, 0, 1, 0), 0, 0));
-        //======== panel8 ========
+        //======== 状态栏 ========
         {
             panel8.setLayout(new GridBagLayout());
             ((GridBagLayout)panel8.getLayout()).columnWidths = new int[] {12, 42, 0, 0, 0, 0};
@@ -629,7 +649,7 @@ public class MainWindow {
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 0), 0, 0));
         }
-        contentPane.add(panel8, new GridBagConstraints(0, 4, 2, 1, 0.0, 0.0,
+        contentPane.add(panel8, new GridBagConstraints(0, 5, 2, 1, 0.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                 new Insets(0, 0, 0, 0), 0, 0));
         windowFrame.setSize(1042, 787);
@@ -668,16 +688,17 @@ public class MainWindow {
         Hashtable position = new Hashtable();
         JLabel tick1 = new JLabel(time.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         tick1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 15));
-        time = time.plusMinutes(30);
+        //time = time.plusMinutes(30);
+        time = time.plusSeconds(30);
         JLabel tick2 = new JLabel(time.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         tick2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 15));
-        time = time.plusMinutes(30);
+        time = time.plusSeconds(30);
         JLabel tick3 = new JLabel(time.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         tick3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 15));
-        time = time.plusMinutes(30);
+        time = time.plusSeconds(30);
         JLabel tick4 = new JLabel(time.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         tick4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 15));
-        time = time.plusMinutes(30);
+        time = time.plusSeconds(30);
         JLabel tick5 = new JLabel(time.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         tick5.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 15));
 
@@ -712,6 +733,14 @@ public class MainWindow {
     }*/
     public String getCurLayerName(){
         return curLayerName;
+    }
+    public JSlider getSlider(){
+        return this.slider1;
+    }
+    public void updateSignalPanel(){
+        double curTime = engine.getNetwork().getSimClock().getCurrentTime();
+        ((SignalStagePanel) panel9).updateTime(curTime,curTime+120);
+        panel9.repaint();
     }
     public LayerPanel getLayerPanel(){
         return layerPanel;

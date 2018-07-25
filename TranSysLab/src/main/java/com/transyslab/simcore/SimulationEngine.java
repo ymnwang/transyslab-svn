@@ -8,6 +8,8 @@ import org.apache.commons.csv.CSVRecord;
 import javax.swing.event.EventListenerList;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 
@@ -104,7 +106,7 @@ public abstract class SimulationEngine {
 	}
 
 	public void readSignalPlan(String fileName) {
-		String[] headers = {"NODEID","PLANID","STAGEID","FLID","TLID","FTIME","TTIME"};
+		String[] headers = {"NODEID","PLANID","STAGEID","FLID","TLID","FTIME","TTIME","TURN"};
 		try {
 			List<CSVRecord> results = CSVUtils.readCSV(fileName,headers);
 			Node sNode = null;
@@ -117,8 +119,11 @@ public abstract class SimulationEngine {
 				int stageId = Integer.parseInt(results.get(i).get("STAGEID"));
 				int flid = Integer.parseInt(results.get(i).get("FLID"));
 				int tlid = Integer.parseInt(results.get(i).get("TLID"));
-				double ft = Double.parseDouble(results.get(i).get("FTIME"));
-				double tt = Double.parseDouble(results.get(i).get("TTIME"));
+				LocalTime stime = LocalTime.parse(results.get(i).get("FTIME"),DateTimeFormatter.ofPattern("YYYY-MM-DD HH:mm:ss"));
+				LocalTime etime = LocalTime.parse(results.get(i).get("TTIME"),DateTimeFormatter.ofPattern("YYYY-MM-DD HH:mm:ss"));
+				String turnInfo = results.get(i).get("TURN");
+				double ft = stime.toSecondOfDay();
+				double tt = etime.toSecondOfDay();
 				if (sNode == null || sNode.getId() != nodeId) {
 					sNode = getNetwork().findNode(nodeId);
 					plan = null;
@@ -143,6 +148,7 @@ public abstract class SimulationEngine {
 				}
 				if (newDirNeeded) {
 					stage.addLIDPair(flid, tlid);
+					stage.addTurnInfo(turnInfo);
 				}
 			}
 		} catch (IOException e) {

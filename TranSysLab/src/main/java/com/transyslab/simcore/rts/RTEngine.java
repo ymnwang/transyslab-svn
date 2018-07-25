@@ -3,6 +3,7 @@ package com.transyslab.simcore.rts;
 import com.transyslab.commons.io.CSVUtils;
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.io.XmlParser;
+import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.*;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mlp.MacroCharacter;
@@ -48,7 +49,7 @@ public class RTEngine extends SimulationEngine{
 		runProperties = new HashMap<>();
 		firstEntry = true;
 		isStop = false;
-		isState = true;
+		isState = false;
 	}
 	public RTEngine(String masterFilePath) {
 		this();
@@ -63,13 +64,15 @@ public class RTEngine extends SimulationEngine{
 		runProperties.put("sensorPath", rootDir + config.getString("sensorPath"));
 		String tmp = config.getString("extVhcPath");
 		runProperties.put("extVhcPath", tmp==null || tmp.equals("") ? null : rootDir + tmp);
-
+		runProperties.put("signalPlan", rootDir + config.getString("signalPlan"));
 		//time setting
-		LocalTime stime = LocalTime.parse(config.getString("timeStart"));
-		LocalTime etime = LocalTime.parse(config.getString("timeEnd"));
+		LocalTime stime = LocalTime.parse(config.getString("timeStart"),DateTimeFormatter.ofPattern("YYYY-MM-DD HH:mm:ss"));
+		LocalTime etime = LocalTime.parse(config.getString("timeEnd"),DateTimeFormatter.ofPattern("YYYY-MM-DD HH:mm:ss"));
 		timeStart = stime.toSecondOfDay();
 		timeEnd = etime.toSecondOfDay();
+
 		timeStep = Double.parseDouble(config.getString("timeStep"));
+
 	}
 	@Override
 	public int simulationLoop() {
@@ -110,13 +113,13 @@ public class RTEngine extends SimulationEngine{
 						break;
 					}
 					if(!isState) {
-						rtNetwork.renderVehicle(vds,frameTime.toSecondOfDay());
+						rtNetwork.renderVehicle(vds,frameTime.toNanoOfDay()/1000_000_000.0);
 					}
 					else{
 						//if(frameConter%30 == 0)
-						rtNetwork.renderState(vds);
+						rtNetwork.renderState(vds,frameTime.toNanoOfDay()/1000_000_000.0);
 					}
-
+					rtNetwork.getSimClock().advance(timeStep);
 					vds.clear();
 				}
 				frameConter ++;
@@ -135,6 +138,8 @@ public class RTEngine extends SimulationEngine{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		SimulationClock clock = rtNetwork.getSimClock();
+		clock.init(timeStart, timeEnd, timeStep);
 	}
 	private void loadSimulationFiles(){
 		// ¶ÁÈ¡Â·Íøxml
@@ -196,52 +201,4 @@ public class RTEngine extends SimulationEngine{
 		return 0;
 	}
 
-	public void readSignalPlan(String fileName) {
-		String[] headers = {"NODEID","PLANID","STAGEID","FLID","TLID","FTIME","TTIME"};
-		try {
-			List<CSVRecord> results = CSVUtils.readCSV(fileName,headers);
-			RTNode sNode = null;
-			SignalPlan plan = null;
-			SignalStage stage = null;
-			boolean newDirNeeded = false;
-			for (int i = 1; i < results.size(); i++) {
-				int nodeId = Integer.parseInt(results.get(i).get("NODEID"));
-				int planId = Integer.parseInt(results.get(i).get("PLANID"));
-				int stageId = Integer.parseInt(results.get(i).get("STAGEID"));
-				int flid = Integer.parseInt(results.get(i).get("FLID"));
-				int tlid = Integer.parseInt(results.get(i).get("TLID"));
-				LocalTime stime = LocalTime.parse(config.getString("timeStart"));
-				LocalTime etime = LocalTime.parse(config.getString("timeEnd"));
-				double ft = stime.toSecondOfDay();
-				double tt = etime.toSecondOfDay();
-				if (sNode == null || sNode.getId() != nodeId) {
-					sNode = (RTNode) rtNetwork.findNode(nodeId);
-					plan = null;
-				}
-				if (plan == null || plan.getId() != planId) {
-					plan = new SignalPlan(planId);
-					plan.setFTime(ft);
-					sNode.addSignalPlan(plan);
-					stage = null;
-				}
-				if (stage == null || stage.getId() != stageId) {
-					plan.setTTime(tt);
-					plan.addSignalRow(stageId,ft,tt);
-					stage = plan.findStage(stageId);
-					if (stage == null) {
-						stage = new SignalStage(stageId);
-						plan.addStage(stage);
-						newDirNeeded  = true;
-					}
-					else
-						newDirNeeded = false;
-				}
-				if (newDirNeeded) {
-					stage.addLIDPair(flid, tlid);
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 }

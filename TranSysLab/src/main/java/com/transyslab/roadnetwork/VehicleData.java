@@ -75,7 +75,8 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		this.isSelected = flag;
 	}
 	public int getId(){
-		return this.vehicleID_;
+
+		return Integer.parseInt(this.vhcID);
 	}
 	public String getObjInfo(){
 		return this.info;
