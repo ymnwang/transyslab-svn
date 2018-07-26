@@ -37,9 +37,9 @@ public class RTNetwork extends RoadNetwork{
 	}
 
 	@Override
-	public void createNode(int id, int type, String name) {
+	public void createNode(int id, int type, String name, double x, double y) {
 		RTNode newNode = new RTNode();
-		newNode.init(id, type, nNodes() ,name);
+		newNode.init(id, type, nNodes() ,name, x, y);
 		this.nodes.add(newNode);
 		this.addVertex(newNode);
 	}

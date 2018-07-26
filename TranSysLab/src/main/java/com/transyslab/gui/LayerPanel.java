@@ -838,7 +838,9 @@ public class LayerPanel {
             Node theNode = (Node) object;
             textField1.setText(String.valueOf(theNode.getId()));
             textField2.setText(String.valueOf(theNode.getType()));
-            //TODO 实现坐标读取
+            textField3.setText(String.valueOf(theNode.getPosition().getLocationX()));
+            textField4.setText(String.valueOf(theNode.getPosition().getLocationY()));
+            textField5.setText(String.valueOf(theNode.getPosition().getLocationZ()));
 
         }
         private void initComponents() {

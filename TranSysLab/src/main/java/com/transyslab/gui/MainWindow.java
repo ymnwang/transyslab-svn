@@ -106,7 +106,7 @@ public class MainWindow {
         JPanel panel7 = new JPanel();
         JPanel panel2 = new JPanel();
         JPanel panel8 = new JPanel();
-        panel9 = new SignalStagePanel(slider1); // 相位图
+        JPanel panel9 = SignalStagePanel.getInstance(); // 相位图
         JComboBox<String> comboBox1 = new JComboBox<>();
         JTabbedPane tabbedPane1 = new JTabbedPane();
         JPanel panel1 = new JPanel();
@@ -309,10 +309,7 @@ public class MainWindow {
                                 AppSetup.modelType = Constants.MODEL_TYPE_RT;
                             }
                             initSimEngines();
-                            // TODO warning
-                            ((SignalStagePanel) panel9).setCurNode(engine.getNetwork().findNode(184));
-                            double stime = engine.getNetwork().getSimClock().getStartTime();
-                            ((SignalStagePanel) panel9).updateTime(stime,stime+120);
+
                             engine.addActionLisener(new ActionListener() {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
@@ -739,9 +736,10 @@ public class MainWindow {
     }
     public void updateSignalPanel(){
         double curTime = engine.getNetwork().getSimClock().getCurrentTime();
-        ((SignalStagePanel) panel9).updateTime(curTime,curTime+120);
+        SignalStagePanel.getInstance().updateTime(curTime,curTime+120);
         panel9.repaint();
     }
+
     public LayerPanel getLayerPanel(){
         return layerPanel;
     }

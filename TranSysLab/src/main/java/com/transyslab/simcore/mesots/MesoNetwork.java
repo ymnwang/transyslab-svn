@@ -71,9 +71,10 @@ public class MesoNetwork extends RoadNetwork {
 		this.vhcCounter++;
 		return newVehicle;
 	}
-	public void createNode(int id, int type, String name){
+	public void createNode(int id, int type, String name, double x, double y){
 		MesoNode newNode = new MesoNode();
-		newNode.init(id, type, nNodes() ,name);
+		newNode.init(id, type, nNodes() ,name,x,y);
+		worldSpace.recordExtremePoints(newNode.getPosition());
 		this.nodes.add(newNode);
 		this.addVertex(newNode);
 	}

@@ -43,9 +43,10 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	@Override
-	public void createNode(int id, int type, String name) {
+	public void createNode(int id, int type, String name, double x, double y) {
 		MLPNode newNode = new MLPNode();
-		newNode.init(id, type, nNodes() ,name);
+		newNode.init(id, type, nNodes() ,name, x, y);
+		worldSpace.recordExtremePoints(newNode.getPosition());
 		this.nodes.add(newNode);
 		this.addVertex(newNode);
 	}

@@ -43,8 +43,10 @@ public class ShapeUtil {
 		}
 		gl.glEnd();
 	}
-	public static void drawPoint(GL2 gl, GeoPoint pos, int radius, float[] color, double shiftZ) {
+	public static void drawPoint(GL2 gl, GeoPoint pos, int radius, float[] color, boolean isSelected,double shiftZ) {
 		gl.glColor3f(color[0], color[1], color[2]);
+		if(isSelected)
+			gl.glColor3f(1.0f, 1.0f, 0.0f);
 		gl.glPointSize(radius);
 		gl.glBegin(GL_POINTS);
 		gl.glVertex3d(pos.getLocationX(), pos.getLocationY(), pos.getLocationZ()+shiftZ);

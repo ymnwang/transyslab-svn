@@ -6,9 +6,6 @@ package com.transyslab.roadnetwork;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.transyslab.commons.tools.SimulationClock;
-import com.transyslab.simcore.mesots.MesoODCell;
-
 /**
  *
  * @author YYL 2016-5-24
@@ -39,6 +36,8 @@ public class Node implements NetworkObject {
 	private List<SignalPlan> signalPlans;
 
 	private GeoSurface boundBox;
+
+	private GeoPoint position;
 
 	public Node() {
 		this.interS = null;
@@ -107,12 +106,19 @@ public class Node implements NetworkObject {
 	public void addDnLink(Link link) {
 		dnLinks.add(link);
 	}
-	public void init(int id, int type, int index,String name){
+	public GeoPoint getPosition(){
+		return this.position;
+	}
+	public GeoSurface getBoundBox(){
+		return this.boundBox;
+	}
+	public void init(int id, int type, int index,String name, double x,double y){
 		this.id = id;
 		this.type = type;
 		this.name = name;
 		this.index = index;
 		this.objInfo = name;
+		this.position =  new GeoPoint(x,y,0);
 	}
 	// Return local index of an inbound link or -1 if 'link' is not a
 	// upstream link of this node
@@ -198,7 +204,16 @@ public class Node implements NetworkObject {
 		else
 			return null;
 	}
-
+	public void calcStaticInfo(WorldSpace world_space){
+		position = world_space.worldSpacePoint(position);
+		boundBox = new GeoSurface();
+		double expand = 1;
+		// 以位置点为中心向外拓展出一个边长为2的正方形，以便拾取
+		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()-expand,position.getLocationY()-expand,0.0));
+		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()+expand,position.getLocationY()-expand,0.0));
+		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()+expand,position.getLocationY()+expand,0.0));
+		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()-expand,position.getLocationY()+expand,0.0));
+	}
 	
 
 

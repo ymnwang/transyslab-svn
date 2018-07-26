@@ -70,7 +70,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	}
 
 
-	public abstract void createNode(int id, int type, String name);
+	public abstract void createNode(int id, int type, String name, double x, double y);
 
 	public abstract void createLink(int id, int type, int upNodeId, int dnNodeId);
 
@@ -677,6 +677,8 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (Node itrNode:nodes) {
 			itrNode.sortUpLinks();
 			itrNode.sortDnLinks();
+			// ×ø±êÆ½ÒÆ
+			itrNode.calcStaticInfo(worldSpace);
 		}
 
 		// Set destination index of all destination nodes

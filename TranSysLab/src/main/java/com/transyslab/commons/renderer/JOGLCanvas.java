@@ -218,7 +218,11 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	public void dispose(GLAutoDrawable drawable) {
 	}
 	public void scene(GL2 gl) {
-
+		// Node 点
+		for(int i=0; i< drawableNetwork.nNodes();i++){
+			Node itrNode = drawableNetwork.getNode(i);
+			ShapeUtil.drawPoint(gl,itrNode.getPosition(),10,new float[]{0,0.69f,0.94f},itrNode.isSelected(),LAYER_NODE);
+		}
         // Boundary 线
 		for (int i = 0; i< drawableNetwork.nBoundaries(); i++) {
 			Boundary tmpboundary = drawableNetwork.getBoundary(i);
@@ -323,13 +327,15 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		    case "Segment": //Segment 面
                 for(int i = 0; i< drawableNetwork.nSegments(); i++){
                     Segment tmpSegment = drawableNetwork.getSegment(i);
-                    ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, tmpSegment.isSelected(), LAYER_SEGMENT);
+                    if(tmpSegment.isSelected())
+                    	ShapeUtil.drawPolygon(gl, tmpSegment.getSurface().getKerbList(),Constants.COLOR_GREY, true, LAYER_SEGMENT);
                 }
                 break;
             case "Lane":// Lane 面
                 for(int i = 0; i< drawableNetwork.nLanes(); i++){
                     Lane tmpLane = drawableNetwork.getLane(i);
-                    ShapeUtil.drawPolygon(gl, tmpLane.getSurface().getKerbList(),Constants.COLOR_GREY, tmpLane.isSelected(), LAYER_LANE);
+                    if(tmpLane.isSelected())
+                    	ShapeUtil.drawPolygon(gl, tmpLane.getSurface().getKerbList(),Constants.COLOR_GREY, true, LAYER_LANE);
                 }
                 break;
         }
@@ -343,7 +349,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 
 	}
 	//计算拾取射线与x/y/z = intersectPlane 平面的交点
-	// offset=0,1,2:x,y,z
+	//offset=0,1,2:x,y,z
 	public float[] calcRay(final GL2 gl, final float intersectPlane, final int offset, final int winx, final int winy){
 		int[] viewport = new int[4];
 		float[] projmatrix = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
@@ -387,17 +393,30 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			ray.orig[i] = posNear[i];
 			ray.dir[i] = posFar[i];
 		}
-		/*
-		float[] ray = new float[6];
-		System.arraycopy(posNear, 0, ray, 0, 3);
-		System.arraycopy(posFar, 0, ray, 3, 3);*/
 		return ray;
 	}
 	private void selectObject(GL2 gl, String layerName){
 
 		Ray pickRay = calcRay(gl) ;
-		switch (layerName){
+		switch (layerName){//被选中对象用黄色渲染
 			case "Node":
+				//节点选择
+				for(int i = 0; i < drawableNetwork.nNodes();i++){
+					Node itrNode = drawableNetwork.getNode(i);
+					if(GeoUtil.isIntersect(pickRay,itrNode.getBoundBox())){
+						itrNode.setSelected(true);
+						// TODO checkBox
+						double fTime;
+						if(!itrNode.getSignalPlans().isEmpty()){
+							if(curFrame != null)
+								fTime = curFrame.getSimTimeInSeconds();
+							else
+								fTime = itrNode.getSignalPlans().get(0).getFTime();
+							SignalStagePanel.getInstance().setPlans(itrNode.getSignalPlans(), fTime, fTime + 120);
+						}
+						pickedObjects.add(itrNode);
+					}
+				}
 				break;
 			case "Link":
 				break;
@@ -406,7 +425,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				for(int i=0;i<drawableNetwork.nSegments();i++){
 					Segment tmpSegment = drawableNetwork.getSegment(i);
 					if(GeoUtil.isIntersect(pickRay,tmpSegment.getSurface())){
-						//被选中对象用黄色渲染
 						tmpSegment.setSelected(true);
 						pickedObjects.add(tmpSegment);
 					}
@@ -417,18 +435,16 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				for(int i=0;i<drawableNetwork.nLanes();i++){
 					Lane tmpLane = drawableNetwork.getLane(i);
 					if(GeoUtil.isIntersect(pickRay,tmpLane.getSurface())){
-						//被选中对象用黄色渲染
 						tmpLane.setSelected(true);
 						pickedObjects.add(tmpLane);
 					}
 				}
 				break;
 			case "Vehicle":
-				//选择车辆
+				//车辆选择
 				if(status==ANIMATOR_PAUSE && curFrame!=null) {
 					for (VehicleData vd : curFrame.getVhcDataQueue()) {
 						if (GeoUtil.isIntersect(pickRay, vd.getVhcShape())) {
-							//被选中对象用黄色渲染
 							vd.setSelected(true);
 							pickedObjects.add(vd);
 						}

@@ -50,9 +50,13 @@ public class XmlParser {
 					tmpType = Integer.parseInt(attr.getValue());
 				if (attr.getName().equals("name"))
 					tmpName = attr.getValue();
+				if(attr.getName().equals("NodeX"))
+					beginX = Double.parseDouble(attr.getValue());
+				if(attr.getName().equals("NodeY"))
+					beginY = Double.parseDouble(attr.getValue());
 
 			}
-			network.createNode(tmpId,tmpType,tmpName);
+			network.createNode(tmpId,tmpType,tmpName,beginX, beginY);
 		}
 		// Ω‚ŒˆLink
 		if (node.getName().equals("L")) {

@@ -20,21 +20,23 @@ public class SignalStagePanel extends JPanel {
     private List<Arrow2D> stageArrows;
     private Map<String,int[]>mapDirInt;
 
-    private double curSimTime;
-    private Node curNode;
-    private JSlider slider;
     private double fTime;
     private double tTime;
-
-    public SignalStagePanel(JSlider slider) {
+    private static SignalStagePanel ssp;
+    private SignalStagePanel() {
         setBackground(Color.white);
-        this.slider = slider;
         this.mapDirInt = new HashMap<>();
         this.colorMap = new HashMap<>();
         this.stageBars = new HashMap<>();
         this.stageArrows = new ArrayList<>();
         initialize();
     }
+    public static SignalStagePanel getInstance(){
+        if(ssp == null)
+            ssp = new SignalStagePanel();
+        return ssp;
+    }
+
     public void initialize(){
 
         colors = new ArrayList<>();
@@ -58,9 +60,9 @@ public class SignalStagePanel extends JPanel {
             }
         });
     }
-    public void setCurNode(Node node){
-        this.curNode = node;
-        this.plans2Paint = curNode.getSignalPlans();
+    public void setPlans(List<SignalPlan> plans, double fTime, double tTime){
+        this.plans2Paint = plans;
+        this.updateTime(fTime,tTime);
     }
 
     public void paintComponent(Graphics g) {
@@ -81,9 +83,6 @@ public class SignalStagePanel extends JPanel {
 
     }
 
-    public void setCurSimTime(double curSimTime){
-        this.curSimTime = curSimTime;
-    }
 
     public void updateTime(double fTime, double tTime){
         this.stageArrows.clear();
