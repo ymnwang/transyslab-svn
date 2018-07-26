@@ -35,6 +35,7 @@ public class Constants {
 	public final static int LANE_CHANGE_RIGHT = 0x00000001;//说明：用于rules
 	public final static int LANE_CHANGE_LEFT = 0x00000002;//说明：用于rules
 	public final static int LANE_CHANGE = 0x00000003;//说明：用于rules
+	public final static int LANE_RIGHTTURN_FREE = 0x00000010;//说明：用于rules，右转不受灯控
 
 	public final static int LANE_CHANGE_RIGHT_REQUIRED = 0x00000004;//0100
 	public final static int LANE_CHANGE_LEFT_REQUIRED = 0x00000008;//1000

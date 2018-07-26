@@ -765,7 +765,10 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 								Lane lane = seg.getLane(j);
 								lane.getSignalArrows().stream().forEach(a->{
 									//a.setColor(Constants.COLOR_RED);
-									signalColor.put(a,Constants.COLOR_RED);
+									if (a.rightTurnFree())
+										signalColor.put(a,Constants.COLOR_WHITE);
+									else
+										signalColor.put(a,Constants.COLOR_RED);
 								});
 							}
 						}

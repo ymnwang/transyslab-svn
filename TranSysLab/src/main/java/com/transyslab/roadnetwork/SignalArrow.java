@@ -87,6 +87,10 @@ public class SignalArrow implements Comparable<SignalArrow>{
 
     }
 
+    public boolean rightTurnFree() {
+        return (entrance.rules()&Constants.LANE_RIGHTTURN_FREE)!=0;
+    }
+
     @Override
     public int compareTo(SignalArrow o) {
         if(this.type>o.type)
