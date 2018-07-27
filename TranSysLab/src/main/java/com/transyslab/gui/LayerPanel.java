@@ -14,9 +14,9 @@ import javax.swing.border.*;
 public class LayerPanel {
 
     private Map<String, JPanel> layers;
-    private Map<String,PanelAction> panelAction;
+    private Map<String, PanelAction> panelAction;
 
-    public LayerPanel(){
+    public LayerPanel() {
         layers = new HashMap<>();
         panelAction = new HashMap<>();
         NodePanel nodeLayer = new NodePanel();
@@ -25,28 +25,29 @@ public class LayerPanel {
         LanePanel laneLayer = new LanePanel();
         SensorPanel sensorLayer = new SensorPanel();
         VehiclePanel vehicleLayer = new VehiclePanel();
-        layers.put("Node",nodeLayer);
-        layers.put("Link",linkLayer);
-        layers.put("Segment",segmentLayer);
-        layers.put("Lane",laneLayer);
-        layers.put("Vehicle",vehicleLayer);
-        layers.put("Sensor",sensorLayer);
-        panelAction.put("Node",nodeLayer);
-        panelAction.put("Link",linkLayer);
-        panelAction.put("Segment",segmentLayer);
-        panelAction.put("Lane",laneLayer);
-        panelAction.put("Vehicle",vehicleLayer);
-        panelAction.put("Sensor",sensorLayer);
+        layers.put("Node", nodeLayer);
+        layers.put("Link", linkLayer);
+        layers.put("Segment", segmentLayer);
+        layers.put("Lane", laneLayer);
+        layers.put("Vehicle", vehicleLayer);
+        layers.put("Sensor", sensorLayer);
+        panelAction.put("Node", nodeLayer);
+        panelAction.put("Link", linkLayer);
+        panelAction.put("Segment", segmentLayer);
+        panelAction.put("Lane", laneLayer);
+        panelAction.put("Vehicle", vehicleLayer);
+        panelAction.put("Sensor", sensorLayer);
     }
 
-    public JPanel getLayer(String layerName){
+    public JPanel getLayer(String layerName) {
         return layers.get(layerName);
     }
-    public PanelAction getAction(String layerName){
+
+    public PanelAction getAction(String layerName) {
         return panelAction.get(layerName);
     }
 
-    public class VehiclePanel extends JPanel implements PanelAction{
+    public class VehiclePanel extends JPanel implements PanelAction {
 
         private JTextField textField1;//编号
         private JTextField textField4;//类型
@@ -62,25 +63,28 @@ public class LayerPanel {
         public VehiclePanel() {
             initComponents();
         }
-        public void resetTxtComponents(){
-            for(JTextField tmpText:textFields){
+
+        public void resetTxtComponents() {
+            for (JTextField tmpText : textFields) {
                 tmpText.setText("");
             }
             textArea4.setText("");
         }
-        public void writeTxtComponents(NetworkObject object){
+
+        public void writeTxtComponents(NetworkObject object) {
             VehicleData vhcData = (VehicleData) object;
             textField1.setText(String.valueOf(vhcData.getId()));
-            textField2.setText(String.format("%.2f",vhcData.getVhcLength()));
+            textField2.setText(String.format("%.2f", vhcData.getVhcLength()));
             textField3.setText(String.valueOf(vhcData.getCurLaneID()));
-            textField4.setText(((vhcData.getSpecialFlag()&Constants.VIRTUAL_VEHICLE)!=0 ? "虚拟车" : "真实车") +
-                    ((vhcData.getSpecialFlag()&Constants.FOLLOWING)!=0 ? " 队内" : " 队外"));
-            textField5.setText(String.format("%.2f",vhcData.getCurSpeed()));
+            textField4.setText(((vhcData.getSpecialFlag() & Constants.VIRTUAL_VEHICLE) != 0 ? "虚拟车" : "真实车") +
+                    ((vhcData.getSpecialFlag() & Constants.FOLLOWING) != 0 ? " 队内" : " 队外"));
+            textField5.setText(String.format("%.2f", vhcData.getCurSpeed()));
             textField6.setText(String.valueOf(vhcData.getOriNodeID()));
             textField7.setText(String.valueOf(vhcData.getDesNodeID()));
             textField8.setText(vhcData.getPathInfo());
             textArea4.setText(vhcData.getVhcInfo());
         }
+
         private void initComponents() {
 
             JLabel label1 = new JLabel();
@@ -100,8 +104,8 @@ public class LayerPanel {
             textField7 = new JTextField();
             JLabel label9 = new JLabel();
             textField8 = new JTextField();
-            textFields = new JTextField[]{textField1,textField2,textField3,textField4,
-                    textField5,textField6,textField7,textField8};
+            textFields = new JTextField[]{textField1, textField2, textField3, textField4,
+                    textField5, textField6, textField7, textField8};
 
             JLabel label4 = new JLabel();
             JScrollPane scrollPane4 = new JScrollPane();
@@ -109,10 +113,10 @@ public class LayerPanel {
 
             //======== this ========
             setLayout(new GridBagLayout());
-            ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) getLayout()).columnWidths = new int[]{0, 0, 0};
+            ((GridBagLayout) getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout) getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -171,10 +175,10 @@ public class LayerPanel {
                                 new Font("\u5fae\u8f6f\u96c5\u9ed1", Font.PLAIN, 13)),
                         BorderFactory.createEmptyBorder()));
                 panel5.setLayout(new GridBagLayout());
-                ((GridBagLayout)panel5.getLayout()).columnWidths = new int[] {0, 0, 0};
-                ((GridBagLayout)panel5.getLayout()).rowHeights = new int[] {0, 0, 0, 0};
-                ((GridBagLayout)panel5.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-                ((GridBagLayout)panel5.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 1.0E-4};
+                ((GridBagLayout) panel5.getLayout()).columnWidths = new int[]{0, 0, 0};
+                ((GridBagLayout) panel5.getLayout()).rowHeights = new int[]{0, 0, 0, 0};
+                ((GridBagLayout) panel5.getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+                ((GridBagLayout) panel5.getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 1.0E-4};
 
                 //---- label6 ----
                 label6.setText("\u8d77\u70b9\uff1a");
@@ -227,7 +231,7 @@ public class LayerPanel {
         }
     }
 
-    public class SensorPanel extends JPanel implements PanelAction{
+    public class SensorPanel extends JPanel implements PanelAction {
 
         private JTextField textField1;//编号
         private JTextField textField2;//类型
@@ -241,18 +245,21 @@ public class LayerPanel {
         public SensorPanel() {
             initComponents();
         }
-        public void resetTxtComponents(){
-            for(JTextField tmpText:textFields){
+
+        public void resetTxtComponents() {
+            for (JTextField tmpText : textFields) {
                 tmpText.setText("");
             }
             textArea4.setText("");
         }
+
         // TODO 检测器未统一
-        public void writeTxtComponents(NetworkObject object){
+        public void writeTxtComponents(NetworkObject object) {
             Sensor theSensor = (Sensor) object;
             textField1.setText(String.valueOf(theSensor.getId()));
             textField2.setText(String.valueOf(theSensor.getObjInfo()));
         }
+
         private void initComponents() {
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
@@ -274,10 +281,10 @@ public class LayerPanel {
             //======== this ========
 
             setLayout(new GridBagLayout());
-            ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) getLayout()).columnWidths = new int[]{0, 0, 0};
+            ((GridBagLayout) getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout) getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -316,10 +323,10 @@ public class LayerPanel {
                                 new Font("\u5fae\u8f6f\u96c5\u9ed1", Font.PLAIN, 13)),
                         BorderFactory.createEmptyBorder()));
                 panel5.setLayout(new GridBagLayout());
-                ((GridBagLayout)panel5.getLayout()).columnWidths = new int[] {38, 0, 0};
-                ((GridBagLayout)panel5.getLayout()).rowHeights = new int[] {0, 0, 0, 0};
-                ((GridBagLayout)panel5.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-                ((GridBagLayout)panel5.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 1.0E-4};
+                ((GridBagLayout) panel5.getLayout()).columnWidths = new int[]{38, 0, 0};
+                ((GridBagLayout) panel5.getLayout()).rowHeights = new int[]{0, 0, 0, 0};
+                ((GridBagLayout) panel5.getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+                ((GridBagLayout) panel5.getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 1.0E-4};
 
                 //---- label5 ----
                 label5.setText("\u5f00\u59cb\u65f6\u95f4\uff1a");
@@ -371,7 +378,7 @@ public class LayerPanel {
 
     }
 
-    public class LanePanel extends JPanel implements PanelAction{
+    public class LanePanel extends JPanel implements PanelAction {
 
         private JTextField textField1;//编号
         private JTextField textField2;//长度
@@ -384,23 +391,28 @@ public class LayerPanel {
         public LanePanel() {
             initComponents();
         }
-        public void resetTxtComponents(){
-            for(JTextField tmpText:textFields){
+
+        public void resetTxtComponents() {
+            /*
+            for (JTextField tmpText : textFields) {
                 tmpText.setText("");
             }
-            textArea4.setText("");
+            textArea4.setText("");*/
         }
-        public void writeTxtComponents(NetworkObject object){
+
+        public void writeTxtComponents(NetworkObject object) {
+            /*
             Lane theLane = (Lane) object;
             textField1.setText(String.valueOf(theLane.getId()));
             textField2.setText(String.valueOf(theLane.getLength()));
-            String segmentID = "Segment"+ String.valueOf(theLane.getSegment().getId());
+            String segmentID = "Segment" + String.valueOf(theLane.getSegment().getId());
             textField3.setText(segmentID);
             textArea4.setText(
                     "SegID " + theLane.getSegment().getId() + "\n" +
-                    "LnkID " + theLane.getLink().getId() + "\n" );
-//                    ((MLPLane) theLane).getSDnLnInfo());
+                            "LnkID " + theLane.getLink().getId() + "\n");
+//                    ((MLPLane) theLane).getSDnLnInfo());*/
         }
+        /*
         private void initComponents() {
 
             JLabel label1 = new JLabel();
@@ -422,10 +434,10 @@ public class LayerPanel {
             //======== this ========
 
             setLayout(new GridBagLayout());
-            ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) getLayout()).columnWidths = new int[]{0, 0, 0};
+            ((GridBagLayout) getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout) getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
@@ -464,10 +476,10 @@ public class LayerPanel {
                                 new Font("\u5fae\u8f6f\u96c5\u9ed1", Font.PLAIN, 13)),
                         new EmptyBorder(2, 2, 2, 2)));
                 panel5.setLayout(new GridBagLayout());
-                ((GridBagLayout)panel5.getLayout()).columnWidths = new int[] {0, 0, 0};
-                ((GridBagLayout)panel5.getLayout()).rowHeights = new int[] {0, 0, 0};
-                ((GridBagLayout)panel5.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-                ((GridBagLayout)panel5.getLayout()).rowWeights = new double[] {0.0, 0.0, 1.0E-4};
+                ((GridBagLayout) panel5.getLayout()).columnWidths = new int[]{0, 0, 0};
+                ((GridBagLayout) panel5.getLayout()).rowHeights = new int[]{0, 0, 0};
+                ((GridBagLayout) panel5.getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+                ((GridBagLayout) panel5.getLayout()).rowWeights = new double[]{0.0, 0.0, 1.0E-4};
 
                 //---- label6 ----
                 label6.setText("\u6a2a\u5411\uff1a");
@@ -477,7 +489,7 @@ public class LayerPanel {
                         new Insets(0, 4, 5, 5), 0, 0));
 
                 //---- comboBox2 ----
-                comboBox2.setModel(new DefaultComboBoxModel<>(new String[] {
+                comboBox2.setModel(new DefaultComboBoxModel<>(new String[]{
                         "\u5141\u8bb8\u5de6\u53f3\u6362\u9053",
                         "\u4ec5\u5141\u8bb8\u5de6\u6362\u9053",
                         "\u4ec5\u5141\u8bb8\u53f3\u6362\u9053",
@@ -496,7 +508,7 @@ public class LayerPanel {
                         new Insets(0, 4, 0, 5), 0, 0));
 
                 //---- comboBox3 ----
-                comboBox3.setModel(new DefaultComboBoxModel<>(new String[] {
+                comboBox3.setModel(new DefaultComboBoxModel<>(new String[]{
                         "\u76f4\u884c",
                         "\u4e13\u5de6",
                         "\u4e13\u53f3",
@@ -531,8 +543,245 @@ public class LayerPanel {
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 0, 3), 0, 0));
         }
+        /*
+        public LanePanel() {
+            initComponents();
+        }*/
 
+        private void initComponents() {
+            textFields = new JTextField[2];
+            JTabbedPane tabbedPane1 = new JTabbedPane();
+            JPanel panel1 = new JPanel();
+            JLabel label1 = new JLabel();
+            textField1 = new JTextField();
+            textField2 = new JTextField();
+            JLabel label2 = new JLabel();
+            JLabel label3 = new JLabel();
+            textField3 = new JTextField();
+            JPanel panel5 = new JPanel();
+            JLabel label6 = new JLabel();
+            comboBox2 = new JComboBox<>();
+            JLabel label7 = new JLabel();
+            comboBox3 = new JComboBox<>();
+            JLabel label4 = new JLabel();
+            JScrollPane scrollPane4 = new JScrollPane();
+            textArea4 = new JTextArea();
+            JPanel panel2 = new JPanel();
+            JLabel label5 = new JLabel();
+            JTextField textField4 = new JTextField();
+            JLabel label8 = new JLabel();
+            JTextField textField5 = new JTextField();
+            JLabel label9 = new JLabel();
+            JTextField textField6 = new JTextField();
+            JLabel label10 = new JLabel();
+            JTextField textField7 = new JTextField();
+
+            //======== tabbedPane1 ========
+            {
+                tabbedPane1.setBorder(new EmptyBorder(3, 3, 3, 3));
+                //======== panel1属性 ========
+                {
+                    panel1.setLayout(new GridBagLayout());
+                    ((GridBagLayout)panel1.getLayout()).columnWidths = new int[] {0, 0, 0};
+                    ((GridBagLayout)panel1.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 75, 0, 0};
+                    ((GridBagLayout)panel1.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+                    ((GridBagLayout)panel1.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+
+                    //---- label1 ----
+                    label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                    label1.setText("\u7f16\u53f7\uff1a");
+                    panel1.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+                    panel1.add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+                    panel1.add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+
+                    //---- label2 ----
+                    label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                    label2.setText("\u957f\u5ea6\uff1a");
+                    panel1.add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+
+                    //---- label3 ----
+                    label3.setText("\u96b6\u5c5e\u4e8e\uff1a");
+                    panel1.add(label3, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+                    panel1.add(textField3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+
+                    //======== panel5 ========
+                    {
+                        panel5.setBorder(new CompoundBorder(
+                                new TitledBorder(null, "\u4ea4\u901a\u89c4\u5219", TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION,
+                                        new Font("\u5fae\u8f6f\u96c5\u9ed1", Font.PLAIN, 12)),
+                                new EmptyBorder(2, 2, 2, 2)));
+                        panel5.setFont(new Font("\u5b8b\u4f53", Font.PLAIN, 12));
+                        panel5.setLayout(new GridBagLayout());
+                        ((GridBagLayout)panel5.getLayout()).columnWidths = new int[] {0, 0, 0};
+                        ((GridBagLayout)panel5.getLayout()).rowHeights = new int[] {0, 0, 0};
+                        ((GridBagLayout)panel5.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+                        ((GridBagLayout)panel5.getLayout()).rowWeights = new double[] {0.0, 0.0, 1.0E-4};
+
+                        //---- label6 ----
+                        label6.setText("\u6a2a\u5411\uff1a");
+                        panel5.add(label6, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                                new Insets(0, 6, 5, 5), 0, 0));
+
+                        //---- comboBox2 ----
+                        comboBox2.setModel(new DefaultComboBoxModel<>(new String[] {
+                                "\u5141\u8bb8\u5de6\u53f3\u6362\u9053",
+                                "\u4ec5\u5141\u8bb8\u5de6\u6362\u9053",
+                                "\u4ec5\u5141\u8bb8\u53f3\u6362\u9053",
+                                "\u7981\u6b62\u6362\u9053"
+                        }));
+                        panel5.add(comboBox2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                                new Insets(0, 6, 5, 0), 0, 0));
+
+                        //---- label7 ----
+                        label7.setText("\u7eb5\u5411\uff1a");
+                        panel5.add(label7, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                                new Insets(0, 6, 0, 5), 0, 0));
+
+                        //---- comboBox3 ----
+                        comboBox3.setModel(new DefaultComboBoxModel<>(new String[] {
+                                "\u76f4\u884c",
+                                "\u4e13\u5de6",
+                                "\u4e13\u53f3",
+                                "\u76f4\u5de6",
+                                "\u76f4\u53f3",
+                                "\u76f4\u5de6\u53f3"
+                        }));
+                        panel5.add(comboBox3, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+                                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                                new Insets(0, 6, 0, 0), 0, 0));
+                    }
+                    panel1.add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 3), 0, 0));
+
+                    //---- label4 ----
+                    label4.setText("\u5176\u5b83\uff1a");
+                    panel1.add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+
+                    //======== scrollPane4 ========
+                    {
+                        scrollPane4.setViewportView(textArea4);
+                    }
+                    panel1.add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+                }
+                tabbedPane1.addTab("\u5c5e\u6027", panel1);
+
+                //======== panel2 ========
+                {
+                    panel2.setLayout(new GridBagLayout());
+                    ((GridBagLayout)panel2.getLayout()).columnWidths = new int[] {0, 0, 0};
+                    ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+                    ((GridBagLayout)panel2.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+                    ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
+
+                    //---- label5 ----
+                    label5.setText("\u5e73\u5747\u6392\u961f\u957f\u5ea6\uff1a");
+                    panel2.add(label5, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+                    panel2.add(textField4, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+
+                    //---- label8 ----
+                    label8.setText("\u5e73\u5747\u505c\u8f66\u6b21\u6570\uff1a");
+                    panel2.add(label8, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+                    panel2.add(textField5, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+
+                    //---- label9 ----
+                    label9.setText("\u5e73\u5747\u6392\u961f\u65f6\u95f4\uff1a");
+                    panel2.add(label9, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+                    panel2.add(textField6, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+
+                    //---- label10 ----
+                    label10.setText("\u5e73\u5747\u65c5\u884c\u65f6\u95f4\uff1a");
+                    panel2.add(label10, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+                    panel2.add(textField7, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
+                }
+                tabbedPane1.addTab("\u7edf\u8ba1", panel2);
+                add(tabbedPane1);
+            }
+        }
+        /*
+        public void resetTxtComponents(){
+            /*
+            for(JTextField tmpText:textFields){
+                tmpText.setText("");
+            }
+            textArea4.setText("");*/
+ //}
+        /*
+        public void writeTxtComponents(NetworkObject object){
+            Lane theLane = (Lane) object;
+            textField1.setText(String.valueOf(theLane.getId()));
+            textField2.setText(String.valueOf(theLane.getLength()));
+            String segmentID = "Segment"+ String.valueOf(theLane.getSegment().getId());
+            textField3.setText(segmentID);
+            textArea4.setText(
+                    "SegID " + theLane.getSegment().getId() + "\n" +
+                            "LnkID " + theLane.getLink().getId() + "\n" );
+//                    ((MLPLane) theLane).getSDnLnInfo());
+        }
+
+        private JTabbedPane tabbedPane1;
+        private JPanel panel1;
+        private JLabel label1;
+        private JTextField textField1;
+        private JTextField textField2;
+        private JLabel label2;
+        private JLabel label3;
+        private JTextField textField3;
+        private JPanel panel5;
+        private JLabel label6;
+        private JComboBox<String> comboBox2;
+        private JLabel label7;
+        private JComboBox<String> comboBox3;
+        private JLabel label4;
+        private JScrollPane scrollPane4;
+        private JTextArea textArea4;
+        private JPanel panel2;
+        private JLabel label5;
+        private JTextField textField4;
+        private JLabel label8;
+        private JTextField textField5;
+        private JLabel label9;
+        private JTextField textField6;
+        private JLabel label10;
+        private JTextField textField7;
+        private JTextField[] textFields;*/
     }
+
     public class SegmentPanel extends JPanel implements PanelAction{
 
         private JTextField textField1;//编号
