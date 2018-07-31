@@ -1,7 +1,7 @@
 package com.transyslab.roadnetwork;
 
 public class Constants {
-	public static final double DEFAULT_VEHICLE_WIDTH = 1.8; /* meters */
+	public static final double DEFAULT_VEHICLE_WIDTH = 1.8; /* Camry's width */
 	public static final double DEFAULT_VEHICLE_LENGTH = 4.0; /* meters */
 	public static final int ATTR_FAMILIARITY = 0x00000001;
 	public static final int ATTR_TS_COMPLY = 0x00000010;

@@ -120,6 +120,9 @@ public class XmlParser {
 		if (node.getName().equals("LC")) {
 			int flag = -1;
 			for (Attribute attr : attrs) {
+				if (attr.getName().equals("ID")) {
+					tmpId = Integer.parseInt(attr.getValue());
+				}
 				if (attr.getName().equals("UpLane"))
 					tmpUpId = Integer.parseInt(attr.getValue());
 				if (attr.getName().equals("DnLane"))
@@ -128,9 +131,21 @@ public class XmlParser {
 					flag = Integer.parseInt(attr.getValue());
 
 			}
+			List<GeoPoint> polyline = new ArrayList<>();
+			List<Element> nodelist = node.elements();
+			for(Element n : nodelist){
+				List<Attribute> pattr = n.attributes();
+				for(Attribute attr : pattr){
+					if(attr.getName()=="X")
+						kerbx = Double.parseDouble(attr.getValue());
+					if(attr.getName()=="Y")
+						kerby = Double.parseDouble(attr.getValue());
+				}
+				polyline.add(new GeoPoint(kerbx,kerby));
+			}
 			// TODO 从外部组织几何连接
 			// 拓扑连接
-			network.addLaneConnector(tmpUpId,tmpDnId,flag);
+			network.addLaneConnector(tmpId,tmpUpId,tmpDnId,flag,polyline);
 		}
 		//解析Boundary
 		if (node.getName().equals("Boundary")) {

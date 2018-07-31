@@ -8,6 +8,7 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.math3.ode.MainStateJacobianProvider;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -25,17 +26,18 @@ public class SubWindow {
     private JFrame windowFrame;
     private ProjectPanel projectPanel;
     private CasePanel casePanel;
-//    private ClbrtPanel clbrtPanel;
     private CardLayout cardLayout;
-    // TODO 单例
-    private MainWindow mainWindow;
-    //private Map<String,JPanel> panels;
-    public SubWindow(){
+    private static SubWindow theWindow;
+
+    private SubWindow(){
         initComponets();
     }
-    public void setMainWindow(MainWindow window){
-        mainWindow = window;
+    public static SubWindow getInstance(){
+        if(theWindow == null)
+            theWindow = new SubWindow();
+        return theWindow;
     }
+
     public void showPanel(String panelName){
         this.cardLayout.show(this.windowFrame.getContentPane(),panelName);
         this.windowFrame.setVisible(true);
@@ -436,7 +438,7 @@ public class SubWindow {
                         //text内容置空
                         clearTextFields();
                         //TODO 避免打开项目与新建项目按钮的冲突
-                        mainWindow.initSimEngines();
+                        MainWindow.getInstance().initSimEngines();
                     }
                 });
                 panel1.add(button3, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0,

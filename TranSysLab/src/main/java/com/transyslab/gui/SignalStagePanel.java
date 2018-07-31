@@ -85,19 +85,26 @@ public class SignalStagePanel extends JPanel {
 
 
     public void updateTime(double fTime, double tTime){
+        if(plans2Paint!=null){
+            this.stageArrows.clear();
+            this.stageBars.clear();
+            this.colorMap.clear();
+            this.fTime = fTime;
+            this.tTime = tTime;
+            calcShape2Paint();
+            repaint();
+        }
+
+    }
+    public void clear(){
+        this.plans2Paint = null;
         this.stageArrows.clear();
         this.stageBars.clear();
-        this.fTime = fTime;
-        this.tTime = tTime;
-        calcShape2Paint();
+        this.colorMap.clear();
         repaint();
     }
 
-
     public void calcShape2Paint(){
-        this.stageArrows.clear();
-        this.stageBars.clear();
-
         int width = this.getWidth();
         int height =  this. getHeight();
         for(int i=0;i<plans2Paint.size();i++){
@@ -116,10 +123,14 @@ public class SignalStagePanel extends JPanel {
                 sBarPos[0] = 32 + (int)Math.round((itrPlan.getFTime()-fTime)/(tTime-fTime) * (width -2*32));
             }
             // ½×¶ÎÊ±¼ä±í
-            List<double[]> stages = itrPlan.getSignalTable().stream().filter(s->s[1]>=fTime && s[1]<tTime)
+            List<double[]> stages = itrPlan.getSignalTable().stream().filter(s->s[2]>=fTime && s[1]<tTime)
                     .collect(Collectors.toList());
             for(int j=0;j<stages.size();j++){
-                double sPosX = 32 + Math.round((stages.get(j)[1]-fTime)/(tTime-fTime)* (width-2*32));
+                double sPosX;
+                if(stages.get(j)[1]<fTime )
+                    sPosX = 32;
+                else
+                    sPosX = 32 + Math.round((stages.get(j)[1]-fTime)/(tTime-fTime)* (width-2*32));
                 double sWidth;
                 if(stages.get(j)[2]<=tTime)
                     sWidth = 32 + Math.round((stages.get(j)[2]-fTime)/(tTime-fTime)* (width-2*32)) - sPosX;

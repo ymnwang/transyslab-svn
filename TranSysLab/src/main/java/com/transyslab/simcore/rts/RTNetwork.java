@@ -237,15 +237,13 @@ public class RTNetwork extends RoadNetwork{
 	}
 
 	@Override
-	public int addLaneConnector(int up, int dn, int successiveFlag) {
-		int ans = super.addLaneConnector(up, dn, successiveFlag);
-		if (successiveFlag == Constants.SUCCESSIVE_LANE) {
+	public int addLaneConnector(int id, int up, int dn, int successiveFlag, List<GeoPoint> polyline) {
+		int ans = super.addLaneConnector(id,up, dn, successiveFlag,polyline);
 			RTLane upLane = (RTLane) findLane(up);
 			RTLane dnLane = (RTLane) findLane(dn);
-			upLane.successiveDnLanes.add(dnLane);
-			dnLane.successiveUpLanes.add(upLane);
-			createConnector(upLane,dnLane);
-		}
+			//upLane.successiveDnLanes.add(dnLane);
+			//dnLane.successiveUpLanes.add(upLane);
+			createConnector(id,polyline,upLane,dnLane);
 		return ans;
 	}
 

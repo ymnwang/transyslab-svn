@@ -10,6 +10,7 @@ import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.gui.MainWindow;
+import com.transyslab.gui.PanelAction;
 import com.transyslab.gui.SignalStagePanel;
 import com.transyslab.roadnetwork.*;
 
@@ -19,6 +20,7 @@ import com.transyslab.simcore.mlp.MLPNetwork;
 import com.transyslab.simcore.rts.RTEngine;
 import com.transyslab.simcore.rts.RTNetwork;
 import jhplot.math.LinearAlgebra;
+import sun.applet.Main;
 
 
 import javax.swing.*;
@@ -59,7 +61,6 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
     public static final double LAYER_VEHICLE = 0.5;
     public static final double LAYER_SENSOR = 0.4;
     public static final double LAYER_SIGNALARROW = 0.4;
-	private MainWindow mainWindow;
 	private GLU glu; // for the GL Utility
 	private RoadNetwork drawableNetwork;
 	private Camera cam;
@@ -74,6 +75,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	private AnimationFrame curFrame;
 	private int status;
 	private int mode;
+	private int clockCounter;
+	private double sliderFTime;
 
 	/** Constructor to setup the GUI for this Component */
 	public JOGLCanvas() {
@@ -81,7 +84,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		status = 0;
 		mode = 0;
 		preWinCoods = new java.awt.Point();
-		pickedObjects = new ArrayList<NetworkObject>();
+		pickedObjects = new ArrayList<>();
+		clockCounter = 0;
 
 	}
 	public JOGLCanvas(int width, int height) {
@@ -92,16 +96,15 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		// setPreferredSize 有布局管理器下使用；setSize 无布局管理器下使用
 //		this.setPreferredSize(new Dimension(width, height));
 	}
-	public void setMainWindow(MainWindow window){
-		this.mainWindow = window;
-	}
 	public boolean isNetworkReady(){
 		return drawableNetwork != null? true : false;
 	}
 	public void setDrawableNetwork(RoadNetwork network){
 		drawableNetwork = network;
 	}
-
+	public void setSliderFTime(double fTime){
+		this.sliderFTime = fTime;
+	}
 	public void setCamera(Camera cam){
 		this.cam = cam;
 	}
@@ -204,7 +207,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			scene(gl);
 			if(isPicking) {
 				isPicking = false;
-				selectObject(gl, mainWindow.getCurLayerName());
+				selectObject(gl, MainWindow.getInstance().getCurLayerName());
 			}
 
 		}
@@ -236,11 +239,12 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					Constants.COLOR_WHITE,LAYER_BOUNDARY);
 		}
 
-//        // Connector 线
-//        for(int i=0; i< drawableNetwork.nConnectors();i++){
-//            Connector tmpConnector = drawableNetwork.getConnector(i);
-//            ShapeUtil.drawSolidLine(gl, tmpConnector.getStartPoint(),tmpConnector.getEndPoint(),2, new float[]{0.98f, 0.72f, 0.35f}, LAYER_CONNECTOR);
-//        }
+        // Connector 线
+		/*
+        for(int i=0; i< drawableNetwork.nConnectors();i++){
+            Connector tmpConnector = drawableNetwork.getConnector(i);
+            ShapeUtil.drawPolyline(gl,tmpConnector.getShapePoints(),2, new float[]{0.98f, 0.72f, 0.35f}, LAYER_CONNECTOR);
+        }*/
 
         boolean isPause = (status == ANIMATOR_PAUSE);
         //暂停时不更新帧索引
@@ -306,11 +310,13 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 					}
 				}
 			}
-			JSlider slider = mainWindow.getSlider();
-			slider.setValue((int)Math.floor((curFrame.getSimTimeInSeconds() - drawableNetwork.getSimClock().getStartTime())/60.0));
-			if(slider.getValue()>=120) {// 大于120分钟(超出时间条长度)
-				mainWindow.updateSlider((long)drawableNetwork.getSimClock().getCurrentTime());
-				mainWindow.updateSignalPanel();
+			JSlider slider = MainWindow.getInstance().getSlider();
+			slider.setValue((int)Math.floor((curFrame.getSimTimeInSeconds() - drawableNetwork.getSimClock().getStartTime() - 120*clockCounter)));
+			if(slider.getValue()>=120) {// 大于120秒(超出时间条长度)
+				sliderFTime = drawableNetwork.getSimClock().getCurrentTime();
+				MainWindow.getInstance().updateSlider((long)sliderFTime);
+				MainWindow.getInstance().updateSignalPanel();
+				clockCounter ++;
 			}
             //回收vehicledata
             if(!isPause)
@@ -323,7 +329,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			ShapeUtil.drawPolygon(gl, tmpSensor.getSurface().getKerbList(),Constants.COLOR_GREEN, tmpSensor.isSelected(),LAYER_SENSOR);
 		}
 
-        switch (mainWindow.getCurLayerName()){
+        switch (MainWindow.getInstance().getCurLayerName()){
 		    case "Segment": //Segment 面
                 for(int i = 0; i< drawableNetwork.nSegments(); i++){
                     Segment tmpSegment = drawableNetwork.getSegment(i);
@@ -408,8 +414,8 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 						// TODO checkBox
 						double fTime;
 						if(!itrNode.getSignalPlans().isEmpty()){
-							if(curFrame != null)
-								fTime = curFrame.getSimTimeInSeconds();
+							if(curFrame!=null)
+								fTime = sliderFTime;
 							else
 								fTime = itrNode.getSignalPlans().get(0).getFTime();
 							SignalStagePanel.getInstance().setPlans(itrNode.getSignalPlans(), fTime, fTime + 120);
@@ -459,13 +465,16 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		}
 		//TODO 写死读取第一个对象
 		if(!pickedObjects.isEmpty()){
-			mainWindow.getLayerPanel().getAction(layerName).writeTxtComponents(pickedObjects.get(0));
+			((PanelAction)MainWindow.getInstance().getLayerPanel().getLayer(layerName)).writeTxtComponents(pickedObjects.get(0));
 		}
 	}
 
 	public void deselect(){
 		for(NetworkObject no:pickedObjects){
 			no.setSelected(false);
+			if(no instanceof Node){
+				SignalStagePanel.getInstance().clear();
+			}
 		}
 	}
 	@Override
@@ -481,7 +490,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				if(!pickedObjects.isEmpty()){
 					deselect();
 					pickedObjects.clear();
-					mainWindow.getLayerPanel().getAction(mainWindow.getCurLayerName())
+					((PanelAction)MainWindow.getInstance().getLayerPanel().getLayer(MainWindow.getInstance().getCurLayerName()))
 							.resetTxtComponents();
 				}
 				break;

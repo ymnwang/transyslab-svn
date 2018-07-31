@@ -82,16 +82,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public abstract void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval );
 
 	public void createConnector(int id,List<GeoPoint> shapePoints,Lane upLane, Lane dnLane){
-		//TODO 使用外部读入的点坐标shapePoints
-		List<GeoPoint> tmp = new ArrayList<>();
-		tmp.add(upLane.getEndPnt());
-		tmp.add(dnLane.getStartPnt());
-		Connector newConnector = new Connector(id,tmp);
-		this.connectors.add(newConnector);
-	}
-	//TODO 使用外部读入的点坐标shapePoints
-	public void createConnector(Lane upLane, Lane dnLane){
-		Connector newConnector = new Connector(upLane,dnLane);
+		Connector newConnector = new Connector(id,shapePoints,upLane,dnLane);
 		this.connectors.add(newConnector);
 	}
 	public void createSurface(int id, int segId, List<GeoPoint> kerbList){
@@ -243,6 +234,13 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		}
 		return null;
 	}
+	public Connector findConnector(int id){
+        for(Connector connector:connectors){
+            if(connector.id == id)
+                return connector;
+        }
+        return null;
+    }
 	public ODPair findODPair(int id){
 		for(ODPair odPair:odPairs){
 			if(odPair.id == id)
@@ -272,7 +270,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 	// Connects lane 'up' with lane 'dn'. Return -1 if error, 1 if these
 	// two upLanes are already connected, or 0 if success.
-	public int addLaneConnector(int up, int dn, int successiveFlag) {
+	public int addLaneConnector(int id,int up, int dn, int successiveFlag, List<GeoPoint> polyline) {
 		Lane ulane, dlane;
 		if ((ulane = findLane(up)) == null) {
 			// cerr << "Error:: unknown upstream lane <" << up << ">. ";
@@ -724,6 +722,10 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (GeoSurface surface:surfaces) {
 			surface.translateInWorldSpace(worldSpace);
 		}
+        // Connector 位置平移
+        for (Connector connector:connectors) {
+            connector.translateInWorldSpace(worldSpace);
+        }
 	}
 
 	public void initializeLinkStatistics() {

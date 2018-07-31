@@ -1,8 +1,10 @@
 package com.transyslab.roadnetwork;
 
+import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.simcore.mlp.MLPLane;
 import com.transyslab.simcore.mlp.MLPVehicle;
+import org.apache.commons.math3.genetics.Fitness;
 
 //车辆轨迹数据
 public class VehicleData implements NetworkObject,Comparable<VehicleData>{
@@ -182,8 +184,25 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 			l = lane.getGeoLength();
 			startPnt = lane.getStartPnt();
 			endPnt = lane.getEndPnt();
-			// TODO 写死车宽
-			width = 1.8;
+			width = Constants.DEFAULT_VEHICLE_WIDTH;
+			bothSize = true;
+		}
+		else if(moveOn instanceof Connector){
+			Connector connector = (Connector) moveOn;
+			this.curLaneID = connector.getId();
+			double[] linearDistance = connector.getLinearRelation();
+
+			int index = FitnessFunction.binarySearchIndex(linearDistance,distance);
+			if(index == linearDistance.length)
+				System.out.println("Error: wrong distance on connector");
+			distance = distance - linearDistance[index-1];
+
+			// 折线长度
+			l = linearDistance[index] - linearDistance[index-1];
+			// 投影到对应的折线段上
+			startPnt = connector.getShapePoints().get(index);
+			endPnt = connector.getShapePoints().get(index-1);
+			width = Constants.DEFAULT_VEHICLE_WIDTH;
 			bothSize = true;
 		}
 		else{
@@ -200,7 +219,6 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		//车尾位置
 		double vhcTrailX = startPnt.getLocationX() + s * (endPnt.getLocationX() - startPnt.getLocationX()) / l;
 		double vhcTrailY = startPnt.getLocationY() + s * (endPnt.getLocationY() - startPnt.getLocationY()) / l;
-		// TODO 写死高度z
 		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.0);
 		GeoPoint trailPosition = new GeoPoint(vhcTrailX, vhcTrailY, 0.0);
 		// 注意：对象更替频繁

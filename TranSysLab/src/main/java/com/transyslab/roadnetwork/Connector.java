@@ -14,17 +14,39 @@ public class Connector implements NetworkObject{
 	protected Lane dnLane;
 	// 折线点集,按连接顺序存储
 	protected List<GeoPoint> shapePoints;
+	protected double[] linearRelation;
 
 	public List<GeoPoint> getShapePoints(){
 		return shapePoints;
 	}
-	public Connector(int id, List<GeoPoint> shapePoints){
+	public Connector(int id, List<GeoPoint> shapePoints, Lane upLane, Lane dnLane){
 		this.id = id;
 		this.shapePoints = shapePoints;
-	}
-	public Connector(Lane upLane, Lane dnLane){
 		this.upLane = upLane;
 		this.dnLane = dnLane;
+		initLinearRelation();
+	}
+	private void initLinearRelation(){
+		if(!shapePoints.isEmpty()){
+			int size = shapePoints.size();
+			linearRelation = new double[size];
+			linearRelation[0] = 0;
+			if(size>1){
+				for(int i=1;i<size;i++){
+					linearRelation[i] = shapePoints.get(i).distance(shapePoints.get(i-1))+linearRelation[i-1];
+				}
+			}
+		}
+
+
+	}
+	public double[] getLinearRelation(){
+		return this.linearRelation;
+	}
+	public void translateInWorldSpace(WorldSpace world_space) {
+		for(GeoPoint p: shapePoints){
+			world_space.translateWorldSpacePoint(p);
+		}
 	}
 	@Override
 	public int getId() {

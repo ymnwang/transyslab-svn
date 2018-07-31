@@ -1,6 +1,7 @@
 package com.transyslab.gui;
 import com.transyslab.roadnetwork.*;
 import com.transyslab.simcore.mlp.MLPLane;
+import org.apache.logging.log4j.core.appender.db.jpa.JpaAppender;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -13,12 +14,11 @@ import javax.swing.border.*;
  */
 public class LayerPanel {
 
-    private Map<String, JPanel> layers;
-    private Map<String, PanelAction> panelAction;
+    private Map<String, JTabbedPane> layers;
 
     public LayerPanel() {
         layers = new HashMap<>();
-        panelAction = new HashMap<>();
+        //panelAction = new HashMap<>();
         NodePanel nodeLayer = new NodePanel();
         LinkPanel linkLayer = new LinkPanel();
         SegmentPanel segmentLayer = new SegmentPanel();
@@ -31,23 +31,19 @@ public class LayerPanel {
         layers.put("Lane", laneLayer);
         layers.put("Vehicle", vehicleLayer);
         layers.put("Sensor", sensorLayer);
-        panelAction.put("Node", nodeLayer);
-        panelAction.put("Link", linkLayer);
-        panelAction.put("Segment", segmentLayer);
-        panelAction.put("Lane", laneLayer);
-        panelAction.put("Vehicle", vehicleLayer);
-        panelAction.put("Sensor", sensorLayer);
+//        panelAction.put("Node", nodeLayer);
+//        panelAction.put("Link", linkLayer);
+//        panelAction.put("Segment", segmentLayer);
+//        panelAction.put("Lane", laneLayer);
+//        panelAction.put("Vehicle", vehicleLayer);
+//        panelAction.put("Sensor", sensorLayer);
     }
 
-    public JPanel getLayer(String layerName) {
+    public JTabbedPane getLayer(String layerName) {
         return layers.get(layerName);
     }
 
-    public PanelAction getAction(String layerName) {
-        return panelAction.get(layerName);
-    }
-
-    public class VehiclePanel extends JPanel implements PanelAction {
+    public class VehiclePanel extends JTabbedPane implements PanelAction {
 
         private JTextField textField1;//编号
         private JTextField textField4;//类型
@@ -57,6 +53,9 @@ public class LayerPanel {
         private JTextField textField6;//起点
         private JTextField textField7;//终点
         private JTextField textField8;//路径
+        private JTextField textField9;
+        private JTextField textField10;
+        private JTextField textField11;
         private JTextField[] textFields;
         private JTextArea textArea4;//其它
 
@@ -86,7 +85,8 @@ public class LayerPanel {
         }
 
         private void initComponents() {
-
+            JPanel attrPanel = new JPanel();
+            JPanel statPanel = new JPanel();
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
             JLabel label5 = new JLabel();
@@ -108,63 +108,71 @@ public class LayerPanel {
                     textField5, textField6, textField7, textField8};
 
             JLabel label4 = new JLabel();
+            JLabel label11 = new JLabel();
+            textField9 = new JTextField();
+            JLabel label12 = new JLabel();
+            textField10 = new JTextField();
+            JLabel label13 = new JLabel();
+            textField11 = new JTextField();
             JScrollPane scrollPane4 = new JScrollPane();
             textArea4 = new JTextArea();
 
             //======== this ========
-            setLayout(new GridBagLayout());
-            ((GridBagLayout) getLayout()).columnWidths = new int[]{0, 0, 0};
-            ((GridBagLayout) getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout) getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
-            ((GridBagLayout) getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            this.setBorder(new EmptyBorder(3, 3, 3, 3));
+            this.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+            attrPanel.setLayout(new GridBagLayout());
+            ((GridBagLayout) attrPanel.getLayout()).columnWidths = new int[]{0, 0, 0};
+            ((GridBagLayout) attrPanel.getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout) attrPanel.getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) attrPanel.getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
             label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 0), 0, 0));
-            add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label5 ----
             label5.setText("\u7c7b\u578b\uff1a");
             label5.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label5, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(label5, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 0), 0, 0));
-            add(textField4, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField4, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label2 ----
             label2.setText("\u957f\u5ea6\uff1a");
             label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label2, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(label2, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 0), 0, 0));
-            add(textField2, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField2, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label8 ----
             label8.setText("\u5f53\u524d\u8f66\u901f\uff1a");
             label8.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label8, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
+            attrPanel.add(label8, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 0), 0, 0));
-            add(textField5, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField5, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label3 ----
             label3.setText("\u6240\u5728\u8f66\u9053\uff1a");
             label3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label3, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+            attrPanel.add(label3, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 0), 0, 0));
-            add(textField3, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField3, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
@@ -210,14 +218,14 @@ public class LayerPanel {
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 14, 0, 0), 0, 0));
             }
-            add(panel5, new GridBagConstraints(0, 5, 2, 1, 0.0, 0.0,
+            attrPanel.add(panel5, new GridBagConstraints(0, 5, 2, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 0), 0, 0));
 
             //---- label4 ----
             label4.setText("\u5176\u5b83\uff1a");
             label4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label4, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0,
+            attrPanel.add(label4, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 0), 0, 0));
 
@@ -225,13 +233,65 @@ public class LayerPanel {
             {
                 scrollPane4.setViewportView(textArea4);
             }
-            add(scrollPane4, new GridBagConstraints(1, 6, 1, 2, 0.0, 0.0,
+            attrPanel.add(scrollPane4, new GridBagConstraints(1, 6, 1, 2, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 0, 3), 0, 0));
+            this.addTab("属性",attrPanel);
+
+            //======== panel2 ========
+            {
+                statPanel.setLayout(new GridBagLayout());
+                ((GridBagLayout)statPanel.getLayout()).columnWidths = new int[] {0, 0, 0};
+                ((GridBagLayout)statPanel.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+                ((GridBagLayout)statPanel.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+                ((GridBagLayout)statPanel.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
+
+                //---- label11 ----
+                label11.setText("停车次数");
+                label11.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label11, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField9, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+
+                //---- label12 ----
+                label12.setText("排队时间");
+                label12.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label12, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField10, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+
+                //---- label13 ----
+                label13.setText("旅行时间");
+                label13.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label13, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField11, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+                /*
+                //---- label10 ----
+                label10.setText("平均旅行时间");
+                label10.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                panel2.add(label10, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                panel2.add(textField7, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));*/
+            }
+            this.addTab("\u7edf\u8ba1", statPanel);
+
         }
     }
 
-    public class SensorPanel extends JPanel implements PanelAction {
+    public class SensorPanel extends JTabbedPane implements PanelAction {
 
         private JTextField textField1;//编号
         private JTextField textField2;//类型
@@ -261,6 +321,7 @@ public class LayerPanel {
         }
 
         private void initComponents() {
+            JPanel attrPanel = new JPanel();
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
             JLabel label2 = new JLabel();
@@ -279,40 +340,41 @@ public class LayerPanel {
             textArea4 = new JTextArea();
 
             //======== this ========
-
-            setLayout(new GridBagLayout());
-            ((GridBagLayout) getLayout()).columnWidths = new int[]{0, 0, 0};
-            ((GridBagLayout) getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout) getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
-            ((GridBagLayout) getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            this.setBorder(new EmptyBorder(3, 3, 3, 3));
+            this.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+            attrPanel.setLayout(new GridBagLayout());
+            ((GridBagLayout) attrPanel.getLayout()).columnWidths = new int[]{0, 0, 0};
+            ((GridBagLayout) attrPanel.getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout) attrPanel.getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
+            ((GridBagLayout) attrPanel.getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
             label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+            attrPanel. add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label2 ----
             label2.setText("\u7c7b\u578b\uff1a");
             label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label3 ----
             label3.setText("\u96b6\u5c5e\u4e8e\uff1a");
             label3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label3, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(label3, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
@@ -355,14 +417,14 @@ public class LayerPanel {
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 0, 0, 0), 0, 0));
             }
-            add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
+            attrPanel.add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 0), 0, 0));
 
             //---- label4 ----
             label4.setText("\u5176\u5b83\uff1a");
             label4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+            attrPanel.add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
 
@@ -370,15 +432,15 @@ public class LayerPanel {
             {
                 scrollPane4.setViewportView(textArea4);
             }
-            add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
+            attrPanel.add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 0, 3), 0, 0));
-
+            this.addTab("属性",attrPanel);
         }
 
     }
 
-    public class LanePanel extends JPanel implements PanelAction {
+    public class LanePanel extends JTabbedPane implements PanelAction {
 
         private JTextField textField1;//编号
         private JTextField textField2;//长度
@@ -388,20 +450,26 @@ public class LayerPanel {
         private JComboBox<String> comboBox3;//纵向规则
         private JTextArea textArea4;//其它
 
+        private JTextField textField4;//排队长度
+        private JTextField textField5;//停车次数
+        private JTextField textField6;//排队时间
+        private JTextField textField7;//旅行时间
+        private JTextField textField8;//畅行车速
+
         public LanePanel() {
             initComponents();
         }
 
         public void resetTxtComponents() {
-            /*
+
             for (JTextField tmpText : textFields) {
                 tmpText.setText("");
             }
-            textArea4.setText("");*/
+            textArea4.setText("");
         }
 
         public void writeTxtComponents(NetworkObject object) {
-            /*
+
             Lane theLane = (Lane) object;
             textField1.setText(String.valueOf(theLane.getId()));
             textField2.setText(String.valueOf(theLane.getLength()));
@@ -411,146 +479,11 @@ public class LayerPanel {
                     "SegID " + theLane.getSegment().getId() + "\n" +
                             "LnkID " + theLane.getLink().getId() + "\n");
 //                    ((MLPLane) theLane).getSDnLnInfo());*/
+
         }
-        /*
-        private void initComponents() {
 
-            JLabel label1 = new JLabel();
-            textField1 = new JTextField();
-            JLabel label2 = new JLabel();
-            textField2 = new JTextField();
-            JLabel label3 = new JLabel();
-            textField3 = new JTextField();
-            textFields = new JTextField[]{textField1, textField2, textField3};
-            JPanel panel5 = new JPanel();
-            JLabel label6 = new JLabel();
-            comboBox2 = new JComboBox<>();
-            JLabel label7 = new JLabel();
-            comboBox3 = new JComboBox<>();
-            JLabel label4 = new JLabel();
-            JScrollPane scrollPane4 = new JScrollPane();
-            textArea4 = new JTextArea();
-
-            //======== this ========
-
-            setLayout(new GridBagLayout());
-            ((GridBagLayout) getLayout()).columnWidths = new int[]{0, 0, 0};
-            ((GridBagLayout) getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout) getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
-            ((GridBagLayout) getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
-
-            //---- label1 ----
-            label1.setText("\u7f16\u53f7\uff1a");
-            label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 5, 5), 0, 0));
-            add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 5, 3), 0, 0));
-
-            //---- label2 ----
-            label2.setText("\u957f\u5ea6\uff1a");
-            label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 5, 5), 0, 0));
-            add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 5, 3), 0, 0));
-
-            //---- label3 ----
-            label3.setText("\u96b6\u5c5e\u4e8e\uff1a");
-            label3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label3, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 5, 5), 0, 0));
-            add(textField3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 5, 3), 0, 0));
-
-            //======== panel5 ========
-            {
-                panel5.setBorder(new CompoundBorder(
-                        new TitledBorder(null, "\u4ea4\u901a\u89c4\u5219", TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION,
-                                new Font("\u5fae\u8f6f\u96c5\u9ed1", Font.PLAIN, 13)),
-                        new EmptyBorder(2, 2, 2, 2)));
-                panel5.setLayout(new GridBagLayout());
-                ((GridBagLayout) panel5.getLayout()).columnWidths = new int[]{0, 0, 0};
-                ((GridBagLayout) panel5.getLayout()).rowHeights = new int[]{0, 0, 0};
-                ((GridBagLayout) panel5.getLayout()).columnWeights = new double[]{0.0, 1.0, 1.0E-4};
-                ((GridBagLayout) panel5.getLayout()).rowWeights = new double[]{0.0, 0.0, 1.0E-4};
-
-                //---- label6 ----
-                label6.setText("\u6a2a\u5411\uff1a");
-                label6.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-                panel5.add(label6, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 4, 5, 5), 0, 0));
-
-                //---- comboBox2 ----
-                comboBox2.setModel(new DefaultComboBoxModel<>(new String[]{
-                        "\u5141\u8bb8\u5de6\u53f3\u6362\u9053",
-                        "\u4ec5\u5141\u8bb8\u5de6\u6362\u9053",
-                        "\u4ec5\u5141\u8bb8\u53f3\u6362\u9053",
-                        "\u7981\u6b62\u6362\u9053"
-                }));
-                comboBox2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-                panel5.add(comboBox2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 6, 5, 0), 0, 0));
-
-                //---- label7 ----
-                label7.setText("\u7eb5\u5411\uff1a");
-                label7.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-                panel5.add(label7, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 4, 0, 5), 0, 0));
-
-                //---- comboBox3 ----
-                comboBox3.setModel(new DefaultComboBoxModel<>(new String[]{
-                        "\u76f4\u884c",
-                        "\u4e13\u5de6",
-                        "\u4e13\u53f3",
-                        "\u76f4\u5de6",
-                        "\u76f4\u53f3",
-                        "\u76f4\u5de6\u53f3"
-                }));
-                comboBox3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-                panel5.add(comboBox3, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 6, 0, 0), 0, 0));
-            }
-            add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 0), 0, 0));
-
-            //---- label4 ----
-            label4.setText("\u5176\u5b83\uff1a");
-            label4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 5, 5), 0, 0));
-
-            //======== scrollPane4 ========
-            {
-
-                //---- textArea4 ----
-                textArea4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 13));
-                scrollPane4.setViewportView(textArea4);
-            }
-            add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 3, 0, 3), 0, 0));
-        }
-        /*
-        public LanePanel() {
-            initComponents();
-        }*/
 
         private void initComponents() {
-            textFields = new JTextField[2];
-            JTabbedPane tabbedPane1 = new JTabbedPane();
             JPanel panel1 = new JPanel();
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
@@ -568,17 +501,20 @@ public class LayerPanel {
             textArea4 = new JTextArea();
             JPanel panel2 = new JPanel();
             JLabel label5 = new JLabel();
-            JTextField textField4 = new JTextField();
+            textField4 = new JTextField();
             JLabel label8 = new JLabel();
-            JTextField textField5 = new JTextField();
+            textField5 = new JTextField();
             JLabel label9 = new JLabel();
-            JTextField textField6 = new JTextField();
+            textField6 = new JTextField();
             JLabel label10 = new JLabel();
-            JTextField textField7 = new JTextField();
-
+            textField7 = new JTextField();
+            JLabel label11 = new JLabel();
+            textField8 = new JTextField();
+            textFields = new JTextField[]{textField1,textField2,textField3,textField4,textField5,textField6,textField7, textField8};
             //======== tabbedPane1 ========
             {
-                tabbedPane1.setBorder(new EmptyBorder(3, 3, 3, 3));
+                this.setBorder(new EmptyBorder(3, 3, 3, 3));
+                this.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                 //======== panel1属性 ========
                 {
                     panel1.setLayout(new GridBagLayout());
@@ -609,6 +545,7 @@ public class LayerPanel {
 
                     //---- label3 ----
                     label3.setText("\u96b6\u5c5e\u4e8e\uff1a");
+                    label3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                     panel1.add(label3, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 5, 5, 8), 0, 0));
@@ -631,11 +568,13 @@ public class LayerPanel {
 
                         //---- label6 ----
                         label6.setText("\u6a2a\u5411\uff1a");
+                        label6.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                         panel5.add(label6, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                                 new Insets(0, 6, 5, 5), 0, 0));
 
                         //---- comboBox2 ----
+                        comboBox2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                         comboBox2.setModel(new DefaultComboBoxModel<>(new String[] {
                                 "\u5141\u8bb8\u5de6\u53f3\u6362\u9053",
                                 "\u4ec5\u5141\u8bb8\u5de6\u6362\u9053",
@@ -648,11 +587,13 @@ public class LayerPanel {
 
                         //---- label7 ----
                         label7.setText("\u7eb5\u5411\uff1a");
+                        label7.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                         panel5.add(label7, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                                 new Insets(0, 6, 0, 5), 0, 0));
 
                         //---- comboBox3 ----
+                        comboBox3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                         comboBox3.setModel(new DefaultComboBoxModel<>(new String[] {
                                 "\u76f4\u884c",
                                 "\u4e13\u5de6",
@@ -671,6 +612,7 @@ public class LayerPanel {
 
                     //---- label4 ----
                     label4.setText("\u5176\u5b83\uff1a");
+                    label4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                     panel1.add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 5, 5, 8), 0, 0));
@@ -683,7 +625,7 @@ public class LayerPanel {
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 3, 5, 5), 0, 0));
                 }
-                tabbedPane1.addTab("\u5c5e\u6027", panel1);
+                this.addTab("\u5c5e\u6027", panel1);
 
                 //======== panel2 ========
                 {
@@ -694,7 +636,8 @@ public class LayerPanel {
                     ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
 
                     //---- label5 ----
-                    label5.setText("\u5e73\u5747\u6392\u961f\u957f\u5ea6\uff1a");
+                    label5.setText("最大排队长度");
+                    label5.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                     panel2.add(label5, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 5, 5, 8), 0, 0));
@@ -703,7 +646,8 @@ public class LayerPanel {
                             new Insets(0, 3, 5, 5), 0, 0));
 
                     //---- label8 ----
-                    label8.setText("\u5e73\u5747\u505c\u8f66\u6b21\u6570\uff1a");
+                    label8.setText("平均停车次数");
+                    label8.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                     panel2.add(label8, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 5, 5, 8), 0, 0));
@@ -712,7 +656,8 @@ public class LayerPanel {
                             new Insets(0, 3, 5, 5), 0, 0));
 
                     //---- label9 ----
-                    label9.setText("\u5e73\u5747\u6392\u961f\u65f6\u95f4\uff1a");
+                    label9.setText("平均排队时间");
+                    label9.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                     panel2.add(label9, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 5, 5, 8), 0, 0));
@@ -721,76 +666,45 @@ public class LayerPanel {
                             new Insets(0, 3, 5, 5), 0, 0));
 
                     //---- label10 ----
-                    label10.setText("\u5e73\u5747\u65c5\u884c\u65f6\u95f4\uff1a");
+                    label10.setText("平均旅行时间");
+                    label10.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
                     panel2.add(label10, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 5, 5, 8), 0, 0));
                     panel2.add(textField7, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 3, 5, 5), 0, 0));
+                    //---- label11 ----
+                    label11.setText("畅行车速");
+                    label11.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                    panel2.add(label11, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 5, 5, 8), 0, 0));
+                    panel2.add(textField8, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 3, 5, 5), 0, 0));
                 }
-                tabbedPane1.addTab("\u7edf\u8ba1", panel2);
-                add(tabbedPane1);
+                this.addTab("\u7edf\u8ba1", panel2);
             }
-        }
-        /*
-        public void resetTxtComponents(){
-            /*
-            for(JTextField tmpText:textFields){
-                tmpText.setText("");
-            }
-            textArea4.setText("");*/
- //}
-        /*
-        public void writeTxtComponents(NetworkObject object){
-            Lane theLane = (Lane) object;
-            textField1.setText(String.valueOf(theLane.getId()));
-            textField2.setText(String.valueOf(theLane.getLength()));
-            String segmentID = "Segment"+ String.valueOf(theLane.getSegment().getId());
-            textField3.setText(segmentID);
-            textArea4.setText(
-                    "SegID " + theLane.getSegment().getId() + "\n" +
-                            "LnkID " + theLane.getLink().getId() + "\n" );
-//                    ((MLPLane) theLane).getSDnLnInfo());
         }
 
-        private JTabbedPane tabbedPane1;
-        private JPanel panel1;
-        private JLabel label1;
-        private JTextField textField1;
-        private JTextField textField2;
-        private JLabel label2;
-        private JLabel label3;
-        private JTextField textField3;
-        private JPanel panel5;
-        private JLabel label6;
-        private JComboBox<String> comboBox2;
-        private JLabel label7;
-        private JComboBox<String> comboBox3;
-        private JLabel label4;
-        private JScrollPane scrollPane4;
-        private JTextArea textArea4;
-        private JPanel panel2;
-        private JLabel label5;
-        private JTextField textField4;
-        private JLabel label8;
-        private JTextField textField5;
-        private JLabel label9;
-        private JTextField textField6;
-        private JLabel label10;
-        private JTextField textField7;
-        private JTextField[] textFields;*/
     }
 
-    public class SegmentPanel extends JPanel implements PanelAction{
+    public class SegmentPanel extends JTabbedPane implements PanelAction{
 
         private JTextField textField1;//编号
         private JTextField textField2;//长度
         private JTextField textField3;//隶属于
         private JTextField textField4;//限速
         private JTextField textField5;//控制
+        private JTextField textField6;
+        private JTextField textField7;
+        private JTextField textField8;
+        private JTextField textField9;
+        private JTextField textField10;
         private JTextField[] textFields;
         private JTextArea textArea4;//其它
+
 
         public SegmentPanel() {
             initComponents();
@@ -812,7 +726,8 @@ public class LayerPanel {
             //textField5.setText(String.valueOf(theSegment));
         }
         private void initComponents() {
-
+            JPanel attrPanel = new JPanel();
+            JPanel statPanel = new JPanel();
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
             JLabel label2 = new JLabel();
@@ -824,46 +739,59 @@ public class LayerPanel {
             textField4 = new JTextField();
             JLabel label7 = new JLabel();
             textField5 = new JTextField();
-            textFields = new JTextField[]{textField1, textField2, textField3, textField4, textField5};
+            JLabel label11 = new JLabel();
+            textField6 =  new JTextField();
+            JLabel label12 = new JLabel();
+            textField7 = new JTextField();
+            JLabel label13 = new JLabel();
+            textField8 = new JTextField();
+            JLabel label14 = new JLabel();
+            textField9 = new JTextField();
+            JLabel label15 = new JLabel();
+            textField10 = new JTextField();
+            textFields = new JTextField[]{textField1, textField2, textField3, textField4, textField5,textField6
+                    ,textField7,textField8,textField9,textField10};
             JLabel label4 = new JLabel();
             JScrollPane scrollPane4 = new JScrollPane();
             textArea4 = new JTextArea();
 
             //======== this ========
 
-            setLayout(new GridBagLayout());
-            ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            this.setBorder(new EmptyBorder(3, 3, 3, 3));
+            this.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+            attrPanel.setLayout(new GridBagLayout());
+            ((GridBagLayout)attrPanel.getLayout()).columnWidths = new int[] {0, 0, 0};
+            ((GridBagLayout)attrPanel.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout)attrPanel.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)attrPanel.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
             label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label2 ----
             label2.setText("\u957f\u5ea6\uff1a");
             label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label3 ----
             label3.setText("\u96b6\u5c5e\u4e8e\uff1a");
             label3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label3, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(label3, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
@@ -899,14 +827,14 @@ public class LayerPanel {
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 7, 0, 0), 0, 0));
             }
-            add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
+            attrPanel.add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 0), 0, 0));
 
             //---- label4 ----
             label4.setText("\u5176\u5b83\uff1a");
             label4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+            attrPanel.add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
 
@@ -917,15 +845,77 @@ public class LayerPanel {
                 textArea4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 13));
                 scrollPane4.setViewportView(textArea4);
             }
-            add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
+            attrPanel.add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 0, 3), 0, 0));
+            this.addTab("属性",attrPanel);
+
+            //======== panel2 ========
+            {
+                statPanel.setLayout(new GridBagLayout());
+                ((GridBagLayout)statPanel.getLayout()).columnWidths = new int[] {0, 0, 0};
+                ((GridBagLayout)statPanel.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+                ((GridBagLayout)statPanel.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+                ((GridBagLayout)statPanel.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
+
+                //---- label11 ----
+                label11.setText("最大排队长度");
+                label11.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label11, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField6, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+
+                //---- label12 ----
+                label12.setText("平均停车次数");
+                label12.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label12, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField7, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+
+                //---- label13 ----
+                label13.setText("平均排队时间");
+                label13.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label13, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField8, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+
+                //---- label14 ----
+                label14.setText("平均旅行时间");
+                label14.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label14, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField9, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+
+                //---- label15 ----
+                label15.setText("\u7545\u884c\u8f66\u901f\uff1a");
+                label15.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+                statPanel.add(label15, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 5, 5, 8), 0, 0));
+                statPanel.add(textField10, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                        new Insets(0, 3, 5, 5), 0, 0));
+            }
+            this.addTab("\u7edf\u8ba1", statPanel);
+
         }
 
 
     }
 
-    public class LinkPanel extends JPanel implements PanelAction{
+    public class LinkPanel extends JTabbedPane implements PanelAction{
 
         private JTextField textField1;//编号
         private JTextField textField3;//类型
@@ -956,7 +946,7 @@ public class LayerPanel {
             textField5.setText(dnNodeID);
         }
         private void initComponents() {
-
+            JPanel attrPanel =  new JPanel();
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
             JLabel label3 = new JLabel();
@@ -974,39 +964,41 @@ public class LayerPanel {
             textArea4 = new JTextArea();
 
             //======== this ========
-            setLayout(new GridBagLayout());
-            ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            this.setBorder(new EmptyBorder(3, 3, 3, 3));
+            this.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+            attrPanel.setLayout(new GridBagLayout());
+            ((GridBagLayout)attrPanel.getLayout()).columnWidths = new int[] {0, 0, 0};
+            ((GridBagLayout)attrPanel.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout)attrPanel.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)attrPanel.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
             label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label3 ----
             label3.setText("\u7c7b\u578b\uff1a");
             label3.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label3, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(label3, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField3, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField3, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label2 ----
             label2.setText("\u957f\u5ea6\uff1a");
             label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label2, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(label2, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField2, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField2, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
@@ -1042,14 +1034,14 @@ public class LayerPanel {
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 2, 0, 0), 0, 0));
             }
-            add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
+            attrPanel.add(panel5, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 0), 0, 0));
 
             //---- label4 ----
             label4.setText("\u5176\u5b83\uff1a");
             label4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+            attrPanel.add(label4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
 
@@ -1060,12 +1052,13 @@ public class LayerPanel {
                 textArea4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 13));
                 scrollPane4.setViewportView(textArea4);
             }
-            add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
+            attrPanel.add(scrollPane4, new GridBagConstraints(1, 4, 1, 2, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
+            this.addTab("属性",attrPanel);
         }
     }
-    public class NodePanel extends JPanel implements PanelAction{
+    public class NodePanel extends JTabbedPane implements PanelAction{
 
         private JTextField textField1; //编号
         private JTextField textField2; //类型
@@ -1093,7 +1086,7 @@ public class LayerPanel {
 
         }
         private void initComponents() {
-
+            JPanel attrPanel = new JPanel();
             JLabel label1 = new JLabel();
             textField1 = new JTextField();
             JLabel label2 = new JLabel();
@@ -1111,30 +1104,31 @@ public class LayerPanel {
             textArea4 = new JTextArea();
 
             //======== this ========
-
-            setLayout(new GridBagLayout());
-            ((GridBagLayout)getLayout()).columnWidths = new int[] {0, 0, 0};
-            ((GridBagLayout)getLayout()).rowHeights = new int[] {0, 0, 0, 0, 70, 0, 0};
-            ((GridBagLayout)getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
-            ((GridBagLayout)getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
+            this.setBorder(new EmptyBorder(3, 3, 3, 3));
+            this.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
+            attrPanel.setLayout(new GridBagLayout());
+            ((GridBagLayout)attrPanel.getLayout()).columnWidths = new int[] {0, 0, 0};
+            ((GridBagLayout)attrPanel.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 70, 0, 0};
+            ((GridBagLayout)attrPanel.getLayout()).columnWeights = new double[] {0.0, 1.0, 1.0E-4};
+            ((GridBagLayout)attrPanel.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0E-4};
 
             //---- label1 ----
             label1.setText("\u7f16\u53f7\uff1a");
             label1.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
             //---- label2 ----
             label2.setText("\u7c7b\u578b\uff1a");
             label2.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(label2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
-            add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+            attrPanel.add(textField2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 3), 0, 0));
 
@@ -1180,14 +1174,14 @@ public class LayerPanel {
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 10, 0, 0), 0, 0));
             }
-            add(panel5, new GridBagConstraints(0, 2, 2, 1, 0.0, 0.0,
+            attrPanel.add(panel5, new GridBagConstraints(0, 2, 2, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 0), 0, 0));
 
             //---- label4 ----
             label4.setText("\u5176\u5b83\uff1a");
             label4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 12));
-            add(label4, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
+            attrPanel.add(label4, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
 
@@ -1198,9 +1192,10 @@ public class LayerPanel {
                 textArea4.setFont(new Font("\u65b0\u5b8b\u4f53", Font.PLAIN, 13));
                 scrollPane4.setViewportView(textArea4);
             }
-            add(scrollPane4, new GridBagConstraints(1, 3, 1, 2, 0.0, 0.0,
+            attrPanel.add(scrollPane4, new GridBagConstraints(1, 3, 1, 2, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 3, 5, 5), 0, 0));
+            this.addTab("属性",attrPanel);
         }
 
     }

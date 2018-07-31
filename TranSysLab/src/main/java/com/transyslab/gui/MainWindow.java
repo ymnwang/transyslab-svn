@@ -49,12 +49,11 @@ public class MainWindow {
     private LayerPanel layerPanel;
     private JOGLCanvas canvas;
     private FPSAnimator animator;
-    private SubWindow subWindow;
     private SimulationEngine engine;
     private Trace2DSimple traceRT;
     private ClbrtForm clbrtForm;
-    public MainWindow(){
-
+    private static MainWindow theWindow;
+    private MainWindow(){
         try
         {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -63,6 +62,11 @@ public class MainWindow {
             e.printStackTrace();
         }
         initComponents();
+    }
+    public static MainWindow getInstance(){
+        if(theWindow == null)
+            theWindow = new MainWindow();
+        return theWindow;
     }
     private void initComponents(){
         windowFrame = new JFrame();
@@ -76,13 +80,10 @@ public class MainWindow {
         label8 = new JLabel();
         label9 = new JLabel();
         canvas = new JOGLCanvas();
-        canvas.setMainWindow(this);
         Camera cam = new OrbitCamera();
         canvas.setCamera(cam);
         // Create a animator that drives canvas' display() at the specified FPS.
         animator = new FPSAnimator(canvas, 120, true);
-        subWindow = new SubWindow();
-        subWindow.setMainWindow(this);
         slider1 = new JSlider(0,120,0);
         JMenuBar menuBar1 = new JMenuBar();
         JMenu menu1 = new JMenu();
@@ -103,6 +104,7 @@ public class MainWindow {
         JButton button8 = new JButton();
         JButton button9 = new JButton();
         JButton button10 = new JButton();
+        JButton button11 = new JButton();
         JPanel panel7 = new JPanel();
         JPanel panel2 = new JPanel();
         JPanel panel8 = new JPanel();
@@ -224,7 +226,7 @@ public class MainWindow {
             button1.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    subWindow.showPanel("project");
+                    SubWindow.getInstance().showPanel("project");
                 }
             });
             toolBar1.add(button1);
@@ -276,7 +278,7 @@ public class MainWindow {
 
                             double sTime = LocalTime.parse(config.getString("timeStart"),DateTimeFormatter.ofPattern("YYYY-MM-DD HH:mm:ss")).toSecondOfDay();
                             updateSlider((long)sTime);
-
+                            canvas.setSliderFTime(sTime);
                             if(modelType.equals("MesoTS")) {
                                 //TODO: 由于properties解释过程不统一，避免报错，将meso properties的解释放在此分支之下 wym
                                 String projectName = config.getString("projectName");
@@ -459,6 +461,7 @@ public class MainWindow {
                         return;
                     }
                     else{
+
                         if(clbrtForm == null) {
                             clbrtForm = new ClbrtForm();
                         }
@@ -467,6 +470,7 @@ public class MainWindow {
                             clbrtForm.setVisible(true);
                             clbrtForm.requestFocusInWindow();
                         }
+
                     }
 
                 }
@@ -479,12 +483,36 @@ public class MainWindow {
             button10.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (canvas.getStatus()==JOGLCanvas.ANIMATOR_PAUSE) {
-                        canvas.setMode(JOGLCanvas.ANIMATOR_FRAME_ADVANCE);
+                    if(!canvas.isNetworkReady()){
+                        JOptionPane.showMessageDialog(null, "请先加载路网");
+                        return;
                     }
+                    else{
+                        if (canvas.getStatus()==JOGLCanvas.ANIMATOR_PAUSE) {
+                            canvas.setMode(JOGLCanvas.ANIMATOR_FRAME_ADVANCE);
+                        }
+                    }
+
                 }
             });
             toolBar1.add(button10);
+
+            //---- 按键：宏微观显示切换 ----
+            button11.setIcon(new ImageIcon(loadImage("icon/new/switch.png")
+                    .getImage().getScaledInstance(20,20,java.awt.Image.SCALE_SMOOTH)));
+            button11.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if(!canvas.isNetworkReady()){
+                        JOptionPane.showMessageDialog(null, "请先加载路网");
+                        return;
+                    }
+                    else{
+                        RTEngine.isState = !RTEngine.isState;
+                    }
+                }
+            });
+            toolBar1.add(button11);
         }
         contentPane.add(toolBar1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
@@ -511,9 +539,11 @@ public class MainWindow {
             //======== 默认显示Node属性 ========
             {
                 panel7.setLayout(new CardLayout());
+
                 for (int i = 0; i < layerNames.length; i++) {
                     panel7.add(layerPanel.getLayer(layerNames[i]), layerNames[i]);
                 }
+                //panel7.add(layerPanel.getLayer("Lane"),"Lane");
             }
             panel2.add(panel7, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
@@ -528,7 +558,7 @@ public class MainWindow {
                     String selectedItem = (String)comboBox1.getSelectedItem();
                     if(curLayerName != selectedItem){
                         //清除要素面板内容
-                        layerPanel.getAction(curLayerName).resetTxtComponents();
+                        ((PanelAction)layerPanel.getLayer(curLayerName)).resetTxtComponents();
                         //清除被选对象
                         canvas.deselect();
                     }
@@ -736,7 +766,6 @@ public class MainWindow {
     public void updateSignalPanel(){
         double curTime = engine.getNetwork().getSimClock().getCurrentTime();
         SignalStagePanel.getInstance().updateTime(curTime,curTime+120);
-        panel9.repaint();
     }
 
     public LayerPanel getLayerPanel(){
