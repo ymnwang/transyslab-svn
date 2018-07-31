@@ -1,0 +1,148 @@
+﻿<MesoTS>
+<SurvStations num="48">
+<station type="1" name="det1" interval="900" zone="5" segid="1570" id="1" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" name="det2" interval="900" zone="5" segid="1571" id="2" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5560" id="3" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5561" id="4" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1660" id="5" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1661" id="6" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="210" id="7" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="211" id="8" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5570" id="9" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5571" id="10" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5090" id="11" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5091" id="12" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1540" id="13" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1541" id="14" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="840" id="15" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="841" id="16" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5110" id="17" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5111" id="18" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1780" id="19" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1781" id="20" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="960" id="21" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="961" id="22" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="3490" id="23" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="3491" id="24" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5620" id="25" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="5621" id="26" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="3550" id="27" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="3551" id="28" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1840" id="29" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1841" id="30" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="4800" id="31" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="4801" id="32" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="990" id="33" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="991" id="34" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1690" id="35" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1691" id="36" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1510" id="37" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="1511" id="38" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="870" id="39" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="871" id="40" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="990" id="41" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="991" id="42" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="930" id="43" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="931" id="44" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="4810" id="45" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="4811" id="46" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="810" id="47" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+<station type="1" interval="900" zone="5" segid="811" id="48" pos="0.58">
+<sensor id="-5" laneid="-1"/>
+</station>
+</SurvStations>
+</MesoTS>
