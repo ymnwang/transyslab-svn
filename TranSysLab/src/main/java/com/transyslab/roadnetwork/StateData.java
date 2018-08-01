@@ -18,8 +18,13 @@ public class StateData implements NetworkObject{
             RTLane curLane = (RTLane) stateOn;
             this.avgSpeed = curLane.getAvgSpeed();
             this.queueLength = curLane.getQueueLength();//
-            GeoPoint queuePosition = curLane.getStartPnt().intermediate(curLane.getEndPnt(),queueLength/curLane.getGeoLength());
-            this.surface = GeoUtil.lineToRectangle(curLane.getStartPnt(),queuePosition,Constants.LANE_WIDTH,true);
+            if(queueLength <curLane.getGeoLength()){
+                GeoPoint queuePosition = curLane.getStartPnt().intermediate(curLane.getEndPnt(),queueLength/curLane.getGeoLength());
+                this.surface = GeoUtil.lineToRectangle(curLane.getStartPnt(),queuePosition,Constants.LANE_WIDTH,true);
+            }
+            else
+                this.surface = null;// 排队长度超出车道长度时surface为空
+
         }
     }
 

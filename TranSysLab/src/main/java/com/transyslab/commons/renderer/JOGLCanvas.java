@@ -295,6 +295,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_GREEN, vd.isSelected(), 1);
 							break;
 						default:
+							ShapeUtil.drawPolygon(gl, vd.getVhcShape().getKerbList(), Constants.COLOR_WHITE, vd.isSelected(), 1);
 							break;
 					}
 				}
@@ -304,7 +305,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			if(RTEngine.isState ){
 				for(StateData sd:curFrame.getStateDataQueue()) {
 					Color color = ColorBar.valueToColor(0, 15, sd.getAvgSpeed(), 250);
-					if (color != null) {
+					if (color != null && sd.getSurface()!=null) {// 排队长度超出车道长度时surface为空
 						float[] colorf = new float[]{color.getRed()/255.0f,color.getGreen()/255.0f,color.getBlue()/255.0f};
 						ShapeUtil.drawPolygon(gl, sd.getSurface().getKerbList(), colorf, false, 0.9);
 					}

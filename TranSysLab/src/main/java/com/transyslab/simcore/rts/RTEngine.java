@@ -109,7 +109,7 @@ public class RTEngine extends SimulationEngine{
 				onConnector = true;
 			VehicleData vd = new VehicleData();
 			if(onConnector)
-				vd.init(vhcId,rtNetwork.findConnector(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,speed,turn,queueFlag,true);
+				vd.init(vhcId,rtNetwork.findConnector(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,speed,"B",queueFlag,true);
 			else
 				vd.init(vhcId,rtNetwork.findLane(laneid), Constants.DEFAULT_VEHICLE_LENGTH,distance,speed,turn,queueFlag,true);
 			if(frameTime.compareTo(time)!=0){//ÐÂµÄÒ»Ö¡

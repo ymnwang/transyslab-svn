@@ -53,13 +53,6 @@ public class RTLane extends Lane implements Comparator<RTLane> {
 		}
 		if(movingVehicles!=null)// 有车在畅行区
 			avgSpeed = movingVehicles.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble();
-		/*
-		this.queuePosition = startPnt.intermediate(endPnt, queueLength/getGeoLength());
-		stateSurface = GeoUtil.lineToRectangle(startPnt,queuePosition,width, true);
-		if(!vhcOnLn.isEmpty()){// 有车在畅行区
-			avgSpeed = vhcOnLn.stream().mapToDouble(VehicleData::getCurSpeed).average().getAsDouble();
-			vhcOnLn.clear();
-		}*/
 	}
 
 	public void setAvgSpeed(double avgSpeed){

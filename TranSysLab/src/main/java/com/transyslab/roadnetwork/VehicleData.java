@@ -190,6 +190,8 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		else if(moveOn instanceof Connector){
 			Connector connector = (Connector) moveOn;
 			this.curLaneID = connector.getId();
+			if(this.curLaneID == 4080)
+				System.out.println();
 			double[] linearDistance = connector.getLinearRelation();
 
 			int index = FitnessFunction.binarySearchIndex(linearDistance,distance);
@@ -200,8 +202,8 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 			// 折线长度
 			l = linearDistance[index] - linearDistance[index-1];
 			// 投影到对应的折线段上
-			startPnt = connector.getShapePoints().get(index);
-			endPnt = connector.getShapePoints().get(index-1);
+			startPnt = connector.getShapePoints().get(index-1);
+			endPnt = connector.getShapePoints().get(index);
 			width = Constants.DEFAULT_VEHICLE_WIDTH;
 			bothSize = true;
 		}
