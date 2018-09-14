@@ -251,7 +251,7 @@ public class MLPEngine extends SimulationEngine{
 			}
 			//º”‘ÿtranspose≥µ¡æ
 			for (int i = 0; i < mlpNetwork.nNodes(); i++) {
-				mlpNetwork.mlpNode(i).dispatchStatedVeh();
+				mlpNetwork.mlpNode(i).update().dispatchStatedVeh();
 			}
 
 		}

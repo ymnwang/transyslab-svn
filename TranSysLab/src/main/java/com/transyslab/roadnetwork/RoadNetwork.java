@@ -81,9 +81,10 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 	public abstract void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval );
 
-	public void createConnector(int id,List<GeoPoint> shapePoints,Lane upLane, Lane dnLane){
+	public Connector createConnector(int id,List<GeoPoint> shapePoints,Lane upLane, Lane dnLane){
 		Connector newConnector = new Connector(id,shapePoints,upLane,dnLane);
 		this.connectors.add(newConnector);
+		return newConnector;
 	}
 	public void createSurface(int id, int segId, List<GeoPoint> kerbList){
 		GeoSurface surface = new GeoSurface();

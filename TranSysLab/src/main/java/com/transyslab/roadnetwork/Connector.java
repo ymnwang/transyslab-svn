@@ -73,4 +73,20 @@ public class Connector implements NetworkObject{
 	public GeoPoint getEndPoint(){
 		return dnLane.getStartPnt();
 	}
+
+	public int upLaneID() {
+		return upLane.getId();
+	}
+
+	public int dnLaneID() {
+		return dnLane.getId();
+	}
+
+	public int upLinkID() {
+		return upLane.getLink().getId();
+	}
+
+	public int dnLinkID() {
+		return dnLane.getLink().getId();
+	}
 }

@@ -370,6 +370,7 @@ public class MLPNetwork extends RoadNetwork {
 		for (int i = 0; i < nLanes(); i++) {
 			mlpLane(i).vehsOnLn.clear();//从lane上移除在网车辆
 		}
+		connectors.forEach(conn -> ((MLPConnector)conn).clearVehsOnConn());//remove vehicles on lane connector
 		for (int i = 0; i < nNodes(); i++) {
 			mlpNode(i).clearStatedVehs();//从Node上清除未加入路段的车辆
 		}
@@ -770,8 +771,14 @@ public class MLPNetwork extends RoadNetwork {
 		int ans = super.addLaneConnector(id, up, dn, successiveFlag,polyline);
 		MLPLane upLane = (MLPLane) findLane(up);
 		MLPLane dnLane = (MLPLane) findLane(dn);
-		if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0)
-			createConnector(id,polyline,upLane,dnLane);
+		MLPConnector mlpConn = (MLPConnector) createConnector(id,polyline,upLane,dnLane);
+		upLane.dnStrmConns.add(mlpConn);
+		dnLane.upStrmConns.add(mlpConn);
+		if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0) {
+			MLPNode theNode = (MLPNode) upLane.getLink().getDnNode();
+			mlpConn.setNode(theNode);
+			theNode.addLC(mlpConn);
+		}
 		if (successiveFlag == Constants.SUCCESSIVE_LANE) {
 			upLane.successiveDnLanes.add(dnLane);
 			dnLane.successiveUpLanes.add(upLane);

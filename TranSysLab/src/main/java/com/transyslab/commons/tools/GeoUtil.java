@@ -260,4 +260,9 @@ public class GeoUtil {
 		//rstp1.setLocCoods(p1.getX()+mua * p21.getX(),p1.getY() + mua * p21.getY(),p1.getZ() + mua * p21.getZ());
 		//rstp2.setLocCoods(p3.getX()+mub * p43.getX(),p3.getY() + mub * p43.getY(),p3.getZ() + mub * p43.getZ());
 	}
+	// 判断折线是否相交（两折线中的任意线段跨立）
+	public static boolean isCross(List<GeoPoint> ploylineP, List<GeoPoint> polyLineQ) {
+		//todo: 实现几何判断逻辑
+		return false;
+	}
 }

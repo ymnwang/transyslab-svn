@@ -1,5 +1,8 @@
 package com.transyslab.simcore.mlp;
 
+import com.transyslab.roadnetwork.Constants;
+import com.transyslab.roadnetwork.Node;
+
 public class Dynamics {
 	protected MLPLink link;
 	protected MLPParameter mlpParameter;
@@ -73,9 +76,10 @@ public class Dynamics {
 		}
 		else {
 			//准备处于Link Passing的头车
-			if (ExpSwitch.APPROACH_CTRL) {
+			Node dnNode = headVeh.getLink().getDnNode();
+			if (ExpSwitch.APPROACH_CTRL || dnNode.type(Constants.NODE_TYPE_INTERSECTION)!=0) {
 				//接近路口减速通过
-				double passingSpd = ExpSwitch.APPROACH_SPD;
+				double passingSpd = ((MLPNode)dnNode).getPassSpd();
 				double gap = ((MLPSegment)headVeh.link.getEndSegment()).endDSP - headVeh.Displacement();
 				double upperGap = mlpParameter.CELL_RSP_UPPER;
 				double r = gap / upperGap;
@@ -100,5 +104,8 @@ public class Dynamics {
 			}
 		}
 	}
-	
+
+	public double getFreeFlow() {
+		return (linkCharacteristics[0] + linkCharacteristics[5])/2.0;
+	}
 }

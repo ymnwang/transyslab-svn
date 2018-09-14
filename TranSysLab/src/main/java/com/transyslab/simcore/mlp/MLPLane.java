@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
@@ -21,7 +22,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	//private double capacity = 0.5;
 //	private MLPLane upConectLane_;
 //	private MLPLane dnConectLane_;
-	public int lateralCutInAllowed; // 十位数字0(1)表示(不)允许左侧车道并线；个位数字0(1)表示(不)允许右侧车道并线
+//	public int lateralCutInAllowed; // 十位数字0(1)表示(不)允许左侧车道并线；个位数字0(1)表示(不)允许右侧车道并线
 //	public boolean LfCutinAllowed;	//left cut in allowed = true=允许左侧车道换道到此车道，
 //	public boolean RtCutinAllowed;	//left cut in allowed = true=允许左侧车道换道到此车道，
 	public boolean enterAllowed;	//true=允许（后方）车道车辆驶入;false=不允许车道车辆驶入(等于道路封闭)
@@ -30,16 +31,20 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 //	public int di;//弃用
 	protected List<MLPLane> successiveDnLanes;
 	protected List<MLPLane> successiveUpLanes;
+	protected List<MLPConnector> upStrmConns;
+	protected List<MLPConnector> dnStrmConns;
 	
 	public MLPLane(){
 		lnPosNum_ = 0;
 		vehsOnLn = new LinkedList<MLPVehicle>();
-		lateralCutInAllowed = 0;
+//		lateralCutInAllowed = 0;
 //		LfCutinAllowed = true;
 //		RtCutinAllowed = true;
 		enterAllowed = true;
 		successiveDnLanes = new ArrayList<>();
 		successiveUpLanes = new ArrayList<>();
+		upStrmConns = new ArrayList<>();
+		dnStrmConns = new ArrayList<>();
 	}
 
 	@Override
@@ -457,5 +462,22 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 
 	public double getCapacity() {
 		return capacity_;
+	}
+
+	protected MLPConnector pickDnConn(int dnLinkID){
+		List<MLPConnector> candidates = dnStrmConns.stream().filter(c -> c.dnLinkID()==dnLinkID).collect(Collectors.toList());
+		if (candidates.size()<=0)
+			return null;
+		else if (candidates.size()==1)
+			return candidates.get(0);
+		else {
+			candidates.sort((o1, o2) -> {
+				double q1 = o1.queueNum();
+				double q2 = o2.queueNum();
+				return Double.compare(q1, q2);
+			});
+			return candidates.get(0);
+		}
+
 	}
 }
