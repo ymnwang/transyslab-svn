@@ -1,5 +1,6 @@
 package com.transyslab.roadnetwork;
 
+import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.GeoUtil;
 import com.transyslab.simcore.rts.RTLane;
 
@@ -19,8 +20,13 @@ public class StateData implements NetworkObject{
             this.avgSpeed = curLane.getAvgSpeed();
             this.queueLength = curLane.getQueueLength();//
             if(queueLength <curLane.getGeoLength()){
-                GeoPoint queuePosition = curLane.getStartPnt().intermediate(curLane.getEndPnt(),queueLength/curLane.getGeoLength());
-                this.surface = GeoUtil.lineToRectangle(curLane.getStartPnt(),queuePosition,Constants.LANE_WIDTH,true);
+                double[] linearDistance = curLane.getLinearRelation();
+                double distance = curLane.getGeoLength() - queueLength;
+                int index = FitnessFunction.binarySearchIndex(linearDistance,distance);
+                if(index == linearDistance.length)
+                    System.out.println("Error: wrong distance on connector");
+
+                this.surface = GeoUtil.multiLine2Triangles(curLane.getCtrlPoints().subList(index-1,curLane.getCtrlPoints().size()),Constants.LANE_WIDTH,true);
             }
             else
                 this.surface = null;// 排队长度超出车道长度时surface为空
@@ -34,9 +40,11 @@ public class StateData implements NetworkObject{
     public double getAvgSpeed(){
         return this.avgSpeed;
     }
-
+    public NetworkObject getStateOn(){
+        return this.stateOn;
+    }
     @Override
-    public int getId() {
+    public long getId() {
         return stateOn.getId();
     }
 

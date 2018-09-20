@@ -50,7 +50,7 @@ public class SignalPlan {
 	public double getTime(){
 		return this.tTime;
 	}
-	public boolean check(double t, int fLID, int tLID) {
+	public boolean check(double t, long fLID, long tLID) {
 		SignalStage stage = findStage(t);
 		return (stage!=null && stage.checkDir(fLID,tLID));
 	}

@@ -147,8 +147,7 @@ public abstract class SimulationEngine {
 						newDirNeeded = false;
 				}
 				if (newDirNeeded) {
-					stage.addLIDPair(flid, tlid);
-					stage.addTurnInfo(turnInfo);
+					stage.addLIDPair(flid, tlid,turnInfo);
 				}
 			}
 		} catch (IOException e) {

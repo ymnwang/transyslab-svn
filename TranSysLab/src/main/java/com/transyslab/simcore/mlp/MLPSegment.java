@@ -80,12 +80,13 @@ public class MLPSegment extends Segment{
 			int m = Math.min(nLanes, dnSeg.nLanes());
 			double sumLF = 0.0, sumLFSquared = 0.0, sumRT = 0.0, sumRTSquared = 0.0;
 			for (int i = 0; i < m; i++) {
+				/*
 				double tmpLF = getLane(i).getEndPnt().distanceSquared(dnSeg.getLane(i).getStartPnt());
 				double tmpRT = getLane(nLanes -1-i).getEndPnt().distanceSquared(dnSeg.getLane(dnSeg.nLanes()-1-i).getStartPnt());
 				sumLFSquared += tmpLF;
 				sumLF += Math.sqrt(tmpLF);
 				sumRTSquared += tmpRT;
-				sumRT += Math.sqrt(tmpRT);
+				sumRT += Math.sqrt(tmpRT);*/
 			}
 //			double coefVarLF = Math.sqrt(sumLFSquared/m - Math.pow(sumLF/m, 2))/(sumLF/m);
 //			double coefVarRT = Math.sqrt(sumRTSquared/m - Math.pow(sumRT/m, 2))/(sumRT/m);

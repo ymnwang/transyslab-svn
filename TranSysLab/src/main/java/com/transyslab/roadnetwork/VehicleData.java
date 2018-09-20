@@ -24,10 +24,10 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	//车辆信息
 	protected String info;
 	protected String pathInfo;
-	protected int oriNodeID;
-	protected int desNodeID;
+	protected long oriNodeID;
+	protected long desNodeID;
 	protected double curSpeed;
-	protected int curLaneID;
+	protected long curLaneID;
 	protected boolean isSelected;
 	protected double distance;
 	protected int tarLaneID;// TODO ffff
@@ -60,13 +60,13 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	public double getCurSpeed(){
 		return curSpeed;
 	}
-	public int getOriNodeID(){
+	public long getOriNodeID(){
 		return oriNodeID;
 	}
-	public int getDesNodeID(){
+	public long getDesNodeID(){
 		return desNodeID;
 	}
-	public int getCurLaneID(){
+	public long getCurLaneID(){
 		return curLaneID;
 	}
 	public String getPathInfo(){
@@ -78,9 +78,8 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	public void setSelected(boolean flag){
 		this.isSelected = flag;
 	}
-	public int getId(){
-
-		return Integer.parseInt(this.vhcID);
+	public long getId(){
+		return Long.parseLong(this.vhcID);
 	}
 	public String getObjInfo(){
 		return this.info;
@@ -106,6 +105,7 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		this.curSpeed = vhc.getCurrentSpeed();
 		this.oriNodeID = vhc.oriNode().getId();
 		this.desNodeID = vhc.desNode().getId();
+		/*
 		StringBuilder sb = new StringBuilder();
 		int nLinks = vhc.path.getLinks().size();
 		for(int i =0;i<vhc.path.getLinks().size();i++){
@@ -115,12 +115,7 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 			}
 		}
 		this.pathInfo = sb.toString();
-//		Object moveOn;
-//		if(isSegBased)
-//			moveOn = vhc.getSegment();
-//		else
-//			moveOn = vhc.getLane();
-//		calcShapePoint(moveOn,vhc.getDistance(),false);
+
 		double simLength = vhc.getLane().getLength();//仿真计算中的行程
 		double rate = 1.0 - vhc.getDistance() / simLength;// linear reference
 		GeoPoint startPnt=null, endPnt=null;
@@ -156,7 +151,7 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		double vhcTailY = vhcHeadY - scaledLength * (endPnt.getLocationY() - startPnt.getLocationY()) / (endPnt.distance(startPnt));
 		this.headPosition = new GeoPoint(vhcHeadX, vhcHeadY, 0.0);
 		GeoPoint tailPosition = new GeoPoint(vhcTailX, vhcTailY, 0.0);
-		this.rectangle = GeoUtil.lineToRectangle(tailPosition, headPosition, 1.8, true);
+		this.rectangle = GeoUtil.lineToRectangle(tailPosition, headPosition, 1.8, true);*/
 	}
 	// distReverse 行驶距离是否以路段开端作为起点
 	public void calcShapePoint(Object moveOn, double distance, boolean distReverse){
@@ -166,7 +161,14 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		boolean bothSize;
 		// TODO 换至初始化函数中
 		this.distance = distance;
+
 		if(moveOn instanceof Segment){
+			startPnt = null;
+			endPnt = null;
+			width = 0;
+			bothSize = false;
+			l = 0.1;
+			/*
 			Segment seg = (Segment) moveOn;
 			l = seg.getLength();
 			startPnt = seg.getStartPnt();
@@ -176,22 +178,36 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 			//车宽
 			width = seg.nLanes()*Constants.LANE_WIDTH;
 			//
-			bothSize = false;
+			bothSize = false;*/
+
 		}
 		else if(moveOn instanceof Lane){
+
 			Lane lane = (Lane) moveOn;
+			if(!distReverse)
+				distance = lane.getGeoLength()-distance;
+
 			this.curLaneID = lane.getId();
-			l = lane.getGeoLength();
-			startPnt = lane.getStartPnt();
-			endPnt = lane.getEndPnt();
+
+			double[] linearDistance = lane.getLinearRelation();
+
+			int index = FitnessFunction.binarySearchIndex(linearDistance,distance);
+			if(index == linearDistance.length)
+				System.out.println("Error: wrong distance on connector");
+			distance = distance - linearDistance[index-1];
+
+			// 折线长度
+			l = linearDistance[index] - linearDistance[index-1];
+			// 投影到对应的折线段上
+			startPnt = lane.getCtrlPoints().get(index-1);
+			endPnt = lane.getCtrlPoints().get(index);
+
 			width = Constants.DEFAULT_VEHICLE_WIDTH;
 			bothSize = true;
 		}
 		else if(moveOn instanceof Connector){
 			Connector connector = (Connector) moveOn;
 			this.curLaneID = connector.getId();
-			if(this.curLaneID == 4080)
-				System.out.println();
 			double[] linearDistance = connector.getLinearRelation();
 
 			int index = FitnessFunction.binarySearchIndex(linearDistance,distance);
@@ -212,8 +228,6 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 			return;
 		}
 		double s = distance;
-		if(!distReverse)
-			s = l-distance;
 		//车头位置
 		double vhcHeadX = startPnt.getLocationX() + s * (endPnt.getLocationX() - startPnt.getLocationX()) / l;
 		double vhcHeadY = startPnt.getLocationY() + s * (endPnt.getLocationY() - startPnt.getLocationY()) / l;
@@ -226,25 +240,13 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		// 注意：对象更替频繁
 		this.rectangle = GeoUtil.lineToRectangle(trailPosition, headPosition, width,bothSize);
 	}
-	public void init(int id,Object moveOn,double vhcLength,double distance,double speed,int tarLaneID,boolean queueFlag,boolean distReverse){
-		this.vehicleID_ = id;
-		this.tarLaneID = tarLaneID;
-		this.vehicleLength_ = vhcLength;
-		this.curSpeed = speed;
-		this.queueFlag = queueFlag;
-		if(moveOn == null) {
-			System.out.println("Error: Could not find the Lane");
-			return;
-		}
-		calcShapePoint(moveOn,distance,distReverse);
-	}
 	public void init(String id, Object moveOn, double vhcLength, double distance, double speed,String turn, boolean queueFlag, boolean distReverse){
 		this.vhcID = id;
 		this.turn = turn;
 		this.vehicleLength_ = vhcLength;
 		this.curSpeed = speed;
 		this.queueFlag = queueFlag;
-
+		this.info = this.vhcID + "\n"+String.valueOf(curSpeed)+ "\n" + String.valueOf(queueFlag) + "\n"+this.distance;
 		if(moveOn == null) {
 			System.out.println("Error: Could not find the Lane");
 			return;

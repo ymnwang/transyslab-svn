@@ -9,18 +9,18 @@ public class GeoSurface implements NetworkObject{
 	protected List<GeoPoint> kerbPoints;
 	protected int segmentId;
 	protected int index;
-	protected int id;
+	protected long id;
 	protected String objInfo;
 	protected boolean isSelected;
 	public GeoSurface(){
 		kerbPoints = new ArrayList<GeoPoint>();
 	}
-	public void init(int code, int segmentid) {
+	public void init(long code, int segmentid) {
 		this.id =  code;
 		segmentId = segmentid;
 
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public void setSelected(boolean flag){

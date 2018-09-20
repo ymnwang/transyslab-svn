@@ -46,16 +46,16 @@ public class JdbcUtils {
 		try
 		{
 //			Configuration config = builder.getConfiguration();
-			Configuration config = configs.properties(new File("src/main/resources/demo_neihuan/scenario2/dbcp.properties"));
-			String driver = config.getString("dbcp.driverClassName");
-		    String url = config.getString("dbcp.url");
-		    String user = config.getString("dbcp.username");
-		    String pwd = config.getString("dbcp.password");
-		    int initialSize = config.getInt("dbcp.initialSize");
-		    int maxActive = config.getInt("dbcp.maxActive");
-		    int minIdle = config.getInt("dbcp.minIdle");
-		    int maxIdle = config.getInt("dbcp.maxIdle");
-		    int maxWait = config.getInt("dbcp.maxWait");
+			Configuration config = configs.properties(new File("src/main/resources/xc_test/dbcp.properties"));
+			String driver = config.getString("driverClassName");
+		    String url = config.getString("url");
+		    String user = config.getString("username");
+		    String pwd = config.getString("password");
+		    int initialSize = config.getInt("initialSize");
+		    int maxActive = config.getInt("maxActive");
+		    int minIdle = config.getInt("minIdle");
+		    int maxIdle = config.getInt("maxIdle");
+		    int maxWait = config.getInt("maxWait");
 		    BasicDataSource bds = new BasicDataSource();
 		    bds.setDriverClassName(driver);
 			bds.setUrl(url);

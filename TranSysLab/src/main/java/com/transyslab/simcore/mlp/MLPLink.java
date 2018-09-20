@@ -33,11 +33,11 @@ public class MLPLink extends Link {
 	}
 
 	@Override
-	public void init(int id, int type, int index, Node upNode, Node dnNode, RoadNetwork roadNetwork) {
-		super.init(id, type, index, upNode, dnNode, roadNetwork);
+	public void init(long id, int type, String name,int index, Node upNode, Node dnNode) {
+		super.init(id, type, name, index, upNode, dnNode);
 		dynaFun = new Dynamics(this);
 	}
-	
+
 	public void checkConnectivity(){
 		
 	}

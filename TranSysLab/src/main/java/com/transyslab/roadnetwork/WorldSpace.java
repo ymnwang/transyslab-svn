@@ -3,6 +3,8 @@
  */
 package com.transyslab.roadnetwork;
 
+import java.util.List;
+
 /**
  * ÊÀ½ç×ø±ê
  *
@@ -51,6 +53,16 @@ public class WorldSpace {
 
 		northEastPnt = new GeoPoint(Math.max(northEastPnt.getLocationX(), point.getLocationX()),
 				Math.max(northEastPnt.getLocationY(), point.getLocationY()));
+	}
+	public void recordExtremePoints(List<GeoPoint> ctrlPoints) {
+		for(GeoPoint point:ctrlPoints){
+			southWestPnt = new GeoPoint(Math.min(southWestPnt.getLocationX(), point.getLocationX()),
+					Math.min(southWestPnt.getLocationY(), point.getLocationY()));
+
+			northEastPnt = new GeoPoint(Math.max(northEastPnt.getLocationX(), point.getLocationX()),
+					Math.max(northEastPnt.getLocationY(), point.getLocationY()));
+		}
+
 	}
 	public void createWorldSpace() {
 		width = (northEastPnt.getLocationX() - southWestPnt.getLocationX()); //* Parameter.lengthFactor();

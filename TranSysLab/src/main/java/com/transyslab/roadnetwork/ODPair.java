@@ -11,7 +11,7 @@ import java.util.List;
  *
  */
 public class ODPair implements NetworkObject{
-	protected int id;
+	protected long id;
 	protected String name;
 	protected Node oriNode;
 	protected Node desNode;
@@ -62,7 +62,7 @@ public class ODPair implements NetworkObject{
 	public int nPaths(){
 		return paths.size();
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getObjInfo(){

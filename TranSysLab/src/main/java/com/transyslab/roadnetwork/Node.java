@@ -12,7 +12,7 @@ import java.util.List;
  */
 
 public class Node implements NetworkObject {
-	protected int id;
+	protected long id;
 	protected String name;
 	// Node数组中的索引
 	protected int index;
@@ -37,7 +37,7 @@ public class Node implements NetworkObject {
 
 	private GeoSurface boundBox;
 
-	private GeoPoint position;
+	private GeoPoint posPoint;
 
 	public Node() {
 		this.interS = null;
@@ -70,7 +70,7 @@ public class Node implements NetworkObject {
 	public void setInterS(Intersection intersection) {
 		interS = intersection;
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getName(){
@@ -106,19 +106,19 @@ public class Node implements NetworkObject {
 	public void addDnLink(Link link) {
 		dnLinks.add(link);
 	}
-	public GeoPoint getPosition(){
-		return this.position;
+	public GeoPoint getPosPoint(){
+		return this.posPoint;
 	}
 	public GeoSurface getBoundBox(){
 		return this.boundBox;
 	}
-	public void init(int id, int type, int index,String name, double x,double y){
+	public void init(long id, int type, int index,String name, GeoPoint posPoint){
 		this.id = id;
 		this.type = type;
 		this.name = name;
 		this.index = index;
 		this.objInfo = name;
-		this.position =  new GeoPoint(x,y,0);
+		this.posPoint =  posPoint;
 	}
 	// Return local index of an inbound link or -1 if 'link' is not a
 	// upstream link of this node
@@ -185,6 +185,9 @@ public class Node implements NetworkObject {
 	public int getDestIndex() {
 		return destIndex;
 	}
+	public void setDestIndex(int destIndex){
+		this.destIndex = destIndex;
+	}
 	public void addSignalPlan(int planId) {
 		signalPlans.add(new SignalPlan(planId));
 	}
@@ -205,14 +208,14 @@ public class Node implements NetworkObject {
 			return null;
 	}
 	public void calcStaticInfo(WorldSpace world_space){
-		position = world_space.worldSpacePoint(position);
+		posPoint = world_space.worldSpacePoint(posPoint);
 		boundBox = new GeoSurface();
 		double expand = 1;
 		// 以位置点为中心向外拓展出一个边长为2的正方形，以便拾取
-		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()-expand,position.getLocationY()-expand,0.0));
-		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()+expand,position.getLocationY()-expand,0.0));
-		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()+expand,position.getLocationY()+expand,0.0));
-		boundBox.addKerbPoint(new GeoPoint(position.getLocationX()-expand,position.getLocationY()+expand,0.0));
+		boundBox.addKerbPoint(new GeoPoint(posPoint.getLocationX()-expand, posPoint.getLocationY()-expand,0.0));
+		boundBox.addKerbPoint(new GeoPoint(posPoint.getLocationX()+expand, posPoint.getLocationY()-expand,0.0));
+		boundBox.addKerbPoint(new GeoPoint(posPoint.getLocationX()+expand, posPoint.getLocationY()+expand,0.0));
+		boundBox.addKerbPoint(new GeoPoint(posPoint.getLocationX()-expand, posPoint.getLocationY()+expand,0.0));
 	}
 	
 

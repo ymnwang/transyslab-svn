@@ -260,4 +260,17 @@ public class GeoUtil {
 		//rstp1.setLocCoods(p1.getX()+mua * p21.getX(),p1.getY() + mua * p21.getY(),p1.getZ() + mua * p21.getZ());
 		//rstp2.setLocCoods(p3.getX()+mub * p43.getX(),p3.getY() + mub * p43.getY(),p3.getZ() + mub * p43.getZ());
 	}
+	public static GeoSurface multiLine2Triangles(List<GeoPoint> points,final double width, final boolean bothSide){
+		int nPoints = points.size();
+		if(nPoints < 2){
+			System.out.println("Error");
+			return null;
+		}
+		else if(nPoints<3) {
+			return lineToRectangle(points.get(0),points.get(1),width,bothSide);
+		}
+		else{
+			return new GeoSurface();
+		}
+	}
 }
