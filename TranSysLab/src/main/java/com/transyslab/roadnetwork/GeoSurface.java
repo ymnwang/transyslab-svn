@@ -6,22 +6,32 @@ import java.util.List;
 import com.jogamp.opengl.math.geom.AABBox;
 
 public class GeoSurface implements NetworkObject{
+	public static final int CONVEX_POLYGON = 1;
+	public static final int MULTI_POLYGONS = 2;
+	public static final int RANDOM_POINTS = 3;
 	protected List<GeoPoint> kerbPoints;
-	protected int segmentId;
+	protected int type;
 	protected int index;
 	protected long id;
 	protected String objInfo;
 	protected boolean isSelected;
 	public GeoSurface(){
-		kerbPoints = new ArrayList<GeoPoint>();
+		this.kerbPoints = new ArrayList<>();
+		this.type = CONVEX_POLYGON;
 	}
-	public void init(long code, int segmentid) {
+	public GeoSurface(int type){
+		this.kerbPoints = new ArrayList<>();
+		this.type = type;
+	}
+	public void init(long code) {
 		this.id =  code;
-		segmentId = segmentid;
 
 	}
 	public long getId(){
 		return this.id;
+	}
+	public int getType(){
+		return this.type;
 	}
 	public void setSelected(boolean flag){
 		this.isSelected = flag;

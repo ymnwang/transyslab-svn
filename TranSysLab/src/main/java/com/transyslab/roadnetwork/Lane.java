@@ -203,16 +203,16 @@ public class Lane implements NetworkObject,Comparable<Lane> {
 		// Check if this is the last lane
 
 		if (getSegment().getDnSegment() == null && // last segment
-													// ('->downstream()' added
-													// by Angus)
+				// ('->downstream()' added
+				// by Angus)
 				getLink().getDnNode().type(Constants.NODE_TYPE_EXTERNAL) != 0 && // external
-																					// node
+				// node
 				nDnLanes() <= 0) { // no downstream lane
 			type |= Constants.LANE_TYPE_BOUNDARY;
 		}
 
 		if (laneType(Constants.LANE_TYPE_BOUNDARY) == 0 && // not at the
-															// boundary
+				// boundary
 				nDnLanes() <= 0) { // no downstream lane
 			type |= Constants.LANE_TYPE_DROPPED;
 		}
@@ -344,7 +344,7 @@ public class Lane implements NetworkObject,Comparable<Lane> {
 	}
 	// 路网世界坐标平移后再调用
 	public void createLaneSurface(){
-		surface = GeoUtil.multiLine2Triangles(ctrlPoints,width,true);
+		surface = GeoUtil.multiLines2Rectangles(ctrlPoints,width,true);
 
 	}
 	public GeoSurface getSurface(){

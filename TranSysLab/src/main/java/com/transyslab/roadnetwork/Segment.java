@@ -299,7 +299,11 @@ public class Segment implements NetworkObject {
 	}
 	// 路网世界坐标平移后再调用
 	public void createSurface(){
-		surface = GeoUtil.multiLine2Triangles(ctrlPoints, lanes.size()* Constants.LANE_WIDTH, false);
+		double width = 0;
+		for(Lane laneInSgmt:lanes){
+			width += laneInSgmt.width;
+		}
+		surface = GeoUtil.multiLines2Rectangles(ctrlPoints, width, false);
 	}
 	public double calcDensity() {
 		return 0;

@@ -37,7 +37,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	protected List<GeoSurface> surfaces = new ArrayList<>();
 // protected List<SurvStation> survStations = new ArrayList<SurvStation>();
 
-//	protected List<Path> paths = new ArrayList<>();
+	//	protected List<Path> paths = new ArrayList<>();
 	// ODPair 包含一对od的所有paths
 	protected List<ODPair> odPairs = new ArrayList<>();
 	// 系统随机种子
@@ -85,37 +85,37 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		this.connectors.add(newConnector);
 		return newConnector;
 	}
-    public Connector createConnector(long id,long upLaneId, long dnLaneId,List<GeoPoint> shapePoints){
-        Connector newConnector = new Connector();
-        newConnector.init(id,upLaneId,dnLaneId,shapePoints);
-        this.connectors.add(newConnector);
-        Lane ulane, dlane;
-        if ((ulane = findLane(upLaneId)) == null) {
-            System.out.println("Error: unknown upstream lane " + upLaneId);
-            return null;
-        }
-        else if ((dlane = findLane(dnLaneId)) == null) {
-            System.out.println("Error: unknown downstream lane " + dnLaneId);
-            return null;
-        }
+	public Connector createConnector(long id,long upLaneId, long dnLaneId,List<GeoPoint> shapePoints){
+		Connector newConnector = new Connector();
+		newConnector.init(id,upLaneId,dnLaneId,shapePoints);
+		this.connectors.add(newConnector);
+		Lane ulane, dlane;
+		if ((ulane = findLane(upLaneId)) == null) {
+			System.out.println("Error: unknown upstream lane " + upLaneId);
+			return null;
+		}
+		else if ((dlane = findLane(dnLaneId)) == null) {
+			System.out.println("Error: unknown downstream lane " + dnLaneId);
+			return null;
+		}
 
-        // Check if this connector make sense
+		// Check if this connector make sense
 		/*
         if (ulane.getSegment().isNeighbor(dlane.getSegment()) == 0) {
             System.out.println("Error: is not the neighbor");
         }*/
 
-        if (ulane.findInDnLane(dnLaneId) != null || dlane.findInUpLane(upLaneId) != null) {
-            System.out.println("Error: already connected");
-            return null;
-        }
-        ulane.dnLanes.add(dlane);
-        dlane.upLanes.add(ulane);
-        return newConnector;
-    }
+		if (ulane.findInDnLane(dnLaneId) != null || dlane.findInUpLane(upLaneId) != null) {
+			System.out.println("Error: already connected");
+			return null;
+		}
+		ulane.dnLanes.add(dlane);
+		dlane.upLanes.add(ulane);
+		return newConnector;
+	}
 	public void createSurface(long id, int segId, List<GeoPoint> kerbList){
 		GeoSurface surface = new GeoSurface();
-		surface.init(id, segId);
+		surface.init(id);
 		surface.setKerbList(kerbList);
 		surfaces.add(surface);
 	}
@@ -232,7 +232,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	}
 	public Connector findConnector(int id){
 		return connectors.stream().filter(c ->c.getId() == id).findFirst().orElse(null);
-    }
+	}
 	public ODPair findODPair(int id){
 		return odPairs.stream().filter(odPair -> odPair.getId() == id).findFirst().orElse(null);
 	}
@@ -247,9 +247,9 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public List<Sensor> getSurvStations() {
 		return this.sensors;
 	}
-    public List<Lane> getLanes(){
-	    return this.lanes;
-    }
+	public List<Lane> getLanes(){
+		return this.lanes;
+	}
 	// Connects lane 'up' with lane 'dn'. Return -1 if error, 1 if these
 	// two upLanes are already connected, or 0 if success.
 	public int addLaneConnector(long id,long up, long dn, int successiveFlag, List<GeoPoint> polyline) {
@@ -704,10 +704,10 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (GeoSurface surface:surfaces) {
 			surface.translateInWorldSpace(worldSpace);
 		}
-        // Connector 位置平移
-        for (Connector connector:connectors) {
-            connector.translateInWorldSpace(worldSpace);
-        }
+		// Connector 位置平移
+		for (Connector connector:connectors) {
+			connector.translateInWorldSpace(worldSpace);
+		}
 	}
 
 	public void initializeLinkStatistics() {

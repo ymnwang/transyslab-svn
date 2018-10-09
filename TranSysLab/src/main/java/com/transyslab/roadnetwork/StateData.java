@@ -26,7 +26,7 @@ public class StateData implements NetworkObject{
                 if(index == linearDistance.length)
                     System.out.println("Error: wrong distance on connector");
 
-                this.surface = GeoUtil.multiLine2Triangles(curLane.getCtrlPoints().subList(index-1,curLane.getCtrlPoints().size()),Constants.LANE_WIDTH,true);
+                this.surface = GeoUtil.multiLines2Rectangles(curLane.getCtrlPoints().subList(index-1,curLane.getCtrlPoints().size()),Constants.LANE_WIDTH,true);
             }
             else
                 this.surface = null;// 排队长度超出车道长度时surface为空
