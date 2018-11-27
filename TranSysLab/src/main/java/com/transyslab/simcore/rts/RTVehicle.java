@@ -20,6 +20,6 @@ public class RTVehicle extends Vehicle{
 		this.curLane = lane;
 	}
 	public String toString(){
-		return Integer.toString(id) + Integer.toString(curLane.getId()) + Double.toString(distance);
+		return Integer.toString(id) + Long.toString(curLane.getId()) + Double.toString(distance);
 	}
 }

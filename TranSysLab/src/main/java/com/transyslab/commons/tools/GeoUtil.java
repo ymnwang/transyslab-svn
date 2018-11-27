@@ -1,5 +1,6 @@
 package com.transyslab.commons.tools;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.jogamp.opengl.math.Ray;
@@ -20,23 +21,23 @@ public class GeoUtil {
 	public static GeoPoint intersect(Boundary upBound, Boundary dnBound) {
 		double[][] coef = new double[][] { upBound.getDelta(), LinearAlgebra.times(dnBound.getDelta(), -1)};
 		coef = LinearAlgebra.transpose(coef);
-		double[][] b = new double[][] {LinearAlgebra.minus(dnBound.getStartPnt().getLocCoods(), 
-																						upBound.getStartPnt().getLocCoods())};
+		double[][] b = new double[][] {LinearAlgebra.minus(dnBound.getStartPnt().getLocCoods(),
+				upBound.getStartPnt().getLocCoods())};
 		b = LinearAlgebra.transpose(b);
 		int r = LinearAlgebra.rank(coef);
 		switch (r) {
-		case 0:
-			return null;
-		case 1:
-			return dnBound.getStartPnt();
-		case 2:
-			double[][] ans = LinearAlgebra.solve(coef, b);
-			double[] p = LinearAlgebra.plus(LinearAlgebra.times(upBound.getDelta(), ans[0][0]), upBound.getStartPnt().getLocCoods());
-			return new GeoPoint(p);
-		case 3:
-			return null;
-		default:
-			return null;
+			case 0:
+				return null;
+			case 1:
+				return dnBound.getStartPnt();
+			case 2:
+				double[][] ans = LinearAlgebra.solve(coef, b);
+				double[] p = LinearAlgebra.plus(LinearAlgebra.times(upBound.getDelta(), ans[0][0]), upBound.getStartPnt().getLocCoods());
+				return new GeoPoint(p);
+			case 3:
+				return null;
+			default:
+				return null;
 		}
 	}
 	public static GeoSurface lineToRectangle(final GeoPoint fPoint, final GeoPoint tPoint, final double width, final boolean bothSide){
@@ -87,6 +88,7 @@ public class GeoUtil {
 		}
 		return sf;
 	}
+
 	public static GeoPoint calcRotation(GeoPoint fPoint, GeoPoint tPoint, double theta, Vector3D rotateDir){
 		// 四元数法计算旋转矩阵，旋转角为theta,绕轴rotateDir（单位向量）旋转
 		if(rotateDir.getNorm() - 1.0 > Constants.RATE_EPSILON)
@@ -116,7 +118,7 @@ public class GeoUtil {
 		}
 	}
 	public static boolean isIntersect(Ray ray, GeoSurface surf) {
-		
+
 		boolean Intersect = true;
 
 		List<GeoPoint> geoPointSet = surf.getKerbList();
@@ -153,7 +155,7 @@ public class GeoUtil {
 		VectorUtil.normalizeVec3(normVector,normVector);
 
 		if (VectorUtil.dotVec3(normVector, ray.dir) == 0) // when ray is orthogonal with normal vector, there
-														// is no intersection
+		// is no intersection
 		{
 			Intersect = false;
 		}
@@ -161,54 +163,82 @@ public class GeoUtil {
 		else // if there is a intersection, find out whether it is within the lane
 		{
 			// find out the scale to intersect
-			
+
 			float scale = -(normVector[0] * (ray.orig[0] - x[k]) + normVector[1] * (ray.orig[1] - y[k])
 					+ normVector[2] * (ray.orig[2] - z[k]))
 					/ (normVector[0] * ray.dir[0] + normVector[1] * ray.dir[1] + normVector[2] * ray.dir[2]);
-			float[] intersection = { ray.orig[0] + scale * ray.dir[0], ray.orig[1] + scale * ray.dir[1],
-					ray.orig[2] + scale * ray.dir[2] };
-
-			float[] c1 = { 0f, 0f, 0f };
-			float[] c2 = { 0f, 0f, 0f };
-		
-			double temp = 1;
-			
-			// 判断点是否在多边形内部，设多边形由点n1、n2、n3...组成，交点为no，依次求 ni->ni+1 与 ni->no 的叉乘，判断叉乘结果是否都在一个方向，若是则在平面内，反之在平面外
-			for (int i = 0; i < geoPointSet.size() - 2; i++) {
-
-				float[] va = { x[i + 1] - x[i], y[i + 1] - y[i], z[i + 1] - z[i] };
-				float[] vai = { intersection[0] - x[i], intersection[1] - y[i], intersection[2] - z[i] };
-				float[] vb = { x[i + 2] - x[i + 1], y[i + 2] - y[i + 1], z[i + 2] - z[i + 1] };
-				float[] vbi = { intersection[0] - x[i + 1], intersection[1] - y[i + 1], intersection[2] - z[i + 1] };
-				
-				VectorUtil.crossVec3(c1, va, vai);
-				VectorUtil.crossVec3(c2, vb, vbi);
-
-				temp = temp * VectorUtil.dotVec3(c1, c2); // a.b=|a||b|cos<a,b>
-
-				if (temp < 0) {
-					break;
+			GeoPoint intersection = new GeoPoint( ray.orig[0] + scale * ray.dir[0], ray.orig[1] + scale * ray.dir[1],
+					ray.orig[2] + scale * ray.dir[2] );
+			if(surf.getType() == GeoSurface.MULTI_POLYGONS){
+				// polygon个数
+				int nPolygon = geoPointSet.size()/2-1;
+				for(int i=0;i<nPolygon;i++){
+					List<GeoPoint> kerbs = new ArrayList<>();
+					int index = i*2;
+					kerbs.add(geoPointSet.get(index));
+					kerbs.add(geoPointSet.get(index+1));
+					kerbs.add(geoPointSet.get(index+3));
+					kerbs.add(geoPointSet.get(index+2));
+					if(Intersect = isInPolygon(intersection,kerbs)){
+						break;
+					}
 				}
 			}
-		
-			if(temp >= 0)
-			{
-				float[] vd = { x[0] - x[geoPointSet.size() - 1], y[0] - y[geoPointSet.size() - 1], z[0] - z[geoPointSet.size() - 1] };
-				float[] vdi = { intersection[0] - x[geoPointSet.size() - 1], intersection[1] - y[geoPointSet.size() - 1],
-						intersection[2] - z[geoPointSet.size() - 1] };
-				VectorUtil.crossVec3(c1, vd, vdi);
-				temp = temp * VectorUtil.dotVec3(c1, c2);
+			else{// 顶点已按逆时针顺序存储的凸边形
+				Intersect = isInPolygon(intersection,geoPointSet);
 			}
-			
-			
-			if (temp >= 0) {
-				Intersect = true;
-			} else {
-				Intersect = false;
-			}
+
+
+
+
 		}
 
 		return Intersect;
+	}
+	public static boolean isInPolygon(GeoPoint point,List<GeoPoint> vertices){
+		// 判断点是否在多边形内部，设多边形由点n1、n2、n3...组成，交点为no，依次求 ni->ni+1 与 ni->no 的叉乘，判断叉乘结果是否都在一个方向，
+		// 若是则在平面内，反之在平面外
+		Vector3D c1 = new Vector3D(0,0,0),c2 = new Vector3D(0,0,0);
+		double temp = 1;
+		int nPoint = vertices.size();
+		double x[] = new double[nPoint];
+		double y[] = new double[nPoint];
+		double z[] = new double[nPoint];
+		for(int i=0; i< nPoint;i++){
+			x[i] = vertices.get(i).getLocationX();
+			y[i] = vertices.get(i).getLocationY();
+			z[i] = vertices.get(i).getLocationZ();
+		}
+		for (int i = 0; i < nPoint - 2; i++) {
+			double[] va = { x[i + 1] - x[i], y[i + 1] - y[i], z[i + 1] - z[i] };
+			double[] vai = { point.getLocationX() - x[i], point.getLocationY() - y[i], point.getLocationZ() - z[i] };
+			double[] vb = { x[i + 2] - x[i + 1], y[i + 2] - y[i + 1], z[i + 2] - z[i + 1] };
+			double[] vbi = { point.getLocationX() - x[i + 1], point.getLocationY() - y[i + 1], point.getLocationZ() - z[i + 1] };
+			c1 = new Vector3D(va).crossProduct(new Vector3D(vai));
+			c2 = new Vector3D(vb).crossProduct(new Vector3D(vbi));
+
+			temp = temp * c1.dotProduct(c2); // a.b=|a||b|cos<a,b>
+
+			if (temp < 0) {
+				break;
+			}
+		}
+
+		if(temp >= 0)
+		{
+			double[] vd = { x[0] - x[nPoint - 1], y[0] - y[nPoint - 1], z[0] - z[nPoint - 1] };
+			double[] vdi = { point.getLocationX() - x[nPoint - 1], point.getLocationY() - y[nPoint - 1],
+					point.getLocationZ() - z[nPoint - 1] };
+			c1 = new Vector3D(vd).crossProduct(new Vector3D(vdi));
+			temp = temp * c1.dotProduct(c2);
+		}
+
+
+		if (temp >= 0) {
+			return true;
+		} else {
+			return  false;
+		}
 	}
 	// 判断空间直线是否有交点，有则返回交点，否则返回null
 	public static GeoPoint calcLineLineIntersection(GeoPoint l1p1, GeoPoint l1p2, GeoPoint l2p1, GeoPoint l2p2){
@@ -259,6 +289,88 @@ public class GeoUtil {
 		return null;
 		//rstp1.setLocCoods(p1.getX()+mua * p21.getX(),p1.getY() + mua * p21.getY(),p1.getZ() + mua * p21.getZ());
 		//rstp2.setLocCoods(p3.getX()+mub * p43.getX(),p3.getY() + mub * p43.getY(),p3.getZ() + mub * p43.getZ());
+	}
+	// 凸边形三角剖分算法，未实现
+	public static GeoSurface multiLine2Triangles(List<GeoPoint> points,final double width, final boolean bothSide){
+		int nPoints = points.size();
+		if(nPoints < 2){
+			System.out.println("Error");
+			return null;
+		}
+		else if(nPoints<3) {
+			return lineToRectangle(points.get(0),points.get(1),width,bothSide);
+		}
+		else{
+			return new GeoSurface();
+		}
+	}
+	public static GeoSurface multiLines2Rectangles(List<GeoPoint> points,final double width, final boolean bothSide){
+		GeoSurface sf = new GeoSurface(GeoSurface.MULTI_POLYGONS);
+		GeoPoint tPoint,fPoint;
+		int nPolygons = points.size()-1;
+		for(int i=0;i<nPolygons;i++){
+			tPoint = points.get(i+1);
+			fPoint = points.get(i);
+			double[] vecDir = LinearAlgebra.minus(tPoint.getLocCoods(), fPoint.getLocCoods());
+			double distance;
+			if(bothSide)// 从中心线扩展成矩形面
+				distance = width/2.0f;
+			else // 从中心线向右拓宽
+				distance = width;
+			double[] translation = new double[3];
+			if(vecDir[0] == 0.0){
+				if(vecDir[1]!=0.0){
+					// coods.X
+					translation[0] = distance;
+					// coods.Y
+					translation[1] = 0.0;
+				}
+				else{
+					System.out.println("Error: Can't not expand");
+				}
+			}
+			else{
+				// coods.Y
+				translation[1] = distance/Math.sqrt(1.0 + Math.pow(vecDir[1]/vecDir[0],2));
+				// coods.X
+				translation[0] = (-vecDir[1]/vecDir[0]) * translation[1];
+			}
+			Vector3D normVec = new Vector3D(translation[0],translation[1],translation[2]);
+			Vector3D dirVec = new Vector3D(vecDir[0],vecDir[1],vecDir[2]);
+			//注意叉乘次序，a x b ！= b x a
+			normVec = Vector3D.crossProduct(normVec, dirVec);
+			if(normVec.getZ()<0)
+				// z>=0的面朝上，适应opengl右手坐标系
+				translation = LinearAlgebra.divide(translation, -1);
+			// 矩形四个顶点，按逆时针顺序存储
+			if(bothSide){
+				if(i==nPolygons-1){//最后一个矩形
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(tPoint.getLocCoods(),translation)));
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(tPoint.getLocCoods(),translation)));
+				}
+				else{
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.minus(fPoint.getLocCoods(),translation)));
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
+				}
+
+			}
+			else{
+				if(i==nPolygons-1){//最后一个矩形
+					sf.addKerbPoint(new GeoPoint(fPoint));
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
+					sf.addKerbPoint(new GeoPoint(tPoint));
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(tPoint.getLocCoods(),translation)));
+				}
+				else {
+					sf.addKerbPoint(new GeoPoint(fPoint));
+					sf.addKerbPoint(new GeoPoint(LinearAlgebra.plus(fPoint.getLocCoods(),translation)));
+				}
+			}
+		}
+
+		return sf;
 	}
 	// 判断折线是否相交（两折线中的任意线段跨立）
 	public static boolean isCross(List<GeoPoint> ploylineP, List<GeoPoint> polyLineQ) {

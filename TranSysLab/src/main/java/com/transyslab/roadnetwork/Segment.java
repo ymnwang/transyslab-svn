@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class Segment implements NetworkObject {
 
-	protected int id;
+	protected long id;
 	protected String name;
 	protected String objInfo;
 	protected List<Lane> lanes;
@@ -43,8 +43,9 @@ public class Segment implements NetworkObject {
 	protected int state;
 	protected int localType; // head, tail, etc
 
-	protected GeoPoint startPnt;
-	protected GeoPoint endPnt;
+
+	protected List<GeoPoint> ctrlPoints;
+	protected double[] linearRelation;
 	protected double bulge;
 	protected GeoSurface surface;
 
@@ -60,7 +61,7 @@ public class Segment implements NetworkObject {
 		state = 0;
 		lanes = new ArrayList<>();
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getName(){
@@ -99,25 +100,24 @@ public class Segment implements NetworkObject {
 	public int getIndex() {
 		return index;
 	}
-
+	public void setLanes(List<Lane> lanes){
+		this.lanes = lanes;
+	}
+	public void setUpSegment(Segment upSegment){
+		this.upSegment = upSegment;
+	}
+	public void setDnSegment(Segment dnSegment){
+		this.dnSegment = dnSegment;
+	}
+	public List<GeoPoint> getCtrlPoints(){
+		return this.ctrlPoints;
+	}
 	// Index within the link. 0 is the upstream.
 	public int localIndex() {
 		return (index - link.getStartSegment().index);
 	}
 	public int getType() {
 		return (link.type());
-	}
-	public GeoPoint getStartPnt() {
-		return startPnt;
-	}
-	public GeoPoint getEndPnt() {
-		return endPnt;
-	}
-	public void setStartPnt(GeoPoint p) {
-		startPnt = p;
-	}
-	public void setEndPnt(GeoPoint p) {
-		endPnt = p;
 	}
 	public double getLength() {
 		return length;
@@ -181,7 +181,7 @@ public class Segment implements NetworkObject {
 	public void addLane(Lane lane){
 		this.lanes.add(lane);
 	}
-	public void init(int id, int speed_limit, int index, double speed, double grd, Link link) {
+	public void init(long id, int speed_limit, int index, double speed, double grd, List<GeoPoint> ctrlPoints,Link link) {
 		// YYL
 		if (this.link != null) {
 			// cerr << "Error:: Segment <" << id << "> "
@@ -195,12 +195,17 @@ public class Segment implements NetworkObject {
 		this.speedLimit = speed_limit;
 		this.grade = grd;
 		this.index = index;
-		this.link.addSegment(this);
-	}
-	public void initArc(double x1, double y1, double b, double x2, double y2) {
-		this.startPnt = new GeoPoint(x1, y1);
-		this.endPnt = new GeoPoint(x2, y2);
-		this.bulge = -b;
+		this.ctrlPoints = ctrlPoints;
+		if(!ctrlPoints.isEmpty()){
+			int size = ctrlPoints.size();
+			linearRelation = new double[size];
+			linearRelation[0] = 0;
+			if(size>1){
+				for(int i=1;i<size;i++){
+					linearRelation[i] = ctrlPoints.get(i).distance(ctrlPoints.get(i-1))+linearRelation[i-1];
+				}
+			}
+		}
 	}
 
 
@@ -246,23 +251,32 @@ public class Segment implements NetworkObject {
 
 	public void snapCoordinates() {
 		Segment ups = getUpSegment();
-		if (ups != null) {// not the first segment in the link
-			// Find the middle point
+		if (ups != null) {// 非起始路段
+			// 上游路段终点与下游路段起点间的中点
+			int nPoints =  ups.ctrlPoints.size();
+			GeoPoint mp = new GeoPoint(ups.ctrlPoints.get(nPoints-1), ctrlPoints.get(0), 0.5);
 
-			GeoPoint p = new GeoPoint(ups.getEndPnt(), getStartPnt(), 0.5);
-
-			// Snap to the middle point
-
-			ups.setEndPnt(p);
-			setStartPnt(p);
+			// 合并
+			ups.ctrlPoints.set(nPoints-1,mp);
+			ctrlPoints.set(0,mp);
 		}
 	}
 
 	public void calcArcInfo(WorldSpace world_space) {
-		startPnt = world_space.worldSpacePoint(startPnt);
-		endPnt = world_space.worldSpacePoint(endPnt);
-		length = startPnt.distance(endPnt);
-		startAngle = endAngle = startPnt.angle(endPnt);
+
+		int size = ctrlPoints.size();
+		linearRelation = new double[size];
+		linearRelation[0] = 0;
+		for(int i=0;i<size;i++){
+			// 坐标平移
+			ctrlPoints.set(i,world_space.worldSpacePoint(ctrlPoints.get(i)));
+			if(i>=1){
+				linearRelation[i] = ctrlPoints.get(i).distance(ctrlPoints.get(i-1))+linearRelation[i-1];
+			}
+		}
+
+		length = linearRelation[size-1];
+		startAngle = endAngle = 0;
 
 	}
 
@@ -285,7 +299,11 @@ public class Segment implements NetworkObject {
 	}
 	// 路网世界坐标平移后再调用
 	public void createSurface(){
-		surface = GeoUtil.lineToRectangle(startPnt, endPnt, lanes.size()* Constants.LANE_WIDTH, false);
+		double width = 0;
+		for(Lane laneInSgmt:lanes){
+			width += laneInSgmt.width;
+		}
+		surface = GeoUtil.multiLines2Rectangles(ctrlPoints, width, false);
 	}
 	public double calcDensity() {
 		return 0;
@@ -316,10 +334,10 @@ public class Segment implements NetworkObject {
 	public void outputSegment() throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(this.id).append(",");
-		sb.append(startPnt.getLocationX()).append(",");
-		sb.append(startPnt.getLocationY()).append(",");
-		sb.append(endPnt.getLocationX()).append(",");
-		sb.append(endPnt.getLocationY()).append("\n");
+//		sb.append(startPnt.getLocationX()).append(",");
+//		sb.append(startPnt.getLocationY()).append(",");
+//		sb.append(endPnt.getLocationX()).append(",");
+//		sb.append(endPnt.getLocationY()).append("\n");
 		String filepath = "E:\\OutputRoadNetwork.txt";
 		FileOutputStream out = new FileOutputStream(filepath, true);
 		OutputStreamWriter osw = new OutputStreamWriter(out, "utf-8");

@@ -6,12 +6,12 @@ import java.util.List;
  * Created by ITSA405-35 on 2018/5/22.
  */
 public class Connector implements NetworkObject{
-	protected int id;
+	protected long id;
 	protected String name;
 	protected String objInfo;
 	protected boolean isSelected;
-	protected Lane upLane;
-	protected Lane dnLane;
+	protected long upLaneId;
+	protected long dnLaneId;
 	// 折线点集,按连接顺序存储
 	protected List<GeoPoint> shapePoints;
 	protected double[] linearRelation;
@@ -19,11 +19,20 @@ public class Connector implements NetworkObject{
 	public List<GeoPoint> getShapePoints(){
 		return shapePoints;
 	}
-	public Connector(int id, List<GeoPoint> shapePoints, Lane upLane, Lane dnLane){
+	public Connector(){
+
+	}
+	public Connector(long id,List<GeoPoint> shapePoints,long upLaneId, long dnLaneId){
 		this.id = id;
 		this.shapePoints = shapePoints;
-		this.upLane = upLane;
-		this.dnLane = dnLane;
+		this.upLaneId = upLaneId;
+		this.dnLaneId = dnLaneId;
+	}
+	public void init(long id, long upLaneId, long dnLaneId, List<GeoPoint> shapePoints){
+		this.id = id;
+		this.shapePoints = shapePoints;
+		this.upLaneId = upLaneId;
+		this.dnLaneId = dnLaneId;
 		initLinearRelation();
 	}
 	private void initLinearRelation(){
@@ -49,7 +58,7 @@ public class Connector implements NetworkObject{
 		}
 	}
 	@Override
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 

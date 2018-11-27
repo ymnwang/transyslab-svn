@@ -56,7 +56,7 @@ public class XmlParser {
 					beginY = Double.parseDouble(attr.getValue());
 
 			}
-			network.createNode(tmpId,tmpType,tmpName,beginX, beginY);
+			network.createNode(tmpId,tmpType,tmpName,new GeoPoint(beginX,beginY,0));
 		}
 		// 解析Link
 		if (node.getName().equals("L")) {
@@ -70,7 +70,7 @@ public class XmlParser {
 				if (attr.getName().equals("DnNode"))
 					tmpDnId = Integer.parseInt(attr.getValue());
 			}
-			network.createLink(tmpId,tmpType,tmpUpId,tmpDnId);
+			network.createLink(tmpId,tmpType,null,tmpUpId,tmpDnId);
 		}
 		//解析Segment
 		if (node.getName().equals("S")) {
@@ -93,7 +93,7 @@ public class XmlParser {
 					endY = Double.parseDouble(attr.getValue());
 
 			}
-			network.createSegment(tmpId,tmpSpeedLimit,tmpFreeSpeed,gradient,beginX,beginY,0, endX,endY);
+			//network.createSegment(tmpId,tmpSpeedLimit,tmpFreeSpeed,gradient,beginX,beginY,0, endX,endY);
 
 		}
 		//解析Lane
@@ -114,7 +114,7 @@ public class XmlParser {
 					endY = Double.parseDouble(attr.getValue());
 
 			}
-			network.createLane(tmpId,tmpType,beginX,beginY,endX,endY);
+			//network.createLane(tmpId,tmpType,beginX,beginY,endX,endY);
 		}
 		//解析LaneConnector
 		if (node.getName().equals("LC")) {

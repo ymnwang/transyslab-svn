@@ -9,9 +9,7 @@ import java.util.ListIterator;
 
 import com.transyslab.commons.renderer.AnimationFrame;
 import com.transyslab.commons.renderer.FrameQueue;
-import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.*;
-import org.netlib.lapack.SSYCON;
 
 
 /**
@@ -71,47 +69,50 @@ public class MesoNetwork extends RoadNetwork {
 		this.vhcCounter++;
 		return newVehicle;
 	}
-	public void createNode(int id, int type, String name, double x, double y){
+	public Node createNode(long id, int type, String name,GeoPoint posPoint){
 		MesoNode newNode = new MesoNode();
-		newNode.init(id, type, nNodes() ,name,x,y);
-		worldSpace.recordExtremePoints(newNode.getPosition());
+		newNode.init(id, type, nNodes(),name,posPoint);
+		worldSpace.recordExtremePoints(newNode.getPosPoint());
 		this.nodes.add(newNode);
 		this.addVertex(newNode);
+		return newNode;
 	}
 
-	public void createLink(int id, int type, int upNodeId, int dnNodeId){
+	public Link createLink(long id, int type, String name,long upNodeId, long dnNodeId){
 		MesoLink newLink = new MesoLink();
-		newLink.init(id,type,nLinks(),findNode(upNodeId),findNode(dnNodeId),this);
+		newLink.init(id,type,name,nLinks(),findNode(upNodeId),findNode(dnNodeId));
+		newLink.setNetwork(this);
 		links.add(newLink);
 		this.addEdge(newLink.getUpNode(),newLink.getDnNode(),newLink);
 		this.setEdgeWeight(newLink,Double.POSITIVE_INFINITY);
+		return newLink;
 	}
 
-	public void createSegment(int id, int speedLimit, double freeSpeed, double grd, double beginX,
-							  double beginY, double b,double endX, double endY){
+	public Segment createSegment(long id, int speedLimit, double freeSpeed, double grd, List<GeoPoint> ctrlPoints){
 		MesoSegment newSegment = new MesoSegment();
-		newSegment.init(id,speedLimit,nSegments(),freeSpeed,grd,links.get(nLinks()-1));
-		newSegment.initArc(beginX,beginY,b,endX,endY);
-		worldSpace.recordExtremePoints(newSegment.getStartPnt());
-		worldSpace.recordExtremePoints(newSegment.getEndPnt());
+		newSegment.init(id,speedLimit,nSegments(),freeSpeed,grd,ctrlPoints,links.get(nLinks()-1));
+		worldSpace.recordExtremePoints(ctrlPoints);
 		segments.add(newSegment);
+		return newSegment;
 	}
 
-	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY){
+	public Lane createLane(long id, int rule,int orderNum, double width ,String direction, List<GeoPoint> ctrlPoints ){
 		MesoLane newLane = new MesoLane();
-		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
+		newLane.init(id,rule,nLanes(),orderNum,width,direction,ctrlPoints,segments.get(nSegments()-1));
 		// TODO 暂无车道坐标和车道边界关联
 		/*
 		worldSpace.recordExtremePoints(newLane.getStartPnt());
 		worldSpace.recordExtremePoints(newLane.getEndPnt());*/
 		lanes.add(newLane);
+		return newLane;
 	}
 
-	public void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval ){
+	public Sensor createSensor(long id, int type, String detName, long segId, double pos, double zone, double interval ){
 		SurvStation newSurvStt = new SurvStation();
 		MesoSegment mesoSegment = (MesoSegment) findSegment(segId);
 		newSurvStt.init(id,type, nSensors(),findSegment(segId),pos,zone,interval);
 		sensors.add(newSurvStt);
+		return newSurvStt;
 	}
 
 

@@ -212,7 +212,7 @@ public class MesoEngine extends SimulationEngine {
 					tempBestFitness_ = de.getFitness(i);
 					// tempIndex_ = i;
 					for (int j = 0; j < tempBest_.length; j++) {
-						tempBest_[j] = de.getPosition(i)[j];
+						tempBest_[j] = de.getPosPoint(i)[j];
 					}
 
 				}

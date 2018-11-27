@@ -13,7 +13,7 @@ import org.jgrapht.GraphPath;
 
 public class Path implements NetworkObject {
 
-	protected int id;
+	protected long id;
 	protected String objInfo;
 	protected int index; // index in the array;
 	// สตภýปฏ
@@ -33,7 +33,7 @@ public class Path implements NetworkObject {
 	public Path() {
 		links = new ArrayList<>();
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getObjInfo(){

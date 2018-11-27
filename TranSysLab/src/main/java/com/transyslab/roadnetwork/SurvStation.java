@@ -15,7 +15,7 @@ import com.transyslab.commons.tools.GeoUtil;
 public class SurvStation implements Sensor{
 	protected int type; // sensor type 1:loop; 2:microwave;3:video;4:kakou
 	protected int task; // data items
-	protected int id;
+	protected long id;
 	protected String objInfo;
 	protected Segment segment; // pointer to segment
 	protected double zoneLength; // length of detection zone
@@ -41,7 +41,7 @@ public class SurvStation implements Sensor{
 	public String getObjInfo(){
 		return this.objInfo;
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public boolean isSelected(){
@@ -96,7 +96,7 @@ public class SurvStation implements Sensor{
 		return flowList;
 	}
 
-	public void init(int id,int ty,int index,Segment seg, double pos,double zone, double iv) {
+	public void init(long id,int ty,int index,Segment seg, double pos,double zone, double iv) {
 		this.id = id;
 		this.type = ty; // sensor type
 		this.interval = iv; // statistic time interval in seconds
@@ -214,9 +214,11 @@ public class SurvStation implements Sensor{
 
 	@Override
 	public void createSurface(){
-		GeoPoint startPnt = new GeoPoint(segment.getStartPnt(), segment.getEndPnt(), position);
+		GeoPoint segSPnt = segment.ctrlPoints.get(0);
+		GeoPoint segEPnt = segment.ctrlPoints.get(segment.ctrlPoints.size()-1);
+		GeoPoint startPnt = new GeoPoint(segSPnt, segEPnt, position);
 		double lenScale = zoneLength / segment.getLength();
-		GeoPoint endPnt = new GeoPoint(startPnt, segment.getEndPnt(),lenScale);
+		GeoPoint endPnt = new GeoPoint(startPnt, segEPnt,lenScale);
 		double width = segment.nLanes() * segment.getLeftLane().getWidth();
 		surface = GeoUtil.lineToRectangle(startPnt, endPnt, width,true);
 	}

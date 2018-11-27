@@ -1,7 +1,5 @@
 package com.transyslab.gui;
 import com.transyslab.roadnetwork.*;
-import com.transyslab.simcore.mlp.MLPLane;
-import org.apache.logging.log4j.core.appender.db.jpa.JpaAppender;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -1080,9 +1078,9 @@ public class LayerPanel {
             Node theNode = (Node) object;
             textField1.setText(String.valueOf(theNode.getId()));
             textField2.setText(String.valueOf(theNode.getType()));
-            textField3.setText(String.valueOf(theNode.getPosition().getLocationX()));
-            textField4.setText(String.valueOf(theNode.getPosition().getLocationY()));
-            textField5.setText(String.valueOf(theNode.getPosition().getLocationZ()));
+            textField3.setText(String.valueOf(theNode.getPosPoint().getLocationX()));
+            textField4.setText(String.valueOf(theNode.getPosPoint().getLocationY()));
+            textField5.setText(String.valueOf(theNode.getPosPoint().getLocationZ()));
 
         }
         private void initComponents() {

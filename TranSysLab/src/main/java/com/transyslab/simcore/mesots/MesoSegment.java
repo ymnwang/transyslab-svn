@@ -328,7 +328,7 @@ public class MesoSegment extends Segment {
 			Date date = null;
 			// simtaskid Ð´ËÀ£¬×¢Òâ¸ü¸Ä
 			ps.setInt(1, 5);
-			ps.setInt(2, getId());
+			ps.setLong(2, getId());
 			ps.setDate(3, new java.sql.Date(date.getTime()));
 			ps.setTimestamp(3, new java.sql.Timestamp(date.getTime()));
 			ps.setInt(4, nLanes());

@@ -77,7 +77,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	}
 	
 	public void calLnPos() {
-		lnPosNum_ = getId()%10;
+		//lnPosNum_ = getId()%10;
 	}
 	
 	public int getLnPosNum(){

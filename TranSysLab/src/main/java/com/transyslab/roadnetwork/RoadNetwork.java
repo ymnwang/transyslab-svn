@@ -37,7 +37,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	protected List<GeoSurface> surfaces = new ArrayList<>();
 // protected List<SurvStation> survStations = new ArrayList<SurvStation>();
 
-//	protected List<Path> paths = new ArrayList<>();
+	//	protected List<Path> paths = new ArrayList<>();
 	// ODPair 包含一对od的所有paths
 	protected List<ODPair> odPairs = new ArrayList<>();
 	// 系统随机种子
@@ -70,25 +70,52 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	}
 
 
-	public abstract void createNode(int id, int type, String name, double x, double y);
+	public abstract Node createNode(long id, int type, String name, GeoPoint posPoint);
 
-	public abstract void createLink(int id, int type, int upNodeId, int dnNodeId);
+	public abstract Link createLink(long id, int type, String name,long upNodeId, long dnNodeId);
 
-	public abstract void createSegment(int id, int speedLimit, double freeSpeed, double grd, double beginX,
-									   double beginY, double b, double endX, double endY);
+	public abstract Segment createSegment(long id, int speedLimit, double freeSpeed, double grd, List<GeoPoint> ctrlPoints);
+	public abstract Lane createLane(long id, int rule, int orderNum, double width ,String direction ,List<GeoPoint> ctrlPoints);
 
-	public abstract void createLane(int id, int rule, double beginX, double beginY, double endX, double endY);
+	public abstract Sensor createSensor(long id, int type, String detName, long segId, double pos, double zone, double interval );
 
-	public abstract void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval );
 
-	public Connector createConnector(int id,List<GeoPoint> shapePoints,Lane upLane, Lane dnLane){
-		Connector newConnector = new Connector(id,shapePoints,upLane,dnLane);
+	public Connector createConnector(long id,List<GeoPoint> shapePoints,long upLaneId, long dnLaneId){
+		Connector newConnector = new Connector(id,shapePoints,upLaneId,dnLaneId);
 		this.connectors.add(newConnector);
 		return newConnector;
 	}
-	public void createSurface(int id, int segId, List<GeoPoint> kerbList){
+	public Connector createConnector(long id,long upLaneId, long dnLaneId,List<GeoPoint> shapePoints){
+		Connector newConnector = new Connector();
+		newConnector.init(id,upLaneId,dnLaneId,shapePoints);
+		this.connectors.add(newConnector);
+		Lane ulane, dlane;
+		if ((ulane = findLane(upLaneId)) == null) {
+			System.out.println("Error: unknown upstream lane " + upLaneId);
+			return null;
+		}
+		else if ((dlane = findLane(dnLaneId)) == null) {
+			System.out.println("Error: unknown downstream lane " + dnLaneId);
+			return null;
+		}
+
+		// Check if this connector make sense
+		/*
+        if (ulane.getSegment().isNeighbor(dlane.getSegment()) == 0) {
+            System.out.println("Error: is not the neighbor");
+        }*/
+
+		if (ulane.findInDnLane(dnLaneId) != null || dlane.findInUpLane(upLaneId) != null) {
+			System.out.println("Error: already connected");
+			return null;
+		}
+		ulane.dnLanes.add(dlane);
+		dlane.upLanes.add(ulane);
+		return newConnector;
+	}
+	public void createSurface(long id, int segId, List<GeoPoint> kerbList){
 		GeoSurface surface = new GeoSurface();
-		surface.init(id, segId);
+		surface.init(id);
 		surface.setKerbList(kerbList);
 		surfaces.add(surface);
 	}
@@ -188,90 +215,44 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public int nSurfaces(){
 		return surfaces.size();
 	}
-	public Node findNode(int id) {
-		ListIterator<Node> i = nodes.listIterator();
-		while (i.hasNext()) {
-			Node tempNode = i.next();
-			if(tempNode.id == id)
-				return tempNode;
-		}
-		return null;
+	public Node findNode(long id) {
+		return nodes.stream().filter(n -> n.getId() == id).findFirst().orElse(null);
 	}
-	public Link findLink(int id) {
-		ListIterator<Link> i = links.listIterator();
-		while (i.hasNext()) {
-			Link tempLink = i.next();
-			if (tempLink.id == id) {
-				// <c,return -1;>c,return 1;=c return 0;
-				return tempLink;
-			}
-		}
-		return null;
+	public Link findLink(long id) {
+		return links.stream().filter(l ->l.getId() == id).findFirst().orElse(null);
 	}
-	public Segment findSegment(int id) {
-		ListIterator<Segment> i = segments.listIterator();
-		while (i.hasNext()) {
-			Segment tempSegment = i.next();
-			if (tempSegment.id == id) {
-				return tempSegment;
-			}
-		}
-		return null;
+	public Segment findSegment(long id){
+		return segments.stream().filter(s -> s.getId() == id).findFirst().orElse(null);
 	}
-	public Lane findLane(int id) {
-		ListIterator<Lane> i = lanes.listIterator();
-		while (i.hasNext()) {
-			Lane tempLane = i.next();
-			if (tempLane.id == id) {
-				return tempLane;
-			}
-		}
-		return null;
+	public Lane findLane(long id) {
+		return lanes.stream().filter( lane -> lane.getId() == id).findFirst().orElse(null);
 	}
-	public Boundary findBoundary(int id){
-		for(Boundary boundary:boundaries){
-			if(boundary.id == id)
-				return boundary;
-		}
-		return null;
+	public Boundary findBoundary(long id){
+		return boundaries.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
 	}
 	public Connector findConnector(int id){
-        for(Connector connector:connectors){
-            if(connector.id == id)
-                return connector;
-        }
-        return null;
-    }
+		return connectors.stream().filter(c ->c.getId() == id).findFirst().orElse(null);
+	}
 	public ODPair findODPair(int id){
-		for(ODPair odPair:odPairs){
-			if(odPair.id == id)
-				return odPair;
-		}
-		return null;
+		return odPairs.stream().filter(odPair -> odPair.getId() == id).findFirst().orElse(null);
 	}
 	public ODPair findODPair(int oriId, int desId){
-		for(ODPair odPair:odPairs){
-			if(odPair.oriNode.id == oriId && odPair.desNode.id == desId)
-				return odPair;
-		}
-		return null;
+		return odPairs.stream().filter(odPair -> odPair.oriNode.getId() == oriId && odPair.desNode.getId() == desId)
+				.findFirst().orElse(null);
 	}
 	public ODPair findODPair(Node oriNode, Node desNode){
 		return odPairs.stream().filter(p -> p.oriNode == oriNode && p.desNode == desNode).findFirst().orElse(null);
-		/*for(ODPair odPair:odPairs){
-			if(odPair.oriNode == oriNode && odPair.desNode == desNode)
-				return odPair;
-		}
-		return null;*/
 	}
 
 	public List<Sensor> getSurvStations() {
 		return this.sensors;
 	}
-
+	public List<Lane> getLanes(){
+		return this.lanes;
+	}
 	// Connects lane 'up' with lane 'dn'. Return -1 if error, 1 if these
 	// two upLanes are already connected, or 0 if success.
-	public int addLaneConnector(int id,int up, int dn, int successiveFlag, List<GeoPoint> polyline) {
+	public int addLaneConnector(long id,long up, long dn, int successiveFlag, List<GeoPoint> polyline) {
 		Lane ulane, dlane;
 		if ((ulane = findLane(up)) == null) {
 			// cerr << "Error:: unknown upstream lane <" << up << ">. ";
@@ -304,7 +285,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	}
 	// Exclude turn movements from link 'up' to link "dn". Returns 0 if
 	// it success, -1 if error, or 1 if the turn is already excluded.
-	public int addTurnProhibitor(int up, int dn) {
+	public int addTurnProhibitor(long up, long dn) {
 		Link ulink, dlink;
 		if ((ulink = findLink(up)) == null) {
 			// cerr << "Error:: unknown upstream link <" << up << ">. ";
@@ -723,10 +704,10 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		for (GeoSurface surface:surfaces) {
 			surface.translateInWorldSpace(worldSpace);
 		}
-        // Connector 位置平移
-        for (Connector connector:connectors) {
-            connector.translateInWorldSpace(worldSpace);
-        }
+		// Connector 位置平移
+		for (Connector connector:connectors) {
+			connector.translateInWorldSpace(worldSpace);
+		}
 	}
 
 	public void initializeLinkStatistics() {
@@ -784,7 +765,8 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 								Link L2 = null;
 								for (int i = 0; i < seg.nLanes(); i++) {
 									seg.getLane(i).getSignalArrows().forEach(a->{
-										if (a.getTLinkId()==p[1]) {
+										String checkDir = stage.getDirection(p).split("_")[1];
+										if (a.getDirection().equals(checkDir)) {
 											if (plan.isAmber(now)) {
 												//a.setColor(Constants.COLOR_AMBER);
 												signalColor.put(a,Constants.COLOR_AMBER);

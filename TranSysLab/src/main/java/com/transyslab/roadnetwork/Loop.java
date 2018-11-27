@@ -16,7 +16,7 @@ import com.transyslab.commons.tools.GeoUtil;
 
 public class Loop implements Sensor{
 
-	protected int id;
+	protected long id;
 	protected String name;
 	protected String objInfo;
 
@@ -41,7 +41,7 @@ public class Loop implements Sensor{
 		zoneLength = 2;
 	}
 
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getName(){
@@ -174,10 +174,11 @@ public class Loop implements Sensor{
 
 	@Override
 	public void createSurface() {
-		GeoPoint startPnt = new GeoPoint(lane.getStartPnt(), lane.getEndPnt(), (1- position));
-		double lenScale = zoneLength/ lane.getLength();
-		GeoPoint endPnt = new GeoPoint(startPnt, lane.getEndPnt(),(1-lenScale));
-		surface = GeoUtil.lineToRectangle(startPnt, endPnt, lane.getWidth(),true);
+		// TODO 不用百分比，用具体线性参考位置
+		GeoPoint itplPoint = lane.itplAmongCtrlPoints(position*lane.getGeoLength());
+		double lenScale = zoneLength/ itplPoint.distance(lane.getCtrlPoints().get(0));
+		GeoPoint startPnt = itplPoint.intermediate(lane.getCtrlPoints().get(0),1-lenScale);
+		surface = GeoUtil.lineToRectangle(startPnt, itplPoint, lane.getWidth(),true);
 	}
 	public void clean(){
 		recordedCount = 0;

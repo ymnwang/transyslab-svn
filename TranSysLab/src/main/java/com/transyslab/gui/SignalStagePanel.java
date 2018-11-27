@@ -147,7 +147,7 @@ public class SignalStagePanel extends JPanel {
                 colorMap.put(s.getId(),colors.get(j));
                 int aOffset = 10;
                 int baseY = 9;
-                List<String> turnInfo = s.getTurnInfo();
+                List<String> turnInfo = s.getDirections();
                 for(String turn:turnInfo){
                     String[] spiltInfo = turn.split("_");//0:东南西北；1:左直右
                     int[] dir = mapDirInt.get(spiltInfo[0]);

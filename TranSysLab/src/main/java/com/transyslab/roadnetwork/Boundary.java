@@ -6,7 +6,7 @@ public class Boundary implements NetworkObject{
 	protected GeoPoint startPnt;
 	protected GeoPoint endPnt;
 	protected int index;
-	protected int id;
+	protected long id;
 	protected String objInfo;
 	protected boolean isSelected;
 	public Boundary() {
@@ -18,13 +18,13 @@ public class Boundary implements NetworkObject{
 	public void setSelected(boolean flag){
 		this.isSelected = flag;
 	}
-	public void init(int id, int index,double beginx, double beginy, double endx, double endy ){
+	public void init(long id, int index,double beginx, double beginy, double endx, double endy ){
 		this.id = id;
 		this.index = index;
 		startPnt = new GeoPoint(beginx,beginy);
 		endPnt = new GeoPoint(endx,endy);
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getObjInfo(){

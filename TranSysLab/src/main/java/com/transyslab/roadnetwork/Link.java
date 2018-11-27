@@ -14,7 +14,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
  */
 public class Link extends DefaultWeightedEdge implements NetworkObject{
 
-	protected int id;
+	protected long id;
 	protected String name;
 	protected String objInfo;
 	protected List<Segment> segments;
@@ -78,7 +78,7 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 		segments = new ArrayList<>();
 		paths =new ArrayList<>();
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getName(){
@@ -135,10 +135,14 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 	public List<Segment> getSegments(){
 		return this.segments;
 	}
+	public void setSegments(List<Segment> sgmts){
+		this.segments = sgmts;
+	}
 	public void addSegment(Segment seg){ this.segments.add(seg);}
-	public void init(int id, int type, int index,Node upNode, Node dnNode, RoadNetwork roadNetwork){
+	public void init(long id, int type, String name, int index,Node upNode, Node dnNode){
 		this.id = id;
 		this.type =type;
+		this.name =name;
 		this.upNode = upNode;
 		this.dnNode = dnNode;
 		this.index = index;
@@ -146,8 +150,12 @@ public class Link extends DefaultWeightedEdge implements NetworkObject{
 			System.out.print("Error in init link");
 		upNode.addDnLink(this);
 		dnNode.addUpLink(this);
-		network = roadNetwork;
+
 	}
+	public void setNetwork(RoadNetwork network) {
+		this.network = network;
+	}
+
 	// 新增方法，用于组织二维数组，方便输出
 	public int[] getSumOfFlow() {
 		return nSamplesTravelTimeEnteringAt;

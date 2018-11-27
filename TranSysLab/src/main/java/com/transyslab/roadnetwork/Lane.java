@@ -5,6 +5,7 @@ package com.transyslab.roadnetwork;
 
 import java.util.*;
 
+import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.commons.tools.GeoUtil;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
@@ -14,20 +15,21 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
  * @author YYL
  *
  */
-public class Lane implements NetworkObject {
+public class Lane implements NetworkObject,Comparable<Lane> {
 
-	protected int id;
+	protected long id;
 	protected String name;
 	protected String objInfo;
 	// 车道宽度
-	public float width = 3.5f;
+	public double width ;
 	protected int index;
+	protected int orderNum;
 	protected Segment segment;
 	protected int rules;// lane use and change rules
 	protected List<Lane> upLanes;
 	protected List<Lane> dnLanes;
-	protected GeoPoint startPnt;
-	protected GeoPoint endPnt;
+	protected List<GeoPoint> ctrlPoints;
+	protected double[] linearRelation;
 	protected double geoLength;
 	protected GeoSurface surface;
 	protected List<SignalArrow> signalArrows;
@@ -37,7 +39,8 @@ public class Lane implements NetworkObject {
 	protected Lane leftLane;
 	protected Lane rightLane;
 	protected boolean isSelected;
-	protected int turnType;
+	protected String direction;
+
 	public Lane() {
 		segment = null;
 		type = 0;
@@ -46,8 +49,9 @@ public class Lane implements NetworkObject {
 		upLanes = new ArrayList<>();
 		dnLanes = new ArrayList<>();
 		signalArrows = new ArrayList<>();
+		ctrlPoints = new ArrayList<>();
 	}
-	public int getId(){
+	public long getId(){
 		return this.id;
 	}
 	public String getName(){
@@ -84,7 +88,39 @@ public class Lane implements NetworkObject {
 	public int getIndex() {
 		return index;
 	}
+	public void setLeftLane(Lane leftLane){
+		this.leftLane = leftLane;
+	}
+	public void setRightLane(Lane rightLane){
+		this.rightLane = rightLane;
+	}
+	public double[] getLinearRelation() {
+		return linearRelation;
+	}
 
+	public List<GeoPoint> getCtrlPoints() {
+		return ctrlPoints;
+	}
+	// distance 按从流向起点算起，插入点的线性距离
+	public GeoPoint itplAmongCtrlPoints(double distance){
+
+		int index = FitnessFunction.binarySearchIndex(linearRelation,distance);
+		if(index == linearRelation.length)
+			System.out.println("Error: wrong distance on connector");
+		distance = distance - linearRelation[index-1];
+		double l = linearRelation[index] - linearRelation[index-1];
+		// 投影到对应的折线段上
+		GeoPoint startPnt = ctrlPoints.get(index-1);
+		GeoPoint endPnt = ctrlPoints.get(index);
+		return endPnt.intermediate(startPnt,distance/l);
+	}
+	/*
+            public GeoPoint getEndPnt(){
+                return ctrlPoints.get(ctrlPoints.size() -1);
+            }
+            public GeoPoint getStartPnt(){
+                return ctrlPoints.get(0);
+            }*/
 	public int linkType() {
 		return segment.getType();
 	}
@@ -167,16 +203,16 @@ public class Lane implements NetworkObject {
 		// Check if this is the last lane
 
 		if (getSegment().getDnSegment() == null && // last segment
-													// ('->downstream()' added
-													// by Angus)
+				// ('->downstream()' added
+				// by Angus)
 				getLink().getDnNode().type(Constants.NODE_TYPE_EXTERNAL) != 0 && // external
-																					// node
+				// node
 				nDnLanes() <= 0) { // no downstream lane
 			type |= Constants.LANE_TYPE_BOUNDARY;
 		}
 
 		if (laneType(Constants.LANE_TYPE_BOUNDARY) == 0 && // not at the
-															// boundary
+				// boundary
 				nDnLanes() <= 0) { // no downstream lane
 			type |= Constants.LANE_TYPE_DROPPED;
 		}
@@ -233,7 +269,7 @@ public class Lane implements NetworkObject {
 	 * Check if a lane is one of the downstream upLanes
 	 * --------------------------------------------------------------------
 	 */
-	public Lane findInUpLane(int c) {
+	public Lane findInUpLane(long c) {
 		ListIterator<Lane> i = upLanes.listIterator();
 		while (i.hasNext()) {
 			Lane tempLane = i.next();
@@ -245,7 +281,7 @@ public class Lane implements NetworkObject {
 	}
 
 	// Find if a lane is one the downstream upLanes
-	public Lane findInDnLane(int c) {
+	public Lane findInDnLane(long c) {
 		ListIterator<Lane> i = dnLanes.listIterator();
 		while (i.hasNext()) {
 			Lane tempLane = i.next();
@@ -281,9 +317,9 @@ public class Lane implements NetworkObject {
 
 	public void init(int id, int r, int index, double beginx, double beginy, double endx, double endy, Segment seg) {
 
-		startPnt =new GeoPoint(beginx,beginy);
-		endPnt =new GeoPoint(endx,endy);
-		geoLength = startPnt.distance(endPnt);
+		//startPnt =new GeoPoint(beginx,beginy);
+		//endPnt =new GeoPoint(endx,endy);
+		//geoLength = startPnt.distance(endPnt);
 		if (this.segment != null) {
 			System.out.print("Can't not init segment twice");
 			return ;
@@ -296,10 +332,20 @@ public class Lane implements NetworkObject {
 		this.index = index;
 		this.segment.addLane(this);
 	}
+	public void init(long id, int r, int index, int orderNum, double width ,String direction ,List<GeoPoint> ctrlPoints, Segment segment) {
+		this.id = id;
+		this.rules = r;
+		this.index = index;
+		this.ctrlPoints = ctrlPoints;
+		this.orderNum = orderNum;
+		this.direction = direction;
+		this.width = width;
+		this.segment = segment;
+	}
 	// 路网世界坐标平移后再调用
 	public void createLaneSurface(){
-		surface = GeoUtil.lineToRectangle(startPnt, endPnt, width, true);
-		//surface.createAabBox();
+		surface = GeoUtil.multiLines2Rectangles(ctrlPoints,width,true);
+
 	}
 	public GeoSurface getSurface(){
 		return surface;
@@ -308,53 +354,51 @@ public class Lane implements NetworkObject {
 		return width;
 	}
 
-	public GeoPoint getStartPnt() {
-		return startPnt;
-	}
-	public GeoPoint getEndPnt() {
-		return endPnt;
-	}
-
 	public void calcStaticInfo(WorldSpace worldSpace) {
 		if (getLeftLane() == null)
 			rulesExclude(Constants.LANE_CHANGE_LEFT);
 		if (getRightLane() == null)
 			rulesExclude(Constants.LANE_CHANGE_RIGHT);
 		setLaneType();
-		//起终点坐标平移
-		startPnt = worldSpace.worldSpacePoint(startPnt);
-		endPnt = worldSpace.worldSpacePoint(endPnt);
+
+		int size = ctrlPoints.size();
+		linearRelation = new double[size];
+		linearRelation[0] = 0;
+		for(int i=0;i<size;i++){
+			// 坐标平移
+			ctrlPoints.set(i,worldSpace.worldSpacePoint(ctrlPoints.get(i)));
+			if(i>=1){
+				linearRelation[i] = ctrlPoints.get(i).distance(ctrlPoints.get(i-1))+linearRelation[i-1];
+			}
+		}
+		geoLength = linearRelation[size-1];
+
 		//生成车道面
 		createLaneSurface();
 		//信控标识
-		List<Integer> aList = new ArrayList<>();
 		if(laneType(Constants.LANE_TYPE_SIGNAL_ARROW) != 0){
-			for(Lane dnLane:dnLanes){
-				if (!aList.contains(dnLane.getLink().getId())) {
-					aList.add(dnLane.getLink().getId());
-					double tol = 0.1;
-					double x1 = getEndPnt().getLocationX() - getStartPnt().getLocationX();
-					double y1 = getEndPnt().getLocationY() - getStartPnt().getLocationY();
-					double dis1 = getEndPnt().distance(getStartPnt());
-					double x2 = dnLane.getEndPnt().getLocationX() - dnLane.getStartPnt().getLocationX();
-					double y2 = dnLane.getEndPnt().getLocationY() - dnLane.getStartPnt().getLocationY();
-					double dis2 = dnLane.getEndPnt().distance(dnLane.getStartPnt());
-					double crossProduct = x1*y2 - x2*y1;
-					double a = crossProduct/dis1/dis2;
-					if (a > tol)
-						signalArrows.add(new SignalArrow(getId()*10+1,SignalArrow.LEFTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
-					else if (a < -tol)
-						signalArrows.add(new SignalArrow(getId()*10+3,SignalArrow.RIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
-					else
-						signalArrows.add(new SignalArrow(getId()*10+2,SignalArrow.STRAIGHTARROW,this.getLink().getId(),dnLane.getLink().getId(),this));
+			char[] turns = direction.toCharArray();
+			if(turns.length!=0){
+				double r = (getGeoLength()+1)/getGeoLength();// 起点偏移1m
+				GeoPoint startPnt = ctrlPoints.get(0);
+				GeoPoint endPnt = ctrlPoints.get(size-1);
+				GeoPoint rectgFP = endPnt.intermediate(startPnt,r);
+				r = r + 6.0/getGeoLength();// 箭头长度6m
+				GeoPoint rectgEP = endPnt.intermediate(startPnt,r);
+				for(char turn:turns){
+					SignalArrow sa = new SignalArrow(0,turn,rectgFP,rectgEP);
+					sa.setRightTurnFree((rules()&Constants.LANE_RIGHTTURN_FREE)!=0);
+					signalArrows.add(sa);
 				}
 			}
-
+			// 计算流向箭头的横向位置
 			if(signalArrows.size()>1) {
 				Collections.sort(signalArrows);
-				Vector3D translate = new Vector3D(surface.getKerbList().get(0).getLocationX() - startPnt.getLocationX(),
-						surface.getKerbList().get(0).getLocationY() - startPnt.getLocationY(),
-						surface.getKerbList().get(0).getLocationZ() - startPnt.getLocationZ());//←
+				GeoPoint refPoint = surface.getKerbList().get(surface.getKerbList().size() - 2);
+				GeoPoint endPnt = ctrlPoints.get(ctrlPoints.size()-1);
+				Vector3D translate = new Vector3D(refPoint.getLocationX() - endPnt.getLocationX(),
+						refPoint.getLocationY() - endPnt.getLocationY(),
+						refPoint.getLocationZ() - endPnt.getLocationZ());//←
 				translate = translate.normalize();
 				if(signalArrows.size()==2){
 					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.3));
@@ -431,5 +475,14 @@ public class Lane implements NetworkObject {
 	public RoadNetwork getNetwork() {
 		return segment.getNetwork();
 	}
-	
+
+	@Override
+	public int compareTo(Lane o) {
+		if(this.orderNum>o.orderNum)
+			return 1;
+		else if(this.orderNum<o.orderNum)
+			return -1;
+		else
+			return 0;
+	}
 }

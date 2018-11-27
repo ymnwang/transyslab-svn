@@ -43,45 +43,45 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	@Override
-	public void createNode(int id, int type, String name, double x, double y) {
+	public Node createNode(long id, int type, String name, GeoPoint posPoint) {
 		MLPNode newNode = new MLPNode();
-		newNode.init(id, type, nNodes() ,name, x, y);
-		worldSpace.recordExtremePoints(newNode.getPosition());
+		newNode.init(id, type, nNodes() ,name, posPoint);
+		worldSpace.recordExtremePoints(newNode.getPosPoint());
 		this.nodes.add(newNode);
 		this.addVertex(newNode);
+		return newNode;
 	}
 
 	@Override
-	public void createLink(int id, int type, int upNodeId, int dnNodeId) {
+	public Link createLink(long id, int type, String name,long upNodeId, long dnNodeId) {
 		MLPLink newLink = new MLPLink();
-		newLink.init(id,type,nLinks(),findNode(upNodeId),findNode(dnNodeId),this);
+		newLink.init(id,type,name,nLinks(),findNode(upNodeId),findNode(dnNodeId));
+		newLink.setNetwork(this);
 		links.add(newLink);
 		this.addEdge(newLink.getUpNode(),newLink.getDnNode(),newLink);
 		this.setEdgeWeight(newLink,Double.POSITIVE_INFINITY);
+		return newLink;
 	}
-
 	@Override
-	public void createSegment(int id, int speedLimit, double freeSpeed, double grd, double beginX,
-							  double beginY, double b, double endX, double endY) {
+	public Segment createSegment(long id, int speedLimit, double freeSpeed, double grd, List<GeoPoint> ctrlPoint) {
 		MLPSegment newSegment = new MLPSegment();
-		newSegment.init(id,speedLimit,nSegments(),freeSpeed,grd,links.get(nLinks()-1));
-		newSegment.initArc(beginX,beginY,b,endX,endY);
-		worldSpace.recordExtremePoints(newSegment.getStartPnt());
-		worldSpace.recordExtremePoints(newSegment.getEndPnt());
+		newSegment.init(id,speedLimit,nSegments(),freeSpeed,grd,ctrlPoint,links.get(nLinks()-1));
+		worldSpace.recordExtremePoints(ctrlPoint);
 		segments.add(newSegment);
+		return newSegment;
 	}
 
 	@Override
-	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY) {
+	public Lane createLane(long id, int rule, int orderNum, double width ,String direction,List<GeoPoint> ctrlPoints) {
 		MLPLane newLane = new MLPLane();
-		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
-		worldSpace.recordExtremePoints(newLane.getStartPnt());
-		worldSpace.recordExtremePoints(newLane.getEndPnt());
+		newLane.init(id,rule,nLanes(),orderNum,width,direction,ctrlPoints,segments.get(nSegments()-1));
+		worldSpace.recordExtremePoints(ctrlPoints);
 		lanes.add(newLane);
+		return newLane;
 	}
 
 	@Override
-	public void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval) {
+	public Sensor createSensor(long id, int type, String detName, long segId, double pos, double zone, double interval) {
 		MLPSegment seg = (MLPSegment) findSegment(segId);
 		MLPLink lnk = (MLPLink) seg.getLink();
 		double dsp = seg.startDSP + seg.getLength()*pos;
@@ -90,6 +90,7 @@ public class MLPNetwork extends RoadNetwork {
 			MLPLoop loop = new MLPLoop(ln, seg, lnk, detName, dsp, pos);
 			sensors.add(loop);
 		}
+		return null;
 	}
 
 
@@ -105,7 +106,7 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	@Override
-	public MLPLink findLink(int id) {
+	public MLPLink findLink(long id) {
 		return (MLPLink) super.findLink(id);
 	}
 
@@ -242,7 +243,7 @@ public class MLPNetwork extends RoadNetwork {
 		mlpLink(linkIdx).dynaFun.setPartialCharacteristics(args, mask);
 	}
 	
-	public void setLoopsOnLink(String name, int linkID, double p) {
+	public void setLoopsOnLink(String name, long linkID, double p) {
 		MLPLink theLink = findLink(linkID);
 		MLPSegment theSeg = null;
 		MLPLane theLane = null;
@@ -767,10 +768,12 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	@Override
-	public int addLaneConnector(int id, int up, int dn, int successiveFlag, List<GeoPoint> polyline) {
+	public int addLaneConnector(long id, long up, long dn, int successiveFlag, List<GeoPoint> polyline) {
 		int ans = super.addLaneConnector(id, up, dn, successiveFlag,polyline);
 		MLPLane upLane = (MLPLane) findLane(up);
 		MLPLane dnLane = (MLPLane) findLane(dn);
+		if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0)
+			createConnector(id,polyline,up,dn);
 		MLPConnector mlpConn = (MLPConnector) createConnector(id,polyline,upLane,dnLane);
 		upLane.dnStrmConns.add(mlpConn);
 		dnLane.upStrmConns.add(mlpConn);

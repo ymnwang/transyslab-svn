@@ -19,7 +19,7 @@ public class MesoVehicle extends Vehicle {
 	protected MesoTrafficCell trafficCell; // pointer to current traffic cell
 	protected MesoVehicle leading; // downstream vehicle
 	protected MesoVehicle trailing; // upstream vehicle
-	protected int sensorIDFlag;
+	protected long sensorIDFlag;
 	protected int flags; // indicator for internal use
 	protected boolean needRecycle;
 	// These variables are use to cache the calculation for speeding

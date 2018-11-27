@@ -6,32 +6,24 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 
 public class SignalArrow implements Comparable<SignalArrow>{
-    public final static int LEFTARROW = 1;
-    public final static int STRAIGHTARROW = 2;
-    public final static int RIGHTARROW = 3;
     public final static double LINELENGTH = 2.5;
     public final static double TIPLENGTH =1.5;
     public final static double TURNLENGTH = 1;
     public final static double TURNANGLE= 45.0/180.0*Math.PI;
-
     protected int id;
     protected int type;
-    protected Lane entrance;
     protected GeoPoint[] polyline;
     protected GeoPoint[] arrowTip;// 三角形
     protected float[] color = Constants.COLOR_WHITE;
-    protected int fLinkId;
-    protected int tLinkId;
+    protected String direction;
+    protected boolean rightTurnFree;
 
-    public SignalArrow(int id, int type,int fLinkId, int tLinkId,Lane entrance){
+    public SignalArrow(int id, int type, GeoPoint rectgFP, GeoPoint rectgEP){
         this.id = id;
-        this.entrance = entrance;
         this.type = type;
         this.arrowTip = new GeoPoint[3];
         this.polyline = new GeoPoint[3];
-        this.fLinkId = fLinkId;
-        this.tLinkId = tLinkId;
-        initialize();
+        initialize(rectgFP,rectgEP);
     }
     public GeoPoint[] getPolyline(){
         return this.polyline;
@@ -45,17 +37,15 @@ public class SignalArrow implements Comparable<SignalArrow>{
     public float[] getColor(){
         return this.color;
     }
-    public int getFLinkId(){
-        return this.fLinkId;
+    public String getDirection(){
+        return this.direction;
     }
-    public int getTLinkId(){
-        return this.tLinkId;
-    }
-    private void initialize(){
+    private void initialize(GeoPoint rectgFP, GeoPoint rectgEP){
+        /*
         double r = (entrance.getGeoLength()+1)/entrance.getGeoLength();// 起点偏移1m
         GeoPoint rectgFP = entrance.endPnt.intermediate(entrance.startPnt,r);
         r = r + 6.0/entrance.getGeoLength();
-        GeoPoint rectgEP = entrance.endPnt.intermediate(entrance.startPnt,r);
+        GeoPoint rectgEP = entrance.endPnt.intermediate(entrance.startPnt,r);*/
         // polyline fpoint
         polyline[0] = rectgEP.intermediate(rectgFP,1.0/6.0);// 箭头起点偏移1m
         polyline[1] = rectgEP.intermediate(polyline[0],(LINELENGTH - TURNLENGTH)/6.0);
@@ -64,7 +54,7 @@ public class SignalArrow implements Comparable<SignalArrow>{
         GeoSurface rectangle2 = GeoUtil.lineToRectangle(polyline[2],arrowTip[0], TIPLENGTH / Math.tan(Math.PI/3.0),true);
         arrowTip[1] = rectangle2.getKerbList().get(0);
         arrowTip[2] = rectangle2.getKerbList().get(1);
-        if(type!=STRAIGHTARROW){
+        if(!direction.equals("S")){
             // 计算旋转轴
             Vector3D dir1 = new Vector3D(polyline[1].getLocationX() - polyline[0].getLocationX(),
                                 polyline[1].getLocationY() - polyline[0].getLocationY(),
@@ -74,7 +64,7 @@ public class SignalArrow implements Comparable<SignalArrow>{
                                  rectangle2.kerbPoints.get(1).getLocationZ() - polyline[2].getLocationZ());
             Vector3D rotateDir = dir2.crossProduct(dir1).normalize();
             double theta;
-            if(type == LEFTARROW)
+            if(direction.equals("L"))
                 theta = TURNANGLE;
             else
                 theta = -1*TURNANGLE;
@@ -88,9 +78,11 @@ public class SignalArrow implements Comparable<SignalArrow>{
     }
 
     public boolean rightTurnFree() {
-        return (entrance.rules()&Constants.LANE_RIGHTTURN_FREE)!=0;
+        return rightTurnFree;
     }
-
+    public void setRightTurnFree(boolean rightTurnFree){
+        this.rightTurnFree = rightTurnFree;
+    }
     @Override
     public int compareTo(SignalArrow o) {
         if(this.type>o.type)

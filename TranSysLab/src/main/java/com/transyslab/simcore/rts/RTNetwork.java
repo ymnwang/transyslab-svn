@@ -1,9 +1,6 @@
 package com.transyslab.simcore.rts;
 
-import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.io.DBWriter;
-import com.transyslab.commons.io.SQLConnection;
-import com.transyslab.commons.io.TXTUtils;
+
 import com.transyslab.commons.renderer.AnimationFrame;
 import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
@@ -37,44 +34,44 @@ public class RTNetwork extends RoadNetwork{
 	}
 
 	@Override
-	public void createNode(int id, int type, String name, double x, double y) {
+	public Node createNode(long id, int type, String name, GeoPoint posPoint) {
 		RTNode newNode = new RTNode();
-		newNode.init(id, type, nNodes() ,name, x, y);
+		newNode.init(id, type, nNodes() ,name,posPoint);
 		this.nodes.add(newNode);
 		this.addVertex(newNode);
+		return newNode;
 	}
 
 	@Override
-	public void createLink(int id, int type, int upNodeId, int dnNodeId) {
+	public Link createLink(long id, int type, String name ,long upNodeId, long dnNodeId) {
 		RTLink newLink = new RTLink();
-		newLink.init(id,type,nLinks(),findNode(upNodeId),findNode(dnNodeId),this);
+		newLink.init(id,type,name,nLinks(),findNode(upNodeId),findNode(dnNodeId));
 		links.add(newLink);
 		this.addEdge(newLink.getUpNode(),newLink.getDnNode(),newLink);
 		this.setEdgeWeight(newLink,Double.POSITIVE_INFINITY);
+		return newLink;
 	}
 
 	@Override
-	public void createSegment(int id, int speedLimit, double freeSpeed, double grd, double beginX,
-							  double beginY, double b, double endX, double endY) {
+	public Segment createSegment(long id, int speedLimit, double freeSpeed, double grd, List<GeoPoint> ctrlPoints) {
 		RTSegment newSegment = new RTSegment();
-		newSegment.init(id,speedLimit,nSegments(),freeSpeed,grd,links.get(nLinks()-1));
-		newSegment.initArc(beginX,beginY,b,endX,endY);
-		worldSpace.recordExtremePoints(newSegment.getStartPnt());
-		worldSpace.recordExtremePoints(newSegment.getEndPnt());
+		newSegment.init(id,speedLimit,nSegments(),freeSpeed,grd,ctrlPoints,links.get(nLinks()-1));
+		worldSpace.recordExtremePoints(ctrlPoints);
 		segments.add(newSegment);
+		return newSegment;
 	}
 
 	@Override
-	public void createLane(int id, int rule, double beginX, double beginY, double endX, double endY) {
+	public Lane createLane(long id, int rule,int orderNum, double width ,String direction,List<GeoPoint> ctrlPoints) {
 		RTLane newLane = new RTLane();
-		newLane.init(id,rule,nLanes(),beginX,beginY,endX,endY,segments.get(nSegments()-1));
-		worldSpace.recordExtremePoints(newLane.getStartPnt());
-		worldSpace.recordExtremePoints(newLane.getEndPnt());
+		newLane.init(id,rule,nLanes(),orderNum,width,direction,ctrlPoints,segments.get(nSegments()-1));
+		worldSpace.recordExtremePoints(ctrlPoints);
 		lanes.add(newLane);
+		return newLane;
 	}
 
 	@Override
-	public void createSensor(int id, int type, String detName, int segId, double pos, double zone, double interval) {
+	public Sensor createSensor(long id, int type, String detName, long segId, double pos, double zone, double interval) {
 		RTSegment seg = (RTSegment) findSegment(segId);
 		RTLink lnk = (RTLink) seg.getLink();
 		/* TODO 初始化检测器
@@ -84,21 +81,110 @@ public class RTNetwork extends RoadNetwork{
 			RTLoop loop = new RTLoop(ln, seg, lnk, detName, dsp, pos);
 			sensors.add(loop);
 		}*/
+		return null;
 	}
 
 	public void calcStaticInfo() {
-		super.calcStaticInfo();
+		// Create the world space
+		worldSpace.createWorldSpace();
+		// Lane必须从左到右解析，Segment必须从上游至下游解析
+		for(Link itrLink:links){
+			// 按上下游关系保存路段的引用
+			List<Segment> sgmtsInLink = itrLink.getSegments();
+			int nSegment = sgmtsInLink.size();
+			for(int i=0;i<nSegment;i++){
+				Segment itrSgmt = sgmtsInLink.get(i);
+				if(i!=0)//起始路段没有上游
+					itrSgmt.setUpSegment(sgmtsInLink.get(i-1));
+				if(i!=nSegment-1)//末端路段没有下游
+					itrSgmt.setDnSegment(sgmtsInLink.get(i+1));
+				// 按横向关系保存相邻车道的引用
+				List<Lane> lanesInSgmt = itrSgmt.getLanes();
+				int nLanes = lanesInSgmt.size();
+				for(int j=0;j<nLanes;j++){
+					if(j!=0)// 最左侧车道
+						lanesInSgmt.get(j).setLeftLane(lanesInSgmt.get(j-1));
+					if(j!=nLanes-1)// 最右侧车道
+						lanesInSgmt.get(j).setRightLane(lanesInSgmt.get(j+1));
+				}
+			}
+		}
+		for (Segment itrSegment:segments) {
+
+			// Generate arc info such as angles and length from the two
+			// endpoints and bulge. This function also convert the
+			// coordinates from database format to world space format
+			itrSegment.calcArcInfo(worldSpace);
+		}
+
+		// Boundary 位置平移
+		for (Boundary itrBoundary:boundaries) {
+			itrBoundary.translateInWorldSpace(worldSpace);
+		}
+
+		// Sort outgoing and incoming arcs at each node.
+		// Make sure RN_Link::comp() is based on angle.
+
+		for (Node itrNode:nodes) {
+			itrNode.sortUpLinks();
+			itrNode.sortDnLinks();
+			// 坐标平移
+			itrNode.calcStaticInfo(worldSpace);
+		}
+
+		// Set destination index of all destination nodes
+
+		for (Node itrNode:nodes) {
+			itrNode.setDestIndex(-1);
+		}
+		for (int i = nDestNodes = 0; i < nodes.size(); i++) {
+			if ((nodes.get(i).getType() & Constants.NODE_TYPE_DES) != 0)
+				nodes.get(i).setDestIndex(nDestNodes++);
+		}
+		if (nDestNodes == 0) {
+			for (int i = 0; i < nodes.size(); i++) {
+				nodes.get(i).setDestIndex( nDestNodes++);
+			}
+		}
+
+		// Set upLink and dnLink indices
+
+		for (Link itrLink:links) {
+			itrLink.calcIndicesAtNodes();
+		}
+
+		// Set variables in links
+
+		for (Link itrLink:links) {
+			itrLink.calcStaticInfo();
+		}
+
+		// Set variables in segments
+
+		for (Segment itrSegment: segments) {
+			itrSegment.calcStaticInfo();
+		}
+
+		// Set variables in upLanes
+		// 增加坐标平移操作
+
+		for (Lane itrLane:lanes) {
+			itrLane.calcStaticInfo(this.worldSpace);
+		}
+		// Surface 位置平移
+		for (GeoSurface surface:surfaces) {
+			surface.translateInWorldSpace(worldSpace);
+		}
+		// Connector 位置平移
+		for (Connector connector:connectors) {
+			connector.translateInWorldSpace(worldSpace);
+		}
 		organize();
 	}
 
 	public void organize() {
 		//补充车道编号的信息
-		for (Lane l: lanes){
-			((RTLane) l).calLnPos();
-		}
-		for (Lane l: lanes){
-			((RTLane) l).checkConectedLane();
-		}
+
 
 		for (Segment seg: segments){
 			// TODO 线性参考上移至父类
@@ -113,9 +199,6 @@ public class RTNetwork extends RoadNetwork{
 			((RTSegment) seg).setEndDSP(endDSP);
 		}
 
-		for (Segment seg: segments) {
-			((RTSegment) seg).setSucessiveLanes();
-		}
 
 		for (Link l: links){
 			//预留
@@ -126,20 +209,8 @@ public class RTNetwork extends RoadNetwork{
 					((RTLink) l).addLaneGraphVertex((RTLane) lane);
 				});
 			});
-			for (Segment seg: segments) {
-				for (int i = 0; i < seg.nLanes(); i++) {
-					RTLane mlpLane = (RTLane) seg.getLane(i);
-					if (i<seg.nLanes()-1)//可叠加实线判断
-						((RTLink)l).addLaneGraphEdge(mlpLane, (RTLane) mlpLane.getRightLane(), 1.0);
-					if (i>0)//可叠加实线判断
-						((RTLink)l).addLaneGraphEdge(mlpLane, (RTLane) mlpLane.getLeftLane(),1.0);
-					if (!((RTSegment) seg).isEndSeg())
-						mlpLane.successiveDnLanes.forEach(suDnLane ->
-								((RTLink)l).addLaneGraphEdge(mlpLane, (RTLane) suDnLane, 0.0));//可叠加封路判断
-				}
-			}
-			//将jointLane信息装入Link中
-			//((RTLink) l).addLnPosInfo();
+
+
 		}
 	}
 
@@ -171,11 +242,12 @@ public class RTNetwork extends RoadNetwork{
 			else
 				movingVehicles.add(vd);
 		}
-		Map<Integer,List<VehicleData>> qvdsByLane = queueVehicles.stream().collect(groupingBy(VehicleData::getCurLaneID));
-		Map<Integer,List<VehicleData>> mvdsByLane = movingVehicles.stream().collect(groupingBy(VehicleData::getCurLaneID));
+
+		Map<Long,List<VehicleData>> qvdsByLane = queueVehicles.stream().collect(groupingBy(VehicleData::getCurLaneID));
+		Map<Long,List<VehicleData>> mvdsByLane = movingVehicles.stream().collect(groupingBy(VehicleData::getCurLaneID));
 		for(int i=0;i<nLanes();i++){
 			RTLane rtLane = (RTLane) getLane(i);
-			int key = rtLane.getId();
+			long key = rtLane.getId();
 			rtLane.calcState(qvdsByLane.get(key),mvdsByLane.get(key));
 			StateData sd = new StateData(rtLane);
 			af.addStateData(sd);
@@ -234,17 +306,6 @@ public class RTNetwork extends RoadNetwork{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public int addLaneConnector(int id, int up, int dn, int successiveFlag, List<GeoPoint> polyline) {
-		int ans = super.addLaneConnector(id,up, dn, successiveFlag,polyline);
-			RTLane upLane = (RTLane) findLane(up);
-			RTLane dnLane = (RTLane) findLane(dn);
-			//upLane.successiveDnLanes.add(dnLane);
-			//dnLane.successiveUpLanes.add(upLane);
-			createConnector(id,polyline,upLane,dnLane);
-		return ans;
 	}
 
 }
