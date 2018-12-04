@@ -194,7 +194,7 @@ public class MLPNode extends Node{
 	public double getPassSpd() {
 		return passSpd;
 	}
-	private boolean intersectionPass(double currentTime, int fLinkID, int tLinkID) {
+	private boolean intersectionPass(double currentTime, long fLinkID, long tLinkID) {
 		return type(Constants.NODE_TYPE_SIGNALIZED_INTERSECTION)==0 ||
 				findPlan(currentTime).check(currentTime, fLinkID, tLinkID);
 	}

@@ -14,13 +14,17 @@ public class MLPConnector extends Connector {
     private List<MLPConnector> conflictConns;
     private MLPNode node;
     private double length;
+    public MLPLane upLane;
+    public MLPLane dnLane;
 
-    public MLPConnector(int id, List<GeoPoint> shapePoints, Lane upLane, Lane dnLane) {
-        super(id, shapePoints, upLane, dnLane);
+    public MLPConnector(long id, List<GeoPoint> shapePoints, MLPLane upLane, MLPLane dnLane) {
+        super(id, shapePoints, upLane.getId(), dnLane.getId());
         vehsOnConn = new LinkedList<>();
         conflictConns = new ArrayList<>();
         length = -1.0;
         node = null;
+        this.upLane = upLane;
+        this.dnLane = dnLane;
     }
 
     public void setNode(MLPNode node) {
@@ -102,5 +106,21 @@ public class MLPConnector extends Connector {
         double spd_normal = link.dynaFun.sdFun(((double)queueNum())/getLength());
         double rate = node.getPassSpd() / link.dynaFun.getFreeFlow();
         return spd_normal*rate*conflictCoef();
+    }
+
+//    public GeoPoint getStartPoint(){
+//        return upLane.getEndPnt();
+//    }
+//
+//    public GeoPoint getEndPoint(){
+//        return dnLane.getStartPnt();
+//    }
+
+    public long upLinkID() {
+        return upLane.getLink().getId();
+    }
+
+    public long dnLinkID() {
+        return dnLane.getLink().getId();
     }
 }

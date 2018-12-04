@@ -464,7 +464,7 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 		return capacity_;
 	}
 
-	protected MLPConnector pickDnConn(int dnLinkID){
+	protected MLPConnector pickDnConn(long dnLinkID){
 		List<MLPConnector> candidates = dnStrmConns.stream().filter(c -> c.dnLinkID()==dnLinkID).collect(Collectors.toList());
 		if (candidates.size()<=0)
 			return null;

@@ -76,26 +76,12 @@ public class Connector implements NetworkObject{
 	public void setSelected(boolean flag) {
 		this.isSelected = flag;
 	}
-	public GeoPoint getStartPoint(){
-		return upLane.getEndPnt();
-	}
-	public GeoPoint getEndPoint(){
-		return dnLane.getStartPnt();
+
+	public long upLaneID() {
+		return upLaneId;
 	}
 
-	public int upLaneID() {
-		return upLane.getId();
-	}
-
-	public int dnLaneID() {
-		return dnLane.getId();
-	}
-
-	public int upLinkID() {
-		return upLane.getLink().getId();
-	}
-
-	public int dnLinkID() {
-		return dnLane.getLink().getId();
+	public long dnLaneID() {
+		return dnLaneId;
 	}
 }

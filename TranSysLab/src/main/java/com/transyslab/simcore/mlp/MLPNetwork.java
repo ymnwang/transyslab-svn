@@ -789,6 +789,12 @@ public class MLPNetwork extends RoadNetwork {
 		return ans;
 	}
 
+	public Connector createConnector(long id, List<GeoPoint> shapePoints, MLPLane upLane, MLPLane dnLane) {
+		MLPConnector mlpConn = new MLPConnector(id, shapePoints, upLane, dnLane);
+		this.connectors.add(mlpConn);
+		return mlpConn;
+	}
+
 	public List<Double> rawSectionDataFilter(String detName, double fTime, double tTime, int dataType) {
 		List<Double> ans = new ArrayList<>();
 		sensors.stream()

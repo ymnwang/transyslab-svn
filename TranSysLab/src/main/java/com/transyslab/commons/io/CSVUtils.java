@@ -63,6 +63,17 @@ public class CSVUtils {
 		return readCSV(filePath,header,false);
 	}
 
+	public static double[][] readCSVData(String filePath,String[] headers) throws IOException{
+		List<CSVRecord> records = readCSV(filePath,headers);
+		double[][] ans = new double[records.get(0).size()][records.size()];
+		for (int i = 0; i < records.size(); i++) {
+			for (int j = 0; j < records.get(0).size(); j++) {
+				ans[j][i] = Double.parseDouble(records.get(i).get(j));
+			}
+		}
+		return ans;
+	}
+
 	public static void writeCSV(String filePath,String[] header, Object[][] data) throws IOException{
 		writeCSV(filePath,header,false,data);
 	}
