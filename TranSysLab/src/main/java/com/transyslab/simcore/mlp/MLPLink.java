@@ -32,8 +32,8 @@ public class MLPLink extends Link {
 		laneGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 	}
 
-	@Override
-	public void init(long id, int type, String name,int index, Node upNode, Node dnNode) {
+	public void init(long id, int type, String name,int index, Node upNode, Node dnNode, MLPNetwork network) {
+		setNetwork(network);
 		super.init(id, type, name, index, upNode, dnNode);
 		dynaFun = new Dynamics(this);
 	}

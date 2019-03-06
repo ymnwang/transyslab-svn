@@ -75,6 +75,7 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 	public abstract Link createLink(long id, int type, String name,long upNodeId, long dnNodeId);
 
 	public abstract Segment createSegment(long id, int speedLimit, double freeSpeed, double grd, List<GeoPoint> ctrlPoints);
+
 	public abstract Lane createLane(long id, int rule, int orderNum, double width ,String direction ,List<GeoPoint> ctrlPoints);
 
 	public abstract Sensor createSensor(long id, int type, String detName, long segId, double pos, double zone, double interval );

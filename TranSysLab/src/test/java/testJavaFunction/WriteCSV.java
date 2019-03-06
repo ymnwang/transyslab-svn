@@ -31,11 +31,11 @@ public class WriteCSV {
 		//printer.flush();
 		//printer.close();
 
-		try {
-			CSVUtils.writeCSV("R:\\testwrite.csv", null, data);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			CSVUtils.writeCSV("R:\\testwrite.csv", null, data);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 }

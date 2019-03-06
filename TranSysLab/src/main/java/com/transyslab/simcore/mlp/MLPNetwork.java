@@ -55,8 +55,7 @@ public class MLPNetwork extends RoadNetwork {
 	@Override
 	public Link createLink(long id, int type, String name,long upNodeId, long dnNodeId) {
 		MLPLink newLink = new MLPLink();
-		newLink.init(id,type,name,nLinks(),findNode(upNodeId),findNode(dnNodeId));
-		newLink.setNetwork(this);
+		newLink.init(id,type,name,nLinks(),findNode(upNodeId),findNode(dnNodeId),this);
 		links.add(newLink);
 		this.addEdge(newLink.getUpNode(),newLink.getDnNode(),newLink);
 		this.setEdgeWeight(newLink,Double.POSITIVE_INFINITY);
@@ -772,8 +771,13 @@ public class MLPNetwork extends RoadNetwork {
 		int ans = super.addLaneConnector(id, up, dn, successiveFlag,polyline);
 		MLPLane upLane = (MLPLane) findLane(up);
 		MLPLane dnLane = (MLPLane) findLane(dn);
-		if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0)
-			createConnector(id,polyline,up,dn);
+		try {
+			if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0)
+				createConnector(id,polyline,up,dn);
+		}
+		catch (java.lang.NullPointerException e) {
+			System.out.println(e.getStackTrace());
+		}
 		MLPConnector mlpConn = (MLPConnector) createConnector(id,polyline,upLane,dnLane);
 		upLane.dnStrmConns.add(mlpConn);
 		dnLane.upStrmConns.add(mlpConn);

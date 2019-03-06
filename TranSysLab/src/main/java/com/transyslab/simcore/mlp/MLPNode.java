@@ -130,12 +130,10 @@ public class MLPNode extends Node{
 			crSpeed = vehCheck.getCurrentSpeed();
 			followerLen = vehPass.getLength();
 		}
-		//TODO parameter获取方式待优化
 		MLPParameter mlpParameter = (MLPParameter) vehPass.link.getNetwork().getSimParameter();
 		return dis_headway - followerLen < mlpParameter.minGap(crSpeed);
 	}
 	private boolean reachFirst(MLPVehicle vehPass, MLPVehicle vehCheck) {
-		//TODO clock获取方式待优化
 		SimulationClock simClock = vehPass.link.getNetwork().getSimClock();
 		double dis_headway = vehCheck.getDistance() - vehPass.newDis - vehCheck.getCurrentSpeed()*simClock.getStepSize();
 		return dis_headway >= 0;
@@ -158,7 +156,6 @@ public class MLPNode extends Node{
 		statedVehs.add(veh);
 	}
 	protected void dispatchStatedVeh() {
-		//TODO clock获取方式待优化
 		if (statedVehs.size() <= 0)
 			return;
 		SimulationClock simClock = getDnLink(0).getNetwork().getSimClock();
@@ -180,7 +177,6 @@ public class MLPNode extends Node{
 			MLPVehicle v = statedVehs.get(i);
 			if (v.lane.getId() == nextLane.getId()){
 				double gap = veh.newDis + nextLane.getLength() - v.newDis - v.getLength();
-				//TODO parameter获取方式待优化
 				MLPParameter mlpParameter = (MLPParameter) veh.link.getNetwork().getSimParameter();
 				ans |= ( gap < mlpParameter.minGap(veh.newSpeed) );
 			}
