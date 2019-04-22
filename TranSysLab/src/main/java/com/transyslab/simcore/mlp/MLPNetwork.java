@@ -15,6 +15,7 @@ import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
 import org.apache.commons.csv.CSVRecord;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 
 public class MLPNetwork extends RoadNetwork {
@@ -112,9 +113,11 @@ public class MLPNetwork extends RoadNetwork {
 	public void calcStaticInfo() {
 		super.calcStaticInfo();
 		organize();
-
 	}
-
+	public void calcDbStaticInfo() {
+		super.calcDbStaticInfo();
+		organize();
+	}
 
 	public void organize() {
 		//补充车道编号的信息
@@ -139,6 +142,7 @@ public class MLPNetwork extends RoadNetwork {
 			((MLPLane) l).checkConectedLane();
 		}
 
+		int li = 0;
 		for (Link l: links){
 			//预留
 			((MLPLink) l).checkConnectivity();
@@ -162,7 +166,14 @@ public class MLPNetwork extends RoadNetwork {
 			}
 			//将jointLane信息装入Link中
 			((MLPLink) l).addLnPosInfo();
+			li += 1;
+			System.out.println("DEBUG message: link " + l.getId() + " " + li + "th of " + links.size());
 		}
+		//临时修改 wym
+//		List<Connector> c1 = connectors.stream().filter(c->((MLPConnector)c).upLinkID()==-73072 && ((MLPConnector)c).dnLinkID()==-73030).collect(Collectors.toList());
+//		List<Connector> c2 = connectors.stream().filter(c->((MLPConnector)c).upLinkID()==73030 && ((MLPConnector)c).dnLinkID()==73079).collect(Collectors.toList());
+//		c1.forEach(c->((MLPConnector)c).addConflictConns(c2));
+//		c2.forEach(c->((MLPConnector)c).addConflictConns(c1));
 	}
 
 	public void buildEmitTable(boolean needRET, String odFileDir, String emitFileDir){
@@ -385,6 +396,80 @@ public class MLPNetwork extends RoadNetwork {
 		clearSecStat();
 		clearLinkStat();
 	}
+
+	public void transformVehData(VehicleData vd, MLPVehicle veh) {
+		//todo: 过渡方案
+		//计算翻译线性参考
+		if (veh.conn==null){
+			double l0 = veh.segment.getLength();
+			double lr = Math.max(0.0,l0-veh.getDistance()) / l0;
+			double l1 = veh.lane.getGeoLength();
+			if (!veh.segment.isEndSeg()){
+				if (veh.link.getUpNode().type(Constants.NODE_TYPE_INTERSECTION)==0 &&
+						veh.segment.isStartSeg() &&
+						veh.getPath().index()>1) {
+					MLPConnector conn_ = veh.lane.upStrmConns.stream().filter(c->c.upLane.getId()==veh.shownUpLane.getId()).findFirst().orElse(null);
+					double l_ = conn_.getLength();
+
+					int sDnLaneNum = veh.lane.successiveDnLanes.size();
+					MLPLane successiveDnLane = veh.lane.dnStrmConns.size()==1 ?
+							(MLPLane) veh.lane.dnLane(0) :
+							sDnLaneNum==1 ?
+									veh.lane.successiveDnLanes.get(0) :
+									null;
+					if (successiveDnLane==null)
+						System.err.println("wrong successiveDnNum");
+					MLPConnector conn = (MLPConnector) veh.lane.dnStrmConns.stream().filter(c->c.dnLane.equals(successiveDnLane)).findFirst().orElse(null);
+					if (conn==null)
+						System.err.println("can not find a conn");
+					double l2 = conn.getLength();
+
+					double cr1 = l_ / (l_+l1+l2);
+					double cr2 = (l_+l1) / (l_+l1+l2);
+					if (lr<=cr1)
+						vd.init(String.valueOf(veh.getId()), conn_, veh.getLength(), Math.min(l_-1e-5,lr*(l_+l1+l2)), veh.getCurrentSpeed(),"B", Math.abs(veh.getCurrentSpeed())<1.0/3.6, true);
+					else if (lr<=cr2)
+						vd.init(String.valueOf(veh.getId()), veh.lane, veh.getLength(), Math.min(l1-1e-5,lr*(l_+l1+l2)-l_), veh.getCurrentSpeed(),"B", Math.abs(veh.getCurrentSpeed())<1.0/3.6, true);
+					else
+						vd.init(String.valueOf(veh.getId()), conn, veh.getLength(), Math.min(l2-1e-5,lr*(l_+l1+l2)-l_-l1), veh.getCurrentSpeed(),"B", Math.abs(veh.getCurrentSpeed())<1.0/3.6, true);
+				}
+				else {
+					//on the road
+					//find the connector
+					int sDnLaneNum = veh.lane.successiveDnLanes.size();
+					MLPLane successiveDnLane = veh.lane.dnStrmConns.size()==1 ?
+							(MLPLane) veh.lane.dnLane(0) :
+							sDnLaneNum==1 ?
+									veh.lane.successiveDnLanes.get(0) :
+									null;
+					if (successiveDnLane==null)
+						System.err.println("wrong successiveDnNum");
+					MLPConnector conn = (MLPConnector) veh.lane.dnStrmConns.stream().filter(c->c.dnLane.equals(successiveDnLane)).findFirst().orElse(null);
+					if (conn==null)
+						System.err.println("can not find a conn");
+
+					double l2 = conn.getLength();
+					double cr = l1 / (l1+l2);
+					if (lr<=cr)
+						vd.init(String.valueOf(veh.getId()), veh.lane, veh.getLength(), Math.min(l1-1e-5,lr*(l1+l2)), veh.getCurrentSpeed(),"B", Math.abs(veh.getCurrentSpeed())<1.0/3.6, true);
+					else
+						vd.init(String.valueOf(veh.getId()), conn, veh.getLength(), Math.min(l2-1e-5,lr*(l1+l2)-l1), veh.getCurrentSpeed(),"B", Math.abs(veh.getCurrentSpeed())<1.0/3.6, true);
+				}
+			}
+			else {
+				if (veh.link.getDnNode().type(Constants.NODE_TYPE_INTERSECTION)==0) {
+
+				}
+				else
+					vd.init(String.valueOf(veh.getId()), veh.lane, veh.getLength(), Math.min(l1-1e-5,lr*l1), veh.getCurrentSpeed(),"B", Math.abs(veh.getCurrentSpeed())<1.0/3.6, true);
+			}
+
+		}
+		else {
+			//in an intersection
+			vd.init(String.valueOf(veh.getId()), veh.conn, veh.getLength(), Math.min(veh.conn.getLength()-1e-5,veh.conn.getLength()-veh.getDistance()), veh.getCurrentSpeed(),"B", Math.abs(veh.getCurrentSpeed())<1.0/3.6, true);
+		}
+	}
 	
 	public void recordVehicleData(){
 		VehicleData vd;
@@ -401,6 +486,7 @@ public class MLPNetwork extends RoadNetwork {
 						(v.resemblance ? Constants.FOLLOWING : 0) + Math.min(1,v.virtualType),
 						//String.valueOf(v.getNextLink()==null ? "NA" : v.lane.successiveDnLanes.get(0).getLink().getId()==v.getNextLink().getId())
 						v.getInfo());
+				transformVehData(vd, v);
 				//将vehicledata插入frame
 				af.addVehicleData(vd);
 			}
@@ -439,7 +525,9 @@ public class MLPNetwork extends RoadNetwork {
 		ODPair thePair = super.findODPair(oriNode, desNode);
 		if (thePair == null) {
 			// todo 应加入所有可行路径，非最短路
-			GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
+//			GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
+			//临时修改 wym
+			GraphPath<Node, Link> gpath = (GraphPath<Node, Link>) new AllDirectedPaths(this).getAllPaths(oriNode,desNode,true,4).get(0);
 			ODPair newPair = new ODPair(oriNode, desNode);
 			oriNode.setType(oriNode.getType() | Constants.NODE_TYPE_ORI);
 			desNode.setType(desNode.getType() | Constants.NODE_TYPE_DES);
@@ -623,18 +711,44 @@ public class MLPNetwork extends RoadNetwork {
 			double emitTime = 0.0;
 			while ((readLine = bReader.readLine()) != null && emitTime <= tTime) {
 				String[] items = readLine.split(",");
-				emitTime = Double.parseDouble(items[4]);
-				int fLinkID = Integer.parseInt(items[0]);
-				int tLinkID = Integer.parseInt(items[1]);
 				int demand = Integer.parseInt(items[2]);
 				double [] time = {Double.parseDouble(items[3]),
 						Double.parseDouble(items[4])};
+				emitTime = Double.parseDouble(items[4]);
 				double [] speed = {Double.parseDouble(items[5]),
 						Double.parseDouble(items[6]),
 						Double.parseDouble(items[7])};
-				MLPLink theLink = findLink(fLinkID);
-				List<Lane> lanes = theLink.getStartSegment().getLanes();
-				theLink.generateInflow(demand, speed, time, lanes, tLinkID);
+				List<Link> fLinks, tLinks;
+				if (items[0]==null || "".equals(items[0])){
+					//origin not specified
+//					fLinks = links.stream().filter(l->l.nUpLinks()==0).collect(Collectors.toList());
+					fLinks = new ArrayList<>();
+					for (Link l : links) {
+//						System.out.println("DEBUG: link " + l.getId() + " has " + l.nUpLinks() + " upLinks");
+						if (l.nUpLinks()==0)
+							fLinks.add(l);
+					}
+				}
+				else {
+					int fLinkID = Integer.parseInt(items[0]);
+					fLinks = new ArrayList<Link>();
+					fLinks.add(findLink(fLinkID));
+				}
+				if (items[1]==null || "".equals(items[1])){
+					//destination not specified
+					tLinks = links.stream().filter(l->l.nDnLinks()==0).collect(Collectors.toList());
+				}
+				else{
+					int tLinkID = Integer.parseInt(items[1]);
+					tLinks = new ArrayList<Link>();
+					tLinks.add(findLink(tLinkID));
+				}
+				if (fLinks.size()>0 && tLinks.size()>0) {
+					fLinks.forEach(fLink->{
+						List<Lane> lanes = fLink.getStartSegment().getLanes();
+						tLinks.forEach(tLink -> ((MLPLink)fLink).generateInflow(demand, speed, time, lanes, tLink.getId()));
+					});
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -771,13 +885,13 @@ public class MLPNetwork extends RoadNetwork {
 		int ans = super.addLaneConnector(id, up, dn, successiveFlag,polyline);
 		MLPLane upLane = (MLPLane) findLane(up);
 		MLPLane dnLane = (MLPLane) findLane(dn);
-		try {
-			if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0)
-				createConnector(id,polyline,up,dn);
-		}
-		catch (java.lang.NullPointerException e) {
-			System.out.println(e.getStackTrace());
-		}
+//		try {
+//			if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0)
+//				createConnector(id,polyline,up,dn);
+//		}
+//		catch (java.lang.NullPointerException e) {
+//			System.out.println(e.getStackTrace());
+//		}
 		MLPConnector mlpConn = (MLPConnector) createConnector(id,polyline,upLane,dnLane);
 		upLane.dnStrmConns.add(mlpConn);
 		dnLane.upStrmConns.add(mlpConn);
@@ -791,6 +905,23 @@ public class MLPNetwork extends RoadNetwork {
 			dnLane.successiveUpLanes.add(upLane);
 		}
 		return ans;
+	}
+
+	@Override
+	public Connector createConnector(long id, long upLaneId, long dnLaneId, List<GeoPoint> shapePoints) {
+		updateRelation(upLaneId,dnLaneId);
+		MLPLane upLane = (MLPLane) findLane(upLaneId);
+		MLPLane dnLane = (MLPLane) findLane(dnLaneId);
+		MLPConnector mlpConn = new MLPConnector(id,shapePoints,upLane,dnLane);
+		upLane.dnStrmConns.add(mlpConn);
+		dnLane.upStrmConns.add(mlpConn);
+		if(upLane.getSegment().isEndSeg() && (upLane.getSegment().getLink().getDnNode().getType()&Constants.NODE_TYPE_INTERSECTION) !=0) {
+			MLPNode theNode = (MLPNode) upLane.getLink().getDnNode();
+			mlpConn.setNode(theNode);
+			theNode.addLC(mlpConn);
+		}
+		this.connectors.add(mlpConn);
+		return mlpConn;
 	}
 
 	public Connector createConnector(long id, List<GeoPoint> shapePoints, MLPLane upLane, MLPLane dnLane) {

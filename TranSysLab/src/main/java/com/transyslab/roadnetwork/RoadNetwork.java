@@ -90,14 +90,20 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 		Connector newConnector = new Connector();
 		newConnector.init(id,upLaneId,dnLaneId,shapePoints);
 		this.connectors.add(newConnector);
+		if (updateRelation(upLaneId,dnLaneId))
+			return newConnector;
+		else
+			return null;
+	}
+	public boolean updateRelation(long upLaneId, long dnLaneId){
 		Lane ulane, dlane;
 		if ((ulane = findLane(upLaneId)) == null) {
 			System.out.println("Error: unknown upstream lane " + upLaneId);
-			return null;
+			return false;
 		}
 		else if ((dlane = findLane(dnLaneId)) == null) {
 			System.out.println("Error: unknown downstream lane " + dnLaneId);
-			return null;
+			return false;
 		}
 
 		// Check if this connector make sense
@@ -108,11 +114,11 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 		if (ulane.findInDnLane(dnLaneId) != null || dlane.findInUpLane(upLaneId) != null) {
 			System.out.println("Error: already connected");
-			return null;
+			return false;
 		}
 		ulane.dnLanes.add(dlane);
 		dlane.upLanes.add(ulane);
-		return newConnector;
+		return true;
 	}
 	public void createSurface(long id, int segId, List<GeoPoint> kerbList){
 		GeoSurface surface = new GeoSurface();
@@ -710,7 +716,107 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 			connector.translateInWorldSpace(worldSpace);
 		}
 	}
+	public void calcDbStaticInfo(){
+		// Create the world space
+		worldSpace.createWorldSpace();
+		// Lane必须从左到右解析，Segment必须从上游至下游解析
+		for(Link itrLink:links){
+			// 按上下游关系保存路段的引用
+			List<Segment> sgmtsInLink = itrLink.getSegments();
+			int nSegment = sgmtsInLink.size();
+			for(int i=0;i<nSegment;i++){
+				Segment itrSgmt = sgmtsInLink.get(i);
+				if(i!=0)//起始路段没有上游
+					itrSgmt.setUpSegment(sgmtsInLink.get(i-1));
+				if(i!=nSegment-1)//末端路段没有下游
+					itrSgmt.setDnSegment(sgmtsInLink.get(i+1));
+				// 按横向关系保存相邻车道的引用
+				List<Lane> lanesInSgmt = itrSgmt.getLanes();
+				int nLanes = lanesInSgmt.size();
+				for(int j=0;j<nLanes;j++){
+					if(j!=0)// 最左侧车道
+						lanesInSgmt.get(j).setLeftLane(lanesInSgmt.get(j-1));
+					if(j!=nLanes-1)// 最右侧车道
+						lanesInSgmt.get(j).setRightLane(lanesInSgmt.get(j+1));
+				}
+			}
+		}
+		for (Segment itrSegment:segments) {
 
+			// Generate arc info such as angles and length from the two
+			// endpoints and bulge. This function also convert the
+			// coordinates from database format to world space format
+			itrSegment.calcArcInfo(worldSpace);
+		}
+
+		// Boundary 位置平移
+		for (Boundary itrBoundary:boundaries) {
+			itrBoundary.translateInWorldSpace(worldSpace);
+		}
+
+		// Sort outgoing and incoming arcs at each node.
+		// Make sure RN_Link::comp() is based on angle.
+
+		for (Node itrNode:nodes) {
+			itrNode.sortUpLinks();
+			itrNode.sortDnLinks();
+			// 坐标平移
+			itrNode.calcStaticInfo(worldSpace);
+		}
+
+		// Set destination index of all destination nodes
+
+		for (Node itrNode:nodes) {
+			itrNode.setDestIndex(-1);
+		}
+		for (int i = nDestNodes = 0; i < nodes.size(); i++) {
+			if ((nodes.get(i).getType() & Constants.NODE_TYPE_DES) != 0)
+				nodes.get(i).setDestIndex(nDestNodes++);
+		}
+		if (nDestNodes == 0) {
+			for (int i = 0; i < nodes.size(); i++) {
+				nodes.get(i).setDestIndex( nDestNodes++);
+			}
+		}
+
+		// Set upLink and dnLink indices
+
+		for (Link itrLink:links) {
+			itrLink.calcIndicesAtNodes();
+		}
+
+		// Set variables in links
+
+		for (Link itrLink:links) {
+			// 无Segment的路段不计算
+			if(itrLink.nSegments()>0){
+				itrLink.calcStaticInfo();
+			}
+
+		}
+
+		// Set variables in segments
+
+		for (Segment itrSegment: segments) {
+			itrSegment.calcStaticInfo();
+		}
+
+		// Set variables in upLanes
+		// 增加坐标平移操作
+
+		for (Lane itrLane:lanes) {
+			itrLane.calcStaticInfo(this.worldSpace);
+		}
+		// Surface 位置平移
+		for (GeoSurface surface:surfaces) {
+			surface.translateInWorldSpace(worldSpace);
+		}
+		// Connector 位置平移
+		for (Connector connector:connectors) {
+			connector.translateInWorldSpace(worldSpace);
+		}
+
+	}
 	public void initializeLinkStatistics() {
 		for (int i = 0; i < links.size(); i++) {
 			getLink(i).initializeStatistics(linkTimes.infoPeriods);
@@ -784,6 +890,18 @@ public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link
 
 					});
 		}
+	}
+	public void rmLastLink(){
+		Link rmLink = links.remove(links.size()-1);
+		System.out.println("DEBUG: remove centerRoad ID = " + rmLink.getId());
+		rmLink.getUpNode().rmDnLink(rmLink);
+		rmLink.getDnNode().rmUpLink(rmLink);
+	}
+	public void rmSegments(List<Segment> rmSegments){
+		segments.removeAll(rmSegments);
+	}
+	public void rmLanes(List<Lane> rmLanes){
+		lanes.removeAll(rmLanes);
 	}
 	public void setArrowColor() {
 		{

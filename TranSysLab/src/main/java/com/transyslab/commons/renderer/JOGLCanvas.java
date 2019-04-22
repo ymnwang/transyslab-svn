@@ -221,10 +221,10 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 	}
 	public void scene(GL2 gl) {
 		// Node µã
-		for(int i=0; i< drawableNetwork.nNodes();i++){
-			Node itrNode = drawableNetwork.getNode(i);
-			ShapeUtil.drawPoint(gl,itrNode.getPosPoint(),10,new float[]{0,0.69f,0.94f},itrNode.isSelected(),LAYER_NODE);
-		}
+//		for(int i=0; i< drawableNetwork.nNodes();i++){
+//			Node itrNode = drawableNetwork.getNode(i);
+//			ShapeUtil.drawPoint(gl,itrNode.getPosPoint(),10,new float[]{0,0.69f,0.94f},itrNode.isSelected(),LAYER_NODE);
+//		}
 		// Boundary Ïß
 		for (int i = 0; i< drawableNetwork.nBoundaries(); i++) {
 			Boundary tmpboundary = drawableNetwork.getBoundary(i);
@@ -235,7 +235,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 		for(int i = 0; i< drawableNetwork.nSegments(); i++){
 			Segment tmpsegment = drawableNetwork.getSegment(i);
 			ShapeUtil.drawPolyline(gl, tmpsegment.getCtrlPoints(), 2,
-					Constants.COLOR_WHITE,LAYER_BOUNDARY);
+					Constants.COLOR_BLUE,LAYER_BOUNDARY);
 		}
 		// Lane Ïß
 		for(Lane itrLane:drawableNetwork.getLanes()){

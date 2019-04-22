@@ -77,7 +77,8 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	}
 	
 	public void calLnPos() {
-		//lnPosNum_ = getId()%10;
+		//todo: to delete duplicated filed lnPosNum
+		lnPosNum_ = orderNum;
 	}
 	
 	public int getLnPosNum(){
@@ -479,5 +480,9 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 			return candidates.get(0);
 		}
 
+	}
+
+	public List<MLPConnector> connsToDnLink(Long linkId){
+		return dnStrmConns.stream().filter(c->c.dnLinkID()==linkId).collect(Collectors.toList());
 	}
 }

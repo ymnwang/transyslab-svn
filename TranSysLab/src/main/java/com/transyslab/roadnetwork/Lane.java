@@ -376,45 +376,45 @@ public class Lane implements NetworkObject,Comparable<Lane> {
 		//生成车道面
 		createLaneSurface();
 		//信控标识
-		if(laneType(Constants.LANE_TYPE_SIGNAL_ARROW) != 0){
-			char[] turns = direction.toCharArray();
-			if(turns.length!=0){
-				double r = (getGeoLength()+1)/getGeoLength();// 起点偏移1m
-				GeoPoint startPnt = ctrlPoints.get(0);
-				GeoPoint endPnt = ctrlPoints.get(size-1);
-				GeoPoint rectgFP = endPnt.intermediate(startPnt,r);
-				r = r + 6.0/getGeoLength();// 箭头长度6m
-				GeoPoint rectgEP = endPnt.intermediate(startPnt,r);
-				for(char turn:turns){
-					SignalArrow sa = new SignalArrow(0,turn,rectgFP,rectgEP);
-					sa.setRightTurnFree((rules()&Constants.LANE_RIGHTTURN_FREE)!=0);
-					signalArrows.add(sa);
-				}
-			}
-			// 计算流向箭头的横向位置
-			if(signalArrows.size()>1) {
-				Collections.sort(signalArrows);
-				GeoPoint refPoint = surface.getKerbList().get(surface.getKerbList().size() - 2);
-				GeoPoint endPnt = ctrlPoints.get(ctrlPoints.size()-1);
-				Vector3D translate = new Vector3D(refPoint.getLocationX() - endPnt.getLocationX(),
-						refPoint.getLocationY() - endPnt.getLocationY(),
-						refPoint.getLocationZ() - endPnt.getLocationZ());//←
-				translate = translate.normalize();
-				if(signalArrows.size()==2){
-					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.3));
-					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.3));
-					GeoUtil.calcTranslation(signalArrows.get(1).getArrowTip(),translate.scalarMultiply(-0.3));
-					GeoUtil.calcTranslation(signalArrows.get(1).getPolyline(),translate.scalarMultiply(-0.3));
-				}
-				else{
-					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.6));
-					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.6));
-					GeoUtil.calcTranslation(signalArrows.get(2).getArrowTip(),translate.scalarMultiply(-0.6));
-					GeoUtil.calcTranslation(signalArrows.get(2).getPolyline(),translate.scalarMultiply(-0.6));
-				}
-			}
-
-		}
+//		if(laneType(Constants.LANE_TYPE_SIGNAL_ARROW) != 0){
+//			char[] turns = direction.toCharArray();
+//			if(turns.length!=0){
+//				double r = (getGeoLength()+1)/getGeoLength();// 起点偏移1m
+//				GeoPoint startPnt = ctrlPoints.get(0);
+//				GeoPoint endPnt = ctrlPoints.get(size-1);
+//				GeoPoint rectgFP = endPnt.intermediate(startPnt,r);
+//				r = r + 6.0/getGeoLength();// 箭头长度6m
+//				GeoPoint rectgEP = endPnt.intermediate(startPnt,r);
+//				for(char turn:turns){
+//					SignalArrow sa = new SignalArrow(0,turn,rectgFP,rectgEP);
+//					sa.setRightTurnFree((rules()&Constants.LANE_RIGHTTURN_FREE)!=0);
+//					signalArrows.add(sa);
+//				}
+//			}
+//			// 计算流向箭头的横向位置
+//			if(signalArrows.size()>1) {
+//				Collections.sort(signalArrows);
+//				GeoPoint refPoint = surface.getKerbList().get(surface.getKerbList().size() - 2);
+//				GeoPoint endPnt = ctrlPoints.get(ctrlPoints.size()-1);
+//				Vector3D translate = new Vector3D(refPoint.getLocationX() - endPnt.getLocationX(),
+//						refPoint.getLocationY() - endPnt.getLocationY(),
+//						refPoint.getLocationZ() - endPnt.getLocationZ());//←
+//				translate = translate.normalize();
+//				if(signalArrows.size()==2){
+//					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.3));
+//					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.3));
+//					GeoUtil.calcTranslation(signalArrows.get(1).getArrowTip(),translate.scalarMultiply(-0.3));
+//					GeoUtil.calcTranslation(signalArrows.get(1).getPolyline(),translate.scalarMultiply(-0.3));
+//				}
+//				else{
+//					GeoUtil.calcTranslation(signalArrows.get(0).getArrowTip(),translate.scalarMultiply(0.6));
+//					GeoUtil.calcTranslation(signalArrows.get(0).getPolyline(),translate.scalarMultiply(0.6));
+//					GeoUtil.calcTranslation(signalArrows.get(2).getArrowTip(),translate.scalarMultiply(-0.6));
+//					GeoUtil.calcTranslation(signalArrows.get(2).getPolyline(),translate.scalarMultiply(-0.6));
+//				}
+//			}
+//
+//		}
 	}
 	/*
 	 * --------------------------------------------------------------------

@@ -3,6 +3,7 @@ package com.transyslab.simcore.mlp;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -239,19 +240,25 @@ public class MLPEngine extends SimulationEngine{
 					loopRecWriter.write(msg);
 				}
 			}
+			//节点运动迭代
+			for (int i = 0; i < mlpNetwork.nNodes(); i++) {
+				mlpNetwork.mlpNode(i).update();
+			}
 			//车辆状态更新(同时更新)
+			//路段->节点
 			for (int k = 0; k<mlpNetwork.veh_list.size(); k++) {
 				MLPVehicle theVeh = mlpNetwork.veh_list.get(k);
 				if (theVeh.updateMove()==Constants.VEHICLE_RECYCLE)
 					k -=1;
 			}
+			//节点->路段
+			//加载transpose车辆
+			for (int i = 0; i < mlpNetwork.nNodes(); i++) {
+				mlpNetwork.mlpNode(i).dispatchStatedVeh();
+			}
 			//车辆推进
 			for (MLPVehicle vehicle : mlpNetwork.veh_list) {
 				vehicle.advance();
-			}
-			//加载transpose车辆
-			for (int i = 0; i < mlpNetwork.nNodes(); i++) {
-				mlpNetwork.mlpNode(i).update().dispatchStatedVeh();
 			}
 
 		}
@@ -362,18 +369,27 @@ public class MLPEngine extends SimulationEngine{
 		//parse xml into parameter & network
 
 		// 读取路网xml
-		XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkPath"));
-		// 读入路网数据后组织路网不同要素的关系
-		mlpNetwork.calcStaticInfo();
-		//读入配时方案
-		if (!(config.getString("signalPlan")==null||config.getString("signalPlan").equals("")))
-			readSignalPlan(runProperties.get("signalPlan"));
-		// 读入检测器数据
-		if (!(config.getString("sensorPath")==null||config.getString("sensorPath").equals("")))
-			XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorPath"));
-		// 解释路网输出变量
-		mlpNetwork.initLinkStatMap(runProperties.get("statLinkIds"));
-		mlpNetwork.initSectionStatMap(runProperties.get("statDetNames"));
+		//XmlParser.parseNetwork(mlpNetwork, runProperties.get("roadNetworkPath"));
+		try {
+			// 从数据库读入全网数据
+//			NetworkCreator.readDataFromDB(mlpNetwork, "4927,4893,4944,4808,4806,4835,4694,4697,4706", true);
+			NetworkCreator.readDataFromDB(mlpNetwork, null, false);
+			// 读入路网数据后组织路网不同要素的关系
+			mlpNetwork.calcDbStaticInfo();
+//			// 读入路网数据后组织路网不同要素的关系
+//			mlpNetwork.calcStaticInfo();
+			//读入配时方案
+			if (!(config.getString("signalPlan") == null || config.getString("signalPlan").equals("")))
+				readSignalPlan(runProperties.get("signalPlan"));
+			// 读入检测器数据
+			if (!(config.getString("sensorPath") == null || config.getString("sensorPath").equals("")))
+				XmlParser.parseSensors(mlpNetwork, runProperties.get("sensorPath"));
+			// 解释路网输出变量
+			mlpNetwork.initLinkStatMap(runProperties.get("statLinkIds"));
+			mlpNetwork.initSectionStatMap(runProperties.get("statDetNames"));
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return 0;
 	}
 

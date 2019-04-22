@@ -155,7 +155,7 @@ public class RTEngine extends SimulationEngine{
 		// 读取路网xml
 		//XmlParser.parseNetwork(rtNetwork, runProperties.get("roadNetworkPath"));
 		try {
-			NetworkCreator.readDataFromDB(rtNetwork,"4927,4893,4944,4808,4806,4835,4694,4697,4706");
+			NetworkCreator.readDataFromDB(rtNetwork,"4927,4893,4944,4808,4806,4835,4694,4697,4706",true);
 			// 读入路网数据后组织路网不同要素的关系
 			rtNetwork.calcStaticInfo();
 		} catch (SQLException e) {

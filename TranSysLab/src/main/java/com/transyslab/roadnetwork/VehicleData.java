@@ -212,7 +212,7 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 
 			int index = FitnessFunction.binarySearchIndex(linearDistance,distance);
 			if(index == linearDistance.length)
-				System.out.println("Error: wrong distance on connector");
+				System.err.println("Error: wrong distance on connector");
 			distance = distance - linearDistance[index-1];
 
 			// ’€œﬂ≥§∂»

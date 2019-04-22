@@ -13,6 +13,7 @@ public class MLPVehicle extends Vehicle{
 	protected MLPLane lane;
 	protected MLPSegment segment;
 	protected MLPLink link;
+	protected MLPConnector conn;
 	protected int platoonCode;
 	protected int virtualType;//0 for real veh; num>0 for virual veh with the connected vheID
 	protected int buffer;//lane changing cold down remain frames
@@ -27,7 +28,6 @@ public class MLPVehicle extends Vehicle{
 //	public double TimeEntrance;
 	protected double dspLinkEntrance;
 	protected int rvId;
-	protected double time2Dispatch;
 	protected HashMap<MLPLane, Double> diMap;
 //	static public TXTUtils fout = new TXTUtils("src/main/resources/output/test.csv");
 //	protected double TimeExit;
@@ -37,6 +37,8 @@ public class MLPVehicle extends Vehicle{
 	protected MLPParameter mlpParameter;
 
 	private int count;
+
+	public MLPLane shownUpLane;
 	
 	
 	public MLPVehicle(MLPParameter theParameter){
@@ -229,6 +231,27 @@ public class MLPVehicle extends Vehicle{
 //		fout.writeNFlush(u + "," + pr + "\r\n");
 		return pr;
 	}
+
+	public double calLCProbability2(int turning) {
+		double [] gamma = mlpParameter.getLCPara();
+		double lambda1 = MLPParameter.LC_Lambda1;
+		double lambda2 = MLPParameter.LC_Lambda2;
+		double h = calH(turning);
+		double Umlc = h==0.0 ? 0.0 : calMLC();
+		double Udlc = calDLC2(turning);
+		double W = gamma[0]*h*Umlc + gamma[1]*Udlc;// - (gamma[0] + gamma[1])*0.5
+		double U = lambda1*W + lambda2;
+		//º∆À„±ﬂΩÁΩÿ∂œ
+		double tmp = Math.min(Math.max(Math.exp(U),-1e10),1e10);
+		double pr = tmp/(1+tmp);
+		return pr;
+	}
+
+	public double calDLC2(int turning) {
+		MLPLane tarLane = lane.getAdjacent(turning);
+		double p_dlc = ((double) lane.vehsOnLn.size() - tarLane.vehsOnLn.size()) / lane.getLength() / link.dynaFun.linkCharacteristics[2];
+		return p_dlc;
+	}
 	
 	public void initNetworkEntrance(double time, double dsp) {
 		departTime = (float) time;
@@ -263,7 +286,7 @@ public class MLPVehicle extends Vehicle{
 			lane.removeVeh(this, true);
 			return Constants.VEHICLE_RECYCLE;
 		}
-		if (newDis < 0.0) 
+		if (newDis < 0.0 && conn==null)
 			return dealPassing();//Passing link or seg
 		return Constants.VEHICLE_NOT_RECYCLE;
 	}
@@ -360,6 +383,8 @@ public class MLPVehicle extends Vehicle{
 		lane = null;
 		segment = null;
 		link = null;
+		conn = null;
+		shownUpLane = null;
 		platoonCode = 0;
 		virtualType = 0;
 		buffer = 0;
@@ -378,7 +403,6 @@ public class MLPVehicle extends Vehicle{
 		timeEntersLink = 0.0f;
 		dspLinkEntrance = 0.0;
 		rvId = 0;
-		time2Dispatch = 0.0;
 		donePathIndex();
 //		TimeExit = 0.0;
 		diMap.clear();
@@ -476,5 +500,9 @@ public class MLPVehicle extends Vehicle{
 	}
 	public boolean have2ChangeLane() {
 		return virtualType==0 && diMap.get(lane)==Double.POSITIVE_INFINITY;
+	}
+
+	public boolean isVirtual(){
+		return this.virtualType!=0;
 	}
 }

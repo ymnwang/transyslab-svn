@@ -106,6 +106,12 @@ public class Node implements NetworkObject {
 	public void addDnLink(Link link) {
 		dnLinks.add(link);
 	}
+	public void rmUpLink(Link link){
+		upLinks.remove(link);
+	}
+	public void rmDnLink(Link link){
+		dnLinks.remove(link);
+	}
 	public GeoPoint getPosPoint(){
 		return this.posPoint;
 	}

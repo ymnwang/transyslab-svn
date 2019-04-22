@@ -4,6 +4,7 @@
 package com.transyslab.roadnetwork;
 
 import com.transyslab.commons.tools.SimulationClock;
+import com.transyslab.simcore.mlp.MLPVehicle;
 
 /**
  * Vehicle
@@ -405,15 +406,11 @@ public abstract class Vehicle{
 	}
 	public void advancePathIndex() {
 		int i = pathIndex + 1;
-		Link pl = path.getLink(i);
-
-		if (getLink() == null || (getLink().isNeighbor(pl)) != 0) {
-			//TODO ÖØ¹¹¼ì²é
-			setPathIndex(i);
-		}
-		else if (pl != nextLink) {
+		if (i >= path.links.size()) {
 			donePathIndex();
 		}
+		else
+			setPathIndex(i);
 	}
 	public void retrievePathIndex() {
 		int i = pathIndex - 1;

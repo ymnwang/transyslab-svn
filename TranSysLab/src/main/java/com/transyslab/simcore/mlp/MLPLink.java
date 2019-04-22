@@ -182,7 +182,9 @@ public class MLPLink extends Link {
 							//tarLane.RtCutinAllowed &&
 							veh.checkGapAccept(tarLane)) {
 						//换道概率计算
-						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
+						//todo: 重构换道概率计算算法 临时修改by wym
+//						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
+						pr[i] = veh.calLCProbability2(i);
 					}
 				}
 				//排序
@@ -296,7 +298,7 @@ public class MLPLink extends Link {
 		}
 	}
 
-	public void generateInflow(int demand, double[] speed, double[] time, List<Lane> lanes, int tlnkID){
+	public void generateInflow(int demand, double[] speed, double[] time, List<Lane> lanes, long tlnkID){
 		Random r = getNetwork().getSysRand();
 		double mean = speed[0];
 		double sd = speed[1];

@@ -25,6 +25,7 @@ public class MLPConnector extends Connector {
         node = null;
         this.upLane = upLane;
         this.dnLane = dnLane;
+        this.init(id,upLaneId,dnLaneId,shapePoints);
     }
 
     public void setNode(MLPNode node) {
@@ -79,16 +80,32 @@ public class MLPConnector extends Connector {
             conflictConns.add(connector);
     }
 
+    protected void addConflictConns(List<Connector> connectors) {
+        connectors.forEach(c->conflictConns.add((MLPConnector) c));
+    }
+
     public boolean checkConflict(MLPConnector connector) {
         return GeoUtil.isCross(this.getShapePoints(),connector.getShapePoints());
     }
 
     public double conflictCoef(){
+        double yita = 1.0, alpha = 1.0, beta = 1.0;
         double c = 1.0;
         for (int i = 0; i < conflictConns.size(); i++) {
-            c *= conflictConns.get(i).spaceOccupied();
+//            c *= conflictConns.get(i).spaceOccupied();
+            MLPConnector conflictConn = conflictConns.get(i);
+            double qRate = getQRate(conflictConn);
+            double k = ((double) conflictConn.vehsOnConn.size()) / conflictConn.getLength();
+            double km = ((MLPLink) dnLane.getLink()).dynaFun.linkCharacteristics[2];
+            c *= qRate * Math.pow(1-yita*Math.pow(k/km,alpha),beta);
         }
         return c;
+    }
+
+    public double getQRate(MLPConnector conflictConn){
+        double top = (double) this.node.lcList.stream().filter(c -> c.upLinkID()==conflictConn.upLinkID() && c.dnLinkID()==conflictConn.dnLinkID()).count();
+        double butt = (double) this.node.lcList.stream().filter(c -> c.upLinkID()==this.upLinkID() && c.dnLinkID()==this.dnLinkID()).count();
+        return top / butt;
     }
 
     protected List<MLPVehicle> updateVehs(){
@@ -103,9 +120,14 @@ public class MLPConnector extends Connector {
 
     public double calSpd(){
         MLPLink link = (MLPLink) upLane.getLink();
-        double spd_normal = link.dynaFun.sdFun(((double)queueNum())/getLength());
-        double rate = node.getPassSpd() / link.dynaFun.getFreeFlow();
-        return spd_normal*rate*conflictCoef();
+//        double spd_normal = link.dynaFun.sdFun(((double)queueNum())/getLength());
+//        double rate = node.getPassSpd() / link.dynaFun.getFreeFlow();
+//        return spd_normal*rate*conflictCoef();
+        double alpha=1.0,beta=1.0;
+        double k = ((double)queueNum())/getLength();
+        double km = ((MLPLink) dnLane.getLink()).dynaFun.linkCharacteristics[2];
+        double spd_normal = node.getPassSpd() * Math.pow(1-Math.pow(k/km,alpha),beta);
+        return spd_normal * conflictCoef();
     }
 
 //    public GeoPoint getStartPoint(){
@@ -122,5 +144,11 @@ public class MLPConnector extends Connector {
 
     public long dnLinkID() {
         return dnLane.getLink().getId();
+    }
+
+    public double getTailPos() {
+        if (vehsOnConn.size()<=0)
+            return getLength();
+        return getLength() - vehsOnConn.getLast().getDistance() - vehsOnConn.getLast().getLength();
     }
 }

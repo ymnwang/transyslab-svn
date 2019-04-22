@@ -136,20 +136,16 @@
 		  <version>5.3</version>
 	  </dependency>
 	  <dependency>
-		  <groupId>team.simulator.commercial.matlab</groupId>
-		  <artifactId>engine</artifactId>
-		  <version>2017b</version>
+		  <groupId>commons-dbutils</groupId>
+		  <artifactId>commons-dbutils</artifactId>
+		  <version>1.6</version>
 	  </dependency>
 	  <dependency>
-		  <groupId>team.simulator.commercial.matlab</groupId>
-		  <artifactId>javabuilder</artifactId>
-		  <version>2017b</version>
+		  <groupId>commons-dbutils</groupId>
+		  <artifactId>commons-dbutils</artifactId>
+		  <version>1.6</version>
 	  </dependency>
-	  <dependency>
-		  <groupId>team.simulator.commercial.matlab</groupId>
-		  <artifactId>matlabfunctions</artifactId>
-		  <version>2017b</version>
-	  </dependency>
+
   </dependencies>
 	<build>
 		<plugins>

@@ -24,14 +24,14 @@ import java.sql.PreparedStatement;
  */
 public class JdbcUtils {
 
-//	private static String driver_ = "org.postgresql.Driver";  //"oracle.jdbc.driver.OracleDriver";
+	//	private static String driver_ = "org.postgresql.Driver";  //"oracle.jdbc.driver.OracleDriver";
 //	private static String url_ = "jdbc:postgresql://192.168.8.23:5432/neihuandb";//"jdbc:oracle:thin:@192.168.8.138:1521:orcl";
 //	private static String user_ = "postgres";
 //	private static String pwd_ = "its312";
 	private static DataSource dataSource;
 	// log4j2 通过 log4j-jcl 实现Common logging接口
 	// 可修改配置文件，设置输出优先级DEBUG以上
-//	private static Log logger = LogFactory.getLog(JdbcUtils.class);; 
+//	private static Log logger = LogFactory.getLog(JdbcUtils.class);;
 	public JdbcUtils() {
 
 	}
@@ -46,34 +46,34 @@ public class JdbcUtils {
 		try
 		{
 //			Configuration config = builder.getConfiguration();
-			Configuration config = configs.properties(new File("src/main/resources/xc_test/dbcp.properties"));
+			Configuration config = configs.properties(new File("src/main/resources/dbcp.properties"));
 			String driver = config.getString("driverClassName");
-		    String url = config.getString("url");
-		    String user = config.getString("username");
-		    String pwd = config.getString("password");
-		    int initialSize = config.getInt("initialSize");
-		    int maxActive = config.getInt("maxActive");
-		    int minIdle = config.getInt("minIdle");
-		    int maxIdle = config.getInt("maxIdle");
-		    int maxWait = config.getInt("maxWait");
-		    BasicDataSource bds = new BasicDataSource();
-		    bds.setDriverClassName(driver);
+			String url = config.getString("dburl");
+			String user = config.getString("username");
+			String pwd = config.getString("password");
+			int initialSize = config.getInt("initialSize");
+			int maxActive = config.getInt("maxActive");
+			int minIdle = config.getInt("minIdle");
+			int maxIdle = config.getInt("maxIdle");
+			int maxWait = config.getInt("maxWait");
+			BasicDataSource bds = new BasicDataSource();
+			bds.setDriverClassName(driver);
 			bds.setUrl(url);
 			bds.setUsername(user);
 			bds.setPassword(pwd);
-	        bds.setInitialSize(initialSize); 
-	        bds.setMaxTotal(maxActive); 
-	        bds.setMinIdle(minIdle);  
-	        bds.setMaxIdle(maxIdle);  
-	        bds.setMaxWaitMillis(maxWait); 
-	        dataSource = bds;
-		    
+			bds.setInitialSize(initialSize);
+			bds.setMaxTotal(maxActive);
+			bds.setMinIdle(minIdle);
+			bds.setMaxIdle(maxIdle);
+			bds.setMaxWaitMillis(maxWait);
+			dataSource = bds;
+
 		}
 		catch(ConfigurationException cex)
 		{
-		    // loading of the configuration file failed
+			cex.printStackTrace();
 		}
-		
+
 	}
 	public static DataSource getDataSource(){
 		if(dataSource == null)

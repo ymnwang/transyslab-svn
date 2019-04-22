@@ -4,7 +4,7 @@ public class Inflow {
 	public double time;
 	public double speed; // unit m/s
 	public int laneIdx; 
-	public int tLinkID;
+	public long tLinkID;
 	public double dis;
 	public int realVID;
 	
@@ -24,7 +24,7 @@ public class Inflow {
 			dis = row[4];
 	}
 	
-	public Inflow(double time, double speed, int laneIdx, int tLinkID, double dis){
+	public Inflow(double time, double speed, int laneIdx, long tLinkID, double dis){
 		this.time = time;
 		this.speed = speed;
 		this.laneIdx = laneIdx;
@@ -32,7 +32,7 @@ public class Inflow {
 		this.dis = dis;
 	}
 
-	public Inflow(double time, double speed, int laneIdx, int tLinkID, double dis, int realVID){
+	public Inflow(double time, double speed, int laneIdx, long tLinkID, double dis, int realVID){
 		this.time = time;
 		this.speed = speed;
 		this.laneIdx = laneIdx;
