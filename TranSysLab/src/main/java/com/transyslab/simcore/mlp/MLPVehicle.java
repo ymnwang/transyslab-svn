@@ -51,7 +51,11 @@ public class MLPVehicle extends Vehicle{
 	}
 
 	public MLPNetwork getMLPNetwork() {
-		return (MLPNetwork) link.getNetwork();
+		return link!=null ?
+				(MLPNetwork) link.getNetwork() :
+				conn!=null ?
+				(MLPNetwork) conn.upLane.getLink().getNetwork() :
+				null;
 	}
 	
 	@Override
@@ -272,6 +276,8 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void init(int id, double len, double dis, double speed){
+		if (id==85)
+			System.out.println("DEBUG");
 		 setId(id);
 		 type = 1;
 		 length = len;
@@ -484,11 +490,19 @@ public class MLPVehicle extends Vehicle{
 	}
 	public String getInfo(){
 		StringBuilder sb = new StringBuilder();
-//		if (lane != null && diMap.get(lane)==null)
-//			System.out.println("DEBUG MESSAGE");
-		sb.append("Time: " + getMLPNetwork().getSimClock().getCurrentTime());
-//		sb.append("MLC\n" + String.format("%.2f",calMLC()));//(diMap.get(lane)==0 ? 0 : )
-		sb.append("\n«∞≥µæ‡¿Î\n" + (leading==null ? "Inf" : String.format("%.2f",leading.Displacement() - Displacement())));
+		sb.append("sim time: " + getMLPNetwork().getSimClock().getCurrentTime() + "\n");
+		if (lane!=null)
+			sb.append("lane: " + lane.getId() + "\n"
+			+ "VNum: " + (lane.vehsOnLn.indexOf(this)+1) + "/" + lane.vehsOnLn.size() + " pos: " + String.format("%.2f",(1.0-distance/ lane.getLength())) + "\n");
+		if (conn!=null)
+			sb.append("LC: " + conn.getId() + "\n"
+			+ "Vnum: " + (conn.vehsOnConn.indexOf(this)+1) + "/" +conn.vehsOnConn.size() + " pos: " + String.format("%.2f",(1.0-distance/ conn.getLength())) + "\n");
+		if (leading!=null)
+			sb.append("leading " + leading.getId() + " ahead: " + (this.distance-leading.distance) + "\n" );
+		if (stopFlag)
+			sb.append("StopFlag activated.");
+		else
+			sb.append("StopFlag deactivated");
 		return sb.toString();
 	}
 	protected double powerRate(double spd) {

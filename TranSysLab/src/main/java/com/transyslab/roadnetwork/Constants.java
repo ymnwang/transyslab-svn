@@ -196,6 +196,7 @@ public class Constants {
 	public static final float[] COLOR_GREY = {0.21f, 0.21f, 0.21f};
 	public static final float[] COLOR_LITEBLUE = new float[]{0.0f,0.75f,1.0f};
 	public static final float[] COLOR_AMBER = {0.9f, 0.7f, 0.09f};
+	public static final float[] COLOR_GOLDEN = {0.98f, 0.72f, 0.35f};
 	// =0:非snapshot启动，按OD流量随机发车；
     // =1:非snapshot启动，按过车记录定时发车;
 	// =2:snapshot启动，按OD流量随机发车；

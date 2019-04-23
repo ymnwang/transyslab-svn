@@ -398,6 +398,8 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	public void transformVehData(VehicleData vd, MLPVehicle veh) {
+		vd.init(veh,false,(veh.resemblance ? Constants.FOLLOWING : 0) + Math.min(1,veh.virtualType), veh.getInfo());
+		vd.setPathInfo(veh.getPath());
 		//todo: 过渡方案
 		//计算翻译线性参考
 		if (veh.conn==null){
@@ -481,11 +483,6 @@ public class MLPNetwork extends RoadNetwork {
 				//从对象池获取vehicledata对象
 				vd = VehicleDataPool.getInstance().newData();
 				//记录车辆信息
-				vd.init(v,
-						false,
-						(v.resemblance ? Constants.FOLLOWING : 0) + Math.min(1,v.virtualType),
-						//String.valueOf(v.getNextLink()==null ? "NA" : v.lane.successiveDnLanes.get(0).getLink().getId()==v.getNextLink().getId())
-						v.getInfo());
 				transformVehData(vd, v);
 				//将vehicledata插入frame
 				af.addVehicleData(vd);

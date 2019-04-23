@@ -72,6 +72,13 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 	public String getPathInfo(){
 		return pathInfo;
 	}
+	public void setPathInfo(Path path){
+		StringBuilder sb = new StringBuilder();
+		for (Link l : path.getLinks()) {
+			sb.append("¡ú" + l.getId());
+		}
+		pathInfo = sb.toString().substring(1);
+	}
 	public boolean isSelected(){
 		return this.isSelected;
 	}
@@ -246,7 +253,7 @@ public class VehicleData implements NetworkObject,Comparable<VehicleData>{
 		this.vehicleLength_ = vhcLength;
 		this.curSpeed = speed;
 		this.queueFlag = queueFlag;
-		this.info = this.vhcID + "\n"+String.valueOf(curSpeed)+ "\n" + String.valueOf(queueFlag) + "\n"+this.distance;
+//		this.info = this.vhcID + "\n"+String.valueOf(curSpeed)+ "\n" + String.valueOf(queueFlag) + "\n"+this.distance;
 		if(moveOn == null) {
 			System.out.println("Error: Could not find the Lane");
 			return;

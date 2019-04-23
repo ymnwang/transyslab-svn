@@ -35,6 +35,8 @@ public class Dynamics {
 	}
 	public double cfFun(MLPVehicle theVeh){
 		double gap = theVeh.leading.Displacement() - theVeh.leading.getLength() - theVeh.Displacement();
+		if (gap <= 0)
+			System.out.println("DEBUG: car crush");
 		double vlead = (double) theVeh.leading.getCurrentSpeed();
 		double upperGap = mlpParameter.CF_FAR;
 		if(gap < mlpParameter.CF_NEAR) {

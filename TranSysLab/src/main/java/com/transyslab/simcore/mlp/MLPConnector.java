@@ -97,15 +97,17 @@ public class MLPConnector extends Connector {
             double qRate = getQRate(conflictConn);
             double k = ((double) conflictConn.vehsOnConn.size()) / conflictConn.getLength();
             double km = ((MLPLink) dnLane.getLink()).dynaFun.linkCharacteristics[2];
-            c *= qRate * Math.pow(1-yita*Math.pow(k/km,alpha),beta);
+            c *= Math.pow(1 - qRate*yita*Math.pow(k/km,alpha),beta);
         }
         return c;
     }
 
     public double getQRate(MLPConnector conflictConn){
-        double top = (double) this.node.lcList.stream().filter(c -> c.upLinkID()==conflictConn.upLinkID() && c.dnLinkID()==conflictConn.dnLinkID()).count();
-        double butt = (double) this.node.lcList.stream().filter(c -> c.upLinkID()==this.upLinkID() && c.dnLinkID()==this.dnLinkID()).count();
-        return top / butt;
+        //todo: ÁÙÊ±ÐÞ¸Ä²âÊÔº¯Êý
+        return 1.0;
+//        double top = (double) this.node.lcList.stream().filter(c -> c.upLinkID()==conflictConn.upLinkID() && c.dnLinkID()==conflictConn.dnLinkID()).count();
+//        double butt = (double) this.node.lcList.stream().filter(c -> c.upLinkID()==this.upLinkID() && c.dnLinkID()==this.dnLinkID()).count();
+//        return top / butt;
     }
 
     protected List<MLPVehicle> updateVehs(){
@@ -127,7 +129,8 @@ public class MLPConnector extends Connector {
         double k = ((double)queueNum())/getLength();
         double km = ((MLPLink) dnLane.getLink()).dynaFun.linkCharacteristics[2];
         double spd_normal = node.getPassSpd() * Math.pow(1-Math.pow(k/km,alpha),beta);
-        return spd_normal * conflictCoef();
+        double spd = spd_normal * conflictCoef();
+        return spd;
     }
 
 //    public GeoPoint getStartPoint(){

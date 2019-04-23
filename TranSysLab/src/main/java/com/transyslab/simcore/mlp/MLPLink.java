@@ -183,8 +183,8 @@ public class MLPLink extends Link {
 							veh.checkGapAccept(tarLane)) {
 						//换道概率计算
 						//todo: 重构换道概率计算算法 临时修改by wym
-//						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
-						pr[i] = veh.calLCProbability2(i);
+						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
+//						pr[i] = veh.calLCProbability2(i);
 					}
 				}
 				//排序

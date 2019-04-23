@@ -16,6 +16,7 @@ import com.transyslab.roadnetwork.*;
 
 import java.awt.*;
 
+import com.transyslab.simcore.mlp.MLPConnector;
 import com.transyslab.simcore.mlp.MLPNetwork;
 import com.transyslab.simcore.rts.RTEngine;
 import com.transyslab.simcore.rts.RTNetwork;
@@ -245,7 +246,10 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 
 		for(int i=0; i< drawableNetwork.nConnectors();i++){
 			Connector tmpConnector = drawableNetwork.getConnector(i);
-			ShapeUtil.drawPolyline(gl,tmpConnector.getShapePoints(),2, new float[]{0.98f, 0.72f, 0.35f}, LAYER_CONNECTOR);
+			if (tmpConnector instanceof MLPConnector && ((MLPConnector)tmpConnector).vehNumOnConn()>0)
+				ShapeUtil.drawPolyline(gl,tmpConnector.getShapePoints(),2, Constants.COLOR_GOLDEN, LAYER_CONNECTOR);
+			else
+				ShapeUtil.drawPolyline(gl,tmpConnector.getShapePoints(),2, Constants.COLOR_GREY, LAYER_CONNECTOR);
 		}
 
 		boolean isPause = (status == ANIMATOR_PAUSE);

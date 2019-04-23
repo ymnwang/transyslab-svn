@@ -178,8 +178,6 @@ public class MLPEngine extends SimulationEngine{
 		}
 
 		double now = mlpNetwork.getSimClock().getCurrentTime();
-		double startTime = mlpNetwork.getSimClock().getStartTime();
-//		String time = String.format("%.1f", now - startTime);
 		
 		if (now >= updateTime_){
 			//更新随机数序列，避免出现强规律性
