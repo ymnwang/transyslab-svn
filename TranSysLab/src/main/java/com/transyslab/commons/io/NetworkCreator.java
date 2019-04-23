@@ -38,7 +38,9 @@ public class NetworkCreator {
 //            Point pos = ((Point) ((PGgeometry) row[1]).getGeometry());
             //gist版本问题，临时调整 wym
             Point pos = ((PGgeometry) row[1]).getGeometry().getFirstPoint();
-            roadNetwork.createNode(nodeid, Constants.NODE_TYPE_NONSIGNALIZED_INTERSECTION, "N" + String.valueOf(nodeid),
+//            int type = nodeid==1140442662255067200L ? Constants.NODE_TYPE_SIGNALIZED_INTERSECTION : Constants.NODE_TYPE_NONSIGNALIZED_INTERSECTION;
+            int type = Constants.NODE_TYPE_NONSIGNALIZED_INTERSECTION;
+            roadNetwork.createNode(nodeid, type, "N" + String.valueOf(nodeid),
                     new GeoPoint(pos.getX(), pos.getY(), pos.getZ()));
         }
         List<long[]> linkid = new ArrayList<>();

@@ -193,6 +193,7 @@ public class Constants {
 	public static final float[] COLOR_BLUE = {0.0f, 0.0f, 1.0f};
 	public static final float[] COLOR_GREEN = {0.0f, 1.0f, 0.0f};
 	public static final float[] COLOR_WHITE = {1.0f, 1.0f, 1.0f};
+	public static final float[] COLOR_GREY_WHITE = {0.64f, 0.64f, 0.64f};
 	public static final float[] COLOR_GREY = {0.21f, 0.21f, 0.21f};
 	public static final float[] COLOR_LITEBLUE = new float[]{0.0f,0.75f,1.0f};
 	public static final float[] COLOR_AMBER = {0.9f, 0.7f, 0.09f};

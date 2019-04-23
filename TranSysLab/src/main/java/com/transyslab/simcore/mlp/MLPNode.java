@@ -189,22 +189,26 @@ public class MLPNode extends Node{
 		for (int i = 0; i < statedVehs.size(); i++) {
 			MLPVehicle veh = statedVehs.get(i);
 			if (veh.newDis<0.0) {
-				if (!veh.lane.checkVolum(veh.getLength(),veh.newSpeed)) {
+				double maxSpare = veh.lane.spareDis(veh.getLength(),veh.newSpeed);
+				if (maxSpare < 0.0) {//等价于check volume
 					veh.holdAtDnEnd();
 					continue;
 				}
 				double timeAtPoint = now + veh.newDis/veh.newSpeed;//newDis<0 故为+
 				veh.newDis += veh.getLane().getLength();
-				if (veh.newDis < 0.0) {
-					veh.newDis = 0.0;//每次最多经过一个link
-					veh.newSpeed = (veh.getDistance() + veh.getLane().getLength()) / simClock.getStepSize();
-					timeAtPoint = (veh.getDistance() + veh.getLane().getLength()) / veh.newSpeed;
+				double minAllowedNewDis = veh.getLane().getLength() - maxSpare;
+				if (veh.newDis < minAllowedNewDis) {
+					veh.newDis = minAllowedNewDis;//每次最多经过一个link，且不能碰撞lane上的尾车
+					veh.newSpeed = (veh.getDistance() + maxSpare) / simClock.getStepSize();
+					timeAtPoint = now - maxSpare / veh.newSpeed;
 				}
 				veh.initLinkEntrance(timeAtPoint, 0.0);
 				veh.onRouteChoosePath(veh.link.getDnNode(),veh.link.getNetwork());
 				//进入新link，更新强制换道值di
 				veh.updateDi();
-				veh.lane.insertVeh(veh);//增加一个倒序插入会更快
+				veh.lane.appendVeh(veh);
+				//todo: 危险 提前更新状态 为避免多车辆加载到下游道路时发生冲突 暂时处理
+				veh.updateDynamics();
 
 				if (veh.conn!=null)
 					veh.conn.vehsOnConn.remove(veh);
@@ -255,8 +259,6 @@ public class MLPNode extends Node{
 						double maxSpd = ((MLPParameter) rn.getSimParameter()).maxSpeed(gap);
 						passSpd = Math.min(passSpd,maxSpd);
 					}
-					if (passSpd<=1e-5)
-						System.out.println("DEBUG");
 					veh.newSpeed = passSpd;
 					veh.newDis -= passSpd*stepSize;
 				}

@@ -276,8 +276,6 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void init(int id, double len, double dis, double speed){
-		if (id==85)
-			System.out.println("DEBUG");
 		 setId(id);
 		 type = 1;
 		 length = len;
@@ -298,9 +296,13 @@ public class MLPVehicle extends Vehicle{
 	}
 	
 	public void advance() {
+		updateDynamics();
+		buffer = Math.max(0, buffer -1);
+	}
+
+	public void updateDynamics() {
 		currentSpeed = (float) newSpeed;
 		distance = (float) newDis;
-		buffer = Math.max(0, buffer -1);
 	}
 	
 	public int dealPassing() {
@@ -444,9 +446,10 @@ public class MLPVehicle extends Vehicle{
 				}
 			}
 		}
-		else
+		else {
 			//非lane上第一辆车，可取index-1的车作为前车
 			leading = lane.vehsOnLn.get(p-1);
+		}
 		if (p == lane.vehsOnLn.size() - 1) {
 			trailing = (MLPVehicle) null;
 //			MLPLane thelane = lane.connectedUpLane;
@@ -478,8 +481,6 @@ public class MLPVehicle extends Vehicle{
 	public MLPVehicle getLaterallTrailing(){	
 	}*/
 	public void updateDi() {
-//		if (getId()==2)
-//			System.out.println("DEBUG");
 		diMap.clear();
 		List<MLPLane> target = link.validEndLanesFor(this);
 		link.getSegments().forEach(seg -> {

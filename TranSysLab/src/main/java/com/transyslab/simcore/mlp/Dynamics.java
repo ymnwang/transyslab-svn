@@ -10,8 +10,6 @@ public class Dynamics {
 	//public double [] cfPara;//[0]Critical Gap; [1]dUpper;
 	public Dynamics(MLPLink theLink){
 		link = theLink;
-		if (theLink.getNetwork()==null || theLink.getNetwork().getSimParameter()==null)
-			System.out.println("DEBUG");
 		mlpParameter = (MLPParameter) theLink.getNetwork().getSimParameter();
 		linkCharacteristics = new double[6];//((MLPParameter) theLink.getNetwork().getSimParameter()).getSDPara();
 	}
@@ -60,8 +58,6 @@ public class Dynamics {
 		}
 	}
 	public double updateHeadSpd(MLPVehicle headVeh){
-//		if (headVeh.getId() == 16)
-//			System.out.println("DEBUG");
 		MLPLane nextLane = headVeh.lane.connectedDnLane;
 		if (headVeh.getDistance() < MLPParameter.SEG_NEAR &&
 				nextLane != null && (!nextLane.enterAllowed || !nextLane.checkVolum(headVeh))) {

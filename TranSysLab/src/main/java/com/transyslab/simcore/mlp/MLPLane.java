@@ -104,12 +104,18 @@ public class MLPLane extends Lane implements Comparator<MLPLane>{
 	public boolean checkVolum(double vehLen, double vehSpeed) {
 		MLPVehicle tail_ = getTail();
 		if (tail_ != null &&
-			getLength() - tail_.getDistance() <
+			getLength() - tail_.getDistance() - tail_.getLength()<
 			(vehLen +  ((MLPParameter) getNetwork().getSimParameter()).minGap(vehSpeed))) {
 			return false;
 		}
 		else
 			return true;
+	}
+
+	public double spareDis(double vehLen, double vehSpeed) {
+		MLPVehicle tail = getTail();
+		double minus = tail==null ? 0.0 : tail.getDistance() + tail.getLength();
+		return getLength() - minus - vehLen - ((MLPParameter) getNetwork().getSimParameter()).minGap(vehSpeed);
 	}
 	
 	//appendVeh(); removeVeh(); insertVeh(); check list:

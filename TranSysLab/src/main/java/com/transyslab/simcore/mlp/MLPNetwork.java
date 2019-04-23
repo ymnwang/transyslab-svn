@@ -524,7 +524,16 @@ public class MLPNetwork extends RoadNetwork {
 			// todo 应加入所有可行路径，非最短路
 //			GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
 			//临时修改 wym
-			GraphPath<Node, Link> gpath = (GraphPath<Node, Link>) new AllDirectedPaths(this).getAllPaths(oriNode,desNode,true,4).get(0);
+			List<GraphPath<Node, Link>> gpaths = (List<GraphPath<Node, Link>>) new AllDirectedPaths(this).getAllPaths(oriNode,desNode,true,8);
+			gpaths.sort(new Comparator<GraphPath<Node, Link>>() {
+				@Override
+				public int compare(GraphPath<Node, Link> o1, GraphPath<Node, Link> o2) {
+					int n1 = o1.getEdgeList().size();
+					int n2 = o2.getEdgeList().size();
+					return n1<n2 ? -1 : n1>n2 ? 1 : 0;
+				}
+			});
+			GraphPath<Node, Link> gpath = gpaths.get(0);
 			ODPair newPair = new ODPair(oriNode, desNode);
 			oriNode.setType(oriNode.getType() | Constants.NODE_TYPE_ORI);
 			desNode.setType(desNode.getType() | Constants.NODE_TYPE_DES);

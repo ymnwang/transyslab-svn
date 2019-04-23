@@ -114,7 +114,7 @@ public abstract class SimulationEngine {
 			SignalStage stage = null;
 			boolean newDirNeeded = false;
 			for (int i = 1; i < results.size(); i++) {
-				int nodeId = Integer.parseInt(results.get(i).get("NODEID"));
+				Long nodeId = Long.parseLong(results.get(i).get("NODEID"));
 				int planId = Integer.parseInt(results.get(i).get("PLANID"));
 				int stageId = Integer.parseInt(results.get(i).get("STAGEID"));
 				int flid = Integer.parseInt(results.get(i).get("FLID"));

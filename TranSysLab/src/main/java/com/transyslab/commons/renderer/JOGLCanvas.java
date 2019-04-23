@@ -249,7 +249,7 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 			if (tmpConnector instanceof MLPConnector && ((MLPConnector)tmpConnector).vehNumOnConn()>0)
 				ShapeUtil.drawPolyline(gl,tmpConnector.getShapePoints(),2, Constants.COLOR_GOLDEN, LAYER_CONNECTOR);
 			else
-				ShapeUtil.drawPolyline(gl,tmpConnector.getShapePoints(),2, Constants.COLOR_GREY, LAYER_CONNECTOR);
+				ShapeUtil.drawPolyline(gl,tmpConnector.getShapePoints(),2, Constants.COLOR_GREY_WHITE, LAYER_CONNECTOR);
 		}
 
 		boolean isPause = (status == ANIMATOR_PAUSE);
