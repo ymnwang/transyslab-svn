@@ -185,4 +185,10 @@ public class Path implements NetworkObject {
 		desNode = GPath.getEndVertex();
 	}
 
+	public Path(Node o, Node d, List<Link> links){
+		this.oriNode = o;
+		this.desNode = d;
+		this.links = links;
+	}
+
 }

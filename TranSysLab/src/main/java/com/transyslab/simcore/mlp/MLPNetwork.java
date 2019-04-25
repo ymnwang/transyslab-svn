@@ -208,7 +208,9 @@ public class MLPNetwork extends RoadNetwork {
 				MLPVehicle newVeh = generateVeh();
 				newVeh.initInfo(0,launchingLink,mlpLane(emitVeh.laneIdx).getSegment(),mlpLane(emitVeh.laneIdx),emitVeh.realVID);
 				newVeh.init(getNewVehID(), MLPParameter.VEHICLE_LENGTH, (float) emitVeh.dis, (float) emitVeh.speed);
-				assignPath(newVeh, (MLPNode) launchingLink.getUpNode(), (MLPNode) findLink(emitVeh.tLinkID).getDnNode(), false);
+				MLPNode upNode = (MLPNode) launchingLink.getUpNode();
+				MLPNode dnNode = emitVeh.tLinkID==0 ? null : (MLPNode) findLink(emitVeh.tLinkID).getDnNode();
+				assignPath(newVeh, upNode, dnNode, false);
 				//todo 调试阶段暂时固定路径
 				newVeh.fixPath();
 				newVeh.initNetworkEntrance(simClock.getCurrentTime(), mlpLane(emitVeh.laneIdx).getLength()-emitVeh.dis);
@@ -507,13 +509,29 @@ public class MLPNetwork extends RoadNetwork {
 	}
 
 	public void assignPath(MLPVehicle mlpVeh, MLPNode oriNode, MLPNode desNode, boolean isImported) {
+		int maxRandWalkStep = 20;
 		if (isImported) {
 			// todo 完善导入路径的逻辑
 			mlpVeh.fixPath();
 		}
 		else {
-			ODPair thePair = findODPair(oriNode, desNode);
-			mlpVeh.setPath(thePair.assignRoute(mlpVeh),1);
+			if (desNode!=null) {
+				ODPair thePair = findODPair(oriNode, desNode);
+				mlpVeh.setPath(thePair.assignRoute(mlpVeh),1);
+			}
+			else {
+				List<Link> links = new ArrayList<>();
+				Node n = oriNode;
+				for (int i=0; i<20; i++) {
+					if (n.nDnLinks()<=0)
+						break;
+					Link l = n.getDnLink(getSysRand().nextInt(n.nDnLinks()));
+					links.add(l);
+					n = l.getDnNode();
+				}
+				Path randPath = new Path(oriNode,n,links);
+				mlpVeh.setPath(randPath,1);
+			}
 		}
 	}
 
@@ -724,42 +742,30 @@ public class MLPNetwork extends RoadNetwork {
 				double [] speed = {Double.parseDouble(items[5]),
 						Double.parseDouble(items[6]),
 						Double.parseDouble(items[7])};
-				List<Link> fLinks, tLinks;
-				if (items[0]==null || "".equals(items[0])){
-					//origin not specified
-//					fLinks = links.stream().filter(l->l.nUpLinks()==0).collect(Collectors.toList());
-					fLinks = new ArrayList<>();
-					for (Link l : links) {
-//						System.out.println("DEBUG: link " + l.getId() + " has " + l.nUpLinks() + " upLinks");
-						if (l.nUpLinks()==0)
-							fLinks.add(l);
-					}
-				}
-				else {
-					int fLinkID = Integer.parseInt(items[0]);
-					fLinks = new ArrayList<Link>();
-					fLinks.add(findLink(fLinkID));
-				}
-				if (items[1]==null || "".equals(items[1])){
-					//destination not specified
-					tLinks = links.stream().filter(l->l.nDnLinks()==0).collect(Collectors.toList());
-				}
-				else{
-					int tLinkID = Integer.parseInt(items[1]);
-					tLinks = new ArrayList<Link>();
-					tLinks.add(findLink(tLinkID));
-				}
-				if (fLinks.size()>0 && tLinks.size()>0) {
-					fLinks.forEach(fLink->{
-						List<Lane> lanes = fLink.getStartSegment().getLanes();
-						tLinks.forEach(tLink -> ((MLPLink)fLink).generateInflow(demand, speed, time, lanes, tLink.getId()));
-					});
-				}
+				if (items[0]==null || items[0].equals(""))
+					leafEmit(demand, speed, time);
+				else if (items[1]==null || items[1].equals(""))
+					findLink(Long.parseLong(items[0]))
+							.generateInflow(demand, speed, time, lanes, 0);
+				else
+					findLink(Long.parseLong(items[0]))
+							.generateInflow(demand, speed, time, lanes, Long.parseLong(items[1]));
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void leafEmit(int demand, double[] speed, double[] time) {
+		List<Link> fLinks = links.stream().filter(l->l.nUpLinks()==0).collect(Collectors.toList());
+		List<Link> tLinks = links.stream().filter(l->l.nDnLinks()==0).collect(Collectors.toList());
+		if (fLinks.size()>0 && tLinks.size()>0) {
+			fLinks.forEach(fLink->{
+				List<Lane> lanes = fLink.getStartSegment().getLanes();
+				tLinks.forEach(tLink -> ((MLPLink)fLink).generateInflow(demand, speed, time, lanes, tLink.getId()));
+			});
 		}
 	}
 
