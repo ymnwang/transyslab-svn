@@ -1,8 +1,10 @@
 package com.transyslab.commons.renderer;
 
+import java.util.Arrays;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import com.transyslab.roadnetwork.VehicleData;
+
+import com.transyslab.roadnetwork.Constants;
 
 //双缓冲队列，一个可读（消费者），一个可写（生产者）；
 //渲染线程进行读操作，仿真线程进行写操作
@@ -11,7 +13,7 @@ import com.transyslab.roadnetwork.VehicleData;
 public class FrameQueue {
 	
 	//队列帧容量
-    private final static int capacity_ = 30;
+    private final static int capacity_ = Constants.FRAME_QUEUE_BUFFER;
     //互斥锁，保证写操作和队列交换操作的线程安全
     private ReentrantLock  writeLock_;  
     //条件变量，用于唤醒仿真写入操作
@@ -96,7 +98,12 @@ public class FrameQueue {
             	return false;
             }  
             else  
-            {  
+            {
+                //统一回收vehicledata
+                Arrays.stream(readArray_).forEach(f->{
+                    if (f!=null)
+                        f.clean();
+                });
             	//队列引用交换
             	AnimationFrame[] tmpArray = readArray_;  
                 readArray_ = writeArray_;  
@@ -150,7 +157,9 @@ public class FrameQueue {
         	//交换队列失败则返回空帧
         	if(queueSwitch()) 
         		return extract(isPause);
-        	else 
+        	else if (readCount_==0)
+        	    return readArray_[readArray_.length-1];
+        	else
         		return null;  
         }
         //可读队列不为空则读取数据

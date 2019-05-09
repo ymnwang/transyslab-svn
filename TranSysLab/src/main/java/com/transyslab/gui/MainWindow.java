@@ -83,7 +83,7 @@ public class MainWindow {
         Camera cam = new OrbitCamera();
         canvas.setCamera(cam);
         // Create a animator that drives canvas' display() at the specified FPS.
-        animator = new FPSAnimator(canvas, 120, true);
+        animator = new FPSAnimator(canvas, Constants.FPS, true);
         slider1 = new JSlider(0,120,0);
         JMenuBar menuBar1 = new JMenuBar();
         JMenu menu1 = new JMenu();

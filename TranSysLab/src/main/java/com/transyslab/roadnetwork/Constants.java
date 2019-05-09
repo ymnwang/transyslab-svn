@@ -221,4 +221,8 @@ public class Constants {
 
 	//参数优化最大检验次数
 	public static final int REPEAT_TEST_TIMES = 5;
+
+	//display
+	public static final int FPS = 60;
+	public static final int FRAME_QUEUE_BUFFER = 60;
 }

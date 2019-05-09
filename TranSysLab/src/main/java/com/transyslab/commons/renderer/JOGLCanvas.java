@@ -336,9 +336,10 @@ public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener
 				MainWindow.getInstance().updateSignalPanel();
 				clockCounter ++;
 			}
-			//回收vehicledata
-			if(!isPause)
-				curFrame.clean();
+			//以下过程转移至FrameQueue.queueSwitch()中，在交换队列时统一回收
+//			//回收vehicledata
+//			if(!isPause)
+//				curFrame.clean();
 		}
 
 		// Sensor 面
