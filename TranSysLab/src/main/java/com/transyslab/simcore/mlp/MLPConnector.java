@@ -128,6 +128,8 @@ public class MLPConnector extends Connector {
         double alpha=1.0,beta=1.0;
         double k = ((double)queueNum())/getLength();
         double km = ((MLPLink) dnLane.getLink()).dynaFun.linkCharacteristics[2];
+        if (k>=km)
+            return 0.0;
         double spd_normal = node.getPassSpd() * Math.pow(1-Math.pow(k/km,alpha),beta);
         double spd = spd_normal * conflictCoef();
         return spd;
