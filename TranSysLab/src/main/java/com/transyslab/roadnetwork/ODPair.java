@@ -3,8 +3,12 @@
  */
 package com.transyslab.roadnetwork;
 
+import com.transyslab.simcore.mlp.MLPLink;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author yali
@@ -87,7 +91,8 @@ public class ODPair implements NetworkObject{
 		return paths;
 	}
 	public void addPath(Path p){
-		paths.add(p);
+		if (checkTurning(p))
+			paths.add(p);
 	}
 	public Path findPathAccd2Id(int pathId) {
 		for(Path tmpPath:paths){
@@ -104,7 +109,7 @@ public class ODPair implements NetworkObject{
 			return paths.get(index);
 	}
 	public Path chooseRoute(Vehicle pv, RoadNetwork network) {
-		double r = network.sysRand.nextDouble();
+		double r = network.getSysRand().nextDouble();
 		int n = nPaths();
 		int i;
 		for (n = n - 1, i = 0; i < n && r > splits[i]; i++);
@@ -112,10 +117,37 @@ public class ODPair implements NetworkObject{
 	}
 	public List<Path> verifyPath(Vehicle veh) {
 		//todo 检查path可行性
-		return paths;
+		if (veh.getLink()==null)
+			return paths;
+		//make sure path begins with the link on which the vehicle is running
+		return paths.stream()
+				.filter(p->p.getLink(0).getId()==veh.getLink().getId())
+				.collect(Collectors.toList());
 	}
-	public Path assignRoute(Vehicle veh) {
+	public Path assignRoute(Vehicle veh, double rand) {
 		//TODO 路径选择行为：可以考虑放在Vehicle类中
-		return verifyPath(veh).get(0);
+		List<Path> paths = verifyPath(veh);
+		if (paths.size()==0)
+			return null;
+		return paths.get(0);
+//		if (paths.size()==1)
+//			return paths.get(0);
+//		double[] pathLength = paths.stream()
+//				.mapToDouble(p->p.links.stream()
+//						.mapToDouble(l->l.length()*((double)p.links.size()*0.1+1.0)).sum())
+//				.toArray();
+//		double sum = Arrays.stream(pathLength).sum();
+//		int n = pathLength.length,i;
+//		for (n = n - 1, i = 0; i < n && rand*sum > splits[i]; i++);
+//		return paths.get(i);
+	}
+	public static boolean checkTurning(Path p){
+		if (p.nLinks()<=1)
+			return true;
+		for (int i = 0; i < p.nLinks()-1; i++) {
+			if (!((MLPLink)p.getLink(i)).checkTurningTo(p.getLink(i+1).getId()))
+				return false;
+		}
+		return true;
 	}
 }

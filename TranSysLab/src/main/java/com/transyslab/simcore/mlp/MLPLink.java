@@ -20,6 +20,7 @@ public class MLPLink extends Link {
 //	private TXTUtils tmpWriter = new TXTUtils("src/main/resources/output/rand.csv");
 //	public double capacity;//unit: veh/s/lane
 //	private double releaseTime_;
+	private Map<Long, MLPLink> turnableNextLinks;
 	
 	
 	public MLPLink(){
@@ -30,6 +31,7 @@ public class MLPLink extends Link {
 		emitCount = 0;
 //		capacity = MLPParameter.getInstance().capacity;
 		laneGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
+		turnableNextLinks = new HashMap<>();
 	}
 
 	public void init(long id, int type, String name,int index, Node upNode, Node dnNode, MLPNetwork network) {
@@ -416,5 +418,22 @@ public class MLPLink extends Link {
 		DefaultWeightedEdge edge = new DefaultWeightedEdge();
 		laneGraph.addEdge(fLane, tLane, edge);
 		laneGraph.setEdgeWeight(edge,weight);
+	}
+
+	protected void organizeTurnableDnLinks(){
+		getEndSegment().getLanes().forEach(lane -> {
+			((MLPLane)lane).dnStrmConns.forEach(conn -> {
+				if (turnableNextLinks.get(conn.dnLinkID())==null)
+					turnableNextLinks.put(conn.dnLinkID(),(MLPLink) conn.dnLane.getLink());
+			});
+		});
+	}
+
+	public List<MLPLink> getTurnableDnLinks(){
+		return new ArrayList<>(turnableNextLinks.values());
+	}
+
+	public boolean checkTurningTo(Long nextLinkID) {
+		return turnableNextLinks.keySet().contains(nextLinkID);
 	}
 }

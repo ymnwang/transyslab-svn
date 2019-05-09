@@ -13,6 +13,8 @@ import org.jgrapht.GraphPath;
 
 public class Path implements NetworkObject {
 
+	public static final int MAX_PATH_LENGTH = 20;
+
 	protected long id;
 	protected String objInfo;
 	protected int index; // index in the array;

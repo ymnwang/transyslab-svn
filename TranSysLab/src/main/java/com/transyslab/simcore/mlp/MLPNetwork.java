@@ -166,6 +166,7 @@ public class MLPNetwork extends RoadNetwork {
 			}
 			//将jointLane信息装入Link中
 			((MLPLink) l).addLnPosInfo();
+			((MLPLink) l).organizeTurnableDnLinks();
 			li += 1;
 			System.out.println("DEBUG message: link " + l.getId() + " " + li + "th of " + links.size());
 		}
@@ -401,7 +402,7 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void transformVehData(VehicleData vd, MLPVehicle veh) {
 		vd.init(veh,false,(veh.resemblance ? Constants.FOLLOWING : 0) + Math.min(1,veh.virtualType), veh.getInfo());
-		vd.setPathInfo(veh.getPath());
+//		vd.setPathInfo(veh.getPath());
 		//todo: 过渡方案
 		//计算翻译线性参考
 		if (veh.conn==null){
@@ -517,17 +518,32 @@ public class MLPNetwork extends RoadNetwork {
 		else {
 			if (desNode!=null) {
 				ODPair thePair = findODPair(oriNode, desNode);
-				mlpVeh.setPath(thePair.assignRoute(mlpVeh),1);
+				mlpVeh.setPath(thePair.assignRoute(mlpVeh, getSysRand().nextDouble()),1);
 			}
 			else {
 				List<Link> links = new ArrayList<>();
-				Node n = oriNode;
-				for (int i=0; i<20; i++) {
-					if (n.nDnLinks()<=0)
-						break;
-					Link l = n.getDnLink(getSysRand().nextInt(n.nDnLinks()));
+				Node n;
+				Link l;
+				int stepIndex = 1;
+				if (mlpVeh.link!=null) {
+					//make sure path begins with the link on which the vehicle is running
+					l = mlpVeh.getLink();
+					links.add(l);
+					n = mlpVeh.getLink().getDnNode();
+				}
+				else {
+					l = oriNode.getDnLink(getSysRand().nextInt(oriNode.nDnLinks()));
 					links.add(l);
 					n = l.getDnNode();
+				}
+				while (stepIndex<20) {
+					List<MLPLink> dnLinks = ((MLPLink)l).getTurnableDnLinks();
+					if (dnLinks.size()<=0)
+						break;
+					l = dnLinks.get(getSysRand().nextInt(dnLinks.size()));
+					links.add(l);
+					n = l.getDnNode();
+					stepIndex += 1;
 				}
 				Path randPath = new Path(oriNode,n,links);
 				mlpVeh.setPath(randPath,1);
@@ -542,7 +558,7 @@ public class MLPNetwork extends RoadNetwork {
 			// todo 应加入所有可行路径，非最短路
 //			GraphPath<Node, Link> gpath = DijkstraShortestPath.findPathBetween(this, oriNode, desNode);
 			//临时修改 wym
-			List<GraphPath<Node, Link>> gpaths = (List<GraphPath<Node, Link>>) new AllDirectedPaths(this).getAllPaths(oriNode,desNode,true,8);
+			List<GraphPath<Node, Link>> gpaths = (List<GraphPath<Node, Link>>) new AllDirectedPaths(this).getAllPaths(oriNode,desNode,true,Path.MAX_PATH_LENGTH);
 			gpaths.sort(new Comparator<GraphPath<Node, Link>>() {
 				@Override
 				public int compare(GraphPath<Node, Link> o1, GraphPath<Node, Link> o2) {
@@ -551,11 +567,12 @@ public class MLPNetwork extends RoadNetwork {
 					return n1<n2 ? -1 : n1>n2 ? 1 : 0;
 				}
 			});
-			GraphPath<Node, Link> gpath = gpaths.get(0);
-			ODPair newPair = new ODPair(oriNode, desNode);
 			oriNode.setType(oriNode.getType() | Constants.NODE_TYPE_ORI);
 			desNode.setType(desNode.getType() | Constants.NODE_TYPE_DES);
-			newPair.addPath(new Path(gpath));
+			ODPair newPair = new ODPair(oriNode, desNode);
+			for (GraphPath gpath: gpaths) {
+				newPair.addPath(new Path(gpath));
+			}
 			odPairs.add(newPair);
 			return newPair;
 		}
@@ -744,12 +761,14 @@ public class MLPNetwork extends RoadNetwork {
 						Double.parseDouble(items[7])};
 				if (items[0]==null || items[0].equals(""))
 					leafEmit(demand, speed, time);
-				else if (items[1]==null || items[1].equals(""))
-					findLink(Long.parseLong(items[0]))
-							.generateInflow(demand, speed, time, lanes, 0);
-				else
-					findLink(Long.parseLong(items[0]))
-							.generateInflow(demand, speed, time, lanes, Long.parseLong(items[1]));
+				else {
+					MLPLink fLink = findLink(Long.parseLong(items[0]));
+					List<Lane> fLanes = fLink.getStartSegment().getLanes();
+					if (items[1]==null || items[1].equals(""))
+						fLink.generateInflow(demand, speed, time, fLanes, 0);
+					else
+						fLink.generateInflow(demand, speed, time, fLanes, Long.parseLong(items[1]));
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

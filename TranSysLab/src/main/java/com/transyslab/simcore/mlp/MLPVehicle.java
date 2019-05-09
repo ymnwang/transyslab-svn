@@ -492,6 +492,8 @@ public class MLPVehicle extends Vehicle{
 	public String getInfo(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("sim time: " + getMLPNetwork().getSimClock().getCurrentTime() + "\n");
+		if (getNextLink()!=null)
+			sb.append("NLID: " + getNextLink().getId() + "\n");
 		if (lane!=null)
 			sb.append("lane: " + lane.getId() + "\n"
 			+ "VNum: " + (lane.vehsOnLn.indexOf(this)+1) + "/" + lane.vehsOnLn.size() + " pos: " + String.format("%.2f",(1.0-distance/ lane.getLength())) + "\n");
@@ -500,10 +502,6 @@ public class MLPVehicle extends Vehicle{
 			+ "Vnum: " + (conn.vehsOnConn.indexOf(this)+1) + "/" +conn.vehsOnConn.size() + " pos: " + String.format("%.2f",(1.0-distance/ conn.getLength())) + "\n");
 		if (leading!=null)
 			sb.append("leading " + leading.getId() + " ahead: " + (this.distance-leading.distance) + "\n" );
-		if (stopFlag)
-			sb.append("StopFlag activated.");
-		else
-			sb.append("StopFlag deactivated");
 		return sb.toString();
 	}
 	protected double powerRate(double spd) {

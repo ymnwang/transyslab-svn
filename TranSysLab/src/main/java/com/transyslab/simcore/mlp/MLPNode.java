@@ -32,7 +32,7 @@ public class MLPNode extends Node{
 				//innermovement
 				List<MLPConnector> conns = lane_.connsToDnLink( veh.getNextLink().getId());
 				if (conns.size()<=0){
-					System.out.println("warning: veh no. " + veh.getId() + " stop to wait for lane changing at time " + currentTime);
+//					System.out.println("warning: veh no. " + veh.getId() + " stop to wait for lane changing at time " + currentTime);
 					veh.holdAtDnEnd();
 					return Constants.VEHICLE_NOT_RECYCLE;
 				}
