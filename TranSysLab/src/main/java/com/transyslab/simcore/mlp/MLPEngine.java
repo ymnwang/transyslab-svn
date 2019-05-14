@@ -95,6 +95,8 @@ public class MLPEngine extends SimulationEngine{
 		this();
 		rootDir = new File(masterFilePath).getParent() + "/";
 		parseProperties(masterFilePath);
+		//todo: 解析功能集成
+		JdbcUtils.setPropertiesFileName(masterFilePath);
 	}
 
 

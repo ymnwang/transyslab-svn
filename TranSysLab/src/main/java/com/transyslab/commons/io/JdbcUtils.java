@@ -28,6 +28,7 @@ public class JdbcUtils {
 //	private static String url_ = "jdbc:postgresql://192.168.8.23:5432/neihuandb";//"jdbc:oracle:thin:@192.168.8.138:1521:orcl";
 //	private static String user_ = "postgres";
 //	private static String pwd_ = "its312";
+	private static String dbPropertiesFileName = "src/main/resources/dbcp.properties";
 	private static DataSource dataSource;
 	// log4j2 通过 log4j-jcl 实现Common logging接口
 	// 可修改配置文件，设置输出优先级DEBUG以上
@@ -46,7 +47,7 @@ public class JdbcUtils {
 		try
 		{
 //			Configuration config = builder.getConfiguration();
-			Configuration config = configs.properties(new File("src/main/resources/dbcp.properties"));
+			Configuration config = configs.properties(new File(dbPropertiesFileName));
 			String driver = config.getString("driverClassName");
 			String url = config.getString("dburl");
 			String user = config.getString("username");
@@ -101,5 +102,9 @@ public class JdbcUtils {
 
 	public static boolean isIdle() {
 		return (dataSource == null);
+	}
+
+	public static void setPropertiesFileName(String fileName){
+		JdbcUtils.dbPropertiesFileName = fileName;
 	}
 }
