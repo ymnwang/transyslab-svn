@@ -969,4 +969,32 @@ public class MLPNetwork extends RoadNetwork {
 		return ans;
 	}
 
+	public void eliminateLCDeadLock(){
+		List<Integer> dealedVehID = new ArrayList<>();
+		for (MLPVehicle veh: veh_list) {
+			if (!dealedVehID.contains(veh.getId())){
+				dealedVehID.add(veh.getId());
+				MLPVehicle blocking = veh.getLCBlockingVeh();
+				if (blocking==null)
+					continue;
+				MLPVehicle bblocking = blocking.getLCBlockingVeh();
+				if (bblocking!=null && bblocking.equals(veh)) {
+					if (blocking.getLength()==veh.getLength()){
+						//switch lane
+						veh.switchLane(blocking);
+						int buffer = ((MLPParameter)getSimParameter()).getLCBuff();
+						blocking.buffer = buffer;
+						veh.buffer = buffer;
+					}
+					else {
+						//todo: two vehicles with different length should be careful about front & back gap.
+						blocking.setNextLink(null);
+						veh.setNextLink(null);
+					}
+					dealedVehID.add(blocking.getId());
+				}
+			}
+		}
+	}
+
 }

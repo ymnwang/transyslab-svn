@@ -226,6 +226,7 @@ public class MLPEngine extends SimulationEngine{
 				for (int i = 0; i < mlpNetwork.nLinks(); i++){
 					mlpNetwork.mlpLink(i).lanechange();
 				}
+				mlpNetwork.eliminateLCDeadLock();
 				mlpNetwork.platoonRecognize();
 				LCDTime_ = now + ((MLPParameter) mlpNetwork.getSimParameter()).LCDStepSize_;
 			}

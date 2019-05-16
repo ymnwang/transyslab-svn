@@ -184,8 +184,8 @@ public class MLPLink extends Link {
 							//tarLane.RtCutinAllowed &&
 							veh.checkGapAccept(tarLane)) {
 						//换道概率计算
-						//todo: 重构换道概率计算算法 临时修改by wym
 						pr[i] = veh.calLCProbability(i, tailDsp, headDsp, (double) platoon.size());
+						//简易版换道计算，based on lane
 //						pr[i] = veh.calLCProbability2(i);
 					}
 				}
@@ -218,8 +218,6 @@ public class MLPLink extends Link {
 			if ((!veh.lane.diEqualsZero(veh))){
 				if (veh.have2ChangeLane() && veh.calMLC()>0.99)
 					veh.stopFlag = true;
-//				if (veh.calMLC()>0.7)
-//					System.out.println("DEBUG: too late to LC");
 			}
 		}
 	}

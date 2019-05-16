@@ -21,7 +21,7 @@ public class MLPVehicle extends Vehicle{
 	protected int speedLevel;
 	protected boolean cfState;
 	protected boolean resemblance;
-	protected boolean stopFlag;
+	protected boolean stopFlag;//下版本可去除
 	protected double newSpeed;
 	protected double newDis;
 	protected int usage;
@@ -353,7 +353,7 @@ public class MLPVehicle extends Vehicle{
 	
 	protected void holdAtDnEnd() {
 		newDis = 0.0;
-		if (currentSpeed >0.0)
+		if (newSpeed >0.0)
 			newSpeed = (distance -newDis) / getMLPNetwork().getSimClock().getStepSize();
 	}
 	
@@ -502,6 +502,16 @@ public class MLPVehicle extends Vehicle{
 			+ "Vnum: " + (conn.vehsOnConn.indexOf(this)+1) + "/" +conn.vehsOnConn.size() + " pos: " + String.format("%.2f",(1.0-distance/ conn.getLength())) + "\n");
 		if (leading!=null)
 			sb.append("leading " + leading.getId() + " ahead: " + (this.distance-leading.distance) + "\n" );
+//		if (lane!=null){
+//			sb.append("buffer: " + buffer + "\n");
+//			sb.append("endSeg: " + getSegment().isEndSeg() + "\n");
+//			sb.append("di: " + diMap.get(getLane()) + "\n");
+//		}
+		if (conn!=null){
+			sb.append("LC speed: " + conn.calSpd() + "\n");
+			sb.append("Km: " + ((MLPLink) conn.dnLane.getLink()).dynaFun.linkCharacteristics[2] + "\n");
+			sb.append("k: " + ((double)conn.queueNum())/conn.getLength() + "\n");
+		}
 		return sb.toString();
 	}
 	protected double powerRate(double spd) {
@@ -517,5 +527,46 @@ public class MLPVehicle extends Vehicle{
 
 	public boolean isVirtual(){
 		return this.virtualType!=0;
+	}
+
+	public MLPVehicle getLCBlockingVeh(){
+		if (
+				virtualType == 0 && buffer == 0 //换道资格
+				&& getCurrentSpeed()==0.0 // 停车等待
+				&& getLane()!=null && getSegment().isEndSeg() //道路末端
+				&& diMap.get(getLane())!=0 && calMLC()>0.99 //此道不通，强制换道紧急性强
+		){
+			if (getId()==12439||getId()==124448)
+				System.out.println("DEBUG");
+			//选择目标车道
+			MLPLane right = getLane().getAdjacent(0);
+			MLPLane left = getLane().getAdjacent(1);
+			double di = diMap.get(getLane());
+			double di_r = right==null ? Double.POSITIVE_INFINITY : diMap.get(right);
+			double di_l = left==null ? Double.POSITIVE_INFINITY : diMap.get(left);
+			if (di_l>=di && di_r>=di){
+				System.err.println("veh no. " + getId() +  " in dead end.");
+				return null;
+			}
+			MLPLane targetLane = di_r<=di_l ? right : left;
+			//查找阻塞车辆
+			MLPVehicle backVeh = link.findJointLane(targetLane).getFirstVeh();
+			while (backVeh != null && backVeh.Displacement()>Displacement())
+				backVeh = backVeh.trailing;
+			if (backVeh!=null && backVeh.getCurrentSpeed()==0.0 && (Displacement() - length - backVeh.Displacement() <= 0.0))
+				return backVeh;
+			return null;
+		}
+		return null;
+	}
+
+	public void switchLane(MLPVehicle tarVeh){
+		System.out.println("warning: " + getId() + " changes lane with " + tarVeh.getId() + " in link " + getLink().getId());
+		MLPLane theLane = getLane();
+		MLPLane tarLane = tarVeh.getLane();
+		theLane.removeVeh(this,false);
+		tarLane.removeVeh(tarVeh,false);
+		theLane.insertVeh(tarVeh);
+		tarLane.insertVeh(this);
 	}
 }

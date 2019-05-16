@@ -251,15 +251,21 @@ public class MLPNode extends Node{
 			double currentTime = clock.getCurrentTime();
 			for (MLPVehicle veh : statedVehs) {
 				if (veh.conn!=null) {
-					double passSpd = veh.conn.calSpd();
-					LinkedList<MLPVehicle> connVehs = veh.conn.vehsOnConn;
-					if (connVehs.getFirst().getId()!=veh.getId()) {
-						MLPVehicle leading = connVehs.get(connVehs.indexOf(veh)-1);
-						double gap = veh.getDistance() - leading.getLength() - leading.getDistance();
-						double maxSpd = ((MLPParameter) rn.getSimParameter()).maxSpeed(gap);
-						passSpd = Math.min(passSpd,maxSpd);
+					if (veh.conn.vehsOnConn.indexOf(veh)==0){
+						//head use node speed
+						veh.newSpeed = getPassSpd();
 					}
-					veh.newSpeed = passSpd;
+					else {
+						double passSpd = veh.conn.calSpd();
+						LinkedList<MLPVehicle> connVehs = veh.conn.vehsOnConn;
+						if (connVehs.getFirst().getId()!=veh.getId()) {
+							MLPVehicle leading = connVehs.get(connVehs.indexOf(veh)-1);
+							double gap = veh.getDistance() - leading.getLength() - leading.getDistance();
+							double maxSpd = ((MLPParameter) rn.getSimParameter()).maxSpeed(gap);
+							passSpd = Math.min(passSpd,maxSpd);
+						}
+						veh.newSpeed = passSpd;
+					}
 					veh.newDis -= passSpd*stepSize;
 				}
 			}
