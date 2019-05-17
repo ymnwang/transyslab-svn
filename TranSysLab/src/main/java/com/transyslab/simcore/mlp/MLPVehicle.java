@@ -536,8 +536,6 @@ public class MLPVehicle extends Vehicle{
 				&& getLane()!=null && getSegment().isEndSeg() //道路末端
 				&& diMap.get(getLane())!=0 && calMLC()>0.99 //此道不通，强制换道紧急性强
 		){
-			if (getId()==12439||getId()==124448)
-				System.out.println("DEBUG");
 			//选择目标车道
 			MLPLane right = getLane().getAdjacent(0);
 			MLPLane left = getLane().getAdjacent(1);
