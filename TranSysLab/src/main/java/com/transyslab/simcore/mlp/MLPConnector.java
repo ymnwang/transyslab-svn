@@ -97,6 +97,8 @@ public class MLPConnector extends Connector {
             double qRate = getQRate(conflictConn);
             double k = ((double) conflictConn.vehsOnConn.size()) / conflictConn.getLength();
             double km = ((MLPLink) dnLane.getLink()).dynaFun.linkCharacteristics[2];
+            if (k>=km)
+                return 0.0;//deadlock
             c *= Math.pow(1 - qRate*yita*Math.pow(k/km,alpha),beta);
         }
         return c;
