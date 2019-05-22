@@ -283,4 +283,8 @@ public class MLPNode extends Node{
 	public void addLC(MLPConnector lc) {
 		lcList.add(lc);
 	}
+
+	public boolean dnLinkExist(MLPLink dnLink){
+		return dnLinks.contains(dnLink);
+	}
 }

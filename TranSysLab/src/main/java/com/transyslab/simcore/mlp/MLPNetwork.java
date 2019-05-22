@@ -532,7 +532,7 @@ public class MLPNetwork extends RoadNetwork {
 					links.add(l);
 					n = l.getDnNode();
 				}
-				while (stepIndex<20) {
+				while (stepIndex<maxRandWalkStep) {
 					List<MLPLink> dnLinks = ((MLPLink)l).getTurnableDnLinks();
 					if (dnLinks.size()<=0)
 						break;

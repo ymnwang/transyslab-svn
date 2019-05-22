@@ -421,8 +421,13 @@ public class MLPLink extends Link {
 	protected void organizeTurnableDnLinks(){
 		getEndSegment().getLanes().forEach(lane -> {
 			((MLPLane)lane).dnStrmConns.forEach(conn -> {
-				if (turnableNextLinks.get(conn.dnLinkID())==null)
-					turnableNextLinks.put(conn.dnLinkID(),(MLPLink) conn.dnLane.getLink());
+				if (turnableNextLinks.get(conn.dnLinkID())==null){
+					MLPLink tdLink = (MLPLink) conn.dnLane.getLink();
+					if (((MLPNode) getDnNode()).dnLinkExist(tdLink))
+						turnableNextLinks.put(conn.dnLinkID(),tdLink);
+					else
+						System.out.println("warning: turning conflicts at downstream of link no. " + getId());
+				}
 			});
 		});
 	}
