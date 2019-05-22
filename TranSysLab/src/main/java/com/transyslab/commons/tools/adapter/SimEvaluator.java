@@ -22,10 +22,6 @@ import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
 
 import java.util.List;
 
-/**
- * JMetal架构中的适配类，非必要。
- * Created by WangYimin on 2017/11/1.
- */
 public class SimEvaluator implements SolutionListEvaluator{
 	private TaskGiver scheduler;
 

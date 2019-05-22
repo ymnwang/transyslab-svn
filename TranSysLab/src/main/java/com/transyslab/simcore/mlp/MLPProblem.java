@@ -25,9 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by wangyimin on 2017/12/29.
- */
+
 public abstract class MLPProblem extends SimProblem {
 	protected Configuration config;
 	public MLPProblem(){ }

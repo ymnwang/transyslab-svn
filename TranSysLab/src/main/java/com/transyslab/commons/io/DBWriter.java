@@ -22,9 +22,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by WangYimin on 2017/10/11.
- */
+
 public class DBWriter extends JdbcUtils{
 	protected QueryRunner qr;
 	protected String sqlStr;

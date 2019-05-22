@@ -31,9 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by WangYimin on 2017/12/12.
- */
+
 public class FDProblem extends MLPProblem{
 
 	public FDProblem(){	}

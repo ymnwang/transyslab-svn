@@ -21,9 +21,7 @@ import com.transyslab.commons.tools.mutitask.TaskCenter;
 import com.transyslab.commons.tools.mutitask.TaskGiver;
 import com.transyslab.commons.tools.mutitask.TaskWorker;
 
-/**
- * Created by WangYimin on 2017/7/18.
- */
+
 public abstract class SchedulerThread extends Thread implements TaskGiver{
 	private TaskCenter taskCenter;
 

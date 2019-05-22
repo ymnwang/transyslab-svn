@@ -43,9 +43,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Hashtable;
 
-/**
- * Created by yali on 2017/8/26.
- */
+
 public class MainWindow {
     private JFrame windowFrame;
     private JTextArea textArea2;// 控制台信息

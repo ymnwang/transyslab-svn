@@ -35,9 +35,7 @@ import java.util.*;
 import static java.util.stream.Collectors.groupingBy;
 
 
-/**
- * Created by ITSA405-35 on 2018/5/28.
- */
+
 public class RTNetwork extends RoadNetwork{
 
 	private List<RTVehicle> vhcList;

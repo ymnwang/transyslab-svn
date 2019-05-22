@@ -13,9 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 */
-/**
- * Created by yali on 2017/11/5.
- *//*
+/*
 
 public class SolutionStability {
 	public static void main(String[] args) {

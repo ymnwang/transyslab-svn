@@ -24,9 +24,7 @@ import org.apache.commons.configuration2.Configuration;
 
 import java.util.*;
 
-/**
- * Created by yali on 2017/12/7.
- */
+
 public class ToExternalModel implements TaskGiver{
 	private List<Task> taskList;
 	private TaskCenter taskCenter;

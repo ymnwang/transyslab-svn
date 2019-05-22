@@ -21,9 +21,7 @@ import com.transyslab.commons.tools.NewtonFunction;
 
 import java.util.HashMap;
 
-/**
- * Created by WangYimin on 2018/2/22.
- */
+
 public class InterConstraints {
 	public HashMap<String, Constraint> cMap;
 	private double kjUpper, kjLower, qm, vf_CF, vf_SD;

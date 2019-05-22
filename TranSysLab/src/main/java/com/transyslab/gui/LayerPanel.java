@@ -23,9 +23,7 @@ import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.*;
 
-/**
- * Created by yali on 2017/8/26.
- */
+
 public class LayerPanel {
 
     private Map<String, JTabbedPane> layers;

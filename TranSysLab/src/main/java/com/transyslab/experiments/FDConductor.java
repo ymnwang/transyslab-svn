@@ -27,9 +27,7 @@ import com.transyslab.simcore.mlp.MacroCharacter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by WangYimin on 2018/3/23.
- */
+
 public class FDConductor implements SimulationConductor {
 	@Override
 	public void modifyEngineBeforeStart(SimulationEngine engine, SimSolution simSolution) {

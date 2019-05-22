@@ -26,9 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Created by ITSA405-35 on 2018/5/28.
- */
+
 public class RTLane extends Lane {
 	public static final double FREESPEED = 15;//54km/h
 	//	private MLPVehicle head_;

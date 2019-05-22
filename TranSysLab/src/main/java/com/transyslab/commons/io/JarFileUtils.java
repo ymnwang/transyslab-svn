@@ -22,9 +22,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import java.io.*;
 import java.net.URL;
 
-/**
- * Created by WangYimin on 2017/11/9.
- */
+
 public class JarFileUtils {
 	public static File getJarFile(String relativePath) {
 		try {

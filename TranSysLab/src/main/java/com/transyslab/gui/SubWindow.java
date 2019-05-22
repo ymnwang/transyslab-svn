@@ -31,9 +31,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.time.LocalDateTime;
 
-/**
- * Created by yali on 2017/8/27.
- */
+
 public class SubWindow {
     private JFrame windowFrame;
     private ProjectPanel projectPanel;

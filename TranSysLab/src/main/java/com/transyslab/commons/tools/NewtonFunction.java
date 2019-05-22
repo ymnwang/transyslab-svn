@@ -16,9 +16,7 @@
 
 package com.transyslab.commons.tools;
 
-/**
- * Created by wangyimin on 2017/12/28.
- */
+
 public interface NewtonFunction {
 	double calculate(double input, double[] paras);
 	default double findRoot(double start, double[] paras){

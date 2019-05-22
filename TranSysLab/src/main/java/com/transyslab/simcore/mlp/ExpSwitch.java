@@ -16,9 +16,7 @@
 
 package com.transyslab.simcore.mlp;
 
-/**
- * Created by WangYimin on 2018/3/2.
- */
+
 public class ExpSwitch {
 	public final static boolean DOUBLE_LOOP = false;
 	public final static boolean CAP_CTRL = false;

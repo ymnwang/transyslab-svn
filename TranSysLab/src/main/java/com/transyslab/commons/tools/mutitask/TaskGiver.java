@@ -16,9 +16,7 @@
 
 package com.transyslab.commons.tools.mutitask;
 
-/**
- * Created by WangYimin on 2017/7/18.
- */
+
 public interface TaskGiver {
 	default Task dispatch(double[] paras, String workerName) {
 		Task task = new Task(paras, workerName);

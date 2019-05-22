@@ -18,9 +18,7 @@ package com.transyslab.commons.tools;
 
 import java.util.HashMap;
 
-/**
- * Created by yali on 2017/9/14.
- */
+
 public class ADFullerTest {
 	private double pValue;
 	private String autoLag;

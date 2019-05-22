@@ -19,9 +19,7 @@ package com.transyslab.commons.tools.mutitask;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by WangYimin on 2017/7/18.
- */
+
 public class Task {
 	protected double[] inputVariables;
 	protected double[] objectiveValues;

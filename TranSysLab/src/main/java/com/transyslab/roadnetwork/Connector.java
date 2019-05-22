@@ -18,9 +18,7 @@ package com.transyslab.roadnetwork;
 
 import java.util.List;
 
-/**
- * Created by ITSA405-35 on 2018/5/22.
- */
+
 public class Connector implements NetworkObject{
 	protected long id;
 	protected String name;

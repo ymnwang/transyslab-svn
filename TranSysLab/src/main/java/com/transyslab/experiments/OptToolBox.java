@@ -39,9 +39,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Scanner;
 
-/**
- * Created by ITSA405-35 on 2017/12/12.
- */
+
 public class OptToolBox {
 	public static void main(String[] args) {
 		DifferentialEvolution alg = createAlgorithm(args);

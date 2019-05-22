@@ -23,9 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Created by yali on 2017/5/25.
- */
+
 public class MesoODTable {
 
 	protected double nextTime; // time to read od pairs

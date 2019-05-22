@@ -16,9 +16,7 @@
 
 package com.transyslab.commons.tools.mutitask;
 
-/**
- * Created by WangYimin on 2017/7/18.
- */
+
 public interface TaskWorker {
 
 	String ANY_WORKER = null;

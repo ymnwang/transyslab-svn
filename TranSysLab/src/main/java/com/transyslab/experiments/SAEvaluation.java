@@ -27,9 +27,7 @@ import org.apache.commons.csv.CSVRecord;
 import java.io.IOException;
 import java.util.*;
 
-/**
- * Created by yali on 2017/10/22.
- */
+
 public class SAEvaluation {
 	public static void main(String[] args) throws IOException {
 

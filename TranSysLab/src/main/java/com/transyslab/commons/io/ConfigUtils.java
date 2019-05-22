@@ -23,10 +23,6 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import java.io.*;
 import java.net.URL;
 
-/**
- * 从文件路径创建Configure类
- * Created by WangYimin on 2017/11/7.
- */
 public class ConfigUtils {
 	public static Configuration createConfig(String fileName) {
 		try {

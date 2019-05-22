@@ -21,9 +21,7 @@ import com.transyslab.simcore.mlp.*;
 
 import java.util.*;
 
-/**
- * Created by WangYimin on 2017/9/18.
- */
+
 public class BaseEXP {
 	public static void main(String[] args) {
 		String fitnessType = "RMSE";

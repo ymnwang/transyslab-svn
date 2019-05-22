@@ -31,9 +31,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-/**
- * Created by ITSA405-35 on 2018/6/6.
- */
+
 public class ClbrtForm extends JFrame{
 
 	private JPanel panel1;//优化问题设置

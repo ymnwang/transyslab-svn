@@ -16,9 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 */
-/**
- * Created by yali on 2017/10/12.
- *//*
+/*
 
 public class MaximizeEmittedVehicle {
 	protected List<Task> taskList;

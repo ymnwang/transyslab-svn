@@ -18,9 +18,7 @@ package com.transyslab.simcore.rts;
 
 import com.transyslab.roadnetwork.Segment;
 
-/**
- * Created by ITSA405-35 on 2018/5/28.
- */
+
 public class RTSegment extends Segment {
 	private double startDSP;//在当前link中的起点里程
 	private double endDSP;//当前link中的segment终点里程

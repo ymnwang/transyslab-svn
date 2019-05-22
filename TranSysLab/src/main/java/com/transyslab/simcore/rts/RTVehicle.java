@@ -19,9 +19,7 @@ package com.transyslab.simcore.rts;
 import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.Vehicle;
 
-/**
- * Created by ITSA405-35 on 2018/5/29.
- */
+
 public class RTVehicle extends Vehicle{
 	private RTLink curLink;
 	private RTLane curLane;

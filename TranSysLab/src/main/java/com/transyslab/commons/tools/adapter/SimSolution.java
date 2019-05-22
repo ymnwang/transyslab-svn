@@ -24,9 +24,7 @@ import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 
 import java.util.HashMap;
 
-/**
- * Created by WangYimin on 2017/11/5.
- */
+
 public class SimSolution extends Task implements DoubleSolution {
 	protected SimProblem problem;
 	protected final JMetalRandom randomGenerator;

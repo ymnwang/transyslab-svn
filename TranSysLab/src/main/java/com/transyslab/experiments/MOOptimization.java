@@ -18,9 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 */
-/**
- * Created by yali on 2017/10/17.
- *//*
+/*
 
 public class MOOptimization {
 	protected List<Task> taskList;

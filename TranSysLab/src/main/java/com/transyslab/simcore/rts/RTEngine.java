@@ -38,9 +38,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ITSA405-35 on 2018/5/28.
- */
+
 public class RTEngine extends SimulationEngine{
 	//引用路网结构
 	private RTNetwork rtNetwork;

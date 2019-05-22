@@ -20,9 +20,7 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by yali on 2017/8/26.
- */
+
 public class ComponentMediator implements Mediator{
     private List<Component> components;
     public ComponentMediator(){

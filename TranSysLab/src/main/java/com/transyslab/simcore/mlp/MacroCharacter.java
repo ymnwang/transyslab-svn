@@ -22,9 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by WangYimin on 2017/8/16.
- */
+
 public class MacroCharacter {
 	// Ù–‘ÃÙ—°
 	public static final int SELECT_FLOW = 1;

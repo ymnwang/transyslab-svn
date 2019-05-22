@@ -22,9 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Created by WangYimin on 2017/9/24.
- */
+
 public class QueryRunner extends org.apache.commons.dbutils.QueryRunner {
 
 	//wym 将Apache的para[][]改成List<Obj[]>的形式

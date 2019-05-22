@@ -24,11 +24,6 @@ import org.uma.jmetal.util.comparator.impl.OverallConstraintViolationComparator;
 import java.io.Serializable;
 import java.util.Comparator;
 
-/**
- * Created by yali on 2017/11/28.
- * 无约束优化问题的支配解比较器
- * 允许约束违反的比较器为null
- */
 public class DominanceComparator<S extends Solution<?>> implements Comparator<S>, Serializable {
 	private ConstraintViolationComparator<S> constraintViolationComparator;
 	private double boundedValue;

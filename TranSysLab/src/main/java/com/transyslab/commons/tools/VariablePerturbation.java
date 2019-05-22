@@ -18,9 +18,7 @@ package com.transyslab.commons.tools;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
-/**
- * Created by yali on 2017/11/5.
- */
+
 public class VariablePerturbation {
 	public static double[] pertubate(double[] lower, double[] upper, double step,double[] variable){
 		if(lower.length!=upper.length || lower.length!=variable.length){

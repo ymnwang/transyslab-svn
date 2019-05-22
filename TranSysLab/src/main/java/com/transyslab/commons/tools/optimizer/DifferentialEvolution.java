@@ -33,11 +33,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 
-/**
- * Created by yali on 2017/11/27.
- * 重写DE算法的选择操作，应对单目标函数（KS）多解的问题
- * 当目标函数取值相同时，根据其他约束或目标评价当前解是否更优（帕累托支配）
- */
 public class DifferentialEvolution extends AbstractDifferentialEvolution<DoubleSolution> implements Runnable{
 	public static final int BROADCAST = 0;
 	public static final int END = 1;

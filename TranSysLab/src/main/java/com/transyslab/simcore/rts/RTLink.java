@@ -20,9 +20,7 @@ import com.transyslab.roadnetwork.Link;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
-/**
- * Created by ITSA405-35 on 2018/5/28.
- */
+
 public class RTLink extends Link {
 	private SimpleDirectedWeightedGraph<RTLane,DefaultWeightedEdge> laneGraph;
 	public RTLink(){

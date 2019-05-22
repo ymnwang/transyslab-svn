@@ -30,10 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by WangYimin on 2017/8/12.
- * ODÊµÑé
- */
 public class ODEngThread extends EngThread {
 
 	double periodEndTime;

@@ -28,9 +28,7 @@ import com.transyslab.simcore.mlp.MicroCharacter;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by WangYimin on 2018/3/28.
- */
+
 public class QuickFDProblem2 extends FDProblem{
 	static final boolean GENERALIZE = true;
 

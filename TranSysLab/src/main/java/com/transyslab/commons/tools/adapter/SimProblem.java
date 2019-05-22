@@ -23,10 +23,6 @@ import com.transyslab.commons.tools.mutitask.EngThread;
 import org.uma.jmetal.problem.impl.AbstractDoubleProblem;
 import org.uma.jmetal.solution.DoubleSolution;
 
-/**
- * 适配JMetal架构，以便使用标准优化工具进行参数优化。
- * Created by WANG YiMin on 2017/10/26.
- */
 public abstract class SimProblem extends AbstractDoubleProblem implements TaskGiver {
     private TaskCenter taskCenter;
 

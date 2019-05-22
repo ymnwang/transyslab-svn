@@ -18,9 +18,7 @@ package com.transyslab.experiments;
 
 import com.transyslab.simcore.mlp.*;
 
-/**
- * Created by WANG YiMin on 2017/10/12.
- */
+
 public class SpdField {
 
     public static void addLoop(MLPLink mlpLink, double distanceInterval) {
