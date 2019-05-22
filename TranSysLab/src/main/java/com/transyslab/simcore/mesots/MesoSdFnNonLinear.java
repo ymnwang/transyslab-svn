@@ -20,7 +20,6 @@
 package com.transyslab.simcore.mesots;
 
 /**
- * @author YYL 2016-6-6
  */
 public class MesoSdFnNonLinear extends MesoSdFn {
 	// Non Linear Speed-Density Function

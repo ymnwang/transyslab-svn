@@ -19,6 +19,5 @@
  * RoadNetwork,RN_Signal,RN_SensorÎª»ùÀà
  */
 /**
- * @author YYL 2016-5-24
  */
 package com.transyslab.roadnetwork;

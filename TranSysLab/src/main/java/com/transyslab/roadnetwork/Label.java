@@ -22,7 +22,6 @@ package com.transyslab.roadnetwork;
 /**
  * Label
  *
- * @author YYL 2016-6-2
  */
 public class Label {
 	protected int id;

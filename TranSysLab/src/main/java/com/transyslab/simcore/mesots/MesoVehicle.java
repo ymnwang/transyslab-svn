@@ -24,10 +24,7 @@ import java.util.ListIterator;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.*;
 
-/**
- * @author its312
- *
- */
+
 public class MesoVehicle extends Vehicle {
 
 

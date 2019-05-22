@@ -23,7 +23,6 @@ import java.util.*;
 /**
  * extern RN_PathTable * thePathTable; PathTable
  *
- * @author YYL 2016-6-4
  */
 
 public class PathTable {

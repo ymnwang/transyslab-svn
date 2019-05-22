@@ -20,7 +20,6 @@
 package com.transyslab.simcore.mesots;
 
 /**
- * @author YYL 2016-6-6
  */
 // Linear Speed-Density Function
 public class MesoSdFnLinear extends MesoSdFn {

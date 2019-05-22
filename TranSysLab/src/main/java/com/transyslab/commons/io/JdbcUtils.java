@@ -34,10 +34,7 @@ import org.apache.commons.dbutils.DbUtils;
 
 import java.sql.PreparedStatement;
 
-/**
- * @author yali
- *
- */
+
 public class JdbcUtils {
 
 	//	private static String driver_ = "org.postgresql.Driver";  //"oracle.jdbc.driver.OracleDriver";

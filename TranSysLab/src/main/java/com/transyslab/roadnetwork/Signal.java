@@ -19,10 +19,7 @@
  */
 package com.transyslab.roadnetwork;
 
-/**
- * @author yali
- *
- */
+
 public class Signal {
 	protected static int sorted_;
 	protected int index_; // index in array

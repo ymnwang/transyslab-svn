@@ -25,7 +25,6 @@ import com.transyslab.commons.tools.GeoUtil;
 
 /**
 
- * @author YYL
  * ¶ÏÃæ¼ì²âÆ÷
  */
 public class SurvStation implements Sensor{

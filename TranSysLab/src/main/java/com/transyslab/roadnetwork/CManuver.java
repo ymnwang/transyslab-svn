@@ -22,7 +22,6 @@ import java.util.*;
 /**
  * 交叉口通行策略
  *
- * @author YYL 2016-5-31
  */
 public class CManuver {
 	public long _id;

@@ -34,10 +34,7 @@ import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.LinkTimes;
 import com.transyslab.roadnetwork.Segment;
 
-/**
- * @author its312
- *
- */
+
 public class MesoSegment extends Segment {
 
 	protected int nCells; // num of TCs

@@ -20,10 +20,7 @@
 package com.transyslab.simcore.mesots;
 import com.transyslab.roadnetwork.NetworkObject;
 
-/**
- * @author its312
- *
- */
+
 public class MesoIncident  {
 	private double stime_;
 	private double etime_;

@@ -24,10 +24,7 @@ import java.util.HashMap;
 import com.transyslab.roadnetwork.Link;
 import com.transyslab.roadnetwork.Node;
 
-/**
- * @author its312
- *
- */
+
 public class MesoNode extends Node {
 
 	public MesoNode() {

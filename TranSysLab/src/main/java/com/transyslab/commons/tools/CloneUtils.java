@@ -25,10 +25,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-/**
- * @author yali
- *
- */
+
 public class CloneUtils {
 	public static <T extends Serializable> T clone(T obj) {
 		T cloneObj = null;

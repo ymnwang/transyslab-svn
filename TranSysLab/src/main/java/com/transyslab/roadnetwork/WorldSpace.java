@@ -24,8 +24,7 @@ import java.util.List;
 /**
  * ÊÀ½ç×ø±ê
  *
- * @author YYL 
- *     
+ *
  *
  *  We initialize the north east point to - LARGE_NUMBER and the south
  *  west point to + LARGE_NUMBER to ensure that the first network

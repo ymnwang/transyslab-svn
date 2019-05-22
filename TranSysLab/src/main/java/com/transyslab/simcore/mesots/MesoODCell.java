@@ -24,7 +24,6 @@ import com.transyslab.roadnetwork.*;
 /**
  * MesoODCell
  *
- * @author YYL 2016-6-6
  */
 public class MesoODCell extends ODPair{
 

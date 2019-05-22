@@ -27,7 +27,6 @@ import com.transyslab.simcore.AppSetup;
 /**
  * 静态方法解析各类表格
  *
- * @author yali
  *
  */
 public class MesoSetup {

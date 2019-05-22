@@ -24,7 +24,6 @@ import com.transyslab.commons.tools.GeoUtil;
 
 /**
  * ³µµÀ¼ì²âÆ÷
- * @author YYL 2016-6-4
  *
  */
 // NOTE! The following forward declarations are required because of

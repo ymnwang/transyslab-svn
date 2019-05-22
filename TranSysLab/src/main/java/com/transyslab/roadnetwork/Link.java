@@ -26,7 +26,6 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 /**
  * Link µÃÂ
  *
- * @author YYL 2016-5-31
  */
 public class Link extends DefaultWeightedEdge implements NetworkObject{
 

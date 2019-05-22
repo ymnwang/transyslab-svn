@@ -20,7 +20,6 @@
 package com.transyslab.roadnetwork;
 
 /**
- * @author YYL 2016-6-1
  */
 public class GeoPoint {
 	public static final double POINT_EPSILON = 0.1;

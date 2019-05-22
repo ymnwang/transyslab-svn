@@ -25,7 +25,6 @@ import com.transyslab.simcore.mlp.MLPVehicle;
 /**
  * Vehicle
  *
- * @author YYL 2016-6-3
  */
 public abstract class Vehicle{
 

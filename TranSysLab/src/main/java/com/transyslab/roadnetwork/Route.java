@@ -28,7 +28,6 @@ import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 /**
  * Â·¾¶
  *
- * @author YYL
  *
  */
 public class Route extends LinkTimes {

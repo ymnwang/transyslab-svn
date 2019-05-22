@@ -22,10 +22,7 @@ package com.transyslab.roadnetwork;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author YYL 2016-5-24
- */
+
 
 public class Node implements NetworkObject {
 	protected long id;

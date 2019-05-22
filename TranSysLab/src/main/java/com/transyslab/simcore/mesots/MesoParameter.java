@@ -22,10 +22,7 @@ package com.transyslab.simcore.mesots;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Parameter;
 
-/**
- * @author its312
- *
- */
+
 public class MesoParameter extends Parameter {
 
 	final static float ETC_RATE = 0.3f;

@@ -28,7 +28,6 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 /**
  * Lane
  *
- * @author YYL
  *
  */
 public class Lane implements NetworkObject,Comparable<Lane> {

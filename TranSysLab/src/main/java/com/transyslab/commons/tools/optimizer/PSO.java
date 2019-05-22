@@ -21,10 +21,7 @@ package com.transyslab.commons.tools.optimizer;
 
 import java.util.Random;
 
-/**
- * @author yali
- *
- */
+
 public class PSO {
 	/**
 	 * аёвсх╨

@@ -29,7 +29,6 @@ import java.util.*;
  * according to their getDistance from the end of the // link. The sorting is in
  * descending order (Upstream = // LongerDistance = Top) //------
  *
- * @author YYL 2016-6-5
  */
 public class CtrlStation {
 	protected static float maxVisibility_;

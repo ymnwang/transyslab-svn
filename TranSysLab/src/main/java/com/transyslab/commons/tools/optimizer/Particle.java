@@ -22,10 +22,7 @@ import java.util.Random;
 
 import com.transyslab.roadnetwork.Constants;
 
-/**
- * @author yali
- *
- */
+
 public class Particle {
 	protected float[] pos_;// 粒子的位置，求解问题多少维，则此数组为多少维
 	protected float[] v_;// 粒子的速度，维数同位置

@@ -25,10 +25,7 @@ import java.util.List;
 
 import com.transyslab.roadnetwork.*;
 
-/**
- * @author its312
- *
- */
+
 public class MesoVehicleTable {
 	protected List<MesoVehicle> vhcList;
 	protected ODPair odPair;

@@ -28,10 +28,7 @@ import com.transyslab.commons.renderer.FrameQueue;
 import com.transyslab.roadnetwork.*;
 
 
-/**
- * @author its312
- *
- */
+
 public class MesoNetwork extends RoadNetwork {
 	protected int[] permuteLink;
 	protected int nPermutedLinks;

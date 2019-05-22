@@ -32,7 +32,6 @@ import java.util.*;
 /**
  * Segment
  *
- * @author YYL 2016-6-1
  */
 public class Segment implements NetworkObject {
 

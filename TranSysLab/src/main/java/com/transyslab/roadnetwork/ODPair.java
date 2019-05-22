@@ -26,10 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * @author yali
- *
- */
+
 public class ODPair implements NetworkObject{
 	protected long id;
 	protected String name;

@@ -23,7 +23,6 @@ import java.util.*;
 /**
  * ½»²æ¿Ú
  *
- * @author YYL 2016-5-31
  */
 public class Intersection {
 	/*

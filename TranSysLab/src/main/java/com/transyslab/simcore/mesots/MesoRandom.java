@@ -24,10 +24,7 @@ import java.util.Vector;
 
 import com.transyslab.roadnetwork.RoadNetworkPool;
 
-/**
- * @author its312
- *
- */
+
 public class MesoRandom {
 	protected static int flags = 0;
 	protected int signature;

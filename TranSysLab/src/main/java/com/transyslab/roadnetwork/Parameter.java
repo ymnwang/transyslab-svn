@@ -19,10 +19,7 @@
  */
 package com.transyslab.roadnetwork;
 
-/**
- * @author YYL
- *
- */
+
 
 public class Parameter {
 

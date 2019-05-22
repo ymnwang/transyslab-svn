@@ -19,10 +19,7 @@
  */
 package com.transyslab.simcore.mesots;
 
-/**
- *
- * @author YYL 2016-6-6
- */
+
 public abstract class MesoSdFn {
 	
 	//路段末交通流最短车头时距（最大通行能力）

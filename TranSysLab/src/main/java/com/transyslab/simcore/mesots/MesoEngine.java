@@ -29,10 +29,7 @@ import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mlp.MacroCharacter;
 
-/**
- * @author its312
- *
- */
+
 public class MesoEngine extends SimulationEngine {
 	protected String rootDir;
 	protected int runTimes; // 仿真运行次数

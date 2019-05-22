@@ -22,10 +22,7 @@ package com.transyslab.simcore.mesots;
 import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 
-/**
- * @author its312
- *
- */
+
 public class MesoTrafficCell {
 
 	protected MesoSegment segment; // container

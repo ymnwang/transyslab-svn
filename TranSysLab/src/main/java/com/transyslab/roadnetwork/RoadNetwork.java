@@ -30,7 +30,6 @@ import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 /**
  * roadnetwork
  *
- * @author YYL 2016-6-4
  */
 public abstract class RoadNetwork extends SimpleDirectedWeightedGraph<Node, Link>{
 

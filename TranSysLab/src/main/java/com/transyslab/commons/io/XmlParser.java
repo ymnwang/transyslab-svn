@@ -34,10 +34,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-/**
- * @author yali
- *
- */
+
 public class XmlParser {
 	public static void parseNetwork(RoadNetwork network, String filePath){
 		File inputXml = new File(filePath);

@@ -21,10 +21,7 @@ package com.transyslab.simcore.mesots;
 
 import com.transyslab.roadnetwork.Link;
 
-/**
- * @author its312
- *
- */
+
 public class MesoLink extends Link {
 
 	protected MesoVehicle queueHead = new MesoVehicle(); // first vehicle in
