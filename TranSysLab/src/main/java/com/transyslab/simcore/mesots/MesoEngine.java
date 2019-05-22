@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-/**
- *
- */
+
 package com.transyslab.simcore.mesots;
 
 import java.util.ArrayList;

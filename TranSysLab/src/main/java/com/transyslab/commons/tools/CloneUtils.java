@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-/**
- *
- */
+
 package com.transyslab.commons.tools;
 
 import java.io.ByteArrayInputStream;

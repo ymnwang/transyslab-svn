@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-/**
- *
- */
+
 package com.transyslab.commons.io;
 
 import java.io.File;

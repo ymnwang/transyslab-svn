@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-/**
- *
- */
+
 package com.transyslab.simcore.mesots;
 
 import com.transyslab.roadnetwork.TollBooth;

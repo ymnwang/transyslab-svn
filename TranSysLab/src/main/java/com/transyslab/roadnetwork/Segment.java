@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-/**
- *
- */
+
 package com.transyslab.roadnetwork;
 
 import com.transyslab.commons.tools.GeoUtil;
