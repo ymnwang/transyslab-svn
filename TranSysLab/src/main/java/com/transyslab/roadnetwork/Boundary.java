@@ -1,6 +1,6 @@
 package com.transyslab.roadnetwork;
 
-import jhplot.math.LinearAlgebra;
+import com.transyslab.commons.tools.LinearAlgebra;
 
 public class Boundary implements NetworkObject{
 	protected GeoPoint startPnt;

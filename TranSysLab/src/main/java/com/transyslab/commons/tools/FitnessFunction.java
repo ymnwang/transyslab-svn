@@ -1,14 +1,8 @@
 package com.transyslab.commons.tools;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.xmlgraphics.util.io.Finalizable;
 
-import com.transyslab.commons.io.CSVUtils;
+import java.util.Arrays;
 
 public class FitnessFunction {
 	public static double evaRNSE(double[] sim, double[] obs){

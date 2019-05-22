@@ -1,13 +1,8 @@
 package com.transyslab.experiments;
 
-import com.transyslab.commons.io.CSVUtils;
-import com.transyslab.commons.tools.ADFullerTest;
 import com.transyslab.commons.tools.FitnessFunction;
 import com.transyslab.simcore.mlp.*;
-import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.lang3.time.StopWatch;
 
-import java.io.IOException;
 import java.util.*;
 
 /**

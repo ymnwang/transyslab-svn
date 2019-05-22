@@ -1,23 +1,22 @@
 package com.transyslab.gui;
 
 import com.jogamp.opengl.util.FPSAnimator;
-import com.transyslab.commons.renderer.Camera;
-import com.transyslab.commons.renderer.FrameQueue;
-import com.transyslab.commons.renderer.JOGLCanvas;
-import com.transyslab.commons.renderer.OrbitCamera;
-import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.commons.renderer.*;
+import com.transyslab.commons.tools.SimulationClock;
 import com.transyslab.roadnetwork.Constants;
 import com.transyslab.simcore.AppSetup;
 import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
 import com.transyslab.simcore.rts.RTEngine;
-import info.monitorenter.gui.chart.traces.Trace2DSimple;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,9 +24,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.time.LocalTime;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.time.format.DateTimeFormatter;
 import java.util.Hashtable;
 
@@ -50,7 +46,6 @@ public class MainWindow {
     private JOGLCanvas canvas;
     private FPSAnimator animator;
     private SimulationEngine engine;
-    private Trace2DSimple traceRT;
     private ClbrtForm clbrtForm;
     private static MainWindow theWindow;
     private MainWindow(){

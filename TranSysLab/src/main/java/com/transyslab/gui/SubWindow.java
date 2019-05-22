@@ -1,14 +1,11 @@
 package com.transyslab.gui;
 
-import com.mhuss.Util.Str;
 import com.transyslab.commons.io.FileUtils;
 import com.transyslab.simcore.AppSetup;
-import com.transyslab.simcore.SimulationEngine;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.math3.ode.MainStateJacobianProvider;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -17,7 +14,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 /**
  * Created by yali on 2017/8/27.

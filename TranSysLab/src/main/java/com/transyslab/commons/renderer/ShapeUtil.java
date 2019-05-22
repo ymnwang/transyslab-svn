@@ -3,26 +3,14 @@ package com.transyslab.commons.renderer;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.glu.GLUquadric;
-import com.jogamp.opengl.math.FloatUtil;
-import com.jogamp.opengl.math.Matrix4;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.roadnetwork.GeoPoint;
-
 import com.transyslab.roadnetwork.GeoSurface;
-import jhplot.math.DoubleArray;
-import jhplot.math.LinearAlgebra;
 
-import static com.jogamp.opengl.GL.*;// GL constants
-
-import java.awt.*;
 import java.util.List;
-import java.util.Vector;
 
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.ml.clustering.DoublePoint;
-import org.apache.commons.math3.ode.sampling.FieldStepNormalizer;
-import org.apache.commons.math3.util.MathUtils;
+import static com.jogamp.opengl.GL.*;
 
 public class ShapeUtil {
 
