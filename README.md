@@ -12,7 +12,7 @@ TranSysLab offers:
 - parallel simulation speedup
 - GUI for basic simulation task
 
-For more information, see the project website at www.transyslab.com, 
+For more information, see the project website at http://www.transyslab.com, 
 which is also coming soon.
 
 ## Publications
