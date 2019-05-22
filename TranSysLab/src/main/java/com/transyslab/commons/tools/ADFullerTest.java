@@ -1,7 +1,5 @@
 package com.transyslab.commons.tools;
 
-import jhplot.math.DoubleArray;
-
 import java.util.HashMap;
 
 /**
@@ -127,11 +125,12 @@ public class ADFullerTest {
 	}
 	// 矩阵最左加一列全为1的向量
 	public double[][] addConstant(double[][] x){
-		double[] constant = new double[x.length];
-		for(int i=0;i<constant.length;i++){
-			constant[i] = 1;
+		double[][] ans = new double[x[0].length+1][x.length];
+		for (int i = 0; i < ans.length; i++) {
+			for (int j = 0; j < ans[0].length; j++) {
+				ans[i][j]= i==0 ? 1 : x[i-1][j];
+			}
 		}
-		return DoubleArray.insertColumns(x, 0, constant);
-
+		return ans;
 	}
 }

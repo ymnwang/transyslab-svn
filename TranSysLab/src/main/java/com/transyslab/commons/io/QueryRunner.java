@@ -1,7 +1,5 @@
 package com.transyslab.commons.io;
 
-import org.encog.util.Stopwatch;
-
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,8 +47,7 @@ public class QueryRunner extends org.apache.commons.dbutils.QueryRunner {
 			try {
 				stmt = this.prepareStatement(conn, sql);
 
-				Stopwatch timer = new Stopwatch();
-				timer.start();
+				long t_start = System.currentTimeMillis();
 
 				for (Object[] p : params) {
 					this.fillStatement(stmt, p);
@@ -60,8 +57,7 @@ public class QueryRunner extends org.apache.commons.dbutils.QueryRunner {
 					}
 				}
 
-				timer.stop();
-				System.out.println("batch processing time: " + timer.getElapsedMilliseconds());
+				System.out.println("batch processing time: " + (System.currentTimeMillis()-t_start));
 
 				rows = stmt.executeBatch();
 			} catch (SQLException var11) {

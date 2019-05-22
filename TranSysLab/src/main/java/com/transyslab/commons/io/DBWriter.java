@@ -1,7 +1,6 @@
 package com.transyslab.commons.io;
 
 import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
-import org.encog.util.Stopwatch;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,8 +27,7 @@ public class DBWriter extends JdbcUtils{
 
 	private void batchUpload() {
 		System.out.println("uploading Db");
-		Stopwatch timer = new Stopwatch();
-		timer.start();
+		long t_start = System.currentTimeMillis();
 		int batchNum = 100;
 		int headIdx = 0;
 		while (headIdx + batchNum < rows.size()) {
@@ -38,8 +36,7 @@ public class DBWriter extends JdbcUtils{
 		}
 		upload(rows.subList(headIdx, rows.size()-1));
 		rows.clear();
-		timer.stop();
-		System.out.println("finished uploading in " + timer.getElapsedMilliseconds() + "ms");
+		System.out.println("finished uploading in " + (System.currentTimeMillis()-t_start) + "ms");
 	}
 
 	private void upload(List<Object[]> uploadingRows) {
@@ -51,17 +48,15 @@ public class DBWriter extends JdbcUtils{
 	}
 	private void upload() {
 		System.out.println("uploading Db");
-		Stopwatch timer = new Stopwatch();
 		System.out.println("Data size:"+rows.size());
-		timer.start();
+		long t_start = System.currentTimeMillis();
 		try {
 			qr.batch(sqlStr, rows);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		rows.clear();
-		timer.stop();
-		System.out.println("finished uploading in " + timer.getElapsedMilliseconds() + "ms");
+		System.out.println("finished uploading in " + (System.currentTimeMillis()-t_start) + "ms");
 	}
 
 	public synchronized void flush() {

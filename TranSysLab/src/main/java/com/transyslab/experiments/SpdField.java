@@ -1,7 +1,6 @@
 package com.transyslab.experiments;
 
 import com.transyslab.simcore.mlp.*;
-import org.encog.util.Stopwatch;
 
 /**
  * Created by WANG YiMin on 2017/10/12.
@@ -40,16 +39,14 @@ public class SpdField {
         SpdField.addLoop(mlpEngine.getNetwork().findLink(25), 50);
 
         //初始化计时器
-        Stopwatch timer = new Stopwatch();
-        timer.start();
+        long t_begin = System.currentTimeMillis();
 
         //仿真运行
         mlpEngine.repeatRun();
 
         //统计发车
         System.out.println("未发车辆数：" + mlpEngine.countOnHoldVeh() + "辆");
-        timer.stop();
-        System.out.println("time " + timer.getElapsedMilliseconds() + " ms");
+        System.out.println("time " + (System.currentTimeMillis()-t_begin) + " ms");
 
         //关闭引擎
         mlpEngine.close();

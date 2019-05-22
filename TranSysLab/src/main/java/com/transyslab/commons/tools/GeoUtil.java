@@ -10,7 +10,6 @@ import com.transyslab.roadnetwork.Constants;
 import com.transyslab.roadnetwork.GeoPoint;
 import com.transyslab.roadnetwork.GeoSurface;
 
-import jhplot.math.LinearAlgebra;
 import org.apache.commons.math3.geometry.Vector;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;

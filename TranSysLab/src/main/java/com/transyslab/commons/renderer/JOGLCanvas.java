@@ -9,38 +9,28 @@ import com.jogamp.opengl.math.Ray;
 import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.transyslab.commons.tools.GeoUtil;
+import com.transyslab.commons.tools.LinearAlgebra;
 import com.transyslab.gui.MainWindow;
 import com.transyslab.gui.PanelAction;
 import com.transyslab.gui.SignalStagePanel;
 import com.transyslab.roadnetwork.*;
-
-import java.awt.*;
-
 import com.transyslab.simcore.mlp.MLPConnector;
 import com.transyslab.simcore.mlp.MLPNetwork;
 import com.transyslab.simcore.rts.RTEngine;
 import com.transyslab.simcore.rts.RTNetwork;
-import jhplot.math.LinearAlgebra;
-
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import static com.jogamp.opengl.GL.*; // GL constants
+import static com.jogamp.opengl.GL.*;
 import static com.jogamp.opengl.GL2ES1.GL_PERSPECTIVE_CORRECTION_HINT;
 import static com.jogamp.opengl.fixedfunc.GLLightingFunc.GL_SMOOTH;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_MODELVIEW;
 import static com.jogamp.opengl.fixedfunc.GLMatrixFunc.GL_PROJECTION;
-
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class JOGLCanvas extends GLCanvas implements GLEventListener, KeyListener, MouseListener,
 		MouseWheelListener, MouseMotionListener {

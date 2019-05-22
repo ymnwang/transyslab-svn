@@ -1,8 +1,5 @@
 package com.transyslab.commons.tools.mutitask;
 
-import java.io.File;
-import java.util.Arrays;
-
 import com.transyslab.commons.io.ConfigUtils;
 import com.transyslab.commons.io.TXTUtils;
 import com.transyslab.commons.tools.adapter.SimProblem;
@@ -11,7 +8,9 @@ import com.transyslab.simcore.SimulationEngine;
 import com.transyslab.simcore.mesots.MesoEngine;
 import com.transyslab.simcore.mlp.MLPEngine;
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.lang.time.StopWatch;
+
+import java.io.File;
+import java.util.Arrays;
 
 public class EngThread extends Thread implements TaskWorker{
 	private TaskCenter taskCenter;
@@ -61,9 +60,7 @@ public class EngThread extends Thread implements TaskWorker{
 
 	@Override
 	public double[] worksWith(Task task) {
-		StopWatch stopWatch = new StopWatch();
-		stopWatch.reset();
-		stopWatch.start();
+		long t_start = System.currentTimeMillis();
 
 		if (conductor == null)
 			System.err.println("Engine behavior not been determined");
@@ -90,9 +87,9 @@ public class EngThread extends Thread implements TaskWorker{
 
 		//Êä³ö½âµÄlog
 		if (logOn) {
-			stopWatch.stop();
+			double timeUse = System.currentTimeMillis() - t_start;
 			if(broadcastNeeded) {
-				System.out.println(getName() + "runtimes: " + engine.countRunTimes() + " timer: " + stopWatch.getTime());
+				System.out.println(getName() + "runtimes: " + engine.countRunTimes() + " timer: " + timeUse);
 				System.out.println("parameter: " + Arrays.toString(task.getInputVariables()) + "fitness: " + Arrays.toString(fitness));
 			}
 			writer.writeNFlush(Arrays.toString(task.getInputVariables())
