@@ -24,7 +24,7 @@ public class NetworkCreator {
         String sql;
         List<Object[]> result = null;
         // 读取节点数据, roadid为空的记录为交叉口节点
-        sql = "select nodeid, st_transform(geom,2362) from topo_node ";
+        sql = "select nodeid, st_transform(geom,2362), type from topo_node ";
         // 按节点集筛选
         if (nodeIdList != null)
             sql += "where nodeid in (" + nodeIdList + ")";
@@ -35,11 +35,8 @@ public class NetworkCreator {
         // 遍历，node -> node
         for (Object[] row : result) {
             long nodeid = ((BigDecimal) row[0]).longValue();
-//            Point pos = ((Point) ((PGgeometry) row[1]).getGeometry());
-            //gist版本问题，临时调整 wym
             Point pos = ((PGgeometry) row[1]).getGeometry().getFirstPoint();
-//            int type = nodeid==1140442662255067200L ? Constants.NODE_TYPE_SIGNALIZED_INTERSECTION : Constants.NODE_TYPE_NONSIGNALIZED_INTERSECTION;
-            int type = Constants.NODE_TYPE_NONSIGNALIZED_INTERSECTION;
+            int type = (Integer) row[2];
             roadNetwork.createNode(nodeid, type, "N" + String.valueOf(nodeid),
                     new GeoPoint(pos.getX(), pos.getY(), pos.getZ()));
         }
