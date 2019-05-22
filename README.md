@@ -1,7 +1,7 @@
 ## Overview
 
-TranSysLab is a traffic flow simulation platform for large scale urban network implements 
-developed by Research Center of Intelligent Transportation System, Sun Yat-sen University. 
+TranSysLab is a traffic flow simulation platform for large scale urban network, 
+which is developed by Research Center of Intelligent Transportation System, Sun Yat-sen University. 
 
 The project consists of a simulation software, tutorials and several scenarios files. 
 The latter two are coming soon.
