@@ -58,8 +58,6 @@ public class MLPNetwork extends RoadNetwork {
 		MLPLink newLink = new MLPLink();
 		newLink.init(id,type,name,nLinks(),findNode(upNodeId),findNode(dnNodeId),this);
 		links.add(newLink);
-		this.addEdge(newLink.getUpNode(),newLink.getDnNode(),newLink);
-		this.setEdgeWeight(newLink,Double.POSITIVE_INFINITY);
 		return newLink;
 	}
 	@Override
@@ -146,6 +144,9 @@ public class MLPNetwork extends RoadNetwork {
 		for (Link l: links){
 			//预留
 			((MLPLink) l).checkConnectivity();
+			//networkGraph
+			this.addEdge(l.getUpNode(),l.getDnNode(),l);
+			this.setEdgeWeight(l,Double.POSITIVE_INFINITY);
 			//组织laneGraph
 			segments.forEach(segment -> {
 				lanes.forEach(lane -> {
@@ -170,11 +171,6 @@ public class MLPNetwork extends RoadNetwork {
 			li += 1;
 			System.out.println("DEBUG message: link " + l.getId() + " " + li + "th of " + links.size());
 		}
-		//临时修改 wym
-//		List<Connector> c1 = connectors.stream().filter(c->((MLPConnector)c).upLinkID()==-73072 && ((MLPConnector)c).dnLinkID()==-73030).collect(Collectors.toList());
-//		List<Connector> c2 = connectors.stream().filter(c->((MLPConnector)c).upLinkID()==73030 && ((MLPConnector)c).dnLinkID()==73079).collect(Collectors.toList());
-//		c1.forEach(c->((MLPConnector)c).addConflictConns(c2));
-//		c2.forEach(c->((MLPConnector)c).addConflictConns(c1));
 	}
 
 	public void buildEmitTable(boolean needRET, String odFileDir, String emitFileDir){

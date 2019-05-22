@@ -1,9 +1,8 @@
 package com.transyslab.simcore.mlp;
 
-import com.transyslab.roadnetwork.Constants;
-import com.transyslab.roadnetwork.Lane;
-import com.transyslab.roadnetwork.Vehicle;
+import com.transyslab.roadnetwork.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -566,5 +565,12 @@ public class MLPVehicle extends Vehicle{
 		tarLane.removeVeh(tarVeh,false);
 		theLane.insertVeh(tarVeh);
 		tarLane.insertVeh(this);
+	}
+
+	public void setLCPath(MLPLink onLink){
+		List<Link> pathLinks = new ArrayList<>();
+		pathLinks.add(onLink);
+		Path shortPath = new Path(onLink.getUpNode(), onLink.getUpNode(), pathLinks);
+		setPath(shortPath,1);
 	}
 }
