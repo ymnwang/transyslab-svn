@@ -686,7 +686,7 @@ public class MLPNetwork extends RoadNetwork {
 
 	public void loadInflowFromSQL(String tableName, double fTime, double tTime){
 		try {
-			Connection con = SQLConnection.getInstance().getConn();
+			Connection con = JdbcUtils.getConnection();
 			String sql = "SELECT * FROM public." + tableName +
 					" WHERE emitTime >= " + fTime +
 					" AND emitTime < " + tTime +
@@ -709,7 +709,7 @@ public class MLPNetwork extends RoadNetwork {
 						result.getDouble(5),
 						result.getInt(6));
 			}
-			SQLConnection.getInstance().release();
+			JdbcUtils.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

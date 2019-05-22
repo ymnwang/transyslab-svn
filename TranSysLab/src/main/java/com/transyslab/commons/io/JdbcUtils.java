@@ -34,11 +34,6 @@ import java.sql.PreparedStatement;
 
 
 public class JdbcUtils {
-
-	//	private static String driver_ = "org.postgresql.Driver";  //"oracle.jdbc.driver.OracleDriver";
-//	private static String url_ = "jdbc:postgresql://192.168.8.23:5432/neihuandb";//"jdbc:oracle:thin:@192.168.8.138:1521:orcl";
-//	private static String user_ = "postgres";
-//	private static String pwd_ = "its312";
 	private static String dbPropertiesFileName = "src/main/resources/dbcp.properties";
 	private static DataSource dataSource;
 	// log4j2 通过 log4j-jcl 实现Common logging接口
